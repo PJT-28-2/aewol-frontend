@@ -1,0 +1,24 @@
+language: "ko"
+reviews:
+  profile: "chill"
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+  auto_review:
+    enabled: true
+    drafts: false
+  path_instructions:
+    - path: "src/router/**"
+      instructions: "Vue Router 설정입니다. 인증 가드, 라우트 메타 데이터를 확인해주세요."
+    - path: "src/stores/**"
+      instructions: "Pinia 상태 관리입니다. 상태 변이의 일관성과 에러 처리를 확인해주세요."
+    - path: "src/api/**"
+      instructions: "API 모듈입니다. 엔드포인트 경로, 요청/응답 타입, 에러 처리를 확인해주세요."
+    - path: "src/views/**"
+      instructions: "페이지 컴포넌트입니다. 접근성, 반응형 디자인, 로딩/에러 상태 처리를 확인해주세요."
+    - path: "src/components/**"
+      instructions: "재사용 컴포넌트입니다. Props 검증, 이벤트 처리, 스타일 일관성을 확인해주세요."
+chat:
+  auto_reply: true
