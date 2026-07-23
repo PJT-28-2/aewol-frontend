@@ -34,3 +34,7 @@ Thumbs.db
 
 # --- Testing ---
 coverage/
+
+# --- AGENT ---
+CLAUDE.md
+AGENT.md
