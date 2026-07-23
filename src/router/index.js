@@ -223,7 +223,8 @@ const PUBLIC_ROUTE_NAMES = new Set(
 router.beforeEach((to) => {
   const authStore = useAuthStore();
 
-  // TODO: 임시 개발용 우회 - 네비바 작업 끝나면 제거
+  // TODO: 로그인 화면 구현 전까지 임시 인증 우회 (팀 공용, 다른 화면 개발용)
+  // 로그인 플로우 완성되면 제거 필요
   if (import.meta.env.DEV) {
     return;
   }
