@@ -1,5 +1,5 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
+import { createRouter, createWebHistory } from 'vue-router';
+import { useAuthStore } from '@/stores/auth';
 
 /* ------------------------------------------------------------------ */
 /*  Public (no auth required) routes                                  */
@@ -27,14 +27,16 @@ const publicRoutes = [
   {
     path: '/password/reset',
     name: 'PasswordReset',
-    component: () => import('@/views/auth/PasswordResetView.vue'),
+    component: () =>
+      import('@/views/auth/PasswordResetView.vue'),
   },
   {
     path: '/callback/kakao',
     name: 'KakaoCallback',
-    component: () => import('@/views/auth/KakaoCallbackView.vue'),
+    component: () =>
+      import('@/views/auth/KakaoCallbackView.vue'),
   },
-]
+];
 
 /* ------------------------------------------------------------------ */
 /*  Authenticated routes (require login, use DefaultLayout)           */
@@ -79,25 +81,29 @@ const authRoutes = [
   {
     path: '/wallet/buckets',
     name: 'BucketManage',
-    component: () => import('@/views/wallet/BucketManageView.vue'),
+    component: () =>
+      import('@/views/wallet/BucketManageView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
     path: '/wallet/history',
     name: 'TransactionHistory',
-    component: () => import('@/views/wallet/TransactionHistoryView.vue'),
+    component: () =>
+      import('@/views/wallet/TransactionHistoryView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
     path: '/accounts',
     name: 'AccountList',
-    component: () => import('@/views/account/AccountListView.vue'),
+    component: () =>
+      import('@/views/account/AccountListView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
     path: '/accounts/connect',
     name: 'AccountConnect',
-    component: () => import('@/views/account/AccountConnectView.vue'),
+    component: () =>
+      import('@/views/account/AccountConnectView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
@@ -115,19 +121,22 @@ const authRoutes = [
   {
     path: '/dashboard',
     name: 'Dashboard',
-    component: () => import('@/views/dashboard/DashboardView.vue'),
+    component: () =>
+      import('@/views/dashboard/DashboardView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
     path: '/dashboard/pet/:petId',
     name: 'PetDashboard',
-    component: () => import('@/views/dashboard/PetDashboardView.vue'),
+    component: () =>
+      import('@/views/dashboard/PetDashboardView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
     path: '/insurance/simulator',
     name: 'Simulator',
-    component: () => import('@/views/insurance/SimulatorView.vue'),
+    component: () =>
+      import('@/views/insurance/SimulatorView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
@@ -139,7 +148,8 @@ const authRoutes = [
   {
     path: '/insurance/claims',
     name: 'ClaimList',
-    component: () => import('@/views/insurance/ClaimListView.vue'),
+    component: () =>
+      import('@/views/insurance/ClaimListView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
@@ -151,13 +161,15 @@ const authRoutes = [
   {
     path: '/group-purchase',
     name: 'GroupPurchaseList',
-    component: () => import('@/views/grouppurchase/GroupPurchaseListView.vue'),
+    component: () =>
+      import('@/views/grouppurchase/GroupPurchaseListView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
     path: '/group-purchase/:gpId',
     name: 'GroupPurchaseDetail',
-    component: () => import('@/views/grouppurchase/GroupPurchaseDetailView.vue'),
+    component: () =>
+      import('@/views/grouppurchase/GroupPurchaseDetailView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
@@ -175,7 +187,8 @@ const authRoutes = [
   {
     path: '/emergency',
     name: 'Emergency',
-    component: () => import('@/views/emergency/EmergencyView.vue'),
+    component: () =>
+      import('@/views/emergency/EmergencyView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
@@ -190,7 +203,7 @@ const authRoutes = [
     component: () => import('@/views/settings/WithdrawView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
-]
+];
 
 /* ------------------------------------------------------------------ */
 /*  Router instance                                                   */
@@ -198,27 +211,36 @@ const authRoutes = [
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [...publicRoutes, ...authRoutes],
-})
+});
 
 /* ------------------------------------------------------------------ */
 /*  Navigation guard                                                  */
 /* ------------------------------------------------------------------ */
 const PUBLIC_ROUTE_NAMES = new Set(
   publicRoutes.filter((r) => r.name).map((r) => r.name),
-)
+);
 
 router.beforeEach((to) => {
-  const authStore = useAuthStore()
+  const authStore = useAuthStore();
+
+  // TODO: 임시 개발용 우회 - 네비바 작업 끝나면 제거
+  if (import.meta.env.DEV) {
+    return;
+  }
 
   // Redirect unauthenticated users to login
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-    return { path: '/login', query: { redirect: to.fullPath } }
+    return { path: '/login', query: { redirect: to.fullPath } };
   }
 
   // Redirect authenticated users away from public pages (except callback)
-  if (authStore.isAuthenticated && PUBLIC_ROUTE_NAMES.has(to.name) && to.name !== 'KakaoCallback') {
-    return { path: '/home' }
+  if (
+    authStore.isAuthenticated &&
+    PUBLIC_ROUTE_NAMES.has(to.name) &&
+    to.name !== 'KakaoCallback'
+  ) {
+    return { path: '/home' };
   }
-})
+});
 
-export default router
+export default router;
