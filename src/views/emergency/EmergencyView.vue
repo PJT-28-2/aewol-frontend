@@ -4,7 +4,6 @@ import { ref, onMounted } from 'vue'
 const hospitals = ref([])
 const isLoading = ref(true)
 const is24hOnly = ref(false)
-const userLocation = ref(null)
 
 onMounted(async () => {
   // TODO: get user's current location via Geolocation API

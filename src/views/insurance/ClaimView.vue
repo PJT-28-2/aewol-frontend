@@ -1,8 +1,5 @@
 <script setup>
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-
-const router = useRouter()
 
 const step = ref(1) // 1: upload, 2: OCR preview, 3: confirm
 const receiptFile = ref(null)
