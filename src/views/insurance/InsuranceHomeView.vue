@@ -1,15 +1,18 @@
 <script setup>
+import IconCalculator from '@/components/common/icons/IconCalculator.vue'
+import IconCertificate from '@/components/common/icons/IconCertificate.vue'
+
 const menus = [
   {
     to: '/insurance/simulator',
-    icon: 'calculator',
+    icon: IconCalculator,
     tone: 'gold',
     title: '손익분기 시뮬레이터',
     description: '가입이 유리한지 미리 계산해보세요',
   },
   {
     to: '/insurance/claim',
-    icon: 'document',
+    icon: IconCertificate,
     tone: 'navy',
     title: '보험금 청구 서류 작성',
     description: '영수증으로 청구서 초안을 만들어보세요',
@@ -39,42 +42,10 @@ const menus = [
             class="menu-icon"
             :class="`menu-icon--${menu.tone}`"
           >
-            <svg
-              v-if="menu.icon === 'calculator'"
-              width="22"
-              height="22"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.6"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <rect
-                x="5"
-                y="3"
-                width="14"
-                height="18"
-                rx="2"
-              />
-              <path d="M8 7.5h8" />
-              <path d="M8.5 11.5h.01M12 11.5h.01M15.5 11.5h.01M8.5 15h.01M12 15h.01M15.5 15h.01M8.5 18.5h.01M12 18.5h.01" />
-            </svg>
-            <svg
-              v-else
-              width="22"
-              height="22"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.6"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9l-5-6Z" />
-              <path d="M14 3v6h5" />
-              <path d="M9 13.5 15.5 7l1.5 1.5L10.5 15H9v-1.5Z" />
-            </svg>
+            <component
+              :is="menu.icon"
+              :size="22"
+            />
           </span>
 
           <span class="menu-text">
