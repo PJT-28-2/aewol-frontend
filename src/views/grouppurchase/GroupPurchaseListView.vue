@@ -117,13 +117,18 @@ const searchKeyword = ref('')
         </router-link>
       </li>
     </ul>
+
+    <!-- 글쓰기 버튼 -->
+    <router-link to="/group-purchase/create/step1" class="gp-write-btn">
+      + 공동구매 글쓰기
+    </router-link>
   </div>
 </template>
 
 <style scoped>
 .gp-list-page {
   padding: var(--space-4);
-  padding-bottom: calc(var(--bottom-nav-height) + var(--space-4));
+  padding-bottom: calc(var(--bottom-nav-height) + 88px);
   background-color: var(--color-bg);
   min-height: 100vh;
 }
@@ -324,5 +329,23 @@ const searchKeyword = ref('')
   font-weight: var(--font-semibold);
   text-decoration: none;
   white-space: nowrap;
+}
+
+.gp-write-btn {
+  position: fixed;
+  bottom: calc(var(--bottom-nav-height) + var(--space-4));
+  left: var(--space-4);
+  right: var(--space-4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  background-color: var(--color-gold);
+  color: var(--color-navy);
+  border-radius: var(--radius-md);
+  font-size: var(--font-base);
+  font-weight: var(--font-bold);
+  text-decoration: none;
+  box-shadow: var(--shadow-md);
 }
 </style>
