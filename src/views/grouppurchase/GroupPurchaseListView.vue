@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import IconUser from '@/components/common/icons/IconUser.vue'
 
 const groupPurchases = ref([])
 const isLoading = ref(true)
@@ -18,6 +19,10 @@ onMounted(async () => {
         <h1>반려동물 용품 공동구매</h1>
         <p>함께 사면 더 저렴해요</p>
       </div>
+      <router-link to="/group-purchase/my" class="gp-my-btn">
+        <IconUser :size="12" color="var(--color-white)" />
+        MY
+      </router-link>
     </header>
 
     <div v-if="isLoading" class="loading-state">
@@ -63,6 +68,9 @@ onMounted(async () => {
 }
 
 .gp-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
   margin-bottom: var(--space-5);
 }
 
@@ -76,6 +84,20 @@ onMounted(async () => {
   font-size: var(--font-sm);
   color: var(--color-slate-muted);
   margin-top: var(--space-1);
+}
+
+.gp-my-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-shrink: 0;
+  padding: var(--space-2) var(--space-3);
+  background-color: var(--color-navy);
+  color: var(--color-white);
+  border-radius: var(--radius-full);
+  font-size: var(--font-xs);
+  font-weight: var(--font-semibold);
+  text-decoration: none;
 }
 
 .card {
