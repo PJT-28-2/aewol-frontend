@@ -1,14 +1,18 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, computed } from 'vue'
 import IconUser from '@/components/common/icons/IconUser.vue'
 
-const groupPurchases = ref([])
-const isLoading = ref(true)
-
-onMounted(async () => {
-  // TODO: fetch open group purchases from store/API
-  isLoading.value = false
-})
+// TODO: 백엔드 API 연동 후 mock 데이터 제거하고 실제 fetch로 교체
+const groupPurchases = ref([
+  {
+    id: 1,
+    title: '프리미엄 사료 15kg',
+    currentCount: 32,
+    targetCount: 50,
+    dDay: 'D-3',
+    badgeText: '30% 할인',
+  },
+])
 
 // 카테고리 필터 (백엔드 연동 예정, 현재는 선택 상태만 관리)
 const categories = ['전체', '사료', '영양제', '장난감', '기타']
@@ -98,34 +102,18 @@ const searchKeyword = ref('')
       </div>
     </section>
 
-    <div v-if="isLoading" class="loading-state">
-      <p>로딩 중...</p>
-    </div>
-
-    <div v-else-if="groupPurchases.length === 0" class="empty-state">
-      <p>현재 진행 중인 공동구매가 없습니다.</p>
-    </div>
-
-    <ul v-else class="gp-list">
-      <li v-for="gp in groupPurchases" :key="gp.id">
-        <router-link :to="`/group-purchase/${gp.id}`" class="gp-card card">
-          <div class="gp-image">
-            <!-- TODO: product image -->
-          </div>
-          <div class="gp-info">
-            <h3>{{ gp.title }}</h3>
-            <p class="gp-price">{{ gp.price?.toLocaleString() }}원</p>
-            <div class="gp-progress">
-              <div class="progress-bar">
-                <div
-                  class="progress-fill"
-                  :style="{ width: `${(gp.currentCount / gp.targetCount) * 100}%` }"
-                ></div>
-              </div>
-              <span class="progress-text">{{ gp.currentCount }}/{{ gp.targetCount }}명</span>
-            </div>
-            <p class="gp-deadline">마감: {{ gp.deadline }}</p>
-          </div>
+    <!-- 공동구매 목록 -->
+    <ul class="gp-list">
+      <li v-for="gp in groupPurchases" :key="gp.id" class="gp-card">
+        <div class="gp-card__info">
+          <h3>{{ gp.title }}</h3>
+          <p class="gp-card__meta">
+            {{ gp.currentCount }}/{{ gp.targetCount }}명 참여 · {{ gp.dDay }}
+          </p>
+          <span class="gp-card__badge">{{ gp.badgeText }}</span>
+        </div>
+        <router-link :to="`/group-purchase/${gp.id}`" class="gp-card__join-btn">
+          참여하기
         </router-link>
       </li>
     </ul>
@@ -283,90 +271,58 @@ const searchKeyword = ref('')
   color: var(--color-gray-500);
 }
 
-.card {
-  background-color: var(--color-white);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  overflow: hidden;
-}
-
-.loading-state,
-.empty-state {
-  text-align: center;
-  padding: var(--space-8) 0;
-  color: var(--color-gray-500);
-}
-
 .gp-list {
   list-style: none;
   padding: 0;
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-3);
 }
 
 .gp-card {
   display: flex;
-  text-decoration: none;
-  color: inherit;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
 }
 
-.gp-image {
-  width: 100px;
-  height: 100px;
-  background-color: var(--color-gray-200);
-  flex-shrink: 0;
-}
-
-.gp-info {
-  flex: 1;
-  padding: var(--space-3) var(--space-4);
-}
-
-.gp-info h3 {
+.gp-card__info h3 {
   font-size: var(--font-md);
   font-weight: var(--font-semibold);
   color: var(--color-gray-900);
   margin-bottom: var(--space-1);
 }
 
-.gp-price {
-  font-size: var(--font-base);
-  font-weight: var(--font-bold);
-  color: var(--color-navy);
+.gp-card__meta {
+  font-size: var(--font-xs);
+  color: var(--color-gray-500);
   margin-bottom: var(--space-2);
 }
 
-.gp-progress {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin-bottom: var(--space-1);
-}
-
-.progress-bar {
-  flex: 1;
-  height: 6px;
-  background-color: var(--color-gray-200);
-  border-radius: var(--radius-full);
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  background-color: var(--color-gold);
-  border-radius: var(--radius-full);
-}
-
-.progress-text {
+.gp-card__badge {
+  display: inline-block;
+  padding: var(--space-1) var(--space-2);
+  background-color: var(--color-gold-light);
+  color: var(--color-navy);
+  border-radius: var(--radius-sm);
   font-size: var(--font-xs);
-  color: var(--color-gray-500);
+  font-weight: var(--font-semibold);
+}
+
+.gp-card__join-btn {
+  flex-shrink: 0;
+  padding: var(--space-2) var(--space-4);
+  background-color: var(--color-navy);
+  color: var(--color-white);
+  border-radius: var(--radius-full);
+  font-size: var(--font-sm);
+  font-weight: var(--font-semibold);
+  text-decoration: none;
   white-space: nowrap;
-}
-
-.gp-deadline {
-  font-size: var(--font-xs);
-  color: var(--color-gray-400);
 }
 </style>
