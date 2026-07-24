@@ -21,6 +21,7 @@ const pets = ref([
 
 const isLoading = ref(true);
 
+// 펫별 지출 도넛 차트 색상 팔레트
 const petColors = [
   'var(--color-navy)',
   'var(--color-olive)',
@@ -28,6 +29,7 @@ const petColors = [
   '#B25CC9',
 ];
 
+// 펫별 지출 비율 계산
 const petBreakdown = computed(() => {
   const totalSpent = pets.value.reduce(
     (sum, pet) => sum + (pet.expenseAmount || 0),
@@ -45,18 +47,21 @@ const petBreakdown = computed(() => {
     const othersTotal = breakdown
       .slice(0, -1)
       .reduce((sum, pet) => sum + pet.percentage, 0);
-    breakdown[breakdown.length - 1].percentage = 100 - othersTotal;
+    breakdown[breakdown.length - 1].percentage =
+      100 - othersTotal;
   }
 
   return breakdown;
 });
 
+// 인사말에 들어갈 펫 이름 텍스트
 const petNamesText = computed(() =>
   pets.value.length
     ? pets.value.map((pet) => pet.name).join('·')
     : '반려동물',
 );
 
+// 도넛 차트 배경
 const donutGradient = computed(() => {
   if (!petBreakdown.value.length) return 'var(--color-gray-200)';
   let cursor = 0;
@@ -68,21 +73,54 @@ const donutGradient = computed(() => {
   return `conic-gradient(${stops.join(', ')})`;
 });
 
+// 도넛 차트 옆 비율 텍스트
 const donutBreakdownText = computed(() =>
   petBreakdown.value
     .map((pet) => `${pet.name} ${pet.percentage}%`)
     .join(' · '),
 );
 
+// 바로가기 메뉴 6종
 const quickActions = [
-  { label: '증명서', to: null, icon: IconCertificate, bg: '#EFEAE3' },
-  { label: 'SOS 포켓', to: '/emergency', icon: IconSos, bg: '#FCE3E1' },
-  { label: '저금통', to: '/donation', icon: IconSavings, bg: '#E1F2E7' },
-  { label: '가족관리', to: '/share', icon: IconFamily, bg: '#E5EAF6' },
-  { label: '지원사업', to: '/support', icon: IconSupportProgram, bg: '#FBEED9' },
-  { label: '공동구매', to: '/group-purchase', icon: IconGroupPurchase, bg: '#EBE4F5' },
+  {
+    label: '증명서',
+    to: null,
+    icon: IconCertificate,
+    bg: '#EFEAE3',
+  },
+  {
+    label: 'SOS 포켓',
+    to: '/emergency',
+    icon: IconSos,
+    bg: '#FCE3E1',
+  },
+  {
+    label: '저금통',
+    to: '/donation',
+    icon: IconSavings,
+    bg: '#E1F2E7',
+  },
+  {
+    label: '가족관리',
+    to: '/share',
+    icon: IconFamily,
+    bg: '#E5EAF6',
+  },
+  {
+    label: '지원사업',
+    to: '/support',
+    icon: IconSupportProgram,
+    bg: '#FBEED9',
+  },
+  {
+    label: '공동구매',
+    to: '/group-purchase',
+    icon: IconGroupPurchase,
+    bg: '#EBE4F5',
+  },
 ];
 
+// 펫 종에 따라 강아지/고양이 아이콘 선택
 function petIcon(species) {
   return species === 'CAT' ? IconCat : IconDog;
 }
@@ -98,6 +136,7 @@ onMounted(async () => {
   <div
     class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))] bg-(--color-bg) min-h-screen"
   >
+    <!-- 상단 잔액  -->
     <div class="flex justify-end mb-(--space-4)">
       <router-link
         to="/wallet"
@@ -106,10 +145,12 @@ onMounted(async () => {
         <span>{{ walletBalance.toLocaleString() }}원</span>
         <span
           class="inline-flex items-center justify-center w-[20px] h-[20px] rounded-full bg-(--color-gold) text-(color:--color-navy) text-(length:--font-sm) leading-none"
-        >+</span>
+          >+</span
+        >
       </router-link>
     </div>
 
+    <!-- 인사 메시지 -->
     <header class="mb-(--space-6)">
       <h1
         class="text-(length:--font-2xl) font-bold text-(color:--color-navy)"
@@ -123,6 +164,7 @@ onMounted(async () => {
       </p>
     </header>
 
+    <!-- 로딩 상태 -->
     <div
       v-if="isLoading"
       class="text-center py-(--space-8) text-(color:--color-gray-500)"
@@ -131,7 +173,7 @@ onMounted(async () => {
     </div>
 
     <template v-else>
-      <!-- Summary Stat Cards -->
+      <!-- 요약 카드: 총 잔액 / 이번달 지출 / 펫별 지출 -->
       <section
         class="grid grid-cols-2 gap-(--space-3) mb-(--space-5)"
       >
@@ -195,7 +237,7 @@ onMounted(async () => {
         </div>
       </section>
 
-      <!-- Pet Expense Donut Chart -->
+      <!-- 펫별 지출 도넛 차트 -->
       <section
         class="bg-(--color-white) rounded-(--radius-lg) p-(--space-5) shadow-(--shadow-sm) mb-(--space-5)"
       >
@@ -229,7 +271,7 @@ onMounted(async () => {
         </div>
       </section>
 
-      <!-- Quick Links -->
+      <!-- 바로가기 메뉴 그리드 -->
       <section>
         <h2
           class="text-(length:--font-lg) font-semibold text-(color:--color-navy) mb-(--space-4)"
@@ -251,10 +293,7 @@ onMounted(async () => {
               class="flex items-center justify-center w-[48px] h-[48px] rounded-full"
               :style="{ backgroundColor: item.bg }"
             >
-              <component
-                :is="item.icon"
-                :size="20"
-              />
+              <component :is="item.icon" :size="20" />
             </span>
             <span>{{ item.label }}</span>
           </component>
