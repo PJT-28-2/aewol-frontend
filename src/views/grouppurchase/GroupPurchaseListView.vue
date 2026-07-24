@@ -9,6 +9,14 @@ onMounted(async () => {
   // TODO: fetch open group purchases from store/API
   isLoading.value = false
 })
+
+// 카테고리 필터 (백엔드 연동 예정, 현재는 선택 상태만 관리)
+const categories = ['전체', '사료', '영양제', '장난감', '기타']
+const selectedCategory = ref('전체')
+
+function selectCategory(category) {
+  selectedCategory.value = category
+}
 </script>
 
 <template>
@@ -24,6 +32,24 @@ onMounted(async () => {
         MY
       </router-link>
     </header>
+
+    <!-- 필터 영역 -->
+    <section class="gp-filter-section">
+      <span class="gp-filter-label">카테고리</span>
+
+      <div class="gp-category-chips">
+        <button
+          v-for="category in categories"
+          :key="category"
+          type="button"
+          class="gp-chip"
+          :class="{ 'gp-chip--active': selectedCategory === category }"
+          @click="selectCategory(category)"
+        >
+          {{ category }}
+        </button>
+      </div>
+    </section>
 
     <div v-if="isLoading" class="loading-state">
       <p>로딩 중...</p>
@@ -98,6 +124,42 @@ onMounted(async () => {
   font-size: var(--font-xs);
   font-weight: var(--font-semibold);
   text-decoration: none;
+}
+
+.gp-filter-section {
+  margin-bottom: var(--space-5);
+}
+
+.gp-filter-label {
+  display: block;
+  font-size: var(--font-sm);
+  font-weight: var(--font-semibold);
+  color: var(--color-gray-700);
+  margin-bottom: var(--space-3);
+}
+
+.gp-category-chips {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+}
+
+.gp-chip {
+  flex-shrink: 0;
+  padding: var(--space-2) var(--space-4);
+  background-color: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  font-size: var(--font-sm);
+  font-weight: var(--font-medium);
+  color: var(--color-gray-600);
+  cursor: pointer;
+}
+
+.gp-chip--active {
+  background-color: var(--color-navy);
+  border-color: var(--color-navy);
+  color: var(--color-white);
 }
 
 .card {
