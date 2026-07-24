@@ -40,6 +40,7 @@ const menus = [
         >
           <span
             class="menu-icon"
+            aria-hidden="true"
             :class="`menu-icon--${menu.tone}`"
           >
             <component
