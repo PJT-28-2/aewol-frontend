@@ -2,10 +2,16 @@
   /* Colors - Primary */
   --color-navy: #1b2a49;
   --color-navy-light: #2d4a7a;
-  --color-gold: #d99a2b;
+  --color-gold: #f2b853;
   --color-gold-light: #f0c05a;
+  --color-olive: #6a930d;
+  --color-slate: #98a4bc;
+  --color-slate-muted: #8a93a6;
+  --color-slate-dark: #4a5a7d;
   --color-white: #ffffff;
   --color-bg: #ffffff;
+  --color-surface: #fafaf8;
+  --color-border: #eaeae4;
 
   /* Colors - Gray Scale */
   --color-gray-100: #f8f9fa;
