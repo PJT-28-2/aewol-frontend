@@ -1,15 +1,34 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import TransactionList from '@/components/common/TransactionList.vue'
 
 const transactions = ref([])
 const isLoading = ref(true)
+const isError = ref(false)
 
 const filters = ref({
   startDate: '',
   endDate: '',
   category: '',
   petId: '',
+})
+
+// 필터 적용 버튼을 눌렀을 때만 반영되는 실제 필터 조건
+const appliedFilters = ref({ ...filters.value })
+
+const filteredTransactions = computed(() => {
+  return transactions.value.filter((tx) => {
+    const matchesStart =
+      !appliedFilters.value.startDate ||
+      tx.date >= appliedFilters.value.startDate
+    const matchesEnd =
+      !appliedFilters.value.endDate ||
+      tx.date <= appliedFilters.value.endDate
+    const matchesCategory =
+      !appliedFilters.value.category ||
+      tx.category === appliedFilters.value.category
+    return matchesStart && matchesEnd && matchesCategory
+  })
 })
 
 const categoryOptions = [
@@ -23,12 +42,17 @@ const categoryOptions = [
 ]
 
 onMounted(async () => {
-  // TODO: fetch transactions from wallet store/API
-  isLoading.value = false
+  try {
+    // TODO: fetch transactions from wallet store/API
+  } catch {
+    isError.value = true
+  } finally {
+    isLoading.value = false
+  }
 })
 
-const handleFilter = async () => {
-  // TODO: implement filtered transaction fetch
+function handleFilter() {
+  appliedFilters.value = { ...filters.value }
 }
 </script>
 
@@ -99,9 +123,16 @@ const handleFilter = async () => {
         <p>로딩 중...</p>
       </div>
 
+      <div
+        v-else-if="isError"
+        class="loading-state"
+      >
+        <p>거래 내역을 불러오지 못했습니다.</p>
+      </div>
+
       <TransactionList
         v-else
-        :transactions="transactions"
+        :transactions="filteredTransactions"
       />
     </section>
   </div>

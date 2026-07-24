@@ -11,8 +11,8 @@ defineProps({
 })
 
 function formatDate(isoDate) {
-  const d = new Date(isoDate)
-  return `${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
+  const [, month, day] = isoDate.split('-')
+  return `${month}.${day}`
 }
 
 function formatAmount(amount) {

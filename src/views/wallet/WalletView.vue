@@ -136,10 +136,10 @@ const activeFilter = ref('all');
 
 const filteredTransactions = computed(() => {
   return transactions.value.filter((tx) => {
-    const txDate = new Date(tx.date);
+    const [txYear, txMonth] = tx.date.split('-').map(Number);
     const matchesMonth =
-      txDate.getFullYear() === activeMonth.value.year &&
-      txDate.getMonth() + 1 === activeMonth.value.month;
+      txYear === activeMonth.value.year &&
+      txMonth === activeMonth.value.month;
     const matchesType =
       activeFilter.value === 'all' || tx.type === activeFilter.value;
     return matchesMonth && matchesType;
@@ -216,7 +216,7 @@ onMounted(async () => {
         class="flex flex-col items-center gap-(--space-2) no-underline text-(color:--color-slate-dark) text-(length:--font-sm) font-medium"
       >
         <span
-          class="flex items-center justify-center w-[48px] h-[48px] rounded-full bg-(--color-surface)"
+          class="flex items-center justify-center w-(--space-9) h-(--space-9) rounded-full bg-(--color-surface)"
         >
           <component
             :is="menu.icon"
@@ -245,7 +245,7 @@ onMounted(async () => {
             v-for="filter in filters"
             :key="filter.key"
             type="button"
-            class="h-[32px] px-(--space-4) rounded-full text-(length:--font-sm) font-semibold"
+            class="h-(--space-7) px-(--space-4) rounded-full text-(length:--font-sm) font-semibold"
             :class="
               activeFilter === filter.key
                 ? 'bg-(--color-navy) text-(color:--color-white)'

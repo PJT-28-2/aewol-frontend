@@ -1,8 +1,9 @@
 <script setup>
+import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
-const txId = route.params.txId
+const txId = computed(() => route.params.txId)
 
 // TODO: 거래 상세 데이터 fetch 및 화면 구현
 </script>
