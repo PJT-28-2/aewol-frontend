@@ -7,7 +7,7 @@ const tabs = [
   { path: '/home', label: '홈', icon: 'home' },
   { path: '/wallet', label: '지갑', icon: 'wallet' },
   {
-    path: '/insurance/simulator',
+    path: '/insurance',
     label: '보험',
     icon: 'insurance',
   },
