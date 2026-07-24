@@ -33,6 +33,9 @@ function selectStatus(status) {
   selectedStatus.value = status
   isStatusOpen.value = false
 }
+
+// 검색어 (백엔드 연동 예정)
+const searchKeyword = ref('')
 </script>
 
 <template>
@@ -84,6 +87,14 @@ function selectStatus(status) {
         >
           {{ category }}
         </button>
+      </div>
+
+      <div class="gp-search">
+        <input
+          v-model="searchKeyword"
+          type="text"
+          placeholder="상품명으로 검색해보세요"
+        />
       </div>
     </section>
 
@@ -237,6 +248,7 @@ function selectStatus(status) {
   display: flex;
   gap: var(--space-2);
   overflow-x: auto;
+  margin-bottom: var(--space-3);
 }
 
 .gp-chip {
@@ -255,6 +267,20 @@ function selectStatus(status) {
   background-color: var(--color-navy);
   border-color: var(--color-navy);
   color: var(--color-white);
+}
+
+.gp-search input {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--font-sm);
+  color: var(--color-gray-700);
+}
+
+.gp-search input::placeholder {
+  color: var(--color-gray-500);
 }
 
 .card {
