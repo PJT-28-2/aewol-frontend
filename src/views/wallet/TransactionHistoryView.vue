@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import TransactionList from '@/components/common/TransactionList.vue'
 
 const transactions = ref([])
 const isLoading = ref(true)
@@ -34,7 +35,12 @@ const handleFilter = async () => {
 <template>
   <div class="transaction-page">
     <header class="page-header">
-      <router-link to="/wallet" class="back-btn">&lsaquo; 지갑</router-link>
+      <router-link
+        to="/wallet"
+        class="back-btn"
+      >
+        &lsaquo; 지갑
+      </router-link>
       <h1>거래 내역</h1>
     </header>
 
@@ -43,52 +49,60 @@ const handleFilter = async () => {
       <div class="filter-row">
         <div class="filter-item">
           <label for="startDate">시작일</label>
-          <input id="startDate" v-model="filters.startDate" type="date" />
+          <input
+            id="startDate"
+            v-model="filters.startDate"
+            type="date"
+          >
         </div>
         <div class="filter-item">
           <label for="endDate">종료일</label>
-          <input id="endDate" v-model="filters.endDate" type="date" />
+          <input
+            id="endDate"
+            v-model="filters.endDate"
+            type="date"
+          >
         </div>
       </div>
       <div class="filter-row">
         <div class="filter-item">
           <label for="category">카테고리</label>
-          <select id="category" v-model="filters.category">
-            <option v-for="opt in categoryOptions" :key="opt.value" :value="opt.value">
+          <select
+            id="category"
+            v-model="filters.category"
+          >
+            <option
+              v-for="opt in categoryOptions"
+              :key="opt.value"
+              :value="opt.value"
+            >
               {{ opt.label }}
             </option>
           </select>
         </div>
         <!-- TODO: implement pet filter dropdown -->
       </div>
-      <button class="btn-filter" @click="handleFilter">필터 적용</button>
+      <button
+        class="btn-filter"
+        @click="handleFilter"
+      >
+        필터 적용
+      </button>
     </section>
 
     <!-- Transaction List -->
     <section class="transaction-section">
-      <div v-if="isLoading" class="loading-state">
+      <div
+        v-if="isLoading"
+        class="loading-state"
+      >
         <p>로딩 중...</p>
       </div>
 
-      <div v-else-if="transactions.length === 0" class="empty-state">
-        <p>거래 내역이 없습니다.</p>
-      </div>
-
-      <ul v-else class="transaction-list">
-        <li v-for="tx in transactions" :key="tx.id" class="transaction-item card">
-          <div class="tx-info">
-            <h3>{{ tx.description }}</h3>
-            <p class="tx-meta">
-              <span class="tx-category">{{ tx.category }}</span>
-              <span v-if="tx.petName"> &middot; {{ tx.petName }}</span>
-            </p>
-            <p class="tx-date">{{ tx.date }}</p>
-          </div>
-          <p class="tx-amount" :class="{ income: tx.amount > 0, expense: tx.amount < 0 }">
-            {{ tx.amount > 0 ? '+' : '' }}{{ tx.amount.toLocaleString() }}원
-          </p>
-        </li>
-      </ul>
+      <TransactionList
+        v-else
+        :transactions="transactions"
+      />
     </section>
   </div>
 </template>
@@ -172,69 +186,9 @@ const handleFilter = async () => {
   cursor: pointer;
 }
 
-.loading-state,
-.empty-state {
+.loading-state {
   text-align: center;
   padding: var(--space-8) 0;
   color: var(--color-gray-500);
-}
-
-.transaction-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.transaction-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.tx-info {
-  flex: 1;
-}
-
-.tx-info h3 {
-  font-size: var(--font-md);
-  font-weight: var(--font-semibold);
-  color: var(--color-gray-900);
-}
-
-.tx-meta {
-  font-size: var(--font-xs);
-  color: var(--color-gray-500);
-  margin-top: var(--space-1);
-}
-
-.tx-category {
-  background-color: var(--color-gray-100);
-  padding: 1px var(--space-2);
-  border-radius: var(--radius-sm);
-  font-weight: var(--font-medium);
-}
-
-.tx-date {
-  font-size: var(--font-xs);
-  color: var(--color-gray-400);
-  margin-top: var(--space-1);
-}
-
-.tx-amount {
-  font-size: var(--font-base);
-  font-weight: var(--font-bold);
-  white-space: nowrap;
-  margin-left: var(--space-4);
-}
-
-.tx-amount.income {
-  color: var(--color-success);
-}
-
-.tx-amount.expense {
-  color: var(--color-danger);
 }
 </style>
