@@ -1,5 +1,7 @@
 <script setup>
-defineProps({
+import { nextTick, ref, useId, watch } from 'vue'
+
+const props = defineProps({
   modelValue: {
     type: Boolean,
     required: true,
@@ -12,6 +14,13 @@ defineProps({
 
 const emit = defineEmits(['update:modelValue'])
 
+const titleId = useId()
+const sheetRef = ref(null)
+let previouslyFocusedElement = null
+
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
 function close() {
   emit('update:modelValue', false)
 }
@@ -21,6 +30,42 @@ function onOverlayClick(event) {
     close()
   }
 }
+
+function onKeydown(event) {
+  if (event.key === 'Escape') {
+    close()
+    return
+  }
+  if (event.key !== 'Tab' || !sheetRef.value) return
+
+  const focusable = sheetRef.value.querySelectorAll(FOCUSABLE_SELECTOR)
+  if (focusable.length === 0) return
+
+  const first = focusable[0]
+  const last = focusable[focusable.length - 1]
+
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault()
+    last.focus()
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault()
+    first.focus()
+  }
+}
+
+watch(
+  () => props.modelValue,
+  async (isOpen) => {
+    if (isOpen) {
+      previouslyFocusedElement = document.activeElement
+      await nextTick()
+      sheetRef.value?.focus()
+    } else if (previouslyFocusedElement) {
+      previouslyFocusedElement.focus()
+      previouslyFocusedElement = null
+    }
+  },
+)
 </script>
 
 <template>
@@ -37,7 +82,13 @@ function onOverlayClick(event) {
         @click="onOverlayClick"
       >
         <div
-          class="w-full max-w-[480px] mx-auto max-h-[50vh] bg-(--color-white) rounded-t-[32px] overflow-hidden flex flex-col pb-[env(safe-area-inset-bottom,0)]"
+          ref="sheetRef"
+          role="dialog"
+          aria-modal="true"
+          :aria-labelledby="title ? titleId : undefined"
+          tabindex="-1"
+          class="w-full max-w-(--layout-max-width) mx-auto max-h-[50vh] bg-(--color-white) rounded-t-(--radius-sheet) overflow-hidden flex flex-col pb-[env(safe-area-inset-bottom,0)] outline-none"
+          @keydown="onKeydown"
         >
           <button
             type="button"
@@ -50,6 +101,7 @@ function onOverlayClick(event) {
 
           <h2
             v-if="title"
+            :id="titleId"
             class="shrink-0 px-(--space-5) pt-(--space-4) pb-(--space-2) text-(length:--font-lg) font-semibold text-(color:--color-gray-900)"
           >
             {{ title }}
