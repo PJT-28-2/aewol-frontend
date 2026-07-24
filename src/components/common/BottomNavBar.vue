@@ -11,7 +11,7 @@ const tabs = [
   { path: '/home', label: '홈', icon: IconHome },
   { path: '/wallet', label: '지갑', icon: IconWallet },
   {
-    path: '/insurance/simulator',
+    path: '/insurance',
     label: '보험',
     icon: IconInsurance,
   },

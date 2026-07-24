@@ -133,6 +133,13 @@ const authRoutes = [
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
+    path: '/insurance',
+    name: 'InsuranceHome',
+    component: () =>
+      import('@/views/insurance/InsuranceHomeView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
     path: '/insurance/simulator',
     name: 'Simulator',
     component: () =>
