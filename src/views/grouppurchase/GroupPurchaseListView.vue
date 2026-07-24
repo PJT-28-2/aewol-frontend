@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import IconUser from '@/components/common/icons/IconUser.vue'
 
 const groupPurchases = ref([])
@@ -16,6 +16,22 @@ const selectedCategory = ref('전체')
 
 function selectCategory(category) {
   selectedCategory.value = category
+}
+
+// 상태 드롭다운 필터: 전체/진행중/마감, 미선택 시 "상태"로 표시 (백엔드 연동 예정)
+const statusOptions = ['전체', '진행중', '마감']
+const selectedStatus = ref('')
+const isStatusOpen = ref(false)
+
+const statusLabel = computed(() => selectedStatus.value || '상태')
+
+function toggleStatusDropdown() {
+  isStatusOpen.value = !isStatusOpen.value
+}
+
+function selectStatus(status) {
+  selectedStatus.value = status
+  isStatusOpen.value = false
 }
 </script>
 
@@ -35,7 +51,27 @@ function selectCategory(category) {
 
     <!-- 필터 영역 -->
     <section class="gp-filter-section">
-      <span class="gp-filter-label">카테고리</span>
+      <div class="gp-filter-row">
+        <span class="gp-filter-label">카테고리</span>
+
+        <div class="gp-status-dropdown">
+          <button
+            type="button"
+            class="gp-status-btn"
+            @click="toggleStatusDropdown"
+          >
+            {{ statusLabel }}
+            <span class="gp-status-arrow">▾</span>
+          </button>
+          <ul v-if="isStatusOpen" class="gp-status-menu">
+            <li v-for="option in statusOptions" :key="option">
+              <button type="button" @click="selectStatus(option)">
+                {{ option }}
+              </button>
+            </li>
+          </ul>
+        </div>
+      </div>
 
       <div class="gp-category-chips">
         <button
@@ -130,12 +166,71 @@ function selectCategory(category) {
   margin-bottom: var(--space-5);
 }
 
+.gp-filter-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-3);
+}
+
 .gp-filter-label {
-  display: block;
   font-size: var(--font-sm);
   font-weight: var(--font-semibold);
   color: var(--color-gray-700);
-  margin-bottom: var(--space-3);
+}
+
+.gp-status-dropdown {
+  position: relative;
+}
+
+.gp-status-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  background-color: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  font-size: var(--font-xs);
+  font-weight: var(--font-medium);
+  color: var(--color-gray-700);
+  cursor: pointer;
+}
+
+.gp-status-arrow {
+  font-size: var(--font-xs);
+  color: var(--color-gray-500);
+}
+
+.gp-status-menu {
+  position: absolute;
+  top: calc(100% + var(--space-1));
+  right: 0;
+  z-index: 10;
+  min-width: 96px;
+  list-style: none;
+  margin: 0;
+  padding: var(--space-1);
+  background-color: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+}
+
+.gp-status-menu li button {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  text-align: left;
+  font-size: var(--font-sm);
+  color: var(--color-gray-700);
+  cursor: pointer;
+}
+
+.gp-status-menu li button:hover {
+  background-color: var(--color-gray-100);
 }
 
 .gp-category-chips {
