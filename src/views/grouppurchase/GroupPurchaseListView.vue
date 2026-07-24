@@ -12,9 +12,12 @@ onMounted(async () => {
 
 <template>
   <div class="gp-list-page">
-    <header class="page-header">
-      <h1>공동구매</h1>
-      <router-link to="/group-purchase/create" class="btn-create">+ 만들기</router-link>
+    <!-- 헤더 -->
+    <header class="gp-header">
+      <div class="gp-header__text">
+        <h1>반려동물 용품 공동구매</h1>
+        <p>함께 사면 더 저렴해요</p>
+      </div>
     </header>
 
     <div v-if="isLoading" class="loading-state">
@@ -59,24 +62,20 @@ onMounted(async () => {
   min-height: 100vh;
 }
 
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.gp-header {
   margin-bottom: var(--space-5);
 }
 
-.page-header h1 {
-  font-size: var(--font-2xl);
+.gp-header__text h1 {
+  font-size: var(--font-xl);
   font-weight: var(--font-bold);
   color: var(--color-navy);
 }
 
-.btn-create {
+.gp-header__text p {
   font-size: var(--font-sm);
-  color: var(--color-gold);
-  font-weight: var(--font-semibold);
-  text-decoration: none;
+  color: var(--color-slate-muted);
+  margin-top: var(--space-1);
 }
 
 .card {
