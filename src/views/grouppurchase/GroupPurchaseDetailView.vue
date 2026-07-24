@@ -1,9 +1,5 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
-
-const route = useRoute()
-const gpId = route.params.id
 
 const groupPurchase = ref(null)
 const participants = ref([])

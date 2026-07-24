@@ -15,10 +15,6 @@ onMounted(async () => {
 const handleInvite = async () => {
   // TODO: implement member invite
 }
-
-const handleRemoveMember = async (memberId) => {
-  // TODO: implement member removal with confirmation
-}
 </script>
 
 <template>

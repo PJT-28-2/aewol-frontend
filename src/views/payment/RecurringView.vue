@@ -23,7 +23,7 @@ const handleCreate = async () => {
   showCreateForm.value = false
 }
 
-const handleCancel = async (id) => {
+const handleCancel = async (_id) => {
   // TODO: implement cancel recurring payment with confirmation
 }
 </script>
