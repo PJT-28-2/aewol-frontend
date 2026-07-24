@@ -25,7 +25,7 @@ function isActive(path) {
 
 <template>
   <nav
-    class="fixed bottom-0 left-0 right-0 z-100 flex items-center justify-around h-(--bottom-nav-height) bg-white border-t border-[#EAEAE4] pb-[env(safe-area-inset-bottom,0)]"
+    class="fixed bottom-0 left-0 right-0 z-100 flex items-center justify-around h-(--bottom-nav-height) bg-white border-t border-(--color-border) pb-[env(safe-area-inset-bottom,0)]"
   >
     <router-link
       v-for="tab in tabs"
@@ -33,7 +33,7 @@ function isActive(path) {
       :to="tab.path"
       class="flex flex-col items-center justify-center flex-1 h-full gap-1 no-underline"
       :class="
-        isActive(tab.path) ? 'text-[#1B2A49]' : 'text-[#8A93A6]'
+        isActive(tab.path) ? 'text-(color:--color-navy)' : 'text-(color:--color-slate-muted)'
       "
     >
       <component
