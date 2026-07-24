@@ -2,10 +2,13 @@ import js from '@eslint/js'
 import pluginVue from 'eslint-plugin-vue'
 
 export default [
-  js.configs.recommended,
-  ...pluginVue.configs['flat/essential'],
   {
-    files: ['**/*.{js,jsx,cjs,mjs,vue}'],
+    ignores: ['dist/**', 'node_modules/**'],
+  },
+  js.configs.recommended,
+  ...pluginVue.configs['flat/recommended'],
+  {
+    files: ['**/*.{js,mjs,cjs,vue}'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
@@ -15,14 +18,13 @@ export default [
         console: 'readonly',
         process: 'readonly',
         localStorage: 'readonly',
+        sessionStorage: 'readonly',
         fetch: 'readonly',
       },
     },
     rules: {
       'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+       'vue/multi-word-component-names': 'off',
     },
-  },
-  {
-    ignores: ['dist/**', 'node_modules/**'],
   },
 ]
