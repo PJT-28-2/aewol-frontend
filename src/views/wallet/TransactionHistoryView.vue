@@ -2,6 +2,7 @@
 import { computed, ref, onMounted } from 'vue'
 import TransactionList from '@/components/common/TransactionList.vue'
 
+// TODO: 백엔드 API 연동 후 mock 데이터 제거하고 실제 fetch로 교체
 const transactions = ref([])
 const isLoading = ref(true)
 const isError = ref(false)
@@ -43,7 +44,48 @@ const categoryOptions = [
 
 onMounted(async () => {
   try {
-    // TODO: fetch transactions from wallet store/API
+    transactions.value = [
+      {
+        id: 1,
+        date: '2026-07-18',
+        title: '24시 우리동물병원',
+        subtitle: '병원비 · 소로 진료',
+        amount: -42000,
+        category: 'MEDICAL',
+      },
+      {
+        id: 2,
+        date: '2026-07-17',
+        title: '펫사료마트',
+        subtitle: '사료·간식 · LLM 분류',
+        amount: -31200,
+        category: 'FOOD',
+      },
+      {
+        id: 3,
+        date: '2026-07-15',
+        title: '미미미용실',
+        subtitle: '미용비 · 나비 미용',
+        amount: -38000,
+        category: 'GROOMING',
+      },
+      {
+        id: 4,
+        date: '2026-06-20',
+        title: '펫프렌즈 보험',
+        subtitle: '반려동물보험 · 월 납입',
+        amount: -25000,
+        category: 'INSURANCE',
+      },
+      {
+        id: 5,
+        date: '2026-06-05',
+        title: '펫샵 용품점',
+        subtitle: '용품 · 리드줄 구매',
+        amount: -18000,
+        category: 'SUPPLIES',
+      },
+    ]
   } catch {
     isError.value = true
   } finally {

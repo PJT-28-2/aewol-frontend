@@ -43,11 +43,15 @@ function onKeydown(event) {
 
   const first = focusable[0]
   const last = focusable[focusable.length - 1]
+  const isOnContainer = document.activeElement === sheetRef.value
 
-  if (event.shiftKey && document.activeElement === first) {
+  if (event.shiftKey && (isOnContainer || document.activeElement === first)) {
     event.preventDefault()
     last.focus()
-  } else if (!event.shiftKey && document.activeElement === last) {
+  } else if (
+    !event.shiftKey &&
+    (isOnContainer || document.activeElement === last)
+  ) {
     event.preventDefault()
     first.focus()
   }
@@ -65,6 +69,7 @@ watch(
       previouslyFocusedElement = null
     }
   },
+  { immediate: true },
 )
 </script>
 
