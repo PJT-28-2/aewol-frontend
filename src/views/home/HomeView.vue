@@ -22,8 +22,8 @@ const pets = ref([
 const isLoading = ref(true);
 
 const petColors = [
-  '#1B2A49',
-  '#3FA66C',
+  'var(--color-navy)',
+  'var(--color-olive)',
   '#4A6FA5',
   '#B25CC9',
 ];
@@ -33,13 +33,22 @@ const petBreakdown = computed(() => {
     (sum, pet) => sum + (pet.expenseAmount || 0),
     0,
   );
-  return pets.value.map((pet, index) => ({
+  const breakdown = pets.value.map((pet, index) => ({
     ...pet,
     color: petColors[index % petColors.length],
     percentage: totalSpent
       ? Math.round((pet.expenseAmount / totalSpent) * 100)
       : 0,
   }));
+
+  if (totalSpent && breakdown.length > 1) {
+    const othersTotal = breakdown
+      .slice(0, -1)
+      .reduce((sum, pet) => sum + pet.percentage, 0);
+    breakdown[breakdown.length - 1].percentage = 100 - othersTotal;
+  }
+
+  return breakdown;
 });
 
 const petNamesText = computed(() =>
@@ -92,7 +101,7 @@ onMounted(async () => {
     <div class="flex justify-end mb-(--space-4)">
       <router-link
         to="/wallet"
-        class="inline-flex items-center h-[26px] gap-(--space-2) pl-(--space-4) pr-(--space-2) bg-[#FAFAF8] border border-[#EAEAE4] rounded-full shadow-(--shadow-sm) text-(color:--color-navy) text-(length:--font-sm) font-semibold no-underline"
+        class="inline-flex items-center h-[26px] gap-(--space-2) pl-(--space-4) pr-(--space-2) bg-(--color-surface) border border-(--color-border) rounded-full shadow-(--shadow-sm) text-(color:--color-navy) text-(length:--font-sm) font-semibold no-underline"
       >
         <span>{{ walletBalance.toLocaleString() }}원</span>
         <span
@@ -127,7 +136,7 @@ onMounted(async () => {
         class="grid grid-cols-2 gap-(--space-3) mb-(--space-5)"
       >
         <div
-          class="bg-[#FAFAF8] rounded-(--radius-lg) p-(--space-5) shadow-(--shadow-sm)"
+          class="bg-(--color-surface) rounded-(--radius-lg) p-(--space-5) shadow-(--shadow-sm)"
         >
           <p
             class="text-(length:--font-sm) text-(color:--color-slate-dark)"
@@ -141,7 +150,7 @@ onMounted(async () => {
           </p>
         </div>
         <div
-          class="bg-[#FAFAF8] rounded-(--radius-lg) p-(--space-5) shadow-(--shadow-sm)"
+          class="bg-(--color-surface) rounded-(--radius-lg) p-(--space-5) shadow-(--shadow-sm)"
         >
           <p
             class="text-(length:--font-sm) text-(color:--color-slate-dark)"
@@ -164,7 +173,7 @@ onMounted(async () => {
         <div
           v-for="pet in petBreakdown"
           :key="pet.id"
-          class="bg-[#FAFAF8] rounded-(--radius-lg) p-(--space-5) shadow-(--shadow-sm)"
+          class="bg-(--color-surface) rounded-(--radius-lg) p-(--space-5) shadow-(--shadow-sm)"
         >
           <p
             class="flex items-center gap-(--space-1) text-(length:--font-sm) text-(color:--color-slate-dark)"
