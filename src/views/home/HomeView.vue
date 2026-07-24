@@ -1,286 +1,304 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue';
+import IconCat from '@/components/common/icons/IconCat.vue';
+import IconCertificate from '@/components/common/icons/IconCertificate.vue';
+import IconDog from '@/components/common/icons/IconDog.vue';
+import IconFamily from '@/components/common/icons/IconFamily.vue';
+import IconGroupPurchase from '@/components/common/icons/IconGroupPurchase.vue';
+import IconSavings from '@/components/common/icons/IconSavings.vue';
+import IconSos from '@/components/common/icons/IconSos.vue';
+import IconSupportProgram from '@/components/common/icons/IconSupportProgram.vue';
 
-const walletSummary = ref({
-  totalBalance: 0,
-  bucketCount: 0,
-})
-const pets = ref([])
-const isLoading = ref(true)
+const memberName = ref('애월');
+
+// TODO: 백엔드 API 연동 후 mock 데이터 제거하고 실제 fetch로 교체
+const walletBalance = ref(482600);
+const monthlyExpense = ref({ total: 243000, changeRate: -12 });
+const pets = ref([
+  { id: 1, name: '소로', species: 'DOG', expenseAmount: 168000 },
+  { id: 2, name: '나비', species: 'CAT', expenseAmount: 75000 },
+]);
+
+const isLoading = ref(true);
+
+// 펫별 지출 도넛 차트 색상 팔레트
+const petColors = [
+  'var(--color-navy)',
+  'var(--color-olive)',
+  '#4A6FA5',
+  '#B25CC9',
+];
+
+// 펫별 지출 비율 계산
+const petBreakdown = computed(() => {
+  const totalSpent = pets.value.reduce(
+    (sum, pet) => sum + (pet.expenseAmount || 0),
+    0,
+  );
+  const breakdown = pets.value.map((pet, index) => ({
+    ...pet,
+    color: petColors[index % petColors.length],
+    percentage: totalSpent
+      ? Math.round((pet.expenseAmount / totalSpent) * 100)
+      : 0,
+  }));
+
+  if (totalSpent && breakdown.length > 1) {
+    const othersTotal = breakdown
+      .slice(0, -1)
+      .reduce((sum, pet) => sum + pet.percentage, 0);
+    breakdown[breakdown.length - 1].percentage =
+      100 - othersTotal;
+  }
+
+  return breakdown;
+});
+
+// 인사말에 들어갈 펫 이름 텍스트
+const petNamesText = computed(() =>
+  pets.value.length
+    ? pets.value.map((pet) => pet.name).join('·')
+    : '반려동물',
+);
+
+// 도넛 차트 배경
+const donutGradient = computed(() => {
+  if (!petBreakdown.value.length) return 'var(--color-gray-200)';
+  let cursor = 0;
+  const stops = petBreakdown.value.map((pet) => {
+    const start = cursor;
+    cursor += pet.percentage;
+    return `${pet.color} ${start}% ${cursor}%`;
+  });
+  return `conic-gradient(${stops.join(', ')})`;
+});
+
+// 도넛 차트 옆 비율 텍스트
+const donutBreakdownText = computed(() =>
+  petBreakdown.value
+    .map((pet) => `${pet.name} ${pet.percentage}%`)
+    .join(' · '),
+);
+
+// 바로가기 메뉴 6종
+const quickActions = [
+  {
+    label: '증명서',
+    to: null,
+    icon: IconCertificate,
+    bg: '#EFEAE3',
+  },
+  {
+    label: 'SOS 포켓',
+    to: '/emergency',
+    icon: IconSos,
+    bg: '#FCE3E1',
+  },
+  {
+    label: '저금통',
+    to: '/donation',
+    icon: IconSavings,
+    bg: '#E1F2E7',
+  },
+  {
+    label: '가족관리',
+    to: '/share',
+    icon: IconFamily,
+    bg: '#E5EAF6',
+  },
+  {
+    label: '지원사업',
+    to: '/support',
+    icon: IconSupportProgram,
+    bg: '#FBEED9',
+  },
+  {
+    label: '공동구매',
+    to: '/group-purchase',
+    icon: IconGroupPurchase,
+    bg: '#EBE4F5',
+  },
+];
+
+// 펫 종에 따라 강아지/고양이 아이콘 선택
+function petIcon(species) {
+  return species === 'CAT' ? IconCat : IconDog;
+}
 
 onMounted(async () => {
-  // TODO: fetch wallet summary and pet list from stores/API
-  isLoading.value = false
-})
+  // TODO: fetch wallet balance, monthly expense summary, and pet expense
+  // breakdown from wallet/dashboard/pet stores
+  isLoading.value = false;
+});
 </script>
 
 <template>
-  <div class="home-page">
-    <header class="page-header">
-      <h1>애월</h1>
-      <p class="greeting">안녕하세요! 오늘도 반려동물과 함께하세요.</p>
+  <div
+    class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))] bg-(--color-bg) min-h-screen"
+  >
+    <!-- 상단 잔액  -->
+    <div class="flex justify-end mb-(--space-4)">
+      <router-link
+        to="/wallet"
+        class="inline-flex items-center h-[26px] gap-(--space-2) pl-(--space-4) pr-(--space-2) bg-(--color-surface) border border-(--color-border) rounded-full shadow-(--shadow-sm) text-(color:--color-navy) text-(length:--font-sm) font-semibold no-underline"
+      >
+        <span>{{ walletBalance.toLocaleString() }}원</span>
+        <span
+          class="inline-flex items-center justify-center w-[20px] h-[20px] rounded-full bg-(--color-gold) text-(color:--color-navy) text-(length:--font-sm) leading-none"
+          >+</span
+        >
+      </router-link>
+    </div>
+
+    <!-- 인사 메시지 -->
+    <header class="mb-(--space-6)">
+      <h1
+        class="text-(length:--font-2xl) font-bold text-(color:--color-navy)"
+      >
+        {{ memberName }}님, 오늘도 화이팅!
+      </h1>
+      <p
+        class="text-(length:--font-md) text-(color:--color-slate-muted) mt-(--space-1)"
+      >
+        이번 달 {{ petNamesText }} 지출을 확인해보세요
+      </p>
     </header>
 
-    <!-- Wallet Summary Card -->
-    <section class="wallet-summary card">
-      <h2>내 지갑</h2>
-      <p class="balance">{{ walletSummary.totalBalance.toLocaleString() }}원</p>
-      <p class="bucket-count">버킷 {{ walletSummary.bucketCount }}개</p>
-      <div class="wallet-actions">
-        <router-link to="/wallet" class="btn-outline">상세보기</router-link>
-      </div>
-    </section>
+    <!-- 로딩 상태 -->
+    <div
+      v-if="isLoading"
+      class="text-center py-(--space-8) text-(color:--color-gray-500)"
+    >
+      <p>로딩 중...</p>
+    </div>
 
-    <!-- Pet List Cards -->
-    <section class="pet-section">
-      <div class="section-header">
-        <h2>내 반려동물</h2>
-        <router-link to="/pets/register" class="btn-add">+ 등록</router-link>
-      </div>
-
-      <div v-if="isLoading" class="loading-placeholder">
-        <!-- TODO: implement skeleton loader -->
-        <p>로딩 중...</p>
-      </div>
-
-      <div v-else-if="pets.length === 0" class="empty-state">
-        <p>등록된 반려동물이 없습니다.</p>
-        <router-link to="/pets/register" class="btn-primary">반려동물 등록하기</router-link>
-      </div>
-
-      <div v-else class="pet-cards">
-        <div v-for="pet in pets" :key="pet.id" class="pet-card card">
-          <div class="pet-avatar">
-            <!-- TODO: pet avatar image -->
-          </div>
-          <div class="pet-info">
-            <h3>{{ pet.name }}</h3>
-            <p class="pet-meta">{{ pet.species }} &middot; {{ pet.breed }}</p>
-          </div>
-          <router-link :to="`/pets/${pet.id}`" class="btn-detail">상세</router-link>
+    <template v-else>
+      <!-- 요약 카드: 총 잔액 / 이번달 지출 / 펫별 지출 -->
+      <section
+        class="grid grid-cols-2 gap-(--space-3) mb-(--space-5)"
+      >
+        <div
+          class="bg-(--color-surface) rounded-(--radius-lg) p-(--space-5) shadow-(--shadow-sm)"
+        >
+          <p
+            class="text-(length:--font-sm) text-(color:--color-slate-dark)"
+          >
+            총 잔액
+          </p>
+          <p
+            class="text-(length:--font-xl) font-bold text-(color:--color-navy) mt-(--space-2)"
+          >
+            {{ walletBalance.toLocaleString() }}원
+          </p>
         </div>
-      </div>
-    </section>
+        <div
+          class="bg-(--color-surface) rounded-(--radius-lg) p-(--space-5) shadow-(--shadow-sm)"
+        >
+          <p
+            class="text-(length:--font-sm) text-(color:--color-slate-dark)"
+          >
+            이번 달 총지출
+          </p>
+          <p
+            class="text-(length:--font-xl) font-bold text-(color:--color-navy) mt-(--space-2)"
+          >
+            {{ monthlyExpense.total.toLocaleString() }}원
+          </p>
+          <p
+            class="text-(length:--font-xs) text-(color:--color-slate-muted) mt-(--space-1)"
+          >
+            전월 대비
+            {{ monthlyExpense.changeRate > 0 ? '+' : ''
+            }}{{ monthlyExpense.changeRate }}%
+          </p>
+        </div>
+        <div
+          v-for="pet in petBreakdown"
+          :key="pet.id"
+          class="bg-(--color-surface) rounded-(--radius-lg) p-(--space-5) shadow-(--shadow-sm)"
+        >
+          <p
+            class="flex items-center gap-(--space-1) text-(length:--font-sm) text-(color:--color-slate-dark)"
+          >
+            <component
+              :is="petIcon(pet.species)"
+              :size="14"
+              color="var(--color-slate-dark)"
+              class="shrink-0"
+            />
+            {{ pet.name }} 지출
+          </p>
+          <p
+            class="text-(length:--font-xl) font-bold mt-(--space-2)"
+            :style="{ color: pet.color }"
+          >
+            {{ pet.expenseAmount.toLocaleString() }}원
+          </p>
+        </div>
+      </section>
 
-    <!-- Quick Actions -->
-    <section class="quick-actions">
-      <h2>빠른 메뉴</h2>
-      <div class="action-grid">
-        <router-link to="/payment" class="action-item card">
-          <span class="action-icon"><!-- TODO: icon --></span>
-          <span>결제</span>
-        </router-link>
-        <router-link to="/dashboard" class="action-item card">
-          <span class="action-icon"><!-- TODO: icon --></span>
-          <span>통계</span>
-        </router-link>
-        <router-link to="/insurance/simulator" class="action-item card">
-          <span class="action-icon"><!-- TODO: icon --></span>
-          <span>보험</span>
-        </router-link>
-        <router-link to="/emergency" class="action-item card">
-          <span class="action-icon"><!-- TODO: icon --></span>
-          <span>응급</span>
-        </router-link>
-      </div>
-    </section>
+      <!-- 펫별 지출 도넛 차트 -->
+      <section
+        class="bg-(--color-white) rounded-(--radius-lg) p-(--space-5) shadow-(--shadow-sm) mb-(--space-5)"
+      >
+        <div class="flex items-center gap-(--space-5)">
+          <div
+            class="w-[88px] h-[88px] rounded-full shrink-0 relative"
+            :style="{ background: donutGradient }"
+          >
+            <div
+              class="absolute inset-[16px] rounded-full bg-(--color-white)"
+            />
+          </div>
+          <div class="flex-1">
+            <h2
+              class="text-(length:--font-base) font-semibold text-(color:--color-navy)"
+            >
+              반려동물별 지출 차트
+            </h2>
+            <p
+              class="text-(length:--font-sm) text-(color:--color-gray-600) mt-(--space-1)"
+            >
+              {{ donutBreakdownText || '지출 내역이 없습니다' }}
+            </p>
+            <router-link
+              to="/dashboard"
+              class="inline-block mt-(--space-2) text-(length:--font-sm) font-semibold text-(color:--color-gold) no-underline"
+            >
+              자세히 보기 &rsaquo;
+            </router-link>
+          </div>
+        </div>
+      </section>
+
+      <!-- 바로가기 메뉴 그리드 -->
+      <section>
+        <h2
+          class="text-(length:--font-lg) font-semibold text-(color:--color-navy) mb-(--space-4)"
+        >
+          바로가기
+        </h2>
+        <div
+          class="grid grid-cols-3 gap-y-(--space-4) gap-x-(--space-2)"
+        >
+          <component
+            :is="item.to ? 'router-link' : 'div'"
+            v-for="item in quickActions"
+            :key="item.label"
+            v-bind="item.to ? { to: item.to } : {}"
+            class="flex flex-col items-center gap-(--space-2) no-underline text-(color:--color-slate-dark) text-(length:--font-sm) font-medium"
+            :class="{ 'cursor-not-allowed': !item.to }"
+          >
+            <span
+              class="flex items-center justify-center w-[48px] h-[48px] rounded-full"
+              :style="{ backgroundColor: item.bg }"
+            >
+              <component :is="item.icon" :size="20" />
+            </span>
+            <span>{{ item.label }}</span>
+          </component>
+        </div>
+      </section>
+    </template>
   </div>
 </template>
-
-<style scoped>
-.home-page {
-  padding: var(--space-4);
-  padding-bottom: calc(var(--bottom-nav-height) + var(--space-4));
-  background-color: var(--color-bg);
-  min-height: 100vh;
-}
-
-.page-header {
-  margin-bottom: var(--space-6);
-}
-
-.page-header h1 {
-  font-size: var(--font-2xl);
-  font-weight: var(--font-bold);
-  color: var(--color-navy);
-}
-
-.greeting {
-  font-size: var(--font-md);
-  color: var(--color-gray-600);
-  margin-top: var(--space-1);
-}
-
-.card {
-  background-color: var(--color-white);
-  border-radius: var(--radius-lg);
-  padding: var(--space-5);
-  box-shadow: var(--shadow-sm);
-}
-
-.wallet-summary {
-  margin-bottom: var(--space-6);
-}
-
-.wallet-summary h2 {
-  font-size: var(--font-md);
-  color: var(--color-gray-600);
-  font-weight: var(--font-medium);
-}
-
-.balance {
-  font-size: var(--font-3xl);
-  font-weight: var(--font-bold);
-  color: var(--color-navy);
-  margin: var(--space-2) 0;
-}
-
-.bucket-count {
-  font-size: var(--font-sm);
-  color: var(--color-gray-500);
-}
-
-.wallet-actions {
-  margin-top: var(--space-4);
-}
-
-.btn-outline {
-  display: inline-block;
-  padding: var(--space-2) var(--space-4);
-  border: 1px solid var(--color-navy);
-  border-radius: var(--radius-md);
-  color: var(--color-navy);
-  font-size: var(--font-sm);
-  font-weight: var(--font-semibold);
-  text-decoration: none;
-}
-
-.pet-section {
-  margin-bottom: var(--space-6);
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--space-4);
-}
-
-.section-header h2 {
-  font-size: var(--font-lg);
-  font-weight: var(--font-semibold);
-  color: var(--color-navy);
-}
-
-.btn-add {
-  font-size: var(--font-sm);
-  color: var(--color-gold);
-  font-weight: var(--font-semibold);
-  text-decoration: none;
-}
-
-.empty-state {
-  text-align: center;
-  padding: var(--space-7) 0;
-  color: var(--color-gray-500);
-}
-
-.btn-primary {
-  display: inline-block;
-  margin-top: var(--space-4);
-  padding: var(--space-3) var(--space-5);
-  background-color: var(--color-navy);
-  color: var(--color-white);
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: var(--font-md);
-  font-weight: var(--font-semibold);
-  text-decoration: none;
-}
-
-.pet-cards {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.pet-card {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-}
-
-.pet-avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: var(--radius-full);
-  background-color: var(--color-gray-200);
-  flex-shrink: 0;
-}
-
-.pet-info {
-  flex: 1;
-}
-
-.pet-info h3 {
-  font-size: var(--font-base);
-  font-weight: var(--font-semibold);
-  color: var(--color-gray-900);
-}
-
-.pet-meta {
-  font-size: var(--font-sm);
-  color: var(--color-gray-500);
-  margin-top: var(--space-1);
-}
-
-.btn-detail {
-  font-size: var(--font-sm);
-  color: var(--color-navy);
-  text-decoration: none;
-  font-weight: var(--font-medium);
-}
-
-.quick-actions {
-  margin-bottom: var(--space-6);
-}
-
-.quick-actions h2 {
-  font-size: var(--font-lg);
-  font-weight: var(--font-semibold);
-  color: var(--color-navy);
-  margin-bottom: var(--space-4);
-}
-
-.action-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--space-3);
-}
-
-.action-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-4) var(--space-2);
-  text-decoration: none;
-  color: var(--color-gray-700);
-  font-size: var(--font-sm);
-  font-weight: var(--font-medium);
-}
-
-.action-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-full);
-  background-color: var(--color-navy-light);
-  opacity: 0.1;
-}
-
-.loading-placeholder {
-  text-align: center;
-  padding: var(--space-5);
-  color: var(--color-gray-500);
-}
-</style>
