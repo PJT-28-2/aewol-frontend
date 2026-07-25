@@ -1,247 +1,306 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
+import BottomSheet from '@/components/common/BottomSheet.vue';
+import TransactionList from '@/components/common/TransactionList.vue';
+import IconCheck from '@/components/common/icons/IconCheck.vue';
+import IconStats from '@/components/common/icons/IconStats.vue';
+import IconSavings from '@/components/common/icons/IconSavings.vue';
+import IconSearch from '@/components/common/icons/IconSearch.vue';
+import IconRecurring from '@/components/common/icons/IconRecurring.vue';
+import IconChevronDown from '@/components/common/icons/IconChevronDown.vue';
 
-const wallet = ref({
-  totalBalance: 0,
-  availableBalance: 0,
-})
-const buckets = ref([])
-const isLoading = ref(true)
+// TODO: 백엔드 API 연동 후 mock 데이터 제거하고 실제 fetch로 교체
+const walletBalance = ref(482600);
+const transactions = ref([
+  {
+    id: 1,
+    date: '2026-07-18',
+    title: '24시 우리동물병원',
+    subtitle: '병원비 · 소로 진료',
+    amount: -42000,
+    type: 'withdraw',
+  },
+  {
+    id: 2,
+    date: '2026-07-17',
+    title: '펫사료마트',
+    subtitle: '사료·간식 · LLM 분류',
+    amount: -31200,
+    type: 'withdraw',
+  },
+  {
+    id: 3,
+    date: '2026-07-17',
+    title: '엄마 · 충전',
+    subtitle: '펫지갑에 100,000원 충전',
+    amount: 100000,
+    type: 'charge',
+  },
+  {
+    id: 4,
+    date: '2026-07-15',
+    title: '미미미용실',
+    subtitle: '미용비 · 나비 미용',
+    amount: -38000,
+    type: 'withdraw',
+  },
+  {
+    id: 5,
+    date: '2026-06-20',
+    title: '24시 우리동물병원',
+    subtitle: '병원비 · 나비 진료',
+    amount: -25000,
+    type: 'withdraw',
+  },
+  {
+    id: 6,
+    date: '2026-06-05',
+    title: '아빠 · 충전',
+    subtitle: '펫지갑에 50,000원 충전',
+    amount: 50000,
+    type: 'charge',
+  },
+  {
+    id: 7,
+    date: '2026-05-12',
+    title: '펫사료마트',
+    subtitle: '사료·간식 · LLM 분류',
+    amount: -28000,
+    type: 'withdraw',
+  },
+]);
+
+const isLoading = ref(true);
+
+// 서브 메뉴 3종
+const subMenus = [
+  { label: '지출리포트', to: '/dashboard', icon: IconStats },
+  { label: '저금통', to: '/donation', icon: IconSavings },
+  { label: '전체내역', to: '/wallet/history', icon: IconSearch },
+];
+
+// 월 선택 바텀시트
+const isMonthSheetOpen = ref(false);
+const today = new Date();
+const activeMonth = ref({
+  year: today.getFullYear(),
+  month: today.getMonth() + 1,
+});
+
+const monthOptions = computed(() => {
+  const options = [];
+  for (let i = 0; i < 12; i += 1) {
+    const d = new Date(
+      today.getFullYear(),
+      today.getMonth() - i,
+      1,
+    );
+    options.push({
+      year: d.getFullYear(),
+      month: d.getMonth() + 1,
+      label: `${d.getFullYear()}년 ${d.getMonth() + 1}월`,
+    });
+  }
+  return options;
+});
+
+const activeMonthLabel = computed(() => {
+  const isCurrentMonth =
+    activeMonth.value.year === today.getFullYear() &&
+    activeMonth.value.month === today.getMonth() + 1;
+  return isCurrentMonth
+    ? '이번달'
+    : `${activeMonth.value.month}월`;
+});
+
+function isActiveMonth(option) {
+  return (
+    option.year === activeMonth.value.year &&
+    option.month === activeMonth.value.month
+  );
+}
+
+function selectMonth(option) {
+  activeMonth.value = { year: option.year, month: option.month };
+  isMonthSheetOpen.value = false;
+}
+
+// 거래 필터 (전체/충전/출금 + 선택된 월)
+const filters = [
+  { key: 'all', label: '전체' },
+  { key: 'charge', label: '충전' },
+  { key: 'withdraw', label: '출금' },
+];
+const activeFilter = ref('all');
+
+const filteredTransactions = computed(() => {
+  return transactions.value.filter((tx) => {
+    const [txYear, txMonth] = tx.date.split('-').map(Number);
+    const matchesMonth =
+      txYear === activeMonth.value.year &&
+      txMonth === activeMonth.value.month;
+    const matchesType =
+      activeFilter.value === 'all' || tx.type === activeFilter.value;
+    return matchesMonth && matchesType;
+  });
+});
+
+const router = useRouter();
+
+function handleCharge() {
+  router.push('/wallet/charge');
+}
+function handleTransfer() {
+  router.push('/wallet/transfer');
+}
 
 onMounted(async () => {
-  // TODO: fetch wallet data from wallet store/API
-  isLoading.value = false
-})
-
-const handleDeposit = () => {
-  // TODO: implement deposit flow
-}
-
-const handleWithdraw = () => {
-  // TODO: implement withdraw flow
-}
+  isLoading.value = false;
+});
 </script>
 
 <template>
-  <div class="wallet-page">
-    <header class="page-header">
-      <h1>내 지갑</h1>
-    </header>
+  <div
+    class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))] bg-(--color-bg) min-h-screen"
+  >
+    <!-- 헤더 -->
+    <div
+      class="flex items-center justify-between mb-(--space-4)"
+    >
+      <h1
+        class="text-(length:--font-lg) font-bold text-(color:--color-navy)"
+      >
+        펫지갑
+      </h1>
+      <router-link
+        to="/payment/recurring"
+        class="inline-flex items-center gap-(--space-1) text-(length:--font-sm) font-semibold text-(color:--color-navy) no-underline"
+      >
+        <IconRecurring size="16" />
+        정기결제
+      </router-link>
+    </div>
 
-    <!-- Balance Card -->
-    <section class="balance-card card">
-      <p class="balance-label">총 잔액</p>
-      <p class="balance-amount">{{ wallet.totalBalance.toLocaleString() }}원</p>
-      <p class="available-label">
-        사용 가능: <strong>{{ wallet.availableBalance.toLocaleString() }}원</strong>
-      </p>
-      <div class="balance-actions">
-        <button class="btn-deposit" @click="handleDeposit">입금</button>
-        <button class="btn-withdraw" @click="handleWithdraw">출금</button>
+    <!-- 잔액 -->
+    <p
+      class="text-(length:--font-3xl) font-bold text-(color:--color-navy) mb-(--space-4)"
+    >
+      {{ walletBalance.toLocaleString() }}원
+    </p>
+
+    <!-- 충전 / 이체 버튼 -->
+    <div class="flex gap-(--space-2) mb-(--space-7)">
+      <button
+        type="button"
+        class="flex-1 h-[44px] rounded-md bg-(--color-olive) text-(color:--color-white) text-(length:--font-base) font-semibold"
+        @click="handleCharge"
+      >
+        충전
+      </button>
+      <button
+        type="button"
+        class="flex-1 h-[44px] rounded-md bg-(--color-gray-100) text-(color:--color-slate-dark) text-(length:--font-base) font-semibold"
+        @click="handleTransfer"
+      >
+        이체
+      </button>
+    </div>
+
+    <!-- 서브 메뉴 3종 -->
+    <div class="flex justify-around mb-(--space-6)">
+      <router-link
+        v-for="menu in subMenus"
+        :key="menu.label"
+        :to="menu.to"
+        class="flex flex-col items-center gap-(--space-2) no-underline text-(color:--color-slate-dark) text-(length:--font-sm) font-medium"
+      >
+        <span
+          class="flex items-center justify-center w-(--space-9) h-(--space-9) rounded-full bg-(--color-surface)"
+        >
+          <component
+            :is="menu.icon"
+            size="20"
+            color="var(--color-navy)"
+          />
+        </span>
+        {{ menu.label }}
+      </router-link>
+    </div>
+
+    <div
+      v-if="isLoading"
+      class="text-center py-(--space-8) text-(color:--color-gray-500)"
+    >
+      <p>로딩 중...</p>
+    </div>
+
+    <template v-else>
+      <!-- 거래 필터 탭 -->
+      <div
+        class="flex items-center justify-between mb-(--space-4)"
+      >
+        <div class="flex gap-(--space-2)">
+          <button
+            v-for="filter in filters"
+            :key="filter.key"
+            type="button"
+            class="h-(--space-7) px-(--space-4) rounded-full text-(length:--font-sm) font-semibold"
+            :class="
+              activeFilter === filter.key
+                ? 'bg-(--color-navy) text-(color:--color-white)'
+                : 'bg-(--color-surface) text-(color:--color-slate-muted)'
+            "
+            @click="activeFilter = filter.key"
+          >
+            {{ filter.label }}
+          </button>
+        </div>
+        <button
+          type="button"
+          class="flex items-center gap-(--space-1) text-(length:--font-sm) text-(color:--color-slate-muted)"
+          @click="isMonthSheetOpen = true"
+        >
+          {{ activeMonthLabel }}
+          <IconChevronDown
+            size="14"
+            color="var(--color-slate-muted)"
+          />
+        </button>
       </div>
-    </section>
 
-    <!-- Bucket List -->
-    <section class="bucket-section">
-      <div class="section-header">
-        <h2>버킷 목록</h2>
-        <router-link to="/wallet/buckets" class="btn-manage">관리</router-link>
-      </div>
+      <!-- 거래 리스트 -->
+      <TransactionList :transactions="filteredTransactions" />
+    </template>
 
-      <div v-if="isLoading" class="loading-state">
-        <p>로딩 중...</p>
-      </div>
-
-      <div v-else-if="buckets.length === 0" class="empty-state">
-        <p>생성된 버킷이 없습니다.</p>
-        <router-link to="/wallet/buckets" class="btn-link">버킷 만들기</router-link>
-      </div>
-
-      <ul v-else class="bucket-list">
-        <li v-for="bucket in buckets" :key="bucket.id" class="bucket-item card">
-          <div class="bucket-info">
-            <h3>{{ bucket.name }}</h3>
-            <p class="bucket-pet">{{ bucket.petName }}</p>
-          </div>
-          <div class="bucket-balance">
-            <p class="bucket-amount">{{ bucket.balance.toLocaleString() }}원</p>
-            <!-- TODO: implement progress bar for goal -->
-          </div>
+    <BottomSheet
+      v-model="isMonthSheetOpen"
+      title="월 선택"
+    >
+      <ul>
+        <li
+          v-for="option in monthOptions"
+          :key="`${option.year}-${option.month}`"
+        >
+          <button
+            type="button"
+            class="w-full flex items-center justify-between py-(--space-3) text-(length:--font-base)"
+            :class="
+              isActiveMonth(option)
+                ? 'text-(color:--color-gold) font-bold'
+                : 'text-(color:--color-slate-dark)'
+            "
+            @click="selectMonth(option)"
+          >
+            <span>{{ option.label }}</span>
+            <IconCheck
+              v-if="isActiveMonth(option)"
+              size="18"
+              color="var(--color-gold)"
+            />
+          </button>
         </li>
       </ul>
-    </section>
-
-    <!-- Transaction Link -->
-    <router-link to="/wallet/transactions" class="transaction-link card">
-      <span>거래 내역 보기</span>
-      <span class="chevron">&rsaquo;</span>
-    </router-link>
+    </BottomSheet>
   </div>
 </template>
-
-<style scoped>
-.wallet-page {
-  padding: var(--space-4);
-  padding-bottom: calc(var(--bottom-nav-height) + var(--space-4));
-  background-color: var(--color-bg);
-  min-height: 100vh;
-}
-
-.page-header {
-  margin-bottom: var(--space-5);
-}
-
-.page-header h1 {
-  font-size: var(--font-2xl);
-  font-weight: var(--font-bold);
-  color: var(--color-navy);
-}
-
-.card {
-  background-color: var(--color-white);
-  border-radius: var(--radius-lg);
-  padding: var(--space-5);
-  box-shadow: var(--shadow-sm);
-}
-
-.balance-card {
-  background: linear-gradient(135deg, var(--color-navy), var(--color-navy-light));
-  color: var(--color-white);
-  margin-bottom: var(--space-6);
-}
-
-.balance-label {
-  font-size: var(--font-sm);
-  opacity: 0.8;
-}
-
-.balance-amount {
-  font-size: var(--font-3xl);
-  font-weight: var(--font-bold);
-  margin: var(--space-2) 0;
-}
-
-.available-label {
-  font-size: var(--font-sm);
-  opacity: 0.7;
-}
-
-.available-label strong {
-  opacity: 1;
-}
-
-.balance-actions {
-  display: flex;
-  gap: var(--space-3);
-  margin-top: var(--space-5);
-}
-
-.btn-deposit,
-.btn-withdraw {
-  flex: 1;
-  padding: var(--space-3);
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: var(--font-md);
-  font-weight: var(--font-semibold);
-  cursor: pointer;
-}
-
-.btn-deposit {
-  background-color: var(--color-gold);
-  color: var(--color-white);
-}
-
-.btn-withdraw {
-  background-color: rgba(255, 255, 255, 0.2);
-  color: var(--color-white);
-}
-
-.bucket-section {
-  margin-bottom: var(--space-5);
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--space-4);
-}
-
-.section-header h2 {
-  font-size: var(--font-lg);
-  font-weight: var(--font-semibold);
-  color: var(--color-navy);
-}
-
-.btn-manage {
-  font-size: var(--font-sm);
-  color: var(--color-gold);
-  font-weight: var(--font-semibold);
-  text-decoration: none;
-}
-
-.loading-state,
-.empty-state {
-  text-align: center;
-  padding: var(--space-6) 0;
-  color: var(--color-gray-500);
-}
-
-.btn-link {
-  display: inline-block;
-  margin-top: var(--space-3);
-  color: var(--color-navy);
-  font-weight: var(--font-semibold);
-  text-decoration: none;
-  font-size: var(--font-sm);
-}
-
-.bucket-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.bucket-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.bucket-info h3 {
-  font-size: var(--font-base);
-  font-weight: var(--font-semibold);
-  color: var(--color-gray-900);
-}
-
-.bucket-pet {
-  font-size: var(--font-xs);
-  color: var(--color-gray-500);
-  margin-top: var(--space-1);
-}
-
-.bucket-amount {
-  font-size: var(--font-base);
-  font-weight: var(--font-bold);
-  color: var(--color-navy);
-}
-
-.transaction-link {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  text-decoration: none;
-  color: var(--color-gray-700);
-  font-size: var(--font-md);
-  font-weight: var(--font-medium);
-}
-
-.chevron {
-  font-size: var(--font-xl);
-  color: var(--color-gray-400);
-}
-</style>

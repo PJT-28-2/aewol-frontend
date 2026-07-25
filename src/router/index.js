@@ -86,10 +86,29 @@ const authRoutes = [
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
+    path: '/wallet/charge',
+    name: 'Charge',
+    component: () => import('@/views/wallet/ChargeView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
+    path: '/wallet/transfer',
+    name: 'Transfer',
+    component: () => import('@/views/wallet/TransferView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
     path: '/wallet/history',
     name: 'TransactionHistory',
     component: () =>
       import('@/views/wallet/TransactionHistoryView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
+    path: '/wallet/history/:txId',
+    name: 'TransactionDetail',
+    component: () =>
+      import('@/views/wallet/TransactionDetailView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
