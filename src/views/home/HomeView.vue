@@ -138,16 +138,14 @@ onMounted(async () => {
   >
     <!-- 상단 잔액  -->
     <div class="flex justify-end mb-(--space-4)">
-      <router-link
-        to="/wallet"
-        class="inline-flex items-center h-[26px] gap-(--space-2) pl-(--space-4) pr-(--space-2) bg-(--color-surface) border border-(--color-border) rounded-full shadow-(--shadow-sm) text-(color:--color-navy) text-(length:--font-sm) font-semibold no-underline"
+      <div
+        class="inline-flex items-center h-[26px] gap-(--space-2) pl-(--space-4) pr-(--space-2) bg-(--color-surface) border border-(--color-border) rounded-full shadow-(--shadow-sm) text-(color:--color-navy) text-(length:--font-sm) font-semibold"
       >
         <span>{{ walletBalance.toLocaleString() }}원</span>
         <span
           class="inline-flex items-center justify-center w-[20px] h-[20px] rounded-full bg-(--color-gold) text-(color:--color-navy) text-(length:--font-sm) leading-none"
-          >+</span
-        >
-      </router-link>
+        >+</span>
+      </div>
     </div>
 
     <!-- 인사 메시지 -->
@@ -293,7 +291,10 @@ onMounted(async () => {
               class="flex items-center justify-center w-[48px] h-[48px] rounded-full"
               :style="{ backgroundColor: item.bg }"
             >
-              <component :is="item.icon" :size="20" />
+              <component
+                :is="item.icon"
+                :size="20"
+              />
             </span>
             <span>{{ item.label }}</span>
           </component>

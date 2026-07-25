@@ -1,14 +1,35 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { computed, ref, onMounted } from 'vue'
+import TransactionList from '@/components/common/TransactionList.vue'
 
+// TODO: 백엔드 API 연동 후 mock 데이터 제거하고 실제 fetch로 교체
 const transactions = ref([])
 const isLoading = ref(true)
+const isError = ref(false)
 
 const filters = ref({
   startDate: '',
   endDate: '',
   category: '',
   petId: '',
+})
+
+// 필터 적용 버튼을 눌렀을 때만 반영되는 실제 필터 조건
+const appliedFilters = ref({ ...filters.value })
+
+const filteredTransactions = computed(() => {
+  return transactions.value.filter((tx) => {
+    const matchesStart =
+      !appliedFilters.value.startDate ||
+      tx.date >= appliedFilters.value.startDate
+    const matchesEnd =
+      !appliedFilters.value.endDate ||
+      tx.date <= appliedFilters.value.endDate
+    const matchesCategory =
+      !appliedFilters.value.category ||
+      tx.category === appliedFilters.value.category
+    return matchesStart && matchesEnd && matchesCategory
+  })
 })
 
 const categoryOptions = [
@@ -22,19 +43,70 @@ const categoryOptions = [
 ]
 
 onMounted(async () => {
-  // TODO: fetch transactions from wallet store/API
-  isLoading.value = false
+  try {
+    transactions.value = [
+      {
+        id: 1,
+        date: '2026-07-18',
+        title: '24시 우리동물병원',
+        subtitle: '병원비 · 소로 진료',
+        amount: -42000,
+        category: 'MEDICAL',
+      },
+      {
+        id: 2,
+        date: '2026-07-17',
+        title: '펫사료마트',
+        subtitle: '사료·간식 · LLM 분류',
+        amount: -31200,
+        category: 'FOOD',
+      },
+      {
+        id: 3,
+        date: '2026-07-15',
+        title: '미미미용실',
+        subtitle: '미용비 · 나비 미용',
+        amount: -38000,
+        category: 'GROOMING',
+      },
+      {
+        id: 4,
+        date: '2026-06-20',
+        title: '펫프렌즈 보험',
+        subtitle: '반려동물보험 · 월 납입',
+        amount: -25000,
+        category: 'INSURANCE',
+      },
+      {
+        id: 5,
+        date: '2026-06-05',
+        title: '펫샵 용품점',
+        subtitle: '용품 · 리드줄 구매',
+        amount: -18000,
+        category: 'SUPPLIES',
+      },
+    ]
+  } catch {
+    isError.value = true
+  } finally {
+    isLoading.value = false
+  }
 })
 
-const handleFilter = async () => {
-  // TODO: implement filtered transaction fetch
+function handleFilter() {
+  appliedFilters.value = { ...filters.value }
 }
 </script>
 
 <template>
   <div class="transaction-page">
     <header class="page-header">
-      <router-link to="/wallet" class="back-btn">&lsaquo; 지갑</router-link>
+      <router-link
+        to="/wallet"
+        class="back-btn"
+      >
+        &lsaquo; 지갑
+      </router-link>
       <h1>거래 내역</h1>
     </header>
 
@@ -43,52 +115,67 @@ const handleFilter = async () => {
       <div class="filter-row">
         <div class="filter-item">
           <label for="startDate">시작일</label>
-          <input id="startDate" v-model="filters.startDate" type="date" />
+          <input
+            id="startDate"
+            v-model="filters.startDate"
+            type="date"
+          >
         </div>
         <div class="filter-item">
           <label for="endDate">종료일</label>
-          <input id="endDate" v-model="filters.endDate" type="date" />
+          <input
+            id="endDate"
+            v-model="filters.endDate"
+            type="date"
+          >
         </div>
       </div>
       <div class="filter-row">
         <div class="filter-item">
           <label for="category">카테고리</label>
-          <select id="category" v-model="filters.category">
-            <option v-for="opt in categoryOptions" :key="opt.value" :value="opt.value">
+          <select
+            id="category"
+            v-model="filters.category"
+          >
+            <option
+              v-for="opt in categoryOptions"
+              :key="opt.value"
+              :value="opt.value"
+            >
               {{ opt.label }}
             </option>
           </select>
         </div>
         <!-- TODO: implement pet filter dropdown -->
       </div>
-      <button class="btn-filter" @click="handleFilter">필터 적용</button>
+      <button
+        class="btn-filter"
+        @click="handleFilter"
+      >
+        필터 적용
+      </button>
     </section>
 
     <!-- Transaction List -->
     <section class="transaction-section">
-      <div v-if="isLoading" class="loading-state">
+      <div
+        v-if="isLoading"
+        class="loading-state"
+      >
         <p>로딩 중...</p>
       </div>
 
-      <div v-else-if="transactions.length === 0" class="empty-state">
-        <p>거래 내역이 없습니다.</p>
+      <div
+        v-else-if="isError"
+        class="loading-state"
+      >
+        <p>거래 내역을 불러오지 못했습니다.</p>
       </div>
 
-      <ul v-else class="transaction-list">
-        <li v-for="tx in transactions" :key="tx.id" class="transaction-item card">
-          <div class="tx-info">
-            <h3>{{ tx.description }}</h3>
-            <p class="tx-meta">
-              <span class="tx-category">{{ tx.category }}</span>
-              <span v-if="tx.petName"> &middot; {{ tx.petName }}</span>
-            </p>
-            <p class="tx-date">{{ tx.date }}</p>
-          </div>
-          <p class="tx-amount" :class="{ income: tx.amount > 0, expense: tx.amount < 0 }">
-            {{ tx.amount > 0 ? '+' : '' }}{{ tx.amount.toLocaleString() }}원
-          </p>
-        </li>
-      </ul>
+      <TransactionList
+        v-else
+        :transactions="filteredTransactions"
+      />
     </section>
   </div>
 </template>
@@ -172,69 +259,9 @@ const handleFilter = async () => {
   cursor: pointer;
 }
 
-.loading-state,
-.empty-state {
+.loading-state {
   text-align: center;
   padding: var(--space-8) 0;
   color: var(--color-gray-500);
-}
-
-.transaction-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.transaction-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.tx-info {
-  flex: 1;
-}
-
-.tx-info h3 {
-  font-size: var(--font-md);
-  font-weight: var(--font-semibold);
-  color: var(--color-gray-900);
-}
-
-.tx-meta {
-  font-size: var(--font-xs);
-  color: var(--color-gray-500);
-  margin-top: var(--space-1);
-}
-
-.tx-category {
-  background-color: var(--color-gray-100);
-  padding: 1px var(--space-2);
-  border-radius: var(--radius-sm);
-  font-weight: var(--font-medium);
-}
-
-.tx-date {
-  font-size: var(--font-xs);
-  color: var(--color-gray-400);
-  margin-top: var(--space-1);
-}
-
-.tx-amount {
-  font-size: var(--font-base);
-  font-weight: var(--font-bold);
-  white-space: nowrap;
-  margin-left: var(--space-4);
-}
-
-.tx-amount.income {
-  color: var(--color-success);
-}
-
-.tx-amount.expense {
-  color: var(--color-danger);
 }
 </style>
