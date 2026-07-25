@@ -144,7 +144,7 @@ const authRoutes = [
     name: 'Simulator',
     component: () =>
       import('@/views/insurance/SimulatorView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/insurance/claim',
