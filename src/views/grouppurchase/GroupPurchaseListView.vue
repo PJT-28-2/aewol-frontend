@@ -1,6 +1,6 @@
 <script setup>
-import { ref, computed } from 'vue'
-import IconUser from '@/components/common/icons/IconUser.vue'
+import { ref, computed } from 'vue';
+import IconUserCircle from '@/components/common/icons/IconUserCircle.vue';
 
 // TODO: 백엔드 API 연동 후 mock 데이터 제거하고 실제 fetch로 교체
 const groupPurchases = ref([
@@ -12,34 +12,34 @@ const groupPurchases = ref([
     dDay: 'D-3',
     badgeText: '30% 할인',
   },
-])
+]);
 
 // 카테고리 필터 (백엔드 연동 예정, 현재는 선택 상태만 관리)
-const categories = ['전체', '사료', '영양제', '장난감', '기타']
-const selectedCategory = ref('전체')
+const categories = ['전체', '사료', '영양제', '장난감', '기타'];
+const selectedCategory = ref('전체');
 
 function selectCategory(category) {
-  selectedCategory.value = category
+  selectedCategory.value = category;
 }
 
 // 상태 드롭다운 필터: 전체/진행중/마감, 미선택 시 "상태"로 표시 (백엔드 연동 예정)
-const statusOptions = ['전체', '진행중', '마감']
-const selectedStatus = ref('')
-const isStatusOpen = ref(false)
+const statusOptions = ['전체', '진행중', '마감'];
+const selectedStatus = ref('');
+const isStatusOpen = ref(false);
 
-const statusLabel = computed(() => selectedStatus.value || '상태')
+const statusLabel = computed(() => selectedStatus.value || '상태');
 
 function toggleStatusDropdown() {
-  isStatusOpen.value = !isStatusOpen.value
+  isStatusOpen.value = !isStatusOpen.value;
 }
 
 function selectStatus(status) {
-  selectedStatus.value = status
-  isStatusOpen.value = false
+  selectedStatus.value = status;
+  isStatusOpen.value = false;
 }
 
 // 검색어 (백엔드 연동 예정)
-const searchKeyword = ref('')
+const searchKeyword = ref('');
 </script>
 
 <template>
@@ -50,9 +50,11 @@ const searchKeyword = ref('')
         <h1>반려동물 용품 공동구매</h1>
         <p>함께 사면 더 저렴해요</p>
       </div>
-      <router-link to="/group-purchase/my" class="gp-my-btn">
-        <IconUser :size="12" color="var(--color-white)" />
-        MY
+      <router-link
+        to="/group-purchase/my"
+        class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-(--color-gray-100) no-underline"
+      >
+        <IconUserCircle :size="24" color="var(--color-navy)" />
       </router-link>
     </header>
 
@@ -150,20 +152,6 @@ const searchKeyword = ref('')
   font-size: var(--font-sm);
   color: var(--color-slate-muted);
   margin-top: var(--space-1);
-}
-
-.gp-my-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  flex-shrink: 0;
-  padding: var(--space-2) var(--space-3);
-  background-color: var(--color-navy);
-  color: var(--color-white);
-  border-radius: var(--radius-full);
-  font-size: var(--font-xs);
-  font-weight: var(--font-semibold);
-  text-decoration: none;
 }
 
 .gp-filter-section {
