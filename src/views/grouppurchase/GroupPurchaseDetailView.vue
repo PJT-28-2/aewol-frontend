@@ -13,8 +13,15 @@ const groupPurchase = ref({
   deadlineLabel: 'D-3',
 })
 
-// TODO: 수량 변경 시 결제 금액/참여 수량 실시간 반영은 별도 작업에서 구현
-const quantity = 1
+const quantity = ref(1)
+
+function decreaseQuantity() {
+  if (quantity.value > 1) quantity.value -= 1
+}
+
+function increaseQuantity() {
+  quantity.value += 1
+}
 
 const discountRate = computed(() =>
   Math.round(
@@ -22,18 +29,26 @@ const discountRate = computed(() =>
   ),
 )
 
+const displayedCurrentQuantity = computed(
+  () => groupPurchase.value.currentQuantity + quantity.value,
+)
+
 const remainingForConfirm = computed(() =>
   Math.max(
-    groupPurchase.value.targetQuantity - groupPurchase.value.currentQuantity,
+    groupPurchase.value.targetQuantity - displayedCurrentQuantity.value,
     0,
   ),
 )
 
 const progressPercent = computed(() =>
   Math.min(
-    (groupPurchase.value.currentQuantity / groupPurchase.value.targetQuantity) * 100,
+    (displayedCurrentQuantity.value / groupPurchase.value.targetQuantity) * 100,
     100,
   ),
+)
+
+const totalPrice = computed(
+  () => groupPurchase.value.groupPrice * quantity.value,
 )
 </script>
 
@@ -85,7 +100,7 @@ const progressPercent = computed(() =>
           현재 수량
         </p>
         <p class="text-(length:--font-sm) font-bold text-(color:--color-navy)">
-          {{ groupPurchase.currentQuantity }}/{{ groupPurchase.targetQuantity }}개
+          {{ displayedCurrentQuantity }}/{{ groupPurchase.targetQuantity }}개
         </p>
       </div>
       <div class="h-[8px] rounded-full bg-(--color-border) overflow-hidden mb-(--space-2)">
@@ -118,7 +133,9 @@ const progressPercent = computed(() =>
         <div class="flex items-center gap-(--space-3)">
           <button
             type="button"
-            class="size-[34px] rounded-lg bg-(--color-white) border border-(--color-border) text-(length:--font-md) font-bold text-(color:--color-slate-dark)"
+            class="size-[34px] rounded-lg bg-(--color-white) border border-(--color-border) text-(length:--font-md) font-bold text-(color:--color-slate-dark) disabled:opacity-40"
+            :disabled="quantity <= 1"
+            @click="decreaseQuantity"
           >
             −
           </button>
@@ -128,6 +145,7 @@ const progressPercent = computed(() =>
           <button
             type="button"
             class="size-[34px] rounded-lg bg-(--color-white) border border-(--color-border) text-(length:--font-md) font-bold text-(color:--color-slate-dark)"
+            @click="increaseQuantity"
           >
             +
           </button>
@@ -141,7 +159,7 @@ const progressPercent = computed(() =>
         type="button"
         class="w-full h-[52px] rounded-2xl bg-(--color-navy) text-(color:--color-white) text-(length:--font-md) font-bold"
       >
-        {{ groupPurchase.groupPrice.toLocaleString() }}원 결제하기
+        {{ totalPrice.toLocaleString() }}원 결제하기
       </button>
     </div>
   </div>
