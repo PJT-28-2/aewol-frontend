@@ -1,13 +1,19 @@
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import IconImage from '@/components/common/icons/IconImage.vue'
 
-// TODO: 화면 디자인 단계 - 유효성 검사/다음 단계 이동/실제 등록 연동은 별도 작업에서 구현
+// TODO: 화면 디자인 단계 - 유효성 검사/실제 등록 연동은 별도 작업에서 구현
 const productName = ref('')
 const category = ref('')
 const originalPrice = ref('')
 const groupPrice = ref('28,000')
 const discountRate = 30
+
+const router = useRouter()
+function goToNextStep() {
+  router.push('/group-purchase/create/step2')
+}
 </script>
 
 <template>
@@ -121,10 +127,11 @@ const discountRate = 30
       </div>
     </section>
 
-    <!-- 다음 (단계 이동 로직은 별도 작업) -->
+    <!-- 다음: 2단계(구매 조건)로 이동 -->
     <button
       type="button"
       class="w-full h-[52px] rounded-2xl bg-(--color-navy) text-(color:--color-white) text-(length:--font-md) font-bold"
+      @click="goToNextStep"
     >
       다음
     </button>

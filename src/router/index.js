@@ -192,6 +192,27 @@ const authRoutes = [
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
+    path: '/group-purchase/create',
+    name: 'GroupPurchaseCreateStep1',
+    component: () =>
+      import('@/views/grouppurchase/GroupPurchaseCreateStep1.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
+    path: '/group-purchase/create/step2',
+    name: 'GroupPurchaseCreateStep2',
+    component: () =>
+      import('@/views/grouppurchase/GroupPurchaseCreateStep2.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
+    path: '/group-purchase/create/step3',
+    name: 'GroupPurchaseCreateStep3',
+    component: () =>
+      import('@/views/grouppurchase/GroupPurchaseCreateStep3.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
     path: '/group-purchase/:gpId',
     name: 'GroupPurchaseDetail',
     component: () =>
