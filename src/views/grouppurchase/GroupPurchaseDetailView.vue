@@ -20,7 +20,12 @@ function decreaseQuantity() {
 }
 
 function increaseQuantity() {
-  quantity.value += 1
+  const nextQuantity = quantity.value + 1
+  if (groupPurchase.value.currentQuantity + nextQuantity > groupPurchase.value.targetQuantity) {
+    alert('목표 수량을 초과하여 더 이상 선택할 수 없습니다.')
+    return
+  }
+  quantity.value = nextQuantity
 }
 
 const discountRate = computed(() =>
