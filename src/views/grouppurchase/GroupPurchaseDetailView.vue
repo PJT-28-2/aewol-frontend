@@ -16,28 +16,31 @@ const groupPurchase = ref({
 const quantity = ref(1)
 
 function decreaseQuantity() {
-  if (quantity.value > 1) quantity.value -= 1
+  if (quantity.value > 1) quantity.value -= 1 // 최소 수량 1개 미만으로는 내려가지 않도록 제한
 }
 
 function increaseQuantity() {
   const nextQuantity = quantity.value + 1
   if (groupPurchase.value.currentQuantity + nextQuantity > groupPurchase.value.targetQuantity) {
-    alert('목표 수량을 초과하여 더 이상 선택할 수 없습니다.')
+    alert('목표 수량을 초과하여 더 이상 선택할 수 없습니다.') // 목표 수량 초과 선택 차단
     return
   }
   quantity.value = nextQuantity
 }
 
+// 정가 대비 공동구매가 할인율을 직접 저장하지 않고 계산으로 도출
 const discountRate = computed(() =>
   Math.round(
     (1 - groupPurchase.value.groupPrice / groupPurchase.value.unitPrice) * 100,
   ),
 )
 
+// 내가 선택한 수량을 반영했을 때의 참여 현황(미리보기)
 const displayedCurrentQuantity = computed(
   () => groupPurchase.value.currentQuantity + quantity.value,
 )
 
+// 목표 수량까지 남은 개수 (음수 방지)
 const remainingForConfirm = computed(() =>
   Math.max(
     groupPurchase.value.targetQuantity - displayedCurrentQuantity.value,
@@ -45,6 +48,7 @@ const remainingForConfirm = computed(() =>
   ),
 )
 
+// 진행률 바 너비(%) 계산, 100% 초과 방지
 const progressPercent = computed(() =>
   Math.min(
     (displayedCurrentQuantity.value / groupPurchase.value.targetQuantity) * 100,
@@ -52,6 +56,7 @@ const progressPercent = computed(() =>
   ),
 )
 
+// 선택 수량에 따라 실시간으로 바뀌는 결제 금액
 const totalPrice = computed(
   () => groupPurchase.value.groupPrice * quantity.value,
 )
@@ -90,6 +95,7 @@ const totalPrice = computed(
         <p class="text-(length:--font-sm) text-(color:--color-slate-muted) line-through">
           {{ groupPurchase.unitPrice.toLocaleString() }}원
         </p>
+        <!-- 할인율은 저장된 값이 아니라 discountRate computed로 계산된 값 -->
         <span
           class="px-(--space-2) py-(--space-1) rounded-full bg-(--color-discount-bg) text-(color:--color-discount-text) text-(length:--font-xs) font-bold"
         >
@@ -104,10 +110,12 @@ const totalPrice = computed(
         <p class="text-(length:--font-sm) font-bold text-(color:--color-slate-dark)">
           현재 수량
         </p>
+        <!-- 내가 선택한 수량이 더해진 현재 수량(미리보기) -->
         <p class="text-(length:--font-sm) font-bold text-(color:--color-navy)">
           {{ displayedCurrentQuantity }}/{{ groupPurchase.targetQuantity }}개
         </p>
       </div>
+      <!-- 진행률 바도 선택 수량 반영 기준으로 실시간 갱신 -->
       <div class="h-[8px] rounded-full bg-(--color-border) overflow-hidden mb-(--space-2)">
         <div
           class="h-full rounded-full bg-(--color-gold)"
@@ -118,6 +126,7 @@ const totalPrice = computed(
         <p class="text-(length:--font-xs) text-(color:--color-slate-muted)">
           마감까지 {{ groupPurchase.deadlineLabel }}
         </p>
+        <!-- 목표까지 남은 수량도 선택 수량 반영 기준으로 갱신 -->
         <p class="text-(length:--font-xs) font-bold text-(color:--color-discount-text)">
           {{ remainingForConfirm }}개 더 모이면 확정
         </p>
@@ -135,6 +144,7 @@ const totalPrice = computed(
         <p class="text-(length:--font-sm) font-bold text-(color:--color-navy)">
           {{ quantity }}개
         </p>
+        <!-- 수량 스테퍼: -는 1개에서 비활성화, +는 목표 초과 시 alert로 차단 -->
         <div class="flex items-center gap-(--space-3)">
           <button
             type="button"
@@ -158,7 +168,7 @@ const totalPrice = computed(
       </div>
     </section>
 
-    <!-- 결제 버튼 -->
+    <!-- 결제 버튼: 금액은 groupPrice * 선택 수량으로 실시간 계산 -->
     <div class="fixed bottom-(--bottom-nav-height) inset-x-0 p-(--space-4) bg-(--color-white)">
       <button
         type="button"
