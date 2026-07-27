@@ -1,14 +1,43 @@
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import IconImage from '@/components/common/icons/IconImage.vue'
 
-// TODO: 화면 디자인 단계 - 유효성 검사/실제 등록 연동은 별도 작업에서 구현
+// TODO: 실제 등록 연동은 별도 작업에서 구현
+const photos = ref([])
 const productName = ref('')
 const category = ref('')
 const originalPrice = ref('')
-const groupPrice = ref('28,000')
-const discountRate = 30
+const groupPrice = ref('')
+
+function handlePhotoChange(event) {
+  const files = Array.from(event.target.files || [])
+  photos.value = files.slice(0, 5)
+}
+
+// 콤마/원 등 숫자 외 문자를 제거해 실제 금액만 추출
+function parsePrice(value) {
+  const digits = value.replace(/[^0-9]/g, '')
+  return digits ? Number(digits) : 0
+}
+
+// 정가 대비 공동구매가 할인율 실시간 계산 (정가가 더 작거나 없으면 표시하지 않음)
+const discountRate = computed(() => {
+  const original = parsePrice(originalPrice.value)
+  const group = parsePrice(groupPrice.value)
+  if (!original || !group || group >= original) return 0
+  return Math.round((1 - group / original) * 100)
+})
+
+// 사진, 상품명, 카테고리, 정가, 공동구매가격이 모두 입력되어야 다음 단계로 이동 가능
+const isFormValid = computed(
+  () =>
+    photos.value.length > 0 &&
+    productName.value.trim() !== '' &&
+    category.value.trim() !== '' &&
+    parsePrice(originalPrice.value) > 0 &&
+    parsePrice(groupPrice.value) > 0,
+)
 
 const router = useRouter()
 function goToNextStep() {
@@ -50,21 +79,27 @@ function goToNextStep() {
           선택
         </span>
       </div>
-      <button
-        type="button"
-        class="w-full h-[90px] rounded-2xl bg-(--color-white) border-[1.2px] border-(--color-slate-muted) flex flex-col items-center justify-center gap-(--space-1)"
+      <label
+        class="w-full h-[90px] rounded-2xl bg-(--color-white) border-[1.2px] border-(--color-slate-muted) flex flex-col items-center justify-center gap-(--space-1) cursor-pointer"
       >
+        <input
+          type="file"
+          accept="image/*"
+          multiple
+          class="hidden"
+          @change="handlePhotoChange"
+        >
         <IconImage
           size="20"
           color="var(--color-slate-dark)"
         />
         <span class="text-(length:--font-sm) font-bold text-(color:--color-slate-dark)">
-          사진 추가
+          {{ photos.length > 0 ? `사진 ${photos.length}장 선택됨` : '사진 추가' }}
         </span>
         <span class="text-(length:--font-xs) text-(color:--color-slate-muted)">
           최대 5장
         </span>
-      </button>
+      </label>
     </section>
 
     <!-- 상품명 -->
@@ -117,9 +152,11 @@ function goToNextStep() {
           v-model="groupPrice"
           type="text"
           inputmode="numeric"
-          class="w-full h-[46px] pl-(--space-4) pr-(--space-9) rounded-xl bg-(--color-surface) border border-(--color-border) text-(length:--font-sm) font-bold text-(color:--color-navy)"
+          placeholder="28,000 원"
+          class="w-full h-[46px] pl-(--space-4) pr-(--space-9) rounded-xl bg-(--color-surface) border border-(--color-border) text-(length:--font-sm) text-(color:--color-navy) placeholder:text-(color:--color-slate-muted)"
         >
         <span
+          v-if="discountRate > 0"
           class="absolute right-(--space-4) top-1/2 -translate-y-1/2 px-(--space-2) py-(--space-1) rounded-full bg-(--color-discount-bg) text-(color:--color-discount-text) text-(length:--font-xs) font-bold"
         >
           {{ discountRate }}% 할인
@@ -127,10 +164,11 @@ function goToNextStep() {
       </div>
     </section>
 
-    <!-- 다음: 2단계(구매 조건)로 이동 -->
+    <!-- 다음: 사진/필수 입력값이 모두 채워져야 2단계(구매 조건)로 이동 가능 -->
     <button
       type="button"
-      class="w-full h-[52px] rounded-2xl bg-(--color-navy) text-(color:--color-white) text-(length:--font-md) font-bold"
+      class="w-full h-[52px] rounded-2xl bg-(--color-navy) text-(color:--color-white) text-(length:--font-md) font-bold disabled:opacity-40"
+      :disabled="!isFormValid"
       @click="goToNextStep"
     >
       다음
