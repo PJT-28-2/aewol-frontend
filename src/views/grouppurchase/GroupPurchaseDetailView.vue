@@ -1,280 +1,148 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { computed, ref } from 'vue'
+import productImage from '@/assets/images/grouppurchase/mock-product-dogfood.png'
 
-const groupPurchase = ref(null)
-const participants = ref([])
-const isLoading = ref(true)
-const isJoining = ref(false)
-const hasJoined = ref(false)
-
-onMounted(async () => {
-  // TODO: fetch group purchase detail and participants
-  isLoading.value = false
+// TODO: 백엔드 API 연동 후 mock 데이터 제거하고 실제 fetch로 교체 (상세 데이터 연동은 별도 작업에서 진행)
+const groupPurchase = ref({
+  productName: '프리미엄 사료 15kg',
+  image: productImage,
+  groupPrice: 28000,
+  unitPrice: 40000,
+  currentQuantity: 32,
+  targetQuantity: 50,
+  deadlineLabel: 'D-3',
 })
 
-const handleJoin = async () => {
-  // TODO: implement join group purchase
-}
+// TODO: 수량 변경 시 결제 금액/참여 수량 실시간 반영은 별도 작업에서 구현
+const quantity = 1
 
-const handleLeave = async () => {
-  // TODO: implement leave group purchase
-}
+const discountRate = computed(() =>
+  Math.round(
+    (1 - groupPurchase.value.groupPrice / groupPurchase.value.unitPrice) * 100,
+  ),
+)
+
+const remainingForConfirm = computed(() =>
+  Math.max(
+    groupPurchase.value.targetQuantity - groupPurchase.value.currentQuantity,
+    0,
+  ),
+)
+
+const progressPercent = computed(() =>
+  Math.min(
+    (groupPurchase.value.currentQuantity / groupPurchase.value.targetQuantity) * 100,
+    100,
+  ),
+)
 </script>
 
 <template>
-  <div class="gp-detail-page">
-    <header class="page-header">
-      <router-link to="/group-purchase" class="back-btn">&lsaquo; 목록</router-link>
-      <h1>공동구매 상세</h1>
+  <div class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+96px)] bg-(--color-bg) min-h-screen">
+    <header class="mb-(--space-5)">
+      <router-link
+        to="/group-purchase"
+        class="inline-block mb-(--space-3) text-(length:--font-lg) text-(color:--color-navy) no-underline font-bold"
+      >
+        ←
+      </router-link>
+      <h1 class="text-(length:--font-xl) font-bold text-(color:--color-navy)">
+        공동구매 참여
+      </h1>
     </header>
 
-    <div v-if="isLoading" class="loading-state">
-      <p>로딩 중...</p>
-    </div>
-
-    <template v-else-if="groupPurchase">
-      <!-- Product Info -->
-      <section class="product-section">
-        <div class="product-image">
-          <!-- TODO: product image -->
-        </div>
-        <div class="product-info card">
-          <h2>{{ groupPurchase.title }}</h2>
-          <p class="product-price">{{ groupPurchase.price?.toLocaleString() }}원</p>
-          <p class="product-description">{{ groupPurchase.description }}</p>
-
-          <div class="progress-section">
-            <div class="progress-bar">
-              <div
-                class="progress-fill"
-                :style="{ width: `${(groupPurchase.currentCount / groupPurchase.targetCount) * 100}%` }"
-              ></div>
-            </div>
-            <p class="progress-text">
-              {{ groupPurchase.currentCount }} / {{ groupPurchase.targetCount }}명 참여
-            </p>
-          </div>
-
-          <p class="deadline">마감일: {{ groupPurchase.deadline }}</p>
-        </div>
-      </section>
-
-      <!-- Participants -->
-      <section class="participants-section">
-        <h2>참여자 ({{ participants.length }}명)</h2>
-        <ul class="participant-list">
-          <li v-for="p in participants" :key="p.id" class="participant-item">
-            <div class="participant-avatar"><!-- TODO: avatar --></div>
-            <span class="participant-name">{{ p.name }}</span>
-          </li>
-        </ul>
-      </section>
-
-      <!-- Join/Leave Button -->
-      <div class="action-area">
-        <button
-          v-if="!hasJoined"
-          class="btn-join"
-          :disabled="isJoining"
-          @click="handleJoin"
+    <!-- 상품 정보 -->
+    <section class="flex flex-col items-start mb-(--space-6)">
+      <div class="w-[110px] h-[110px] rounded-2xl bg-(--color-surface) overflow-hidden mb-(--space-4)">
+        <img
+          :src="groupPurchase.image"
+          alt=""
+          class="w-full h-full object-cover"
         >
-          {{ isJoining ? '참여 중...' : '참여하기' }}
-        </button>
-        <button
-          v-else
-          class="btn-leave"
-          @click="handleLeave"
-        >
-          참여 취소
-        </button>
       </div>
-    </template>
+      <h2 class="text-(length:--font-md) font-bold text-(color:--color-navy) mb-(--space-2)">
+        {{ groupPurchase.productName }}
+      </h2>
+      <div class="flex items-center gap-(--space-2)">
+        <p class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">
+          {{ groupPurchase.groupPrice.toLocaleString() }}원
+        </p>
+        <p class="text-(length:--font-sm) text-(color:--color-slate-muted) line-through">
+          {{ groupPurchase.unitPrice.toLocaleString() }}원
+        </p>
+        <span
+          class="px-(--space-2) py-(--space-1) rounded-full bg-(--color-discount-bg) text-(color:--color-discount-text) text-(length:--font-xs) font-bold"
+        >
+          {{ discountRate }}% 할인
+        </span>
+      </div>
+    </section>
 
-    <div v-else class="empty-state">
-      <p>공동구매 정보를 찾을 수 없습니다.</p>
+    <!-- 참여 현황 -->
+    <section class="p-(--space-4) rounded-2xl bg-(--color-surface) mb-(--space-6)">
+      <div class="flex items-center justify-between mb-(--space-3)">
+        <p class="text-(length:--font-sm) font-bold text-(color:--color-slate-dark)">
+          현재 수량
+        </p>
+        <p class="text-(length:--font-sm) font-bold text-(color:--color-navy)">
+          {{ groupPurchase.currentQuantity }}/{{ groupPurchase.targetQuantity }}개
+        </p>
+      </div>
+      <div class="h-[8px] rounded-full bg-(--color-border) overflow-hidden mb-(--space-2)">
+        <div
+          class="h-full rounded-full bg-(--color-gold)"
+          :style="{ width: `${progressPercent}%` }"
+        />
+      </div>
+      <div class="flex items-center justify-between">
+        <p class="text-(length:--font-xs) text-(color:--color-slate-muted)">
+          마감까지 {{ groupPurchase.deadlineLabel }}
+        </p>
+        <p class="text-(length:--font-xs) font-bold text-(color:--color-discount-text)">
+          {{ remainingForConfirm }}개 더 모이면 확정
+        </p>
+      </div>
+    </section>
+
+    <!-- 수량 선택 -->
+    <section class="mb-(--space-6)">
+      <p class="text-(length:--font-sm) font-bold text-(color:--color-slate-dark) mb-(--space-3)">
+        수량 선택
+      </p>
+      <div
+        class="flex items-center justify-between h-[46px] px-(--space-4) rounded-xl bg-(--color-surface) border border-(--color-border)"
+      >
+        <p class="text-(length:--font-sm) font-bold text-(color:--color-navy)">
+          {{ quantity }}개
+        </p>
+        <div class="flex items-center gap-(--space-3)">
+          <button
+            type="button"
+            class="size-[34px] rounded-lg bg-(--color-white) border border-(--color-border) text-(length:--font-md) font-bold text-(color:--color-slate-dark)"
+          >
+            −
+          </button>
+          <p class="w-[24px] text-center text-(length:--font-sm) font-bold text-(color:--color-navy)">
+            {{ quantity }}
+          </p>
+          <button
+            type="button"
+            class="size-[34px] rounded-lg bg-(--color-white) border border-(--color-border) text-(length:--font-md) font-bold text-(color:--color-slate-dark)"
+          >
+            +
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 결제 버튼 -->
+    <div class="fixed bottom-(--bottom-nav-height) inset-x-0 p-(--space-4) bg-(--color-white)">
+      <button
+        type="button"
+        class="w-full h-[52px] rounded-2xl bg-(--color-navy) text-(color:--color-white) text-(length:--font-md) font-bold"
+      >
+        {{ groupPurchase.groupPrice.toLocaleString() }}원 결제하기
+      </button>
     </div>
   </div>
 </template>
-
-<style scoped>
-.gp-detail-page {
-  padding: var(--space-4);
-  padding-bottom: calc(var(--bottom-nav-height) + var(--space-8));
-  background-color: var(--color-bg);
-  min-height: 100vh;
-}
-
-.page-header {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  margin-bottom: var(--space-5);
-}
-
-.back-btn {
-  font-size: var(--font-md);
-  color: var(--color-navy);
-  text-decoration: none;
-  font-weight: var(--font-medium);
-}
-
-.page-header h1 {
-  font-size: var(--font-xl);
-  font-weight: var(--font-bold);
-  color: var(--color-navy);
-}
-
-.card {
-  background-color: var(--color-white);
-  border-radius: var(--radius-lg);
-  padding: var(--space-5);
-  box-shadow: var(--shadow-sm);
-}
-
-.loading-state,
-.empty-state {
-  text-align: center;
-  padding: var(--space-8) 0;
-  color: var(--color-gray-500);
-}
-
-.product-image {
-  width: 100%;
-  height: 200px;
-  background-color: var(--color-gray-200);
-  border-radius: var(--radius-lg);
-  margin-bottom: var(--space-4);
-}
-
-.product-info {
-  margin-bottom: var(--space-5);
-}
-
-.product-info h2 {
-  font-size: var(--font-xl);
-  font-weight: var(--font-bold);
-  color: var(--color-gray-900);
-  margin-bottom: var(--space-2);
-}
-
-.product-price {
-  font-size: var(--font-2xl);
-  font-weight: var(--font-bold);
-  color: var(--color-navy);
-  margin-bottom: var(--space-3);
-}
-
-.product-description {
-  font-size: var(--font-md);
-  color: var(--color-gray-600);
-  line-height: 1.6;
-  margin-bottom: var(--space-5);
-}
-
-.progress-section {
-  margin-bottom: var(--space-3);
-}
-
-.progress-bar {
-  height: 8px;
-  background-color: var(--color-gray-200);
-  border-radius: var(--radius-full);
-  overflow: hidden;
-  margin-bottom: var(--space-2);
-}
-
-.progress-fill {
-  height: 100%;
-  background-color: var(--color-gold);
-  border-radius: var(--radius-full);
-  transition: width 0.3s ease;
-}
-
-.progress-text {
-  font-size: var(--font-sm);
-  color: var(--color-gray-600);
-  font-weight: var(--font-medium);
-}
-
-.deadline {
-  font-size: var(--font-sm);
-  color: var(--color-gray-500);
-}
-
-.participants-section {
-  margin-bottom: var(--space-6);
-}
-
-.participants-section h2 {
-  font-size: var(--font-base);
-  font-weight: var(--font-semibold);
-  color: var(--color-navy);
-  margin-bottom: var(--space-3);
-}
-
-.participant-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-}
-
-.participant-item {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.participant-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-full);
-  background-color: var(--color-gray-200);
-}
-
-.participant-name {
-  font-size: var(--font-sm);
-  color: var(--color-gray-700);
-}
-
-.action-area {
-  position: fixed;
-  bottom: var(--bottom-nav-height);
-  left: 0;
-  right: 0;
-  padding: var(--space-4);
-  background-color: var(--color-white);
-  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.08);
-}
-
-.btn-join {
-  width: 100%;
-  padding: var(--space-4);
-  background-color: var(--color-gold);
-  color: var(--color-white);
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: var(--font-base);
-  font-weight: var(--font-bold);
-  cursor: pointer;
-}
-
-.btn-join:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.btn-leave {
-  width: 100%;
-  padding: var(--space-4);
-  background-color: transparent;
-  color: var(--color-danger);
-  border: 1px solid var(--color-danger);
-  border-radius: var(--radius-md);
-  font-size: var(--font-base);
-  font-weight: var(--font-semibold);
-  cursor: pointer;
-}
-</style>
