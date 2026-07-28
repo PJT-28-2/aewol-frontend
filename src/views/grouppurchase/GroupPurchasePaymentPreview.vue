@@ -51,14 +51,14 @@ const isAddressSheetOpen = ref(false);
 const addressForm = ref({
   name: '',
   phone: '',
-  postalCode: '',
+  zipCode: '',
   address: '',
   addressDetail: '',
 });
 const EMPTY_ADDRESS_FORM_ERRORS = {
   name: '',
   phone: '',
-  postalCode: '',
+  zipCode: '',
   address: '',
   addressDetail: '',
 };
@@ -68,7 +68,7 @@ function handleChangeAddress() {
   addressForm.value = {
     name: shippingAddress.value?.recipientName ?? '',
     phone: shippingAddress.value?.recipientPhone ?? '',
-    postalCode: shippingAddress.value?.postalCode ?? '',
+    zipCode: shippingAddress.value?.zipCode ?? '',
     address: shippingAddress.value?.address ?? '',
     addressDetail: shippingAddress.value?.addressDetail ?? '',
   };
@@ -109,9 +109,9 @@ async function handleSearchAddress() {
 
   new window.daum.Postcode({
     oncomplete(data) {
-      addressForm.value.postalCode = data.zonecode;
+      addressForm.value.zipCode = data.zonecode;
       addressForm.value.address = data.roadAddress || data.jibunAddress;
-      addressFormErrors.value.postalCode = '';
+      addressFormErrors.value.zipCode = '';
       addressFormErrors.value.address = '';
       isPostcodeOpen.value = false;
     },
@@ -141,10 +141,10 @@ function validateAddressForm() {
     errors.phone = '전화번호 형식이 올바르지 않아요 (예: 010-1234-5678)';
   }
 
-  if (!form.postalCode.trim()) {
-    errors.postalCode = '우편번호를 입력해주세요';
-  } else if (!/^\d{5}$/.test(form.postalCode.trim())) {
-    errors.postalCode = '우편번호 5자리를 확인해주세요';
+  if (!form.zipCode.trim()) {
+    errors.zipCode = '우편번호를 입력해주세요';
+  } else if (!/^\d{5}$/.test(form.zipCode.trim())) {
+    errors.zipCode = '우편번호 5자리를 확인해주세요';
   }
 
   if (!form.address.trim()) {
@@ -167,7 +167,7 @@ function confirmAddress() {
   shippingAddress.value = {
     recipientName: addressForm.value.name,
     recipientPhone: addressForm.value.phone,
-    postalCode: addressForm.value.postalCode,
+    zipCode: addressForm.value.zipCode,
     address: addressForm.value.address,
     addressDetail: addressForm.value.addressDetail,
   };
@@ -521,12 +521,12 @@ function handleSwitchToBiometric() {}
         </label>
         <div class="flex gap-(--space-2)">
           <input
-            v-model="addressForm.postalCode"
+            v-model="addressForm.zipCode"
             type="text"
             placeholder="12345"
             class="flex-1 min-w-0 h-[46px] px-(--space-4) bg-(--color-surface) border rounded-(--radius-md) text-(length:--font-sm) text-(color:--color-navy) placeholder:text-(color:--color-gray-500)"
             :class="
-              addressFormErrors.postalCode
+              addressFormErrors.zipCode
                 ? 'border-(--color-danger)'
                 : 'border-(--color-border)'
             "
@@ -540,10 +540,10 @@ function handleSwitchToBiometric() {}
           </button>
         </div>
         <p
-          v-if="addressFormErrors.postalCode"
+          v-if="addressFormErrors.zipCode"
           class="text-(length:--font-xs) text-(color:--color-danger) mt-(--space-1)"
         >
-          {{ addressFormErrors.postalCode }}
+          {{ addressFormErrors.zipCode }}
         </p>
       </div>
 
