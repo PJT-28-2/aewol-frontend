@@ -1,7 +1,11 @@
 <script setup>
 import { ref, computed } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import IconWallet from '@/components/common/icons/IconWallet.vue';
 import BottomSheet from '@/components/common/BottomSheet.vue';
+
+const route = useRoute();
+const router = useRouter();
 
 // TODO: 사용자 프로필/배송지 DB 연동 예정, 현재는 mock 데이터
 // 등록된 배송지가 없는 상태를 확인하기 위해 초기값은 null로 둠
@@ -130,9 +134,10 @@ function confirmAddress() {
   isAddressSheetOpen.value = false;
 }
 
-// 결제 API/라우팅은 아직 미구현 — 비밀번호 인증 완료 후 호출
+// TODO: POST /api/group-purchase/{gp_id}/payments 연동 예정 (비밀번호 인증 완료 후 호출)
 function handlePayment() {
-  // TODO: 결제 처리 및 이후 라우팅 연동 예정
+  // 결제 완료 후 이동할 상태 확인 화면 (GroupPurchaseStatusView.vue, 아직 미구현)
+  router.push(`/group-purchase/${route.params.gpId}/status`);
 }
 
 // 충전 페이지 라우팅은 아직 미구현 — 버튼만 배치
@@ -168,7 +173,10 @@ function handlePinBackspace() {
   pinInput.value = pinInput.value.slice(0, -1);
 }
 
-// TODO: 비밀번호 검증 API 연동 예정, 현재는 6자리 입력 완료 시 바로 결제 진행
+// TODO: 사용자가 설정해둔 결제 비밀번호와 비교하는 로직 (DB 연동 전이라 현재는 비교 없이 통과)
+// const isPasswordValid = pinInput.value === savedPaymentPassword;
+// if (!isPasswordValid) { ...비밀번호 불일치 처리... ; return; }
+// 지금은 6자리 입력이 완료되면 바로 결제 진행
 function handlePinComplete() {
   closePinSheet();
   handlePayment();
