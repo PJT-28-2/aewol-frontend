@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import productImage from '@/assets/images/grouppurchase/mock-product-dogfood.png'
+import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 
 // TODO: 백엔드 API 연동 후 mock 데이터 제거하고 실제 fetch로 교체 (상세 데이터 연동은 별도 작업에서 진행)
 const groupPurchase = ref({
@@ -67,9 +68,10 @@ const totalPrice = computed(
     <header class="mb-(--space-5)">
       <router-link
         to="/group-purchase"
-        class="inline-block mb-(--space-3) text-(length:--font-lg) text-(color:--color-navy) no-underline font-bold"
+        aria-label="뒤로 가기"
+        class="inline-flex items-center mb-(--space-3) text-(color:--color-navy)"
       >
-        ←
+        <IconArrowLeft :size="24" color="currentColor" />
       </router-link>
       <h1 class="text-(length:--font-xl) font-bold text-(color:--color-navy)">
         공동구매 참여
