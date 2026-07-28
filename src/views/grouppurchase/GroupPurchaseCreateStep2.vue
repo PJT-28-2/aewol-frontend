@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 
 // TODO: 화면 디자인 단계 - 유효성 검사/실제 등록 연동은 별도 작업에서 구현
 const targetQuantity = ref('50')
@@ -23,10 +24,13 @@ function goToNextStep() {
       <div class="flex items-center justify-between mb-(--space-4)">
         <button
           type="button"
-          class="text-(length:--font-lg) text-(color:--color-navy) font-bold"
+          class="inline-flex text-(color:--color-navy)"
           @click="goToPrevStep"
         >
-          ←
+          <IconArrowLeft
+            size="18"
+            color="var(--color-navy)"
+          />
         </button>
         <p class="text-(length:--font-sm) font-bold text-(color:--color-slate-muted)">
           2/3

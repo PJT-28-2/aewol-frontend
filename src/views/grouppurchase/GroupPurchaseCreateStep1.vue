@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 import IconImage from '@/components/common/icons/IconImage.vue'
 
 // TODO: 실제 등록 연동은 별도 작업에서 구현
@@ -51,9 +52,12 @@ function goToNextStep() {
       <div class="flex items-center justify-between mb-(--space-4)">
         <router-link
           to="/group-purchase"
-          class="text-(length:--font-lg) text-(color:--color-navy) no-underline font-bold"
+          class="inline-flex text-(color:--color-navy) no-underline"
         >
-          ←
+          <IconArrowLeft
+            size="18"
+            color="var(--color-navy)"
+          />
         </router-link>
         <p class="text-(length:--font-sm) font-bold text-(color:--color-slate-muted)">
           1/3

@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
+import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 import IconImage from '@/components/common/icons/IconImage.vue'
 import IconInfo from '@/components/common/icons/IconInfo.vue'
 
@@ -30,10 +31,13 @@ function goToPrevStep() {
       <div class="flex items-center justify-between mb-(--space-4)">
         <button
           type="button"
-          class="text-(length:--font-lg) text-(color:--color-navy) font-bold"
+          class="inline-flex text-(color:--color-navy)"
           @click="goToPrevStep"
         >
-          ←
+          <IconArrowLeft
+            size="18"
+            color="var(--color-navy)"
+          />
         </button>
         <p class="text-(length:--font-sm) font-bold text-(color:--color-slate-muted)">
           3/3
