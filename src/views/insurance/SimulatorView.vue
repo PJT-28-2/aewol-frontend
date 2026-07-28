@@ -31,6 +31,8 @@ const medicalOptions = [
 const pendingCode = ref(medicalOptions[0].code)
 const pendingOtherText = ref('')
 const medicalTags = ref([])
+const tagFeedback = ref('')
+let nextTagId = 0
 
 const isMedicalSheetOpen = ref(false)
 const pendingLabel = computed(
@@ -43,8 +45,25 @@ function selectPendingCode(code) {
 }
 
 function addMedicalTag() {
-  if (medicalTags.value.some((tag) => tag.code === pendingCode.value)) return
-  if (pendingCode.value === 'OTHER' && !pendingOtherText.value.trim()) return
+  tagFeedback.value = ''
+
+  const isOther = pendingCode.value === 'OTHER'
+  const label = isOther
+    ? pendingOtherText.value.trim()
+    : medicalOptions.find((opt) => opt.code === pendingCode.value)?.label
+
+  if (isOther && !label) {
+    tagFeedback.value = '병력 내용을 입력해주세요.'
+    return
+  }
+
+  const isDuplicate = medicalTags.value.some((tag) =>
+    isOther ? tag.code === 'OTHER' && tag.label === label : tag.code === pendingCode.value,
+  )
+  if (isDuplicate) {
+    tagFeedback.value = '이미 추가된 병력이에요.'
+    return
+  }
 
   if (pendingCode.value === 'NONE') {
     medicalTags.value = []
@@ -52,16 +71,12 @@ function addMedicalTag() {
     medicalTags.value = medicalTags.value.filter((tag) => tag.code !== 'NONE')
   }
 
-  const option = medicalOptions.find((opt) => opt.code === pendingCode.value)
-  medicalTags.value.push({
-    code: option.code,
-    label: option.code === 'OTHER' ? pendingOtherText.value.trim() : option.label,
-  })
+  medicalTags.value.push({ id: nextTagId++, code: pendingCode.value, label })
   pendingOtherText.value = ''
 }
 
-function removeMedicalTag(code) {
-  medicalTags.value = medicalTags.value.filter((tag) => tag.code !== code)
+function removeMedicalTag(id) {
+  medicalTags.value = medicalTags.value.filter((tag) => tag.id !== id)
 }
 
 const result = ref(null)
@@ -218,7 +233,7 @@ function mockSimulate() {
           >
             <span
               v-for="tag in medicalTags"
-              :key="tag.code"
+              :key="tag.id"
               class="tag-chip"
             >
               {{ tag.label }}
@@ -226,7 +241,7 @@ function mockSimulate() {
                 type="button"
                 class="tag-remove"
                 aria-label="병력 삭제"
-                @click="removeMedicalTag(tag.code)"
+                @click="removeMedicalTag(tag.id)"
               >
                 ×
               </button>
@@ -260,6 +275,13 @@ function mockSimulate() {
               + 추가
             </button>
           </div>
+
+          <p
+            v-if="tagFeedback"
+            class="tag-feedback"
+          >
+            {{ tagFeedback }}
+          </p>
         </div>
 
         <p
@@ -555,6 +577,12 @@ function mockSimulate() {
 }
 
 .error-text {
+  color: var(--color-danger);
+  font-size: var(--font-sm);
+}
+
+.tag-feedback {
+  margin-top: var(--space-2);
   color: var(--color-danger);
   font-size: var(--font-sm);
 }
