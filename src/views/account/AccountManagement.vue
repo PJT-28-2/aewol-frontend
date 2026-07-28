@@ -6,34 +6,34 @@ import { getBankMeta, formatWon } from '@/utils/bankMeta';
 import BankBadge from '@/components/common/BankBadge.vue';
 import BottomSheet from '@/components/common/BottomSheet.vue';
 import IconLock from '@/components/common/icons/IconLock.vue';
-// import petDeleteWarning from '@/assets/images/pet-delete-warning.png';
-// import petSuccess from '@/assets/images/pet-success.png';
-
+import petDeleteWarning from '@/assets/images/pet-delete-warning.png';
+import petSuccess from '@/assets/images/pet-success.png';
+ 
 const router = useRouter();
 const store = useAccountStore();
-
+ 
 const showUnlinkSheet = ref(false);
 const showUnlinkSuccess = ref(false);
 const unlinkedAccountName = ref('');
 const isUnlinking = ref(false);
 const pendingAccount = ref(null);
-
+ 
 onMounted(() => {
   store.fetchAccounts();
 });
-
+ 
 function openUnlink(account) {
   pendingAccount.value = account;
   store.openUnlinkConfirm(account);
   showUnlinkSheet.value = true;
 }
-
+ 
 function closeUnlinkSheet() {
   showUnlinkSheet.value = false;
   store.closeUnlinkConfirm();
   pendingAccount.value = null;
 }
-
+ 
 async function confirmUnlink() {
   if (!pendingAccount.value) return;
   isUnlinking.value = true;
@@ -47,16 +47,16 @@ async function confirmUnlink() {
     isUnlinking.value = false;
   }
 }
-
+ 
 function closeUnlinkSuccess() {
   showUnlinkSuccess.value = false;
 }
-
+ 
 function goToLink() {
   router.push({ name: 'AccountLinkSelect' });
 }
 </script>
-
+ 
 <template>
   <div class="min-h-screen max-w-[420px] mx-auto bg-(--color-bg) px-5 pt-8 pb-10">
     <!-- 완료 화면: 목록 위에 전체 화면으로 덮음 -->
@@ -76,21 +76,21 @@ function goToLink() {
         확인
       </button>
     </div>
-
+ 
     <template v-else>
       <header class="mb-7">
         <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">계좌 관리</h1>
         <p class="text-(length:--font-md) text-(color:--color-gray-600) mt-1">CODEF로 연동된 계좌를 확인해요</p>
       </header>
-
+ 
       <section class="mb-6">
         <h2 class="text-(length:--font-base) font-semibold text-(color:--color-navy) mb-3">연동된 계좌</h2>
-
+ 
         <p v-if="store.isLoading" class="text-(length:--font-sm) text-(color:--color-gray-500)">불러오는 중이에요…</p>
         <p v-else-if="store.accounts.length === 0" class="text-(length:--font-sm) text-(color:--color-gray-500)">
           아직 연동된 계좌가 없어요
         </p>
-
+ 
         <ul class="flex flex-col gap-3">
           <li
             v-for="account in store.accounts"
@@ -120,14 +120,14 @@ function goToLink() {
           </li>
         </ul>
       </section>
-
+ 
       <button
         class="w-full py-4 rounded-xl bg-(--color-navy) text-(color:--color-white) font-bold mb-6"
         @click="goToLink"
       >
         + 계좌 연동하기
       </button>
-
+ 
       <div class="p-4 rounded-2xl bg-(--color-surface)">
         <p class="text-(length:--font-sm) font-semibold text-(color:--color-navy) mb-1">
           계좌 데이터는 CODEF API를 통해 조회 전용으로 연동돼요
@@ -137,14 +137,14 @@ function goToLink() {
         </p>
       </div>
     </template>
-
+ 
     <!-- 해제 확인 바텀시트 -->
-    <BottomSheet :model-value="showUnlinkSheet" @update:model-value="closeUnlinkSheet">
+    <BottomSheet :model-value="showUnlinkSheet" size="tall" @update:model-value="closeUnlinkSheet">
       <div v-if="pendingAccount" class="flex flex-col items-center text-center">
-        <img :src="petDeleteWarning" alt="" class="w-32 h-auto mb-4" />
+        <img :src="petDeleteWarning" alt="" class="w-24 h-auto mb-3" />
         <h3 class="text-(length:--font-lg) font-bold text-(color:--color-navy) mb-1">계좌 연동을 해제할까요?</h3>
         <p class="text-(length:--font-sm) text-(color:--color-gray-600) mb-5">해제 후에도 언제든 다시 연동할 수 있어요</p>
-
+ 
         <div class="w-full flex items-center gap-3 p-4 rounded-2xl bg-(--color-surface) mb-4 text-left">
           <BankBadge :bank-code="pendingAccount.bankCode" :size="40" />
           <div>
@@ -156,7 +156,7 @@ function goToLink() {
             </p>
           </div>
         </div>
-
+ 
         <ul class="w-full flex flex-col gap-2 mb-6 text-left">
           <li class="flex items-start gap-2 text-(length:--font-sm) text-(color:--color-gray-600)">
             <span class="w-1 h-1 rounded-full bg-(--color-gray-500) mt-2 shrink-0" />
@@ -171,7 +171,7 @@ function goToLink() {
             다시 연동하면 잔액이 새로 조회돼요
           </li>
         </ul>
-
+ 
         <div class="w-full flex gap-3">
           <button
             class="flex-1 py-3.5 rounded-xl border border-(--color-border) text-(color:--color-navy) font-semibold"
