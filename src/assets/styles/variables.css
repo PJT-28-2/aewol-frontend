@@ -8,10 +8,19 @@
   --color-slate: #98a4bc;
   --color-slate-muted: #8a93a6;
   --color-slate-dark: #4a5a7d;
+  --color-slate-light: #c9d1e3;
   --color-white: #ffffff;
   --color-bg: #ffffff;
   --color-surface: #fafaf8;
   --color-border: #eaeae4;
+  --color-olive-surface: #eef3e2;
+  --color-olive-dark: #3f5a08;
+  --color-olive-muted: #5c7a2e;
+  --color-gold-surface: #fbe7c6;
+  --color-gold-dark: #d99a2b;
+  --color-info-surface: #dce6f5;
+  --color-danger-surface: #f2e3e3;
+  --color-danger-dark: #8a3b3b;
 
   /* Colors - Gray Scale */
   --color-gray-100: #f8f9fa;
@@ -78,4 +87,7 @@
   --bottom-nav-height: 64px;
   --header-height: 56px;
   --layout-max-width: 480px;
+  --mobile-content-width: 390px;
+  --control-height: 46px;
+  --control-height-lg: 52px;
 }
