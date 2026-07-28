@@ -130,7 +130,7 @@ function confirmAddress() {
   isAddressSheetOpen.value = false;
 }
 
-// 결제 API/라우팅은 아직 미구현 — 버튼만 배치
+// 결제 API/라우팅은 아직 미구현 — 비밀번호 인증 완료 후 호출
 function handlePayment() {
   // TODO: 결제 처리 및 이후 라우팅 연동 예정
 }
@@ -139,6 +139,43 @@ function handlePayment() {
 function handleCharge() {
   // TODO: /wallet/charge 라우팅 연동 예정
 }
+
+// 송금 비밀번호 인증 바텀시트
+const PIN_LENGTH = 6;
+const pinInput = ref('');
+const keypadKeys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', '⌫'];
+const isPinSheetOpen = ref(false);
+
+function openPinSheet() {
+  pinInput.value = '';
+  isPinSheetOpen.value = true;
+}
+
+function closePinSheet() {
+  isPinSheetOpen.value = false;
+}
+
+function handlePinKeyPress(digit) {
+  if (!digit || pinInput.value.length >= PIN_LENGTH) return;
+
+  pinInput.value += digit;
+  if (pinInput.value.length === PIN_LENGTH) {
+    handlePinComplete();
+  }
+}
+
+function handlePinBackspace() {
+  pinInput.value = pinInput.value.slice(0, -1);
+}
+
+// TODO: 비밀번호 검증 API 연동 예정, 현재는 6자리 입력 완료 시 바로 결제 진행
+function handlePinComplete() {
+  closePinSheet();
+  handlePayment();
+}
+
+// TODO: 생체인증 전환 연동 예정
+function handleSwitchToBiometric() {}
 </script>
 
 <template>
@@ -361,7 +398,7 @@ function handleCharge() {
           ? 'bg-(--color-navy) text-(color:--color-white)'
           : 'bg-(--color-border) text-(color:--color-slate-muted) cursor-not-allowed'
       "
-      @click="handlePayment"
+      @click="openPinSheet"
     >
       {{
         shippingAddress
@@ -515,6 +552,53 @@ function handleCharge() {
           @click="confirmAddress"
         >
           확인
+        </button>
+      </div>
+    </BottomSheet>
+
+    <!-- 송금 비밀번호 인증 바텀시트 -->
+    <BottomSheet v-model="isPinSheetOpen">
+      <div class="text-center">
+        <h2 class="text-(length:--font-lg) font-bold text-(color:--color-navy)">
+          비밀번호를 입력해주세요
+        </h2>
+        <p class="text-(length:--font-sm) text-(color:--color-gray-500) mt-(--space-2)">
+          {{ totalAmount.toLocaleString() }}원을 안전하게 보내기 위해 확인해요
+        </p>
+
+        <div class="flex items-center justify-center gap-(--space-2) mt-(--space-6)">
+          <span
+            v-for="index in PIN_LENGTH"
+            :key="index"
+            class="w-3 h-3 rounded-full"
+            :class="
+              index <= pinInput.length
+                ? 'bg-(--color-navy)'
+                : 'border border-(--color-border)'
+            "
+          />
+        </div>
+
+        <button
+          type="button"
+          class="mt-(--space-6) text-(length:--font-sm) font-bold text-(color:--color-slate-dark)"
+          @click="handleSwitchToBiometric"
+        >
+          🔒 생체인증으로 전환
+        </button>
+      </div>
+
+      <div class="grid grid-cols-3 gap-(--space-4) mt-(--space-7)">
+        <button
+          v-for="key in keypadKeys"
+          :key="key || 'blank'"
+          type="button"
+          :disabled="key === ''"
+          class="h-14 flex items-center justify-center text-(length:--font-2xl) font-bold text-(color:--color-navy)"
+          :class="{ invisible: key === '' }"
+          @click="key === '⌫' ? handlePinBackspace() : handlePinKeyPress(key)"
+        >
+          {{ key }}
         </button>
       </div>
     </BottomSheet>
