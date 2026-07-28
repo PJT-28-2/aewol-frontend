@@ -402,7 +402,7 @@ function mockSimulate() {
   padding: var(--space-4);
   padding-bottom: calc(var(--bottom-nav-height) + var(--space-4));
   background-color: var(--color-bg);
-  min-height: 100vh;
+  min-height: calc(100vh - var(--header-height) - var(--bottom-nav-height));
 }
 
 .page-header {
