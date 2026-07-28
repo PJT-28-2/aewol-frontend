@@ -1,7 +1,11 @@
 <script setup>
 import { computed, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import productImage from '@/assets/images/grouppurchase/mock-product-dogfood.png'
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
+
+const route = useRoute()
+const router = useRouter()
 
 // TODO: 백엔드 API 연동 후 mock 데이터 제거하고 실제 fetch로 교체 (상세 데이터 연동은 별도 작업에서 진행)
 // 필드명은 group_purchase 테이블 컬럼(gp_id, delivery_method, delivery_fee, delivery_date, deadline 등) 기준
@@ -105,6 +109,10 @@ const arrivalDateLabel = computed(() => {
   const date = toLocalDate(groupPurchase.value.deliveryDate)
   return `${date.getMonth() + 1}/${date.getDate()}(${WEEKDAY_LABELS[date.getDay()]}) 도착 보장`
 })
+
+function goToPaymentPreview() {
+  router.push(`/group-purchase/${route.params.gpId}/payment-preview`)
+}
 </script>
 
 <template>
@@ -115,7 +123,7 @@ const arrivalDateLabel = computed(() => {
         aria-label="뒤로 가기"
         class="inline-flex items-center mb-(--space-3) text-(color:--color-navy)"
       >
-        <IconArrowLeft :size="24" color="currentColor" />
+        <IconArrowLeft size="24" />
       </router-link>
       <h1 class="text-(length:--font-xl) font-bold text-(color:--color-navy)">
         공동구매 참여
@@ -242,6 +250,7 @@ const arrivalDateLabel = computed(() => {
       <button
         type="button"
         class="w-full h-[52px] rounded-2xl bg-(--color-navy) text-(color:--color-white) text-(length:--font-md) font-bold"
+        @click="goToPaymentPreview"
       >
         {{ totalPrice.toLocaleString() }}원 결제하기
       </button>
