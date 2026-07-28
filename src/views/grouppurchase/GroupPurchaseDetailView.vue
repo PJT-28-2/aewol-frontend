@@ -4,6 +4,7 @@ import productImage from '@/assets/images/grouppurchase/mock-product-dogfood.png
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 
 // TODO: 백엔드 API 연동 후 mock 데이터 제거하고 실제 fetch로 교체 (상세 데이터 연동은 별도 작업에서 진행)
+// 필드명은 group_purchase 테이블 컬럼(gp_id, delivery_method, delivery_fee, delivery_date, deadline 등) 기준
 const groupPurchase = ref({
   productName: '프리미엄 사료 15kg',
   image: productImage,
@@ -11,11 +12,24 @@ const groupPurchase = ref({
   unitPrice: 40000,
   currentQuantity: 32,
   targetQuantity: 50,
-  deadlineLabel: 'D-3',
-  shippingLabel: '공동구매 마감 후 3일 이내 발송 · 무료배송',
-  shippingFeeLabel: '무료',
-  arrivalDateLabel: '7/25(토) 도착 보장',
+  deadline: '2026-08-01',
+  deliveryMethod: '공동구매 마감 후 3일 이내 발송',
+  deliveryFee: 0,
+  deliveryDate: '2026-08-04',
 })
+
+const WEEKDAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
+
+// 'YYYY-MM-DD' 문자열을 UTC 파싱으로 인한 날짜 밀림 없이 로컬 자정 Date로 변환
+function toLocalDate(dateString) {
+  const [year, month, day] = dateString.split('-').map(Number)
+  return new Date(year, month - 1, day)
+}
+
+function startOfToday() {
+  const now = new Date()
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate())
+}
 
 const quantity = ref(1)
 
@@ -64,6 +78,33 @@ const progressPercent = computed(() =>
 const totalPrice = computed(
   () => groupPurchase.value.groupPrice * quantity.value,
 )
+
+// raw deadline 값에서 남은 일수를 D-day 라벨로 변환
+const deadlineLabel = computed(() => {
+  const diffDays = Math.ceil(
+    (toLocalDate(groupPurchase.value.deadline) - startOfToday()) / (1000 * 60 * 60 * 24),
+  )
+  return `D-${Math.max(diffDays, 0)}`
+})
+
+// delivery_fee가 0원이면 무료로 표시
+const deliveryFeeLabel = computed(() =>
+  groupPurchase.value.deliveryFee === 0
+    ? '무료'
+    : `${groupPurchase.value.deliveryFee.toLocaleString()}원`,
+)
+
+// delivery_method와 배송비 유무를 합친 안내 문구
+const shippingSummaryLabel = computed(() => {
+  const feeSuffix = groupPurchase.value.deliveryFee === 0 ? '무료배송' : '유료배송'
+  return `${groupPurchase.value.deliveryMethod} · ${feeSuffix}`
+})
+
+// raw delivery_date를 'M/D(요일) 도착 보장' 형식으로 변환
+const arrivalDateLabel = computed(() => {
+  const date = toLocalDate(groupPurchase.value.deliveryDate)
+  return `${date.getMonth() + 1}/${date.getDate()}(${WEEKDAY_LABELS[date.getDay()]}) 도착 보장`
+})
 </script>
 
 <template>
@@ -129,7 +170,7 @@ const totalPrice = computed(
       </div>
       <div class="flex items-center justify-between">
         <p class="text-(length:--font-xs) text-(color:--color-slate-muted)">
-          마감까지 {{ groupPurchase.deadlineLabel }}
+          마감까지 {{ deadlineLabel }}
         </p>
         <!-- 목표까지 남은 수량도 선택 수량 반영 기준으로 갱신 -->
         <p class="text-(length:--font-xs) font-bold text-(color:--color-discount-text)">
@@ -176,14 +217,14 @@ const totalPrice = computed(
     <!-- 배송 안내 -->
     <section class="p-(--space-4) rounded-2xl bg-(--color-surface) mb-(--space-6)">
       <p class="text-(length:--font-sm) font-bold text-(color:--color-navy) pb-(--space-3) mb-(--space-3) border-b border-(--color-border)">
-        {{ groupPurchase.shippingLabel }}
+        {{ shippingSummaryLabel }}
       </p>
       <div class="flex items-center justify-between mb-(--space-2)">
         <p class="text-(length:--font-xs) text-(color:--color-slate-muted)">
           배송비
         </p>
         <p class="text-(length:--font-xs) font-bold text-(color:--color-navy)">
-          {{ groupPurchase.shippingFeeLabel }}
+          {{ deliveryFeeLabel }}
         </p>
       </div>
       <div class="flex items-center justify-between">
@@ -191,7 +232,7 @@ const totalPrice = computed(
           도착 예정일
         </p>
         <p class="text-(length:--font-xs) font-bold text-(color:--color-navy)">
-          {{ groupPurchase.arrivalDateLabel }}
+          {{ arrivalDateLabel }}
         </p>
       </div>
     </section>
