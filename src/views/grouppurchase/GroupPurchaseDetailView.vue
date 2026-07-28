@@ -116,7 +116,7 @@ function goToPaymentPreview() {
 </script>
 
 <template>
-  <div class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+96px)] bg-(--color-bg) min-h-screen">
+  <div class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--size-cta-bar-height))] bg-(--color-bg) min-h-screen">
     <header class="mb-(--space-5)">
       <router-link
         to="/group-purchase"
@@ -132,7 +132,7 @@ function goToPaymentPreview() {
 
     <!-- 상품 정보 -->
     <section class="flex flex-col items-start mb-(--space-6)">
-      <div class="w-[110px] h-[110px] rounded-2xl bg-(--color-surface) overflow-hidden mb-(--space-4)">
+      <div class="w-(--size-thumb-lg) h-(--size-thumb-lg) rounded-2xl bg-(--color-surface) overflow-hidden mb-(--space-4)">
         <img
           :src="groupPurchase.image"
           alt=""
@@ -170,7 +170,7 @@ function goToPaymentPreview() {
         </p>
       </div>
       <!-- 진행률 바도 선택 수량 반영 기준으로 실시간 갱신 -->
-      <div class="h-[8px] rounded-full bg-(--color-border) overflow-hidden mb-(--space-2)">
+      <div class="h-(--size-progress-bar) rounded-full bg-(--color-border) overflow-hidden mb-(--space-2)">
         <div
           class="h-full rounded-full bg-(--color-gold)"
           :style="{ width: `${progressPercent}%` }"
@@ -193,7 +193,7 @@ function goToPaymentPreview() {
         수량 선택
       </p>
       <div
-        class="flex items-center justify-between h-[46px] px-(--space-4) rounded-xl bg-(--color-surface) border border-(--color-border)"
+        class="flex items-center justify-between h-(--size-stepper-box) px-(--space-4) rounded-xl bg-(--color-surface) border border-(--color-border)"
       >
         <p class="text-(length:--font-sm) font-bold text-(color:--color-navy)">
           {{ quantity }}개
@@ -202,18 +202,18 @@ function goToPaymentPreview() {
         <div class="flex items-center gap-(--space-3)">
           <button
             type="button"
-            class="size-[34px] rounded-lg bg-(--color-white) border border-(--color-border) text-(length:--font-md) font-bold text-(color:--color-slate-dark) disabled:opacity-40"
+            class="size-(--size-stepper-btn) rounded-lg bg-(--color-white) border border-(--color-border) text-(length:--font-md) font-bold text-(color:--color-slate-dark) disabled:opacity-40"
             :disabled="quantity <= 1"
             @click="decreaseQuantity"
           >
             −
           </button>
-          <p class="w-[24px] text-center text-(length:--font-sm) font-bold text-(color:--color-navy)">
+          <p class="w-(--size-stepper-value) text-center text-(length:--font-sm) font-bold text-(color:--color-navy)">
             {{ quantity }}
           </p>
           <button
             type="button"
-            class="size-[34px] rounded-lg bg-(--color-white) border border-(--color-border) text-(length:--font-md) font-bold text-(color:--color-slate-dark)"
+            class="size-(--size-stepper-btn) rounded-lg bg-(--color-white) border border-(--color-border) text-(length:--font-md) font-bold text-(color:--color-slate-dark)"
             @click="increaseQuantity"
           >
             +
@@ -249,7 +249,7 @@ function goToPaymentPreview() {
     <div class="fixed bottom-(--bottom-nav-height) inset-x-0 p-(--space-4) bg-(--color-white)">
       <button
         type="button"
-        class="w-full h-[52px] rounded-2xl bg-(--color-navy) text-(color:--color-white) text-(length:--font-md) font-bold"
+        class="w-full h-(--size-button-lg) rounded-2xl bg-(--color-navy) text-(color:--color-white) text-(length:--font-md) font-bold"
         @click="goToPaymentPreview"
       >
         {{ totalPrice.toLocaleString() }}원 결제하기

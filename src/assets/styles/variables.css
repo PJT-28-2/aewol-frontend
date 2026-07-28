@@ -80,4 +80,13 @@
   --bottom-nav-height: 64px;
   --header-height: 56px;
   --layout-max-width: 480px;
+
+  /* Component Sizes */
+  --size-thumb-lg: 110px;
+  --size-progress-bar: 8px;
+  --size-stepper-box: 46px;
+  --size-stepper-btn: 34px;
+  --size-stepper-value: 24px;
+  --size-button-lg: 52px;
+  --size-cta-bar-height: 96px;
 }
