@@ -219,6 +219,7 @@ function mockSimulate() {
               <component
                 :is="pet.species === 'CAT' ? IconCat : IconDog"
                 :size="16"
+                :color="pet.id === selectedPetId ? 'var(--color-white)' : 'var(--color-navy)'"
               />
               {{ pet.name }}
             </button>
