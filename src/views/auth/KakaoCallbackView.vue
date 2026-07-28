@@ -1,20 +1,51 @@
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { onMounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+
+const KAKAO_OAUTH_STATE_KEY = 'kakaoOAuthState'
 
 const route = useRoute()
+const router = useRouter()
+const authStore = useAuthStore()
 const errorMessage = ref('')
 
 onMounted(async () => {
-  const code = route.query.code
+  const returnedState =
+    typeof route.query.state === 'string' ? route.query.state : ''
+  const expectedState = window.sessionStorage.getItem(
+    KAKAO_OAUTH_STATE_KEY,
+  )
+
+  window.sessionStorage.removeItem(KAKAO_OAUTH_STATE_KEY)
+
+  if (
+    !expectedState ||
+    !returnedState ||
+    returnedState !== expectedState
+  ) {
+    errorMessage.value = '유효하지 않은 로그인 요청입니다. 다시 시도해주세요.'
+    return
+  }
+
+  if (route.query.error) {
+    errorMessage.value = '카카오 로그인이 취소되었거나 실패했습니다.'
+    return
+  }
+
+  const code = typeof route.query.code === 'string' ? route.query.code : ''
   if (!code) {
     errorMessage.value = '인증 코드가 없습니다.'
     return
   }
 
-  // TODO: implement with authApi.kakaoLogin(code)
-  // On success: store tokens, redirect to home
-  // On failure: show error, redirect to login
+  try {
+    await authStore.kakaoLogin(code)
+    await router.replace('/home')
+  } catch (error) {
+    errorMessage.value =
+      error.response?.data?.message ?? '카카오 로그인 처리에 실패했습니다.'
+  }
 })
 </script>
 

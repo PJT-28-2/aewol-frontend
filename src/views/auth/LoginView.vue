@@ -14,6 +14,15 @@ const email = ref('')
 const password = ref('')
 const isLoading = ref(false)
 const errorMessage = ref('')
+const KAKAO_OAUTH_STATE_KEY = 'kakaoOAuthState'
+
+const createOAuthState = () => {
+  const randomBytes = new Uint8Array(32)
+  window.crypto.getRandomValues(randomBytes)
+  return Array.from(randomBytes, (byte) =>
+    byte.toString(16).padStart(2, '0'),
+  ).join('')
+}
 
 const handleEmailLogin = async () => {
   errorMessage.value = ''
@@ -33,7 +42,7 @@ const handleEmailLogin = async () => {
 const handleKakaoLogin = () => {
   const clientId = import.meta.env.VITE_KAKAO_REST_API_KEY
   const redirectUri =
-    import.meta.env.VITE_KAKAO_REDIRECT_URI ??
+    import.meta.env.VITE_KAKAO_REDIRECT_URI ||
     `${window.location.origin}/callback/kakao`
 
   if (!clientId) {
@@ -41,10 +50,14 @@ const handleKakaoLogin = () => {
     return
   }
 
+  const state = createOAuthState()
+  window.sessionStorage.setItem(KAKAO_OAUTH_STATE_KEY, state)
+
   const params = new URLSearchParams({
     client_id: clientId,
     redirect_uri: redirectUri,
     response_type: 'code',
+    state,
   })
 
   window.location.assign(`https://kauth.kakao.com/oauth/authorize?${params}`)
