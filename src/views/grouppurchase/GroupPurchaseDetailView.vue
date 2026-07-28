@@ -12,6 +12,9 @@ const groupPurchase = ref({
   currentQuantity: 32,
   targetQuantity: 50,
   deadlineLabel: 'D-3',
+  shippingLabel: '공동구매 마감 후 3일 이내 발송 · 무료배송',
+  shippingFeeLabel: '무료',
+  arrivalDateLabel: '7/25(토) 도착 보장',
 })
 
 const quantity = ref(1)
@@ -167,6 +170,29 @@ const totalPrice = computed(
             +
           </button>
         </div>
+      </div>
+    </section>
+
+    <!-- 배송 안내 -->
+    <section class="p-(--space-4) rounded-2xl bg-(--color-surface) mb-(--space-6)">
+      <p class="text-(length:--font-sm) font-bold text-(color:--color-navy) pb-(--space-3) mb-(--space-3) border-b border-(--color-border)">
+        {{ groupPurchase.shippingLabel }}
+      </p>
+      <div class="flex items-center justify-between mb-(--space-2)">
+        <p class="text-(length:--font-xs) text-(color:--color-slate-muted)">
+          배송비
+        </p>
+        <p class="text-(length:--font-xs) font-bold text-(color:--color-navy)">
+          {{ groupPurchase.shippingFeeLabel }}
+        </p>
+      </div>
+      <div class="flex items-center justify-between">
+        <p class="text-(length:--font-xs) text-(color:--color-slate-muted)">
+          도착 예정일
+        </p>
+        <p class="text-(length:--font-xs) font-bold text-(color:--color-navy)">
+          {{ groupPurchase.arrivalDateLabel }}
+        </p>
       </div>
     </section>
 
