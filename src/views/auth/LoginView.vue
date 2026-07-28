@@ -135,45 +135,84 @@ const handleKakaoLogin = () => {
 </script>
 
 <template>
-  <main class="login-page">
+  <main
+    class="mx-auto min-h-svh w-[min(100%,390px)] overflow-hidden rounded-[40px] bg-(--color-white) min-[391px]:my-[max(0px,calc((100svh-844px)/2))] min-[391px]:min-h-[844px] min-[391px]:shadow-(--shadow-lg) max-h-[700px]:min-h-[700px]"
+  >
     <template v-if="!showEmailForm">
-      <section class="login-hero" aria-labelledby="login-title">
+      <section
+        class="relative h-[480px] bg-(--color-pastel-blue) max-h-[700px]:h-[420px]"
+        aria-labelledby="login-title"
+      >
         <h1 id="login-title" class="sr-only">애월 로그인</h1>
 
-        <div class="login-illustration">
-          <img :src="loginIllustration" alt="" />
+        <div
+          class="absolute top-[93px] left-[89px] h-[174px] w-[180px] overflow-hidden max-h-[700px]:top-[52px]"
+        >
+          <img
+            class="absolute top-[-20.73%] left-[-40.17%] h-[198.31%] w-[191.26%] max-w-none"
+            :src="loginIllustration"
+            alt=""
+          />
         </div>
 
-        <img class="login-logo" :src="aewolLogo" alt="애월" />
-        <p class="login-tagline">반려동물을 위한, 전자 지갑</p>
+        <img
+          class="absolute top-[286px] left-1/2 h-[58px] w-[120px] -translate-x-1/2 object-cover max-h-[700px]:top-[245px]"
+          :src="aewolLogo"
+          alt="애월"
+        />
+        <p
+          class="absolute top-[363px] w-full text-center text-[13px] leading-[1.3] text-(color:--color-slate-dark) max-h-[700px]:top-[322px]"
+        >
+          반려동물을 위한, 전자 지갑
+        </p>
       </section>
 
-      <section class="login-actions" aria-label="로그인 메뉴">
-        <button class="login-button login-button--kakao" type="button" @click="handleKakaoLogin">
+      <section
+        class="relative flex flex-col gap-[14px] px-[26px] pt-[60px] pb-8 max-h-[700px]:pt-9"
+        aria-label="로그인 메뉴"
+      >
+        <button
+          class="flex h-[52px] w-full items-center justify-center rounded-(--radius-xl) bg-[#fee500] text-[14.5px] leading-[1.3] font-(--font-bold) text-[#181600]"
+          type="button"
+          @click="handleKakaoLogin"
+        >
           카카오로 3초만에 시작하기
         </button>
         <button
-          class="login-button login-button--email"
+          class="flex h-[52px] w-full items-center justify-center rounded-(--radius-xl) bg-(--color-navy) text-[14.5px] leading-[1.3] font-(--font-bold) text-(color:--color-white)"
           type="button"
           @click="openEmailLogin"
         >
           이메일로 로그인
         </button>
 
-        <nav class="login-links" aria-label="회원 메뉴">
+        <nav
+          class="mt-[9px] flex justify-center gap-[7px] text-[12.5px] leading-[1.3] font-(--font-bold) text-(color:--color-slate-dark)"
+          aria-label="회원 메뉴"
+        >
           <router-link to="/signup">회원가입</router-link>
           <span aria-hidden="true">|</span>
           <router-link to="/id/find">아이디 찾기</router-link>
           <span aria-hidden="true">|</span>
           <router-link to="/password/reset">비밀번호 찾기</router-link>
         </nav>
-        <p v-if="errorMessage" class="login-error" role="alert">{{ errorMessage }}</p>
+        <p
+          v-if="errorMessage"
+          class="text-center text-(length:--font-sm) text-(color:--color-danger)"
+          role="alert"
+        >
+          {{ errorMessage }}
+        </p>
       </section>
     </template>
 
-    <section v-else class="email-login" aria-labelledby="email-login-title">
+    <section
+      v-else
+      class="relative min-h-[700px] px-[22px] pt-[108px] pb-8"
+      aria-labelledby="email-login-title"
+    >
       <button
-        class="email-login__back"
+        class="absolute top-[60px] left-[22px] size-[26px] text-(color:--color-navy)"
         type="button"
         aria-label="이전 화면으로 돌아가기"
         @click="closeEmailLogin"
@@ -181,35 +220,61 @@ const handleKakaoLogin = () => {
         <IconArrowLeft :size="26" />
       </button>
 
-      <h2 id="email-login-title" class="email-login__title">이메일로 로그인</h2>
-      <p class="email-login__description">계정 정보를 입력해주세요</p>
+      <h2
+        id="email-login-title"
+        class="text-(length:--font-xl) leading-[1.3] font-(--font-bold) text-(color:--color-navy)"
+      >
+        이메일로 로그인
+      </h2>
+      <p class="mt-[3px] text-[12.5px] leading-[1.3] text-(color:--color-slate-muted)">
+        계정 정보를 입력해주세요
+      </p>
 
-      <form class="email-form" @submit.prevent="handleEmailLogin">
-        <label for="email">이메일</label>
+      <form class="mt-9 flex flex-col" @submit.prevent="handleEmailLogin">
+        <label
+          class="mb-1 text-[12.5px] leading-[1.3] font-(--font-bold) text-(color:--color-slate-dark)"
+          for="email"
+        >
+          이메일
+        </label>
         <input
           id="email"
           v-model="email"
+          class="h-[46px] w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
           type="email"
           autocomplete="email"
           placeholder="example@aewol.com"
           required
         />
-        <label for="password">비밀번호</label>
+        <label
+          class="mt-[11px] mb-1 text-[12.5px] leading-[1.3] font-(--font-bold) text-(color:--color-slate-dark)"
+          for="password"
+        >
+          비밀번호
+        </label>
         <input
           id="password"
           v-model="password"
+          class="h-[46px] w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
           type="password"
           autocomplete="current-password"
           placeholder="8자 이상 입력해주세요"
           minlength="8"
           required
         />
-        <button class="login-button login-button--email" type="submit" :disabled="isLoading">
+        <button
+          class="mt-6 flex h-[52px] w-full items-center justify-center rounded-(--radius-xl) bg-(--color-gold) text-[14.5px] leading-[1.3] font-(--font-bold) text-(color:--color-navy) disabled:cursor-wait disabled:opacity-65"
+          type="submit"
+          :disabled="isLoading"
+        >
           {{ isLoading ? '로그인 중...' : '로그인' }}
         </button>
       </form>
 
-      <nav class="login-links email-login__links" aria-label="회원 메뉴">
+      <nav
+        class="mt-[15px] flex justify-center gap-[7px] text-[12.5px] leading-[1.3] font-(--font-bold) text-(color:--color-slate-dark)"
+        aria-label="회원 메뉴"
+      >
         <router-link to="/signup">회원가입</router-link>
         <span aria-hidden="true">|</span>
         <router-link to="/id/find">아이디 찾기</router-link>
@@ -217,229 +282,13 @@ const handleKakaoLogin = () => {
         <router-link to="/password/reset">비밀번호 찾기</router-link>
       </nav>
 
-      <p v-if="errorMessage" class="login-error" role="alert">{{ errorMessage }}</p>
+      <p
+        v-if="errorMessage"
+        class="text-center text-(length:--font-sm) text-(color:--color-danger)"
+        role="alert"
+      >
+        {{ errorMessage }}
+      </p>
     </section>
   </main>
 </template>
-
-<style scoped>
-.login-page {
-  width: min(100%, 390px);
-  min-height: 100svh;
-  margin: 0 auto;
-  overflow: hidden;
-  background: var(--color-white);
-  border-radius: 40px;
-}
-
-.login-hero {
-  position: relative;
-  height: 480px;
-  background: var(--color-pastel-blue);
-}
-
-.login-illustration {
-  position: absolute;
-  top: 93px;
-  left: 89px;
-  width: 180px;
-  height: 174px;
-  overflow: hidden;
-}
-
-.login-illustration img {
-  position: absolute;
-  top: -20.73%;
-  left: -40.17%;
-  width: 191.26%;
-  height: 198.31%;
-  max-width: none;
-}
-
-.login-logo {
-  position: absolute;
-  top: 286px;
-  left: 50%;
-  width: 120px;
-  height: 58px;
-  object-fit: cover;
-  transform: translateX(-50%);
-}
-
-.login-tagline {
-  position: absolute;
-  top: 363px;
-  width: 100%;
-  color: var(--color-slate-dark);
-  font-size: 13px;
-  line-height: 1.3;
-  text-align: center;
-}
-
-.login-actions {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  padding: 60px 26px 32px;
-}
-
-.login-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 52px;
-  border-radius: var(--radius-xl);
-  font-size: 14.5px;
-  font-weight: var(--font-bold);
-  line-height: 1.3;
-}
-
-.login-button--kakao {
-  color: #181600;
-  background: #fee500;
-}
-
-.login-button--email {
-  color: var(--color-white);
-  background: var(--color-navy);
-}
-
-.login-button:disabled {
-  cursor: wait;
-  opacity: 0.65;
-}
-
-.login-links {
-  display: flex;
-  justify-content: center;
-  gap: 7px;
-  margin-top: 9px;
-  color: var(--color-slate-dark);
-  font-size: 12.5px;
-  font-weight: var(--font-bold);
-  line-height: 1.3;
-}
-
-.email-form {
-  display: flex;
-  flex-direction: column;
-}
-
-.email-login {
-  position: relative;
-  min-height: 700px;
-  padding: 108px 22px 32px;
-}
-
-.email-login__back {
-  position: absolute;
-  top: 60px;
-  left: 22px;
-  width: 26px;
-  height: 26px;
-  color: var(--color-navy);
-}
-
-.email-login__title {
-  color: var(--color-navy);
-  font-size: var(--font-xl);
-  font-weight: var(--font-bold);
-  line-height: 1.3;
-}
-
-.email-login__description {
-  margin-top: 3px;
-  color: var(--color-slate-muted);
-  font-size: 12.5px;
-  line-height: 1.3;
-}
-
-.email-form {
-  margin-top: 36px;
-}
-
-.email-form label {
-  margin-bottom: 4px;
-  color: var(--color-slate-dark);
-  font-size: 12.5px;
-  font-weight: var(--font-bold);
-  line-height: 1.3;
-}
-
-.email-form input {
-  width: 100%;
-  height: 46px;
-  padding: 0 13px;
-  color: var(--color-navy);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  font-size: 13px;
-  outline: none;
-}
-
-.email-form input + label {
-  margin-top: 11px;
-}
-
-.email-form input::placeholder {
-  color: var(--color-slate-muted);
-  opacity: 1;
-}
-
-.email-form input:focus {
-  border-color: var(--color-navy);
-}
-
-.email-form .login-button {
-  margin-top: 24px;
-  color: var(--color-navy);
-  background: var(--color-gold);
-}
-
-.email-login__links {
-  margin-top: 15px;
-}
-
-.login-error {
-  color: var(--color-danger);
-  font-size: var(--font-sm);
-  text-align: center;
-}
-
-@media (min-width: 391px) {
-  .login-page {
-    min-height: 844px;
-    margin-block: max(0px, calc((100svh - 844px) / 2));
-    box-shadow: var(--shadow-lg);
-  }
-}
-
-@media (max-height: 700px) {
-  .login-page {
-    min-height: 700px;
-  }
-
-  .login-hero {
-    height: 420px;
-  }
-
-  .login-illustration {
-    top: 52px;
-  }
-
-  .login-logo {
-    top: 245px;
-  }
-
-  .login-tagline {
-    top: 322px;
-  }
-
-  .login-actions {
-    padding-top: 36px;
-  }
-}
-</style>

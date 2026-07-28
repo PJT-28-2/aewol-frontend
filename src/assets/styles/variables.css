@@ -85,6 +85,12 @@
   --control-height-md: 46px;
   --control-height-lg: 52px;
 
+  /* Auth Success Screen */
+  --auth-success-image-size: 149px;
+  --auth-success-password-image-offset: 41px;
+  --auth-success-find-id-image-offset: -11px;
+  --auth-success-title-gap: 9px;
+
   /* Layout */
   --bottom-nav-height: 64px;
   --header-height: 56px;
