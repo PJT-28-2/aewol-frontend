@@ -14,6 +14,26 @@ const groupPurchases = ref([
     dDay: 'D-3',
     badgeText: '30% 할인',
   },
+  {
+    id: 2,
+    productName: '강아지 관절 영양제 3개월분',
+    category: '영양제',
+    status: '진행중',
+    currentQuantity: 8,
+    targetQuantity: 30,
+    dDay: 'D-7',
+    badgeText: '20% 할인',
+  },
+  {
+    id: 3,
+    productName: '고양이 스크래처 장난감 세트',
+    category: '장난감',
+    status: '마감',
+    currentQuantity: 20,
+    targetQuantity: 20,
+    dDay: 'D-0',
+    badgeText: '15% 할인',
+  },
 ]);
 
 // 카테고리 필터: mock 데이터의 category 필드 기준으로 필터링 (현재는 클라이언트에서만 처리)
@@ -151,7 +171,7 @@ const filteredGroupPurchases = computed(() => {
             {{ gp.productName }}
           </h3>
           <p class="text-(length:--font-xs) text-(color:--color-gray-500) mb-(--space-2)">
-            {{ gp.currentQuantity }}/{{ gp.targetQuantity }}개 참여 · {{ gp.dDay }}
+            {{ gp.currentQuantity }}/{{ gp.targetQuantity }}개 참여 · {{ gp.status === '마감' ? '마감' : gp.dDay }}
           </p>
           <span class="text-(length:--font-xs) font-semibold text-(color:--color-gold)">
             {{ gp.badgeText }}
