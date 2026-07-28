@@ -2,6 +2,9 @@
 import { ref, computed } from 'vue'
 import IconDog from '@/components/common/icons/IconDog.vue'
 import IconCat from '@/components/common/icons/IconCat.vue'
+import IconChevronDown from '@/components/common/icons/IconChevronDown.vue'
+import IconCheck from '@/components/common/icons/IconCheck.vue'
+import BottomSheet from '@/components/common/BottomSheet.vue'
 
 // TODO(backend): 보험 시뮬레이터용 반려동물 프로필 조회 GET API가 아직 없어 목업으로 대체.
 // usePetStore는 이 화면에서 쓰지 않음 — 전용 API가 나오면 아래 목업을 그 호출로 교체.
@@ -28,6 +31,16 @@ const medicalOptions = [
 const pendingCode = ref(medicalOptions[0].code)
 const pendingOtherText = ref('')
 const medicalTags = ref([])
+
+const isMedicalSheetOpen = ref(false)
+const pendingLabel = computed(
+  () => medicalOptions.find((opt) => opt.code === pendingCode.value)?.label ?? '',
+)
+
+function selectPendingCode(code) {
+  pendingCode.value = code
+  isMedicalSheetOpen.value = false
+}
 
 function addMedicalTag() {
   if (medicalTags.value.some((tag) => tag.code === pendingCode.value)) return
@@ -221,18 +234,17 @@ function mockSimulate() {
           </div>
 
           <div class="tag-input-row">
-            <select
-              v-model="pendingCode"
-              class="tag-select"
+            <button
+              type="button"
+              class="tag-select-trigger"
+              @click="isMedicalSheetOpen = true"
             >
-              <option
-                v-for="opt in medicalOptions"
-                :key="opt.code"
-                :value="opt.code"
-              >
-                {{ opt.label }}
-              </option>
-            </select>
+              <span>{{ pendingLabel }}</span>
+              <IconChevronDown
+                size="16"
+                color="var(--color-gray-500)"
+              />
+            </button>
             <input
               v-if="pendingCode === 'OTHER'"
               v-model="pendingOtherText"
@@ -351,6 +363,36 @@ function mockSimulate() {
           </ul>
         </div>
       </section>
+
+      <BottomSheet
+        v-model="isMedicalSheetOpen"
+        title="병력 선택"
+      >
+        <ul>
+          <li
+            v-for="opt in medicalOptions"
+            :key="opt.code"
+          >
+            <button
+              type="button"
+              class="w-full flex items-center justify-between py-(--space-3) text-(length:--font-base)"
+              :class="
+                opt.code === pendingCode
+                  ? 'text-(color:--color-gold) font-bold'
+                  : 'text-(color:--color-slate-dark)'
+              "
+              @click="selectPendingCode(opt.code)"
+            >
+              <span>{{ opt.label }}</span>
+              <IconCheck
+                v-if="opt.code === pendingCode"
+                size="18"
+                color="var(--color-gold)"
+              />
+            </button>
+          </li>
+        </ul>
+      </BottomSheet>
     </template>
   </div>
 </template>
@@ -479,7 +521,7 @@ function mockSimulate() {
   gap: var(--space-2);
 }
 
-.tag-select,
+.tag-select-trigger,
 .tag-other-input {
   flex: 1;
   min-width: 0;
@@ -488,6 +530,16 @@ function mockSimulate() {
   border-radius: var(--radius-md);
   font-size: var(--font-base);
   box-sizing: border-box;
+}
+
+.tag-select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  background-color: var(--color-white);
+  color: var(--color-gray-800);
+  cursor: pointer;
 }
 
 .btn-add-tag {
