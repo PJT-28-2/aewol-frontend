@@ -7,7 +7,7 @@ import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 import IconCheck from '@/components/common/icons/IconCheck.vue'
 import IconChevronDown from '@/components/common/icons/IconChevronDown.vue'
 import IconImage from '@/components/common/icons/IconImage.vue'
-import { useGroupPurchaseCreateStore } from '@/stores/groupPurchaseCreate'
+import { useGroupPurchaseCreateStore } from '@/stores/groupPurchase'
 
 // 1~3단계가 공유하는 작성 데이터 (3단계 최종 확인에서 그대로 사용)
 const groupPurchaseCreateStore = useGroupPurchaseCreateStore()

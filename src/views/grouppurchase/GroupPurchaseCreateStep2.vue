@@ -5,7 +5,7 @@ import { useRouter } from 'vue-router';
 import BottomSheet from '@/components/common/BottomSheet.vue';
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue';
 import IconChevronDown from '@/components/common/icons/IconChevronDown.vue';
-import { useGroupPurchaseCreateStore } from '@/stores/groupPurchaseCreate';
+import { useGroupPurchaseCreateStore } from '@/stores/groupPurchase';
 
 // 1~3단계가 공유하는 작성 데이터 (3단계 최종 확인에서 그대로 사용)
 const groupPurchaseCreateStore = useGroupPurchaseCreateStore();

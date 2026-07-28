@@ -5,7 +5,7 @@ import { useRouter } from 'vue-router'
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 import IconImage from '@/components/common/icons/IconImage.vue'
 import IconInfo from '@/components/common/icons/IconInfo.vue'
-import { useGroupPurchaseCreateStore } from '@/stores/groupPurchaseCreate'
+import { useGroupPurchaseCreateStore } from '@/stores/groupPurchase'
 
 // 1~2단계에서 입력한 데이터를 그대로 가져와 확인 화면을 채움
 const groupPurchaseCreateStore = useGroupPurchaseCreateStore()
