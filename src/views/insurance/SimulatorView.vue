@@ -111,7 +111,14 @@ function handleReset() {
 }
 
 function openProduct(url) {
-  window.open(url, '_blank', 'noopener,noreferrer')
+  let parsed
+  try {
+    parsed = new URL(url, window.location.origin)
+  } catch {
+    return
+  }
+  if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return
+  window.open(parsed.href, '_blank', 'noopener,noreferrer')
 }
 
 // TODO(backend): recommendedProducts의 badge/joinAgeRange/coverages/productUrl은
