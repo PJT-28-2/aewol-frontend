@@ -1,257 +1,86 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import BottomNavBar from '@/components/common/BottomNavBar.vue'
 
-const members = ref([])
-const inviteEmail = ref('')
-const contributionStats = ref([])
-const isLoading = ref(true)
-const isInviting = ref(false)
+const router = useRouter()
+const selectedPet = ref('소로')
+const pets = ['소로', '나비']
+const members = [
+  { name: '이애월', ratio: 45, color: '#1B2A49' },
+  { name: '김애월', ratio: 30, color: '#F2B853' },
+  { name: '박애월', ratio: 15, color: '#6A930D' },
+  { name: '최애월', ratio: 10, color: '#98A4BC' },
+]
 
-onMounted(async () => {
-  // TODO: fetch shared wallet members and contribution stats
-  isLoading.value = false
-})
-
-const handleInvite = async () => {
-  // TODO: implement member invite
+function openInvite() {
+  router.push('/share/invite')
 }
 </script>
 
 <template>
-  <div class="share-page">
-    <header class="page-header">
-      <h1>공유 지갑</h1>
+  <main class="share-screen">
+    <header class="share-heading">
+      <h1>함께 돌보기</h1>
+      <p>가족과 지갑을 공유하고 기여도를 확인해요</p>
     </header>
 
-    <!-- Invite Form -->
-    <section class="invite-section card">
-      <h2>멤버 초대</h2>
-      <form class="invite-form" @submit.prevent="handleInvite">
-        <input
-          v-model="inviteEmail"
-          type="email"
-          placeholder="초대할 이메일 주소"
-          required
-        />
-        <button type="submit" class="btn-invite" :disabled="isInviting">
-          {{ isInviting ? '초대 중...' : '초대' }}
+    <div class="pet-switcher" role="tablist" aria-label="반려동물 선택">
+      <button
+        v-for="pet in pets"
+        :key="pet"
+        class="pet-tab"
+        :class="{ active: selectedPet === pet }"
+        type="button"
+        @click="selectedPet = pet"
+      >🐕 {{ pet }}</button>
+    </div>
+
+    <section class="members-block">
+      <h2>참여 중인 가족</h2>
+      <div class="member-avatars">
+        <div v-for="(member, index) in members.slice(0, 3)" :key="member.name" class="member-avatar-wrap">
+          <div class="member-avatar" :class="`avatar-${index}`">{{ member.name.slice(0, 1) }}</div>
+          <strong>{{ member.name }}</strong>
+        </div>
+        <button class="member-avatar-wrap invite-avatar" type="button" @click="openInvite">
+          <span class="member-avatar">+</span><strong>초대</strong>
         </button>
-      </form>
+      </div>
     </section>
 
-    <!-- Members List -->
-    <section class="members-section">
-      <h2>멤버 목록</h2>
-
-      <div v-if="isLoading" class="loading-state">
-        <p>로딩 중...</p>
+    <section class="contribution-card" aria-label="이번 달 기여 비율">
+      <div class="donut-chart">
+        <div class="donut-label"><strong>기여 비율</strong><span>이번 달</span></div>
       </div>
-
-      <div v-else-if="members.length === 0" class="empty-state">
-        <p>아직 멤버가 없습니다.</p>
-      </div>
-
-      <ul v-else class="member-list">
-        <li v-for="member in members" :key="member.id" class="member-item card">
-          <div class="member-avatar">
-            <!-- TODO: member avatar -->
-          </div>
-          <div class="member-info">
-            <h3>{{ member.name }}</h3>
-            <p class="member-email">{{ member.email }}</p>
-          </div>
-          <span class="member-role">{{ member.role === 'OWNER' ? '소유자' : '멤버' }}</span>
-        </li>
-      </ul>
     </section>
 
-    <!-- Contribution Stats -->
-    <section class="stats-section">
-      <h2>기여 통계</h2>
-
-      <div v-if="contributionStats.length === 0" class="empty-state">
-        <p>기여 내역이 없습니다.</p>
+    <section class="contribution-list">
+      <div v-for="member in members" :key="member.name" class="contribution-row">
+        <span class="legend-dot" :style="{ backgroundColor: member.color }"></span>
+        <strong>{{ member.name }}</strong><span class="ratio">{{ member.ratio }}%</span>
       </div>
-
-      <ul v-else class="stats-list">
-        <li v-for="stat in contributionStats" :key="stat.memberId" class="stat-item card">
-          <span class="stat-name">{{ stat.name }}</span>
-          <div class="stat-bar-wrapper">
-            <div class="stat-bar" :style="{ width: `${stat.percentage}%` }"></div>
-          </div>
-          <span class="stat-amount">{{ stat.amount?.toLocaleString() }}원</span>
-        </li>
-      </ul>
     </section>
-  </div>
+  </main>
+  <BottomNavBar />
 </template>
 
 <style scoped>
-.share-page {
-  padding: var(--space-4);
-  padding-bottom: calc(var(--bottom-nav-height) + var(--space-4));
-  background-color: var(--color-bg);
-  min-height: 100vh;
-}
-
-.page-header {
-  margin-bottom: var(--space-5);
-}
-
-.page-header h1 {
-  font-size: var(--font-2xl);
-  font-weight: var(--font-bold);
-  color: var(--color-navy);
-}
-
-.card {
-  background-color: var(--color-white);
-  border-radius: var(--radius-lg);
-  padding: var(--space-4);
-  box-shadow: var(--shadow-sm);
-}
-
-.invite-section {
-  margin-bottom: var(--space-6);
-}
-
-.invite-section h2 {
-  font-size: var(--font-base);
-  font-weight: var(--font-semibold);
-  color: var(--color-navy);
-  margin-bottom: var(--space-3);
-}
-
-.invite-form {
-  display: flex;
-  gap: var(--space-3);
-}
-
-.invite-form input {
-  flex: 1;
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--color-gray-300);
-  border-radius: var(--radius-md);
-  font-size: var(--font-md);
-  box-sizing: border-box;
-}
-
-.btn-invite {
-  padding: var(--space-3) var(--space-5);
-  background-color: var(--color-navy);
-  color: var(--color-white);
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: var(--font-md);
-  font-weight: var(--font-semibold);
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.btn-invite:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.members-section,
-.stats-section {
-  margin-bottom: var(--space-6);
-}
-
-.members-section h2,
-.stats-section h2 {
-  font-size: var(--font-lg);
-  font-weight: var(--font-semibold);
-  color: var(--color-navy);
-  margin-bottom: var(--space-4);
-}
-
-.loading-state,
-.empty-state {
-  text-align: center;
-  padding: var(--space-5) 0;
-  color: var(--color-gray-500);
-}
-
-.member-list,
-.stats-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.member-item {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-}
-
-.member-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-full);
-  background-color: var(--color-gray-200);
-  flex-shrink: 0;
-}
-
-.member-info {
-  flex: 1;
-}
-
-.member-info h3 {
-  font-size: var(--font-md);
-  font-weight: var(--font-semibold);
-  color: var(--color-gray-900);
-}
-
-.member-email {
-  font-size: var(--font-xs);
-  color: var(--color-gray-500);
-  margin-top: var(--space-1);
-}
-
-.member-role {
-  font-size: var(--font-xs);
-  font-weight: var(--font-semibold);
-  color: var(--color-gold);
-}
-
-.stat-item {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-}
-
-.stat-name {
-  font-size: var(--font-sm);
-  font-weight: var(--font-medium);
-  color: var(--color-gray-700);
-  min-width: 60px;
-}
-
-.stat-bar-wrapper {
-  flex: 1;
-  height: 8px;
-  background-color: var(--color-gray-200);
-  border-radius: var(--radius-full);
-  overflow: hidden;
-}
-
-.stat-bar {
-  height: 100%;
-  background-color: var(--color-gold);
-  border-radius: var(--radius-full);
-  transition: width 0.3s ease;
-}
-
-.stat-amount {
-  font-size: var(--font-sm);
-  font-weight: var(--font-semibold);
-  color: var(--color-gray-800);
-  min-width: 80px;
-  text-align: right;
-}
+.share-screen { width: min(100%, 390px); min-height: 968px; margin: 0 auto; padding: 58px 22px 102px; background: #fff; color: #1b2a49; box-sizing: border-box; }
+.share-heading h1 { margin: 0; font-size: 20px; line-height: 1.3; font-weight: 700; }
+.share-heading p { margin: 4px 0 0; color: #8a93a6; font-size: 12.5px; }
+.pet-switcher { display: flex; gap: 8px; margin-top: 30px; }
+.pet-tab { width: 73px; height: 36px; border: 1px solid #eaeae4; border-radius: 999px; background: #fafaf8; color: #4a5a7d; font: 700 12.5px Inter, sans-serif; cursor: pointer; }
+.pet-tab.active { border-color: #1b2a49; background: #1b2a49; color: #fff; }
+.members-block { margin-top: 42px; }
+.members-block h2 { margin: 0 0 16px; font-size: 15px; }
+.member-avatars { display: flex; gap: 14px; }
+.member-avatar-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 64px; border: 0; background: none; color: #1b2a49; font-size: 11.5px; cursor: pointer; padding: 0; }
+.member-avatar { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; color: #fff; font-size: 18px; font-weight: 700; background: #f2b853; }
+.avatar-1 { background: #4a5a7d; }.avatar-2 { background: #6a930d; }.invite-avatar .member-avatar { background: #fafaf8; color: #8a93a6; font-size: 28px; }
+.contribution-card { display: grid; place-items: center; margin-top: 42px; }
+.donut-chart { display: grid; place-items: center; width: 200px; height: 200px; border-radius: 50%; background: conic-gradient(#1b2a49 0 45%, #f2b853 45% 75%, #6a930d 75% 90%, #98a4bc 90% 100%); }
+.donut-chart::before { content: ''; position: absolute; width: 132px; height: 132px; border-radius: 50%; background: #fff; }
+.donut-label { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }.donut-label strong { font-size: 16px; }.donut-label span { color: #8a93a6; font-size: 11.5px; }
+.contribution-list { display: flex; flex-direction: column; gap: 8px; margin-top: 40px; }.contribution-row { display: flex; align-items: center; height: 50px; padding: 0 16px; border-radius: 12px; background: #fafaf8; box-sizing: border-box; font-size: 12.5px; }.legend-dot { width: 14px; height: 14px; margin-right: 10px; border-radius: 50%; }.ratio { margin-left: auto; color: #4a5a7d; font-weight: 700; }
 </style>
