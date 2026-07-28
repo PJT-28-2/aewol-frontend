@@ -156,10 +156,14 @@ function goToNextStep() {
 
     <!-- 상품명 -->
     <section class="mb-(--space-5)">
-      <label class="block text-(length:--font-sm) font-bold text-(color:--color-slate-dark) mb-(--space-2)">
+      <label
+        for="product-name"
+        class="block text-(length:--font-sm) font-bold text-(color:--color-slate-dark) mb-(--space-2)"
+      >
         상품명 *
       </label>
       <input
+        id="product-name"
         v-model="productName"
         type="text"
         placeholder="예: 프리미엄 사료 15kg"
@@ -169,12 +173,16 @@ function goToNextStep() {
 
     <!-- 카테고리 -->
     <section class="mb-(--space-5)">
-      <label class="block text-(length:--font-sm) font-bold text-(color:--color-slate-dark) mb-(--space-2)">
+      <label
+        id="category-label"
+        class="block text-(length:--font-sm) font-bold text-(color:--color-slate-dark) mb-(--space-2)"
+      >
         카테고리 *
       </label>
       <button
         type="button"
         class="w-full h-[46px] px-(--space-4) rounded-xl bg-(--color-surface) border border-(--color-border) flex items-center justify-between"
+        aria-labelledby="category-label"
         @click="isCategorySheetOpen = true"
       >
         <span
@@ -222,10 +230,14 @@ function goToNextStep() {
 
     <!-- 정가 -->
     <section class="mb-(--space-5)">
-      <label class="block text-(length:--font-sm) font-bold text-(color:--color-slate-dark) mb-(--space-2)">
+      <label
+        for="original-price"
+        class="block text-(length:--font-sm) font-bold text-(color:--color-slate-dark) mb-(--space-2)"
+      >
         정가 *
       </label>
       <input
+        id="original-price"
         v-model="originalPrice"
         type="text"
         inputmode="numeric"
@@ -236,11 +248,15 @@ function goToNextStep() {
 
     <!-- 공동구매 가격 -->
     <section class="mb-(--space-6)">
-      <label class="block text-(length:--font-sm) font-bold text-(color:--color-slate-dark) mb-(--space-2)">
+      <label
+        for="group-price"
+        class="block text-(length:--font-sm) font-bold text-(color:--color-slate-dark) mb-(--space-2)"
+      >
         공동구매 가격 *
       </label>
       <div class="relative">
         <input
+          id="group-price"
           v-model="groupPrice"
           type="text"
           inputmode="numeric"

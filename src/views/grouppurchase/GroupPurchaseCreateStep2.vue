@@ -156,11 +156,15 @@ function goToNextStep() {
 
     <!-- 목표 수량: 기본값 2, 1 이상의 숫자만 입력 가능 -->
     <section class="mb-(--space-5)">
-      <label class="block text-(length:--font-sm) font-bold text-(color:--color-slate-dark) mb-(--space-2)">
+      <label
+        for="target-quantity"
+        class="block text-(length:--font-sm) font-bold text-(color:--color-slate-dark) mb-(--space-2)"
+      >
         목표 수량 *
       </label>
       <div class="relative">
         <input
+          id="target-quantity"
           :value="targetQuantity"
           type="text"
           inputmode="numeric"
@@ -176,12 +180,16 @@ function goToNextStep() {
 
     <!-- 마감일: 커스텀 달력 바텀시트에서 오늘+3일 이후만 선택 가능 -->
     <section class="mb-(--space-5)">
-      <label class="block text-(length:--font-sm) font-bold text-(color:--color-slate-dark) mb-(--space-2)">
+      <label
+        id="deadline-label"
+        class="block text-(length:--font-sm) font-bold text-(color:--color-slate-dark) mb-(--space-2)"
+      >
         마감일 *
       </label>
       <button
         type="button"
         class="w-full h-[46px] px-(--space-4) rounded-xl bg-(--color-surface) border border-(--color-border) flex items-center justify-between"
+        aria-labelledby="deadline-label"
         @click="isDeadlineSheetOpen = true"
       >
         <span
@@ -269,10 +277,14 @@ function goToNextStep() {
 
     <!-- 배송 방법: 택배배송 고정, 변경 불가 -->
     <section class="mb-(--space-5)">
-      <label class="block text-(length:--font-sm) font-bold text-(color:--color-slate-dark) mb-(--space-2)">
+      <label
+        for="delivery-method"
+        class="block text-(length:--font-sm) font-bold text-(color:--color-slate-dark) mb-(--space-2)"
+      >
         배송 방법 *
       </label>
       <input
+        id="delivery-method"
         type="text"
         :value="deliveryMethod"
         readonly
@@ -282,11 +294,15 @@ function goToNextStep() {
 
     <!-- 배송비: 직접 입력, 숫자만 -->
     <section class="mb-(--space-5)">
-      <label class="block text-(length:--font-sm) font-bold text-(color:--color-slate-dark) mb-(--space-2)">
+      <label
+        for="delivery-fee"
+        class="block text-(length:--font-sm) font-bold text-(color:--color-slate-dark) mb-(--space-2)"
+      >
         배송비 *
       </label>
       <div class="relative">
         <input
+          id="delivery-fee"
           :value="deliveryFee"
           type="text"
           inputmode="numeric"
@@ -302,12 +318,16 @@ function goToNextStep() {
 
     <!-- 배송 예정일: 숫자 부분만 변경 가능 -->
     <section class="mb-(--space-6)">
-      <label class="block text-(length:--font-sm) font-bold text-(color:--color-slate-dark) mb-(--space-2)">
+      <label
+        for="delivery-estimate-days"
+        class="block text-(length:--font-sm) font-bold text-(color:--color-slate-dark) mb-(--space-2)"
+      >
         배송 예정일 *
       </label>
       <div class="flex items-center gap-(--space-1) h-[46px] px-(--space-4) rounded-xl bg-(--color-surface) border border-(--color-border) text-(length:--font-sm) text-(color:--color-navy)">
         <span>마감일로부터</span>
         <input
+          id="delivery-estimate-days"
           :value="deliveryEstimateDays"
           type="text"
           inputmode="numeric"
@@ -322,10 +342,14 @@ function goToNextStep() {
 
     <!-- 추가 설명: 선택 입력 -->
     <section class="mb-(--space-6)">
-      <label class="block text-(length:--font-sm) font-bold text-(color:--color-slate-dark) mb-(--space-2)">
+      <label
+        for="description"
+        class="block text-(length:--font-sm) font-bold text-(color:--color-slate-dark) mb-(--space-2)"
+      >
         추가 설명
       </label>
       <textarea
+        id="description"
         v-model="description"
         rows="4"
         placeholder="상품 상세 설명, 주의사항 등을 입력하세요"
