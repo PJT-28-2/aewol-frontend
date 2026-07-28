@@ -259,6 +259,12 @@ const authRoutes = [
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
+    path: '/support/:programId',
+    name: 'SupportDetail',
+    component: () => import('@/views/support/SupportView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/emergency',
     name: 'Emergency',
     component: () =>
