@@ -4,11 +4,8 @@ import IconWallet from '@/components/common/icons/IconWallet.vue';
 import BottomSheet from '@/components/common/BottomSheet.vue';
 
 // TODO: 사용자 프로필/배송지 DB 연동 예정, 현재는 mock 데이터
-const shippingAddress = ref({
-  recipientName: '김애월',
-  recipientPhone: '010-1234-5678',
-  address: '서울특별시 광진구 화양동, 세종대점 컴포즈 302호',
-});
+// 등록된 배송지가 없는 상태를 확인하기 위해 초기값은 null로 둠
+const shippingAddress = ref(null);
 
 // TODO: 공동구매 참여 화면에서 선택한 상품/수량/가격 정보를 전달받을 예정, 현재는 mock 데이터
 const product = ref({
@@ -48,10 +45,10 @@ const addressForm = ref({
 
 function handleChangeAddress() {
   addressForm.value = {
-    name: shippingAddress.value.recipientName,
-    phone: shippingAddress.value.recipientPhone,
+    name: shippingAddress.value?.recipientName ?? '',
+    phone: shippingAddress.value?.recipientPhone ?? '',
     postalCode: '',
-    address: shippingAddress.value.address,
+    address: shippingAddress.value?.address ?? '',
     addressDetail: '',
   };
   isAddressSheetOpen.value = true;
@@ -97,28 +94,49 @@ function handlePayment() {
     <section
       class="bg-(--color-surface) rounded-(--radius-lg) p-(--space-4) mb-(--space-4)"
     >
-      <div class="flex items-center justify-between mb-(--space-2)">
+      <template v-if="shippingAddress">
+        <div class="flex items-center justify-between mb-(--space-2)">
+          <span
+            class="text-(length:--font-sm) font-semibold text-(color:--color-slate-dark)"
+          >
+            배송지
+          </span>
+          <button
+            type="button"
+            class="text-(length:--font-xs) font-semibold text-(color:--color-slate-dark)"
+            @click="handleChangeAddress"
+          >
+            변경
+          </button>
+        </div>
+        <p class="text-(length:--font-md) font-bold text-(color:--color-navy)">
+          {{ shippingAddress.recipientName }} {{ shippingAddress.recipientPhone }}
+        </p>
+        <p
+          class="text-(length:--font-sm) text-(color:--color-gray-500) mt-(--space-1)"
+        >
+          {{ shippingAddress.address }}
+        </p>
+      </template>
+      <template v-else>
         <span
           class="text-(length:--font-sm) font-semibold text-(color:--color-slate-dark)"
         >
           배송지
         </span>
+        <p
+          class="text-(length:--font-sm) text-(color:--color-gray-500) mt-(--space-2) mb-(--space-3)"
+        >
+          등록된 배송지가 없어요
+        </p>
         <button
           type="button"
-          class="text-(length:--font-xs) font-semibold text-(color:--color-slate-dark)"
+          class="w-full h-[46px] bg-(--color-white) border-[1.2px] border-(--color-navy) rounded-(--radius-full) text-(length:--font-xs) font-bold text-(color:--color-navy)"
           @click="handleChangeAddress"
         >
-          변경
+          + 배송지 추가하기
         </button>
-      </div>
-      <p class="text-(length:--font-md) font-bold text-(color:--color-navy)">
-        {{ shippingAddress.recipientName }} {{ shippingAddress.recipientPhone }}
-      </p>
-      <p
-        class="text-(length:--font-sm) text-(color:--color-gray-500) mt-(--space-1)"
-      >
-        {{ shippingAddress.address }}
-      </p>
+      </template>
     </section>
 
     <!-- 상품 정보 -->
@@ -216,13 +234,19 @@ function handlePayment() {
       공동구매는 목표 인원 달성 시 확정되며, 미달 시 전액 환불됩니다.
     </p>
 
-    <!-- 결제하기 버튼 -->
+    <!-- 결제하기 버튼: 배송지 미등록 시 비활성화 -->
     <button
       type="button"
-      class="fixed bottom-[calc(var(--bottom-nav-height)+var(--space-4))] left-(--space-4) right-(--space-4) flex items-center justify-center p-(--space-4) bg-(--color-navy) text-(color:--color-white) rounded-(--radius-md) text-(length:--font-base) font-bold shadow-(--shadow-md)"
+      :disabled="!shippingAddress"
+      class="fixed bottom-[calc(var(--bottom-nav-height)+var(--space-4))] left-(--space-4) right-(--space-4) flex items-center justify-center p-(--space-4) rounded-(--radius-md) text-(length:--font-base) font-bold shadow-(--shadow-md)"
+      :class="
+        shippingAddress
+          ? 'bg-(--color-navy) text-(color:--color-white)'
+          : 'bg-(--color-border) text-(color:--color-slate-muted) cursor-not-allowed'
+      "
       @click="handlePayment"
     >
-      {{ totalAmount.toLocaleString() }}원 결제하기
+      {{ shippingAddress ? `${totalAmount.toLocaleString()}원 결제하기` : '배송지를 먼저 등록해주세요' }}
     </button>
 
     <!-- 배송지 변경 바텀시트 -->
