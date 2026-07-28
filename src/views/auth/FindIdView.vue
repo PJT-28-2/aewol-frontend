@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
-import IconCheck from '@/components/common/icons/IconCheck.vue'
+import authSuccessImage from '@/assets/images/auth/auth-success.png'
 
 const router = useRouter()
 
@@ -194,9 +194,7 @@ onBeforeUnmount(clearTimers)
 <template>
   <main class="find-id-page">
     <section v-if="isResultVisible" class="find-id-result" aria-labelledby="find-id-result-title">
-      <div class="find-id-result__icon" aria-hidden="true">
-        <IconCheck :size="32" />
-      </div>
+      <img class="find-id-result__image" :src="authSuccessImage" alt="" />
       <h1 id="find-id-result-title">본인 확인이 완료됐어요</h1>
       <p>{{ name || '홍길동' }}님의 가입 이메일이에요</p>
       <div class="find-id-result__email">{{ maskedEmail }}</div>
@@ -299,23 +297,15 @@ onBeforeUnmount(clearTimers)
   text-align: center;
 }
 
-.find-id-result__icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 88px;
-  height: 88px;
-  margin: 92px auto 0;
-  color: var(--color-olive);
-  background: var(--color-pastel-green);
-  border-radius: 44px;
-  font-size: 32px;
-  font-weight: var(--font-bold);
-  line-height: 1;
+.find-id-result__image {
+  width: 149px;
+  height: 149px;
+  margin: -11px auto 0;
+  object-fit: cover;
 }
 
 .find-id-result h1 {
-  margin-top: 28px;
+  margin-top: 9px;
   color: var(--color-navy);
   font-size: 18px;
   font-weight: var(--font-bold);

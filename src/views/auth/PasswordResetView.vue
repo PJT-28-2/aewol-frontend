@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { authApi } from '@/api/auth'
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
-import IconCheck from '@/components/common/icons/IconCheck.vue'
+import authSuccessImage from '@/assets/images/auth/auth-success.png'
 
 const router = useRouter()
 
@@ -80,9 +80,10 @@ const isValidEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
 
 /**
  * 새 비밀번호가 최소 길이와 문자 조합 규칙을 충족하는지 확인한다.
+ * 문자 종류가 많을수록 요구 길이를 줄여 보안성과 입력 편의의 균형을 맞춘다.
  *
  * @param {string} value 검사할 비밀번호
- * @returns {boolean} 8자 이상이며 문자 종류를 2개 이상 조합했는지 여부
+ * @returns {boolean} 2종류 조합 10자 이상 또는 3종류 조합 8자 이상 충족 여부
  */
 const isValidPassword = (value) => {
   const categoryCount = [
@@ -91,7 +92,10 @@ const isValidPassword = (value) => {
     /[^A-Za-z0-9]/.test(value),
   ].filter(Boolean).length
 
-  return value.length >= 8 && categoryCount >= 2
+  return (
+    (categoryCount >= 3 && value.length >= 8) ||
+    (categoryCount >= 2 && value.length >= 10)
+  )
 }
 
 /**
@@ -217,7 +221,7 @@ const handleResetPassword = async () => {
   }
 
   if (!isValidPassword(newPassword.value)) {
-    showToast('영문·숫자·특수문자 중 2가지 이상을 조합해 8자리 이상 입력해주세요')
+    showToast('2가지 조합은 10자리, 3가지 조합은 8자리 이상 입력해주세요')
     return
   }
 
@@ -271,9 +275,7 @@ onBeforeUnmount(clearTimers)
 <template>
   <main class="reset-page">
     <section v-if="isComplete" class="reset-complete" aria-labelledby="reset-complete-title">
-      <div class="reset-complete__icon" aria-hidden="true">
-        <IconCheck :size="32" />
-      </div>
+      <img class="reset-complete__image" :src="authSuccessImage" alt="" />
       <h1 id="reset-complete-title">비밀번호가 변경됐어요</h1>
       <p>새 비밀번호로 다시 로그인해주세요</p>
       <router-link class="reset-complete__button" to="/login">로그인하러 가기</router-link>
@@ -338,7 +340,7 @@ onBeforeUnmount(clearTimers)
             v-model="newPassword"
             type="password"
             autocomplete="new-password"
-            placeholder="8자 이상 입력해주세요"
+            placeholder="2가지 조합 10자리 / 3가지 조합 8자리 이상"
             required
           />
 
@@ -396,23 +398,15 @@ onBeforeUnmount(clearTimers)
   text-align: center;
 }
 
-.reset-complete__icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 88px;
-  height: 88px;
-  margin: 112px auto 0;
-  color: var(--color-olive);
-  background: var(--color-pastel-green);
-  border-radius: 44px;
-  font-size: 32px;
-  font-weight: var(--font-bold);
-  line-height: 1;
+.reset-complete__image {
+  width: 149px;
+  height: 149px;
+  margin: 41px auto 0;
+  object-fit: cover;
 }
 
 .reset-complete h1 {
-  margin-top: 28px;
+  margin-top: 9px;
   color: var(--color-navy);
   font-size: 18px;
   font-weight: var(--font-bold);
