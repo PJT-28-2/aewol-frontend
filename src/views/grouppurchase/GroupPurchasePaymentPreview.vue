@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import IconWallet from '@/components/common/icons/IconWallet.vue';
 import BottomSheet from '@/components/common/BottomSheet.vue';
@@ -68,20 +68,58 @@ function handleChangeAddress() {
   addressForm.value = {
     name: shippingAddress.value?.recipientName ?? '',
     phone: shippingAddress.value?.recipientPhone ?? '',
-    postalCode: '',
+    postalCode: shippingAddress.value?.postalCode ?? '',
     address: shippingAddress.value?.address ?? '',
-    addressDetail: '',
+    addressDetail: shippingAddress.value?.addressDetail ?? '',
   };
   addressFormErrors.value = { ...EMPTY_ADDRESS_FORM_ERRORS };
   isAddressSheetOpen.value = true;
 }
 
-// TODO: 실제 우편번호(주소 검색) API 연동 예정, 현재는 mock 값으로 채움
-function handleSearchAddress() {
-  addressForm.value.postalCode = '12345';
-  addressForm.value.address = '서울특별시 광진구 화양동';
-  addressFormErrors.value.postalCode = '';
-  addressFormErrors.value.address = '';
+// 카카오(다음) 우편번호 서비스 연동
+const DAUM_POSTCODE_SCRIPT_SRC =
+  '//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
+const isPostcodeOpen = ref(false);
+const postcodeContainerRef = ref(null);
+
+function loadDaumPostcodeScript() {
+  if (window.daum?.Postcode) return Promise.resolve();
+
+  const existingScript = document.querySelector(
+    `script[src="${DAUM_POSTCODE_SCRIPT_SRC}"]`,
+  );
+  if (existingScript) {
+    return new Promise((resolve) => existingScript.addEventListener('load', resolve));
+  }
+
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = DAUM_POSTCODE_SCRIPT_SRC;
+    script.onload = resolve;
+    script.onerror = () => reject(new Error('우편번호 서비스를 불러오지 못했습니다'));
+    document.head.appendChild(script);
+  });
+}
+
+// 우편번호 찾기 레이어를 열고 카카오 우편번호 서비스를 그 안에 임베드
+async function handleSearchAddress() {
+  await loadDaumPostcodeScript();
+  isPostcodeOpen.value = true;
+  await nextTick();
+
+  new window.daum.Postcode({
+    oncomplete(data) {
+      addressForm.value.postalCode = data.zonecode;
+      addressForm.value.address = data.roadAddress || data.jibunAddress;
+      addressFormErrors.value.postalCode = '';
+      addressFormErrors.value.address = '';
+      isPostcodeOpen.value = false;
+    },
+  }).embed(postcodeContainerRef.value);
+}
+
+function closePostcode() {
+  isPostcodeOpen.value = false;
 }
 
 function closeAddressSheet() {
@@ -129,7 +167,9 @@ function confirmAddress() {
   shippingAddress.value = {
     recipientName: addressForm.value.name,
     recipientPhone: addressForm.value.phone,
-    address: `${addressForm.value.address}, ${addressForm.value.addressDetail}`,
+    postalCode: addressForm.value.postalCode,
+    address: addressForm.value.address,
+    addressDetail: addressForm.value.addressDetail,
   };
   isAddressSheetOpen.value = false;
 }
@@ -224,7 +264,7 @@ function handleSwitchToBiometric() {}
         <p
           class="text-(length:--font-sm) text-(color:--color-gray-500) mt-(--space-1)"
         >
-          {{ shippingAddress.address }}
+          {{ shippingAddress.address }}, {{ shippingAddress.addressDetail }}
         </p>
       </template>
       <template v-else>
@@ -610,5 +650,27 @@ function handleSwitchToBiometric() {}
         </button>
       </div>
     </BottomSheet>
+
+    <!-- 카카오 우편번호 검색 레이어 -->
+    <Teleport to="body">
+      <div
+        v-if="isPostcodeOpen"
+        class="fixed inset-0 z-1000 bg-(--color-white) flex flex-col"
+      >
+        <div class="flex items-center justify-between p-(--space-4) border-b border-(--color-border)">
+          <span class="text-(length:--font-md) font-semibold text-(color:--color-navy)">
+            주소 검색
+          </span>
+          <button
+            type="button"
+            class="text-(length:--font-sm) text-(color:--color-slate-dark)"
+            @click="closePostcode"
+          >
+            닫기
+          </button>
+        </div>
+        <div ref="postcodeContainerRef" class="flex-1" />
+      </div>
+    </Teleport>
   </div>
 </template>
