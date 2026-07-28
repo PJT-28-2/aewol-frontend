@@ -172,7 +172,7 @@ const handleKakaoLogin = () => {
         aria-label="로그인 메뉴"
       >
         <button
-          class="flex h-[52px] w-full items-center justify-center rounded-(--radius-xl) bg-[#fee500] text-[14.5px] leading-[1.3] font-(--font-bold) text-[#181600]"
+          class="flex h-[52px] w-full items-center justify-center rounded-(--radius-xl) bg-(--color-kakao) text-[14.5px] leading-[1.3] font-(--font-bold) text-(color:--color-kakao-label)"
           type="button"
           @click="handleKakaoLogin"
         >
