@@ -134,6 +134,7 @@ function goToNextStep() {
         <button
           type="button"
           class="inline-flex text-(color:--color-navy)"
+          aria-label="이전 단계로"
           @click="goToPrevStep"
         >
           <IconArrowLeft
@@ -204,6 +205,7 @@ function goToNextStep() {
         <button
           type="button"
           class="p-(--space-2) disabled:opacity-30"
+          aria-label="이전 달"
           :disabled="!canGoPrevMonth"
           @click="goPrevMonth"
         >
@@ -218,6 +220,7 @@ function goToNextStep() {
         <button
           type="button"
           class="p-(--space-2)"
+          aria-label="다음 달"
           @click="goNextMonth"
         >
           <IconArrowLeft
@@ -254,6 +257,7 @@ function goToNextStep() {
                 : 'text-(color:--color-navy)',
               isSelectedDeadline(cell) ? 'bg-(--color-navy) text-(color:--color-white) font-bold' : '',
             ]"
+            :aria-label="`${calendarViewYear}년 ${calendarViewMonth + 1}월 ${cell.getDate()}일`"
             :disabled="isBeforeMinDeadline(cell)"
             @click="selectDeadline(cell)"
           >

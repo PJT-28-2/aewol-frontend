@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, watchEffect } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
@@ -24,9 +24,19 @@ const {
 } = storeToRefs(groupPurchaseCreateStore)
 
 // 1단계에서 업로드한 첫 번째 사진 미리보기 (없으면 아이콘 placeholder)
-const photoPreviewUrl = computed(() =>
-  photos.value.length > 0 ? URL.createObjectURL(photos.value[0]) : '',
-)
+// blob URL은 다음 사진으로 바뀌거나 화면을 벗어날 때 revoke해서 메모리에 안 쌓이게 함
+const photoPreviewUrl = ref('')
+watchEffect((onCleanup) => {
+  const file = photos.value[0]
+  if (!file) {
+    photoPreviewUrl.value = ''
+    return
+  }
+  const url = URL.createObjectURL(file)
+  photoPreviewUrl.value = url
+  // 다음 사진으로 바뀌거나 컴포넌트가 언마운트될 때 자동으로 호출됨
+  onCleanup(() => URL.revokeObjectURL(url))
+})
 
 function parsePrice(value) {
   return Number(String(value).replace(/[^0-9]/g, '')) || 0
@@ -91,6 +101,7 @@ function handleSubmit() {
         <button
           type="button"
           class="inline-flex text-(color:--color-navy)"
+          aria-label="이전 단계로"
           @click="goToPrevStep"
         >
           <IconArrowLeft

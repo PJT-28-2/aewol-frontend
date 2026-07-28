@@ -46,14 +46,22 @@ const discountRate = computed(() => {
   return Math.round((1 - group / original) * 100)
 })
 
-// 사진, 상품명, 카테고리, 정가, 공동구매가격이 모두 입력되어야 다음 단계로 이동 가능
+// 공동구매 가격이 정가보다 높은 경우 (둘 다 입력됐을 때만 검사)
+const isGroupPriceTooHigh = computed(() => {
+  const original = parsePrice(originalPrice.value)
+  const group = parsePrice(groupPrice.value)
+  return original > 0 && group > 0 && group > original
+})
+
+// 사진, 상품명, 카테고리, 정가, 공동구매가격이 모두 입력되고 가격이 유효해야 다음 단계로 이동 가능
 const isFormValid = computed(
   () =>
     photos.value.length > 0 &&
     productName.value.trim() !== '' &&
     category.value.trim() !== '' &&
     parsePrice(originalPrice.value) > 0 &&
-    parsePrice(groupPrice.value) > 0,
+    parsePrice(groupPrice.value) > 0 &&
+    !isGroupPriceTooHigh.value,
 )
 
 const router = useRouter()
@@ -69,6 +77,7 @@ function goToNextStep() {
         <router-link
           to="/group-purchase"
           class="inline-flex text-(color:--color-navy) no-underline"
+          aria-label="공동구매 목록으로"
         >
           <IconArrowLeft
             size="18"
@@ -245,6 +254,12 @@ function goToNextStep() {
           {{ discountRate }}% 할인
         </span>
       </div>
+      <p
+        v-if="isGroupPriceTooHigh"
+        class="mt-(--space-2) text-(length:--font-xs) text-(color:--color-danger)"
+      >
+        공동구매 가격은 정가보다 높을 수 없습니다
+      </p>
     </section>
 
     <!-- 다음: 사진/필수 입력값이 모두 채워져야 2단계(구매 조건)로 이동 가능 -->
