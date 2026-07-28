@@ -17,9 +17,10 @@ const product = ref({
 });
 
 // TODO: 등록된 결제 수단(계좌) 연동 예정, 현재는 mock 데이터
+// 잔액부족 상태를 확인하기 위해 결제 금액(28,000원)보다 적은 잔액으로 설정
 const paymentMethod = ref({
   name: '애월 통합 지갑',
-  balance: 482300,
+  balance: 15000,
 });
 
 // 참여 화면에서 전달받은 수량 · 정가 · 할인가 기준으로 결제 금액 계산
@@ -32,6 +33,14 @@ const discountAmount = computed(
     product.value.purchaseQuantity,
 );
 const totalAmount = computed(() => productAmount.value - discountAmount.value);
+
+// 지갑 잔액이 결제 금액보다 부족한지 여부 (배송지 섹션 숨김, 결제수단 경고 스타일, CTA "충전하러 가기"로 분기)
+const isBalanceInsufficient = computed(
+  () => paymentMethod.value.balance < totalAmount.value,
+);
+const shortfallAmount = computed(
+  () => totalAmount.value - paymentMethod.value.balance,
+);
 
 // 배송지 변경 바텀시트 상태 및 입력 폼 (현재 배송지 값으로 초기화)
 const isAddressSheetOpen = ref(false);
@@ -77,6 +86,11 @@ function confirmAddress() {
 function handlePayment() {
   // TODO: 결제 처리 및 이후 라우팅 연동 예정
 }
+
+// 충전 페이지 라우팅은 아직 미구현 — 버튼만 배치
+function handleCharge() {
+  // TODO: /wallet/charge 라우팅 연동 예정
+}
 </script>
 
 <template>
@@ -90,8 +104,9 @@ function handlePayment() {
       결제 확인
     </h1>
 
-    <!-- 배송지 -->
+    <!-- 배송지: 잔액부족 상태에서는 표시하지 않음 -->
     <section
+      v-if="!isBalanceInsufficient"
       class="bg-(--color-surface) rounded-(--radius-lg) p-(--space-4) mb-(--space-4)"
     >
       <template v-if="shippingAddress">
@@ -171,7 +186,12 @@ function handlePayment() {
         결제 수단
       </h2>
       <div
-        class="flex items-center gap-(--space-3) bg-(--color-white) border-2 border-(--color-navy) rounded-(--radius-lg) p-(--space-4)"
+        class="flex items-center gap-(--space-3) rounded-(--radius-lg) p-(--space-4)"
+        :class="
+          isBalanceInsufficient
+            ? 'bg-(--color-danger-bg) border-[1.5px] border-(--color-danger-border)'
+            : 'bg-(--color-white) border-2 border-(--color-navy)'
+        "
       >
         <span
           class="inline-flex items-center justify-center w-10 h-6 rounded-(--radius-sm) bg-(--color-navy)"
@@ -184,15 +204,39 @@ function handlePayment() {
           {{ paymentMethod.name }}
         </p>
         <p
-          class="shrink-0 text-(length:--font-xs) text-(color:--color-gray-500)"
+          class="shrink-0 text-(length:--font-xs)"
+          :class="isBalanceInsufficient ? 'font-bold text-(color:--color-danger-border)' : 'text-(color:--color-gray-500)'"
         >
           잔액 {{ paymentMethod.balance.toLocaleString() }}원
         </p>
       </div>
+
+      <!-- 잔액부족 경고 -->
+      <div
+        v-if="isBalanceInsufficient"
+        class="mt-(--space-3) bg-(--color-danger-bg) rounded-(--radius-lg) p-(--space-4)"
+      >
+        <p class="text-(length:--font-sm) font-bold text-(color:--color-danger-border)">
+          ⚠️ 잔액이 부족해요
+        </p>
+        <p class="text-(length:--font-xs) text-(color:--color-danger-text) mt-(--space-1)">
+          {{ shortfallAmount.toLocaleString() }}원을 충전하면 결제할 수 있어요
+        </p>
+      </div>
     </section>
 
-    <!-- 결제 금액 -->
-    <section class="mb-(--space-4)">
+    <!-- 결제 금액: 잔액부족 상태에서는 상세 내역 없이 총액만 표시 -->
+    <section v-if="isBalanceInsufficient" class="mb-(--space-4)">
+      <div class="flex items-center justify-between">
+        <span class="text-(length:--font-sm) font-semibold text-(color:--color-slate-dark)">
+          결제 금액
+        </span>
+        <span class="text-(length:--font-lg) font-bold text-(color:--color-navy)">
+          {{ totalAmount.toLocaleString() }}원
+        </span>
+      </div>
+    </section>
+    <section v-else class="mb-(--space-4)">
       <h2
         class="text-(length:--font-sm) font-semibold text-(color:--color-slate-dark) mb-(--space-3)"
       >
@@ -227,15 +271,27 @@ function handlePayment() {
       </div>
     </section>
 
-    <!-- 안내 문구 -->
+    <!-- 안내 문구: 잔액부족 상태에서는 표시하지 않음 -->
     <p
+      v-if="!isBalanceInsufficient"
       class="bg-(--color-surface) rounded-(--radius-md) p-(--space-4) text-(length:--font-xs) text-(color:--color-slate-dark) leading-relaxed"
     >
       공동구매는 목표 인원 달성 시 확정되며, 미달 시 전액 환불됩니다.
     </p>
 
+    <!-- 잔액부족: 충전하러 가기 버튼 -->
+    <button
+      v-if="isBalanceInsufficient"
+      type="button"
+      class="fixed bottom-[calc(var(--bottom-nav-height)+var(--space-4))] left-(--space-4) right-(--space-4) flex items-center justify-center p-(--space-4) bg-(--color-gold) text-(color:--color-navy) rounded-(--radius-md) text-(length:--font-base) font-bold shadow-(--shadow-md)"
+      @click="handleCharge"
+    >
+      충전하러 가기
+    </button>
+
     <!-- 결제하기 버튼: 배송지 미등록 시 비활성화 -->
     <button
+      v-else
       type="button"
       :disabled="!shippingAddress"
       class="fixed bottom-[calc(var(--bottom-nav-height)+var(--space-4))] left-(--space-4) right-(--space-4) flex items-center justify-center p-(--space-4) rounded-(--radius-md) text-(length:--font-base) font-bold shadow-(--shadow-md)"
