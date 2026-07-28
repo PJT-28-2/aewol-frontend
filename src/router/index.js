@@ -31,6 +31,11 @@ const publicRoutes = [
       import('@/views/auth/PasswordResetView.vue'),
   },
   {
+    path: '/id/find',
+    name: 'FindId',
+    component: () => import('@/views/auth/FindIdView.vue'),
+  },
+  {
     path: '/callback/kakao',
     name: 'KakaoCallback',
     component: () =>
