@@ -184,6 +184,24 @@ const authRoutes = [
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
+    path: '/share/start',
+    name: 'ShareStart',
+    component: () => import('@/views/share/ShareStartView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/share/join',
+    name: 'ShareJoin',
+    component: () => import('@/views/share/ShareJoinView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/share/invite',
+    name: 'ShareInvite',
+    component: () => import('@/views/share/ShareInviteView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/group-purchase',
     name: 'GroupPurchaseList',
     component: () =>
