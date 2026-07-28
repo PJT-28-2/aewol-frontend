@@ -1,200 +1,236 @@
 <script setup>
-import { ref } from 'vue'
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import AppButton from '@/components/common/AppButton.vue';
+import AppInput from '@/components/common/AppInput.vue';
+import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue';
+import IconCat from '@/components/common/icons/IconCat.vue';
+import IconDog from '@/components/common/icons/IconDog.vue';
+
+const router = useRouter();
 
 const form = ref({
-  name: '',
   species: 'DOG',
+  name: '',
+  regNumber: '',
   breed: '',
   birthDate: '',
-  gender: 'MALE',
-  weight: null,
-  regNumber: '',
-})
-const isLoading = ref(false)
-const errorMessage = ref('')
+  neutered: null,
+  medicalHistory: '',
+});
 
-const speciesOptions = [
-  { value: 'DOG', label: '강아지' },
-  { value: 'CAT', label: '고양이' },
-  { value: 'ETC', label: '기타' },
-]
+const vaccinationFileName = ref('');
+const isLoading = ref(false);
+const errorMessage = ref('');
 
-const genderOptions = [
-  { value: 'MALE', label: '수컷' },
-  { value: 'FEMALE', label: '암컷' },
-]
+function selectSpecies(species) {
+  form.value.species = species;
+}
 
-const handleSubmit = async () => {
+function selectNeutered(neutered) {
+  form.value.neutered = neutered;
+}
+
+function onFileChange(event) {
+  const file = event.target.files[0];
+  vaccinationFileName.value = file ? file.name : '';
+}
+
+function goBack() {
+  router.back();
+}
+
+async function handleSubmit() {
   // TODO: implement pet registration with pet API
+  router.push('/pets');
 }
 </script>
 
 <template>
-  <div class="pet-register-page">
-    <header class="page-header">
-      <h1>반려동물 등록</h1>
+  <div
+    class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))] bg-(--color-bg) min-h-screen"
+  >
+    <button
+      type="button"
+      class="mb-(--space-3) text-(color:--color-navy)"
+      aria-label="뒤로 가기"
+      @click="goBack"
+    >
+      <IconArrowLeft size="24" />
+    </button>
+
+    <header class="mb-(--space-6)">
+      <h1
+        class="text-(length:--font-2xl) font-bold text-(color:--color-navy)"
+      >
+        반려동물 프로필 등록
+      </h1>
+      <p
+        class="text-(length:--font-md) text-(color:--color-slate-muted) mt-(--space-1)"
+      >
+        우리 아이 정보를 입력해주세요
+      </p>
     </header>
 
-    <form class="register-form" @submit.prevent="handleSubmit">
-      <div class="form-group">
-        <label for="name">이름 *</label>
-        <input
-          id="name"
-          v-model="form.name"
-          type="text"
-          placeholder="반려동물 이름"
-          required
-        />
-      </div>
-
-      <div class="form-group">
-        <label for="species">종류 *</label>
-        <select id="species" v-model="form.species" required>
-          <option v-for="opt in speciesOptions" :key="opt.value" :value="opt.value">
-            {{ opt.label }}
-          </option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label for="breed">품종</label>
-        <input
-          id="breed"
-          v-model="form.breed"
-          type="text"
-          placeholder="예: 골든리트리버, 코리안숏헤어"
-        />
-      </div>
-
-      <div class="form-group">
-        <label for="birthDate">생년월일</label>
-        <input id="birthDate" v-model="form.birthDate" type="date" />
-      </div>
-
-      <div class="form-group">
-        <label>성별</label>
-        <div class="radio-group">
-          <label v-for="opt in genderOptions" :key="opt.value" class="radio-label">
-            <input type="radio" v-model="form.gender" :value="opt.value" />
-            {{ opt.label }}
-          </label>
+    <form
+      class="flex flex-col gap-(--space-5)"
+      @submit.prevent="handleSubmit"
+    >
+      <div>
+        <p
+          class="text-(length:--font-sm) font-medium text-(color:--color-slate-dark) mb-(--space-2)"
+        >
+          종 선택
+        </p>
+        <div class="flex gap-(--space-2)">
+          <button
+            type="button"
+            class="inline-flex items-center gap-(--space-2) h-[36px] px-(--space-4) rounded-(--radius-full) border text-(length:--font-sm) font-medium"
+            :class="
+              form.species === 'DOG'
+                ? 'bg-(--color-navy) border-(--color-navy) text-(color:--color-white)'
+                : 'bg-(--color-white) border-(--color-border) text-(color:--color-slate-dark)'
+            "
+            @click="selectSpecies('DOG')"
+          >
+            <IconDog
+              size="16"
+              :color="
+                form.species === 'DOG'
+                  ? '#ffffff'
+                  : 'var(--color-slate-dark)'
+              "
+            />
+            강아지
+          </button>
+          <button
+            type="button"
+            class="inline-flex items-center gap-(--space-2) h-[36px] px-(--space-4) rounded-(--radius-full) border text-(length:--font-sm) font-medium"
+            :class="
+              form.species === 'CAT'
+                ? 'bg-(--color-navy) border-(--color-navy) text-(color:--color-white)'
+                : 'bg-(--color-white) border-(--color-border) text-(color:--color-slate-dark)'
+            "
+            @click="selectSpecies('CAT')"
+          >
+            <IconCat
+              size="16"
+              :color="
+                form.species === 'CAT'
+                  ? '#ffffff'
+                  : 'var(--color-slate-dark)'
+              "
+            />
+            고양이
+          </button>
         </div>
       </div>
 
-      <div class="form-group">
-        <label for="weight">체중 (kg)</label>
-        <input
-          id="weight"
-          v-model.number="form.weight"
-          type="number"
-          step="0.1"
-          placeholder="체중"
-        />
-      </div>
+      <AppInput
+        v-model="form.name"
+        label="이름"
+        placeholder="소로"
+      />
 
-      <div class="form-group">
-        <label for="regNumber">동물등록번호</label>
-        <input
-          id="regNumber"
+      <div>
+        <AppInput
           v-model="form.regNumber"
-          type="text"
-          placeholder="동물등록번호 (선택)"
+          label="동물등록번호 (선택)"
+          placeholder="15자리 숫자 입력"
         />
+        <p
+          class="text-(length:--font-xs) text-(color:--color-slate-muted) mt-(--space-1)"
+        >
+          국가동물보호정보시스템(APMS)에 등록된 번호예요. 나중에
+          추가해도 괜찮아요.
+        </p>
       </div>
 
-      <p v-if="errorMessage" class="error-text">{{ errorMessage }}</p>
+      <AppInput
+        v-model="form.breed"
+        label="견종"
+        placeholder="포메라니안"
+      />
 
-      <button type="submit" class="btn-primary" :disabled="isLoading">
-        {{ isLoading ? '등록 중...' : '등록하기' }}
-      </button>
+      <AppInput
+        v-model="form.birthDate"
+        type="text"
+        label="생년월일"
+        placeholder="2023.05.12"
+      />
+
+      <div>
+        <p
+          class="text-(length:--font-sm) font-medium text-(color:--color-slate-dark) mb-(--space-2)"
+        >
+          중성화 여부
+        </p>
+        <div class="flex gap-(--space-2)">
+          <button
+            type="button"
+            class="inline-flex items-center h-[36px] px-(--space-4) rounded-(--radius-full) border text-(length:--font-sm) font-medium"
+            :class="
+              form.neutered === true
+                ? 'bg-(--color-navy) border-(--color-navy) text-(color:--color-white)'
+                : 'bg-(--color-white) border-(--color-border) text-(color:--color-slate-dark)'
+            "
+            @click="selectNeutered(true)"
+          >
+            완료
+          </button>
+          <button
+            type="button"
+            class="inline-flex items-center h-[36px] px-(--space-4) rounded-(--radius-full) border text-(length:--font-sm) font-medium"
+            :class="
+              form.neutered === false
+                ? 'bg-(--color-navy) border-(--color-navy) text-(color:--color-white)'
+                : 'bg-(--color-white) border-(--color-border) text-(color:--color-slate-dark)'
+            "
+            @click="selectNeutered(false)"
+          >
+            미완료
+          </button>
+        </div>
+      </div>
+
+      <AppInput
+        v-model="form.medicalHistory"
+        label="병력 (선택)"
+        placeholder="예: 슬개골 탈구 이력 있음"
+      />
+
+      <label
+        class="flex items-center justify-center h-[46px] rounded-(--radius-lg) border border-(--color-slate-muted) bg-(--color-white) text-(length:--font-sm) text-(color:--color-slate-dark) cursor-pointer"
+      >
+        {{
+          vaccinationFileName
+            ? vaccinationFileName
+            : '+ 접종증명서 이미지 업로드'
+        }}
+        <input
+          type="file"
+          accept="image/*"
+          class="hidden"
+          @change="onFileChange"
+        >
+      </label>
+
+      <p
+        v-if="errorMessage"
+        class="text-(length:--font-sm) text-(color:--color-danger)"
+      >
+        {{ errorMessage }}
+      </p>
+
+      <AppButton
+        type="submit"
+        variant="primary"
+        size="lg"
+        block
+        :loading="isLoading"
+      >
+        등록 완료
+      </AppButton>
     </form>
   </div>
 </template>
-
-<style scoped>
-.pet-register-page {
-  padding: var(--space-4);
-  padding-bottom: calc(var(--bottom-nav-height) + var(--space-4));
-  background-color: var(--color-bg);
-  min-height: 100vh;
-}
-
-.page-header {
-  margin-bottom: var(--space-5);
-}
-
-.page-header h1 {
-  font-size: var(--font-2xl);
-  font-weight: var(--font-bold);
-  color: var(--color-navy);
-}
-
-.register-form {
-  max-width: 400px;
-}
-
-.form-group {
-  margin-bottom: var(--space-4);
-}
-
-.form-group label {
-  display: block;
-  font-size: var(--font-sm);
-  font-weight: var(--font-medium);
-  color: var(--color-gray-700);
-  margin-bottom: var(--space-1);
-}
-
-.form-group input,
-.form-group select {
-  width: 100%;
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--color-gray-300);
-  border-radius: var(--radius-md);
-  font-size: var(--font-base);
-  box-sizing: border-box;
-  background-color: var(--color-white);
-}
-
-.radio-group {
-  display: flex;
-  gap: var(--space-5);
-}
-
-.radio-label {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: var(--font-base);
-  color: var(--color-gray-700);
-  cursor: pointer;
-}
-
-.radio-label input[type="radio"] {
-  width: auto;
-}
-
-.error-text {
-  color: var(--color-danger);
-  font-size: var(--font-sm);
-  margin-bottom: var(--space-3);
-}
-
-.btn-primary {
-  width: 100%;
-  padding: var(--space-3) var(--space-4);
-  background-color: var(--color-navy);
-  color: var(--color-white);
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: var(--font-base);
-  font-weight: var(--font-semibold);
-  cursor: pointer;
-  margin-top: var(--space-4);
-}
-
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-</style>
