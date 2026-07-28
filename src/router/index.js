@@ -205,6 +205,12 @@ const authRoutes = [
     component: () =>
       import('@/views/grouppurchase/GroupPurchaseCreateStep2.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    // URL 직접 입력/새로고침으로 1단계를 건너뛰고 들어오는 것을 막음
+    beforeEnter: () => {
+      if (!useGroupPurchaseCreateStore().isStep1Complete) {
+        return '/group-purchase/create';
+      }
+    },
   },
   {
     path: '/group-purchase/create/step3',
@@ -212,6 +218,12 @@ const authRoutes = [
     component: () =>
       import('@/views/grouppurchase/GroupPurchaseCreateStep3.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    // URL 직접 입력/새로고침으로 1~2단계를 건너뛰고 들어오는 것을 막음
+    beforeEnter: () => {
+      const store = useGroupPurchaseCreateStore();
+      if (!store.isStep1Complete) return '/group-purchase/create';
+      if (!store.isStep2Complete) return '/group-purchase/create/step2';
+    },
   },
   {
     path: '/group-purchase/:gpId',
