@@ -90,7 +90,10 @@ const verdictLabels = {
 }
 
 async function handleSimulate() {
-  if (!selectedPet.value) return
+  if (!selectedPet.value) {
+    errorMessage.value = '반려동물을 선택해주세요.'
+    return
+  }
 
   isLoading.value = true
   errorMessage.value = ''
