@@ -5,17 +5,17 @@ import IconWallet from '@/components/common/icons/IconWallet.vue';
 // TODO: 사용자 프로필/배송지 DB 연동 예정, 현재는 mock 데이터
 const shippingAddress = ref({
   recipientName: '김애월',
-  phone: '010-1234-5678',
+  recipientPhone: '010-1234-5678',
   address: '서울특별시 광진구 화양동, 세종대점 컴포즈 302호',
 });
 
 // TODO: 공동구매 참여 화면에서 선택한 상품/수량/가격 정보를 전달받을 예정, 현재는 mock 데이터
 const product = ref({
-  name: '프리미엄 사료 15kg',
+  productName: '프리미엄 사료 15kg',
   optionText: '옵션 없음',
-  quantity: 1,
-  listPrice: 40000,
-  discountedPrice: 28000,
+  purchaseQuantity: 1,
+  totalPrice: 40000,
+  totalDiscountedPrice: 28000,
 });
 
 // TODO: 등록된 결제 수단(계좌) 연동 예정, 현재는 mock 데이터
@@ -25,9 +25,13 @@ const paymentMethod = ref({
 });
 
 // 참여 화면에서 전달받은 수량 · 정가 · 할인가 기준으로 결제 금액 계산
-const productAmount = computed(() => product.value.listPrice * product.value.quantity);
+const productAmount = computed(
+  () => product.value.totalPrice * product.value.purchaseQuantity,
+);
 const discountAmount = computed(
-  () => (product.value.listPrice - product.value.discountedPrice) * product.value.quantity,
+  () =>
+    (product.value.totalPrice - product.value.totalDiscountedPrice) *
+    product.value.purchaseQuantity,
 );
 const totalAmount = computed(() => productAmount.value - discountAmount.value);
 
@@ -47,14 +51,20 @@ function handlePayment() {
     class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+88px)] bg-(--color-bg) min-h-screen"
   >
     <!-- 헤더 -->
-    <h1 class="text-(length:--font-xl) font-bold text-(color:--color-navy) mb-(--space-5)">
+    <h1
+      class="text-(length:--font-xl) font-bold text-(color:--color-navy) mb-(--space-5)"
+    >
       결제 확인
     </h1>
 
     <!-- 배송지 -->
-    <section class="bg-(--color-surface) rounded-(--radius-lg) p-(--space-4) mb-(--space-4)">
+    <section
+      class="bg-(--color-surface) rounded-(--radius-lg) p-(--space-4) mb-(--space-4)"
+    >
       <div class="flex items-center justify-between mb-(--space-2)">
-        <span class="text-(length:--font-sm) font-semibold text-(color:--color-slate-dark)">
+        <span
+          class="text-(length:--font-sm) font-semibold text-(color:--color-slate-dark)"
+        >
           배송지
         </span>
         <button
@@ -66,42 +76,62 @@ function handlePayment() {
         </button>
       </div>
       <p class="text-(length:--font-md) font-bold text-(color:--color-navy)">
-        {{ shippingAddress.recipientName }} {{ shippingAddress.phone }}
+        {{ shippingAddress.recipientName }} {{ shippingAddress.recipientPhone }}
       </p>
-      <p class="text-(length:--font-sm) text-(color:--color-gray-500) mt-(--space-1)">
+      <p
+        class="text-(length:--font-sm) text-(color:--color-gray-500) mt-(--space-1)"
+      >
         {{ shippingAddress.address }}
       </p>
     </section>
 
     <!-- 상품 정보 -->
-    <section class="flex items-center gap-(--space-3) bg-(--color-surface) rounded-(--radius-lg) p-(--space-4) mb-(--space-4)">
-      <div class="shrink-0 w-[48px] h-[48px] bg-(--color-white) border border-(--color-border) rounded-(--radius-md)" />
+    <section
+      class="flex items-center gap-(--space-3) bg-(--color-surface) rounded-(--radius-lg) p-(--space-4) mb-(--space-4)"
+    >
+      <div
+        class="shrink-0 w-[48px] h-[48px] bg-(--color-white) border border-(--color-border) rounded-(--radius-md)"
+      />
       <div class="flex-1 min-w-0">
         <h3 class="text-(length:--font-md) font-bold text-(color:--color-navy)">
-          {{ product.name }}
+          {{ product.productName }}
         </h3>
-        <p class="text-(length:--font-xs) text-(color:--color-gray-500) mt-(--space-1)">
-          {{ product.quantity }}개 · {{ product.optionText }}
+        <p
+          class="text-(length:--font-xs) text-(color:--color-gray-500) mt-(--space-1)"
+        >
+          {{ product.purchaseQuantity }}개 · {{ product.optionText }}
         </p>
       </div>
-      <p class="shrink-0 text-(length:--font-md) font-bold text-(color:--color-navy)">
+      <p
+        class="shrink-0 text-(length:--font-md) font-bold text-(color:--color-navy)"
+      >
         {{ totalAmount.toLocaleString() }}원
       </p>
     </section>
 
     <!-- 결제 수단 -->
     <section class="mb-(--space-4)">
-      <h2 class="text-(length:--font-sm) font-semibold text-(color:--color-slate-dark) mb-(--space-2)">
+      <h2
+        class="text-(length:--font-sm) font-semibold text-(color:--color-slate-dark) mb-(--space-2)"
+      >
         결제 수단
       </h2>
-      <div class="flex items-center gap-(--space-3) bg-(--color-white) border-2 border-(--color-navy) rounded-(--radius-lg) p-(--space-4)">
-        <span class="inline-flex items-center justify-center w-10 h-6 rounded-(--radius-sm) bg-(--color-navy)">
+      <div
+        class="flex items-center gap-(--space-3) bg-(--color-white) border-2 border-(--color-navy) rounded-(--radius-lg) p-(--space-4)"
+      >
+        <span
+          class="inline-flex items-center justify-center w-10 h-6 rounded-(--radius-sm) bg-(--color-navy)"
+        >
           <IconWallet :size="16" color="var(--color-white)" />
         </span>
-        <p class="flex-1 text-(length:--font-md) font-bold text-(color:--color-navy)">
+        <p
+          class="flex-1 text-(length:--font-md) font-bold text-(color:--color-navy)"
+        >
           {{ paymentMethod.name }}
         </p>
-        <p class="shrink-0 text-(length:--font-xs) text-(color:--color-gray-500)">
+        <p
+          class="shrink-0 text-(length:--font-xs) text-(color:--color-gray-500)"
+        >
           잔액 {{ paymentMethod.balance.toLocaleString() }}원
         </p>
       </div>
@@ -109,27 +139,44 @@ function handlePayment() {
 
     <!-- 결제 금액 -->
     <section class="mb-(--space-4)">
-      <h2 class="text-(length:--font-sm) font-semibold text-(color:--color-slate-dark) mb-(--space-3)">
+      <h2
+        class="text-(length:--font-sm) font-semibold text-(color:--color-slate-dark) mb-(--space-3)"
+      >
         결제 금액
       </h2>
-      <div class="flex items-center justify-between text-(length:--font-sm) text-(color:--color-slate-dark) mb-(--space-2)">
+      <div
+        class="flex items-center justify-between text-(length:--font-sm) text-(color:--color-slate-dark) mb-(--space-2)"
+      >
         <span>상품 금액</span>
-        <span class="text-(color:--color-navy)">{{ productAmount.toLocaleString() }}원</span>
+        <span class="text-(color:--color-navy)"
+          >{{ productAmount.toLocaleString() }}원</span
+        >
       </div>
-      <div class="flex items-center justify-between text-(length:--font-sm) text-(color:--color-gold) mb-(--space-3)">
+      <div
+        class="flex items-center justify-between text-(length:--font-sm) text-(color:--color-gold) mb-(--space-3)"
+      >
         <span>공동구매 할인</span>
         <span class="font-bold">-{{ discountAmount.toLocaleString() }}원</span>
       </div>
-      <div class="border-t border-(--color-border) pt-(--space-3) flex items-center justify-between">
-        <span class="text-(length:--font-base) font-bold text-(color:--color-navy)">총 결제금액</span>
-        <span class="text-(length:--font-lg) font-bold text-(color:--color-navy)">
+      <div
+        class="border-t border-(--color-border) pt-(--space-3) flex items-center justify-between"
+      >
+        <span
+          class="text-(length:--font-base) font-bold text-(color:--color-navy)"
+          >총 결제금액</span
+        >
+        <span
+          class="text-(length:--font-lg) font-bold text-(color:--color-navy)"
+        >
           {{ totalAmount.toLocaleString() }}원
         </span>
       </div>
     </section>
 
     <!-- 안내 문구 -->
-    <p class="bg-(--color-surface) rounded-(--radius-md) p-(--space-4) text-(length:--font-xs) text-(color:--color-slate-dark) leading-relaxed">
+    <p
+      class="bg-(--color-surface) rounded-(--radius-md) p-(--space-4) text-(length:--font-xs) text-(color:--color-slate-dark) leading-relaxed"
+    >
       공동구매는 목표 인원 달성 시 확정되며, 미달 시 전액 환불됩니다.
     </p>
 
