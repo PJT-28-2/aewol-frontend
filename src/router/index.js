@@ -61,12 +61,6 @@ const authRoutes = [
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
-    path: '/pets/:petId',
-    name: 'PetDetail',
-    component: () => import('@/views/pet/PetDetailView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
-  },
-  {
     path: '/pets/:petId/edit',
     name: 'PetEdit',
     component: () => import('@/views/pet/PetEditView.vue'),
