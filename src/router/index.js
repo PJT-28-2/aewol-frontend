@@ -41,6 +41,53 @@ const publicRoutes = [
     component: () =>
       import('@/views/auth/KakaoCallbackView.vue'),
   },
+
+
+  {
+  path: '/account',
+  name: 'AccountManagement',
+  component: () => import('@/views/account/AccountManagement.vue'),
+},
+{
+  path: '/account/link',
+  name: 'AccountLinkSelect',
+  component: () => import('@/views/account/AccountLinkSelect.vue'),
+},
+{
+  path: '/account/link/verify',
+  name: 'AccountAuthOneWon',
+  component: () => import('@/views/account/AccountAuthOneWon.vue'),
+},
+{
+  path: '/account/link/complete',
+  name: 'AccountLinkComplete',
+  component: () => import('@/views/account/AccountLinkComplete.vue'),
+},
+{
+  path: '/support',
+  name: 'CustomerCenter',
+  component: () => import('@/views/support/CustomerCenter.vue'),
+},
+{
+  path: '/support/faqs/:faqId',
+  name: 'FaqDetail',
+  component: () => import('@/views/support/FaqDetail.vue'),
+},
+{
+  path: '/support/inquiry',
+  name: 'InquiryForm',
+  component: () => import('@/views/support/InquiryForm.vue'),
+},
+{
+  path: '/support/inquiries',
+  name: 'MyInquiries',
+  component: () => import('@/views/support/MyInquiries.vue'),
+},
+{
+  path: '/support/inquiry/complete',
+  name: 'InquirySubmitted',
+  component: () => import('@/views/support/InquirySubmitted.vue'),
+},
 ];
 
 /* ------------------------------------------------------------------ */

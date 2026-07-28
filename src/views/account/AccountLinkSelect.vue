@@ -1,0 +1,83 @@
+<script setup>
+import { onMounted, computed } from 'vue';
+import { useRouter } from 'vue-router';
+import { useAccountStore } from '@/stores/account';
+import { ENABLED_BANK_CODES } from '@/utils/mockData';
+import BankBadge from '@/components/common/BankBadge.vue';
+import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue';
+
+const router = useRouter();
+const store = useAccountStore();
+
+onMounted(() => {
+  store.fetchBanks();
+});
+
+// 실제 GET /api/banks 응답 필드명이 bankCode/bankName이 아닐 수도 있어서
+// 흔히 쓰는 변형(code, id, name, bankNm 등)까지 방어적으로 매핑해요.
+const normalizedBanks = computed(() =>
+  store.banks.map((bank) => ({
+    code: bank.bankCode ?? bank.code ?? bank.bank_code ?? bank.id ?? bank.bankId ?? '',
+    name: bank.bankName ?? bank.name ?? bank.bank_name ?? bank.bankNm ?? '이름 없음',
+  })),
+);
+
+function isEnabled(bankCode) {
+  return ENABLED_BANK_CODES.includes(bankCode);
+}
+
+function selectBank(bankCode) {
+  if (!isEnabled(bankCode)) return;
+  store.selectBankToLink(bankCode);
+  router.push({ name: 'AccountAuthOneWon' });
+}
+</script>
+
+<template>
+  <div class="min-h-screen bg-(--color-bg) px-5 pt-6 pb-10">
+    <button
+      class="w-8 h-8 rounded-md bg-(--color-navy) flex items-center justify-center mb-5"
+      @click="router.back()"
+    >
+      <IconArrowLeft :size="18" color="var(--color-white)" />
+    </button>
+
+    <header class="mb-7">
+      <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">계좌 연동하기</h1>
+      <p class="text-(length:--font-md) text-(color:--color-gray-600) mt-1">연동할 은행을 선택해주세요</p>
+    </header>
+
+    <p v-if="store.isLoading" class="text-(length:--font-sm) text-(color:--color-gray-500) mb-6">
+      불러오는 중이에요…
+    </p>
+
+    <div class="grid grid-cols-2 gap-3 mb-7">
+      <button
+        v-for="bank in normalizedBanks"
+        :key="bank.code"
+        class="relative flex items-center gap-3 p-4 rounded-2xl bg-(--color-surface) border border-(--color-border) text-left"
+        :class="isEnabled(bank.code) ? '' : 'opacity-50'"
+        :disabled="!isEnabled(bank.code)"
+        @click="selectBank(bank.code)"
+      >
+        <BankBadge :bank-code="bank.code" :fallback-name="bank.name" :size="36" />
+        <span class="font-semibold text-(color:--color-navy) text-(length:--font-md)">{{ bank.name }}</span>
+        <span
+          v-if="!isEnabled(bank.code)"
+          class="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-(--color-gray-200) text-(length:--font-xs) text-(color:--color-gray-600)"
+        >
+          준비중
+        </span>
+      </button>
+    </div>
+
+    <div class="p-4 rounded-2xl bg-(--color-surface)">
+      <p class="text-(length:--font-sm) font-semibold text-(color:--color-navy) mb-1">
+        계좌 데이터는 CODEF API를 통해 조회 전용으로 연동돼요
+      </p>
+      <p class="text-(length:--font-xs) text-(color:--color-gray-600) leading-relaxed">
+        실제 자금은 이동하지 않으며, 잔액 확인 목적에만 사용됩니다
+      </p>
+    </div>
+  </div>
+</template>
