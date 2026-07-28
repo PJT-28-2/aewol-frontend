@@ -2,6 +2,8 @@
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { shareApi } from '@/api/share'
+import IconChevronLeft from '@/components/common/icons/IconChevronLeft.vue'
+import IconInfo from '@/components/common/icons/IconInfo.vue'
 
 const router = useRouter()
 const link = ref('')
@@ -53,38 +55,59 @@ async function joinShare() {
 </script>
 
 <template>
-  <main class="join screen">
+  <main
+    class="relative mx-auto flex min-h-screen w-full max-w-[var(--mobile-content-width)] box-border flex-col bg-(--color-white) px-[var(--space-5)] py-[var(--space-10)] text-(--color-navy)"
+  >
     <button
-      class="back"
+      class="absolute left-[var(--space-5)] top-[var(--header-height)] cursor-pointer border-0 bg-transparent p-0 text-(--color-navy)"
       type="button"
+      aria-label="뒤로 가기"
       @click="router.back()"
     >
-      ‹
+      <IconChevronLeft :size="28" />
     </button>
-    <h1>초대링크 입력</h1>
-    <p class="sub">
+    <h1
+      class="mb-[var(--space-1)] mt-[var(--space-7)] text-[length:var(--font-xl)] font-bold"
+    >
+      초대링크 입력
+    </h1>
+    <p
+      class="mb-[var(--space-8)] mt-0 text-[length:var(--font-sm)] text-(--color-slate-muted)"
+    >
       가족이나 친구가 보낸 초대링크를 입력해주세요
     </p>
-    <label for="invite-link">초대링크 *</label>
+    <label
+      class="mb-[var(--space-2)] block text-[length:var(--font-sm)] font-bold text-(--color-slate-dark)"
+      for="invite-link"
+    >초대링크 *</label>
     <input
       id="invite-link"
       v-model="link"
+      class="h-[var(--control-height)] w-full box-border rounded-[var(--radius-lg)] border border-(--color-border) bg-(--color-surface) px-[var(--space-4)] [font-family:var(--font-family)] text-[length:var(--font-md)]"
       placeholder="aewol.app/invite/..."
       @input="errorMessage = ''"
     >
-    <div class="hint">
-      💡 초대링크는 이메일, 카카오톡, 문자 등으로 받을 수 있습니다.
-      링크를 복사해 입력해주세요.
+    <div
+      class="mt-[var(--space-4)] flex items-start gap-[var(--space-2)] rounded-[var(--radius-lg)] bg-(--color-surface) p-[var(--space-4)] text-[length:var(--font-sm)] leading-[1.45] text-(--color-slate-dark)"
+    >
+      <IconInfo
+        class="mt-0.5 shrink-0 text-(--color-gold-dark)"
+        :size="17"
+      />
+      <span>
+        초대링크는 이메일, 카카오톡, 문자 등으로 받을 수 있습니다.
+        링크를 복사해 입력해주세요.
+      </span>
     </div>
     <p
       v-if="errorMessage"
-      class="feedback error"
+      class="mb-0 mt-[var(--space-4)] text-[length:var(--font-sm)] text-(--color-danger)"
       role="alert"
     >
       {{ errorMessage }}
     </p>
     <button
-      class="primary"
+      class="mt-auto h-[var(--control-height-lg)] w-full cursor-pointer rounded-[var(--radius-xl)] border-0 bg-(--color-navy) font-bold text-(--color-white) disabled:cursor-not-allowed disabled:opacity-45"
       type="button"
       :disabled="!link.trim() || isJoining"
       @click="joinShare"
@@ -93,96 +116,3 @@ async function joinShare() {
     </button>
   </main>
 </template>
-
-<style scoped>
-.screen {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  width: min(100%, var(--mobile-content-width));
-  min-height: 100vh;
-  margin: 0 auto;
-  padding: var(--space-10) var(--space-5);
-  box-sizing: border-box;
-  color: var(--color-navy);
-  background: var(--color-white);
-}
-
-.back {
-  position: absolute;
-  top: var(--header-height);
-  left: var(--space-5);
-  border: 0;
-  background: none;
-  color: var(--color-navy);
-  font-size: var(--font-3xl);
-  line-height: 1;
-  cursor: pointer;
-}
-
-.screen h1 {
-  margin: var(--space-7) 0 var(--space-1);
-  font-size: var(--font-xl);
-}
-
-.sub {
-  margin: 0 0 var(--space-8);
-  color: var(--color-slate-muted);
-  font-size: var(--font-sm);
-}
-
-.screen label {
-  display: block;
-  margin-bottom: var(--space-2);
-  color: var(--color-slate-dark);
-  font-size: var(--font-sm);
-  font-weight: var(--font-bold);
-}
-
-.screen input {
-  width: 100%;
-  height: var(--control-height);
-  padding: 0 var(--space-4);
-  box-sizing: border-box;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
-  font: var(--font-md) var(--font-family);
-}
-
-.hint {
-  margin-top: var(--space-4);
-  padding: var(--space-4);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
-  color: var(--color-slate-dark);
-  font-size: var(--font-sm);
-  line-height: 1.45;
-}
-
-.feedback {
-  margin: var(--space-4) 0 0;
-  font-size: var(--font-sm);
-}
-
-.error {
-  color: var(--color-danger);
-}
-
-.primary {
-  width: 100%;
-  height: var(--control-height-lg);
-  margin-top: auto;
-  border: 0;
-  border-radius: var(--radius-xl);
-  background: var(--color-navy);
-  color: var(--color-white);
-  font-weight: var(--font-bold);
-  cursor: pointer;
-}
-
-.primary:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-</style>

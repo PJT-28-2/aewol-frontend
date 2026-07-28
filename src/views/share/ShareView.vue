@@ -2,7 +2,9 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import BottomNavBar from '@/components/common/BottomNavBar.vue'
-import EmptyState from '@/components/common/EmptyState.vue'
+import IconDog from '@/components/common/icons/IconDog.vue'
+import IconPaw from '@/components/common/icons/IconPaw.vue'
+import IconPlus from '@/components/common/icons/IconPlus.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { usePetStore } from '@/stores/pet'
 import { useShareStore } from '@/stores/share'
@@ -111,15 +113,23 @@ onMounted(loadPets)
 </script>
 
 <template>
-  <main class="share-screen">
-    <header class="share-heading">
-      <h1>함께 돌보기</h1>
-      <p>가족과 지갑을 공유하고 기여도를 확인해요</p>
+  <main
+    class="mx-auto min-h-screen w-full max-w-[var(--mobile-content-width)] box-border bg-(--color-white) px-[var(--space-5)] pb-[calc(var(--bottom-nav-height)+var(--space-8))] pt-[calc(var(--header-height)+var(--space-1))] text-(--color-navy)"
+  >
+    <header>
+      <h1 class="m-0 text-[length:var(--font-xl)] font-bold leading-[1.3]">
+        함께 돌보기
+      </h1>
+      <p
+        class="mb-0 mt-[var(--space-1)] text-[length:var(--font-sm)] text-(--color-slate-muted)"
+      >
+        가족과 지갑을 공유하고 기여도를 확인해요
+      </p>
     </header>
 
     <section
       v-if="isLoadingPets"
-      class="page-state"
+      class="flex flex-col items-center gap-[var(--space-4)] py-[var(--space-10)] text-center text-(--color-slate-dark)"
       aria-label="불러오는 중"
     >
       <LoadingSpinner />
@@ -127,11 +137,12 @@ onMounted(loadPets)
 
     <section
       v-else-if="petError"
-      class="page-state"
+      class="flex flex-col items-center gap-[var(--space-4)] py-[var(--space-10)] text-center text-(--color-slate-dark)"
       role="alert"
     >
       <p>{{ petError }}</p>
       <button
+        class="cursor-pointer rounded-[var(--radius-md)] border-0 bg-(--color-navy) px-[var(--space-4)] py-[var(--space-2)] font-semibold text-(--color-white)"
         type="button"
         @click="loadPets"
       >
@@ -139,37 +150,56 @@ onMounted(loadPets)
       </button>
     </section>
 
-    <EmptyState
+    <section
       v-else-if="pets.length === 0"
-      icon="🐾"
-      message="함께 돌볼 반려동물이 아직 없어요."
-      action-text="반려동물 등록하기"
-      action-route="/pets/register"
-    />
+      class="flex flex-col items-center gap-[var(--space-4)] py-[var(--space-10)] text-center text-(--color-slate-muted)"
+    >
+      <IconPaw
+        class="text-(--color-slate)"
+        :size="40"
+      />
+      <p class="m-0 text-[length:var(--font-sm)]">
+        함께 돌볼 반려동물이 아직 없어요.
+      </p>
+      <button
+        class="cursor-pointer rounded-[var(--radius-md)] border-0 bg-(--color-navy) px-[var(--space-4)] py-[var(--space-2)] font-semibold text-(--color-white)"
+        type="button"
+        @click="router.push('/pets/register')"
+      >
+        반려동물 등록하기
+      </button>
+    </section>
 
     <template v-else>
       <div
-        class="pet-switcher"
+        class="mt-[var(--space-7)] flex flex-wrap gap-[var(--space-2)]"
         role="tablist"
         aria-label="반려동물 선택"
       >
         <button
           v-for="pet in pets"
           :key="getPetId(pet)"
-          class="pet-tab"
-          :class="{ active: selectedPetId === getPetId(pet) }"
+          class="inline-flex h-[var(--control-height-sm)] cursor-pointer items-center gap-[var(--space-1)] rounded-full border border-(--color-border) bg-(--color-surface) px-[var(--space-4)] text-[length:var(--font-sm)] font-bold text-(--color-slate-dark)"
+          :class="{
+            'border-(--color-navy) bg-(--color-navy) text-(--color-white)':
+              selectedPetId === getPetId(pet),
+          }"
           type="button"
           role="tab"
           :aria-selected="selectedPetId === getPetId(pet)"
           @click="selectedPetId = getPetId(pet)"
         >
-          🐕 {{ pet.name }}
+          <IconDog
+            :size="16"
+            color="currentColor"
+          />
+          {{ pet.name }}
         </button>
       </div>
 
       <section
         v-if="shareStore.isLoading"
-        class="page-state"
+        class="flex flex-col items-center gap-[var(--space-4)] py-[var(--space-10)] text-center text-(--color-slate-dark)"
         aria-label="불러오는 중"
       >
         <LoadingSpinner />
@@ -177,11 +207,12 @@ onMounted(loadPets)
 
       <section
         v-else-if="shareStore.error"
-        class="page-state"
+        class="flex flex-col items-center gap-[var(--space-4)] py-[var(--space-10)] text-center text-(--color-slate-dark)"
         role="alert"
       >
         <p>{{ shareStore.error }}</p>
         <button
+          class="cursor-pointer rounded-[var(--radius-md)] border-0 bg-(--color-navy) px-[var(--space-4)] py-[var(--space-2)] font-semibold text-(--color-white)"
           type="button"
           @click="retrySharedCare"
         >
@@ -190,25 +221,31 @@ onMounted(loadPets)
       </section>
 
       <template v-else>
-        <section class="members-block">
-          <h2>참여 중인 가족</h2>
+        <section
+          class="relative mt-[var(--space-8)] pr-[calc(var(--header-height)+var(--space-2))]"
+        >
+          <h2
+            class="mb-[var(--space-4)] mt-0 text-[length:var(--font-base)] font-bold"
+          >
+            참여 중인 가족
+          </h2>
           <p
             v-if="members.length === 0"
-            class="empty-message"
+            class="m-0 py-[var(--space-5)] text-center text-[length:var(--font-sm)] text-(--color-slate-muted)"
           >
             아직 참여 중인 가족이 없어요.
           </p>
           <div
             v-else
-            class="member-avatars"
+            class="flex flex-wrap gap-[var(--space-4)]"
           >
             <div
               v-for="member in members.slice(0, 3)"
               :key="member.id"
-              class="member-avatar-wrap"
+              class="flex min-w-[var(--bottom-nav-height)] flex-col items-center gap-[var(--space-2)] border-0 bg-transparent p-0 text-[length:var(--font-sm)] text-(--color-navy)"
             >
               <div
-                class="member-avatar"
+                class="grid size-[var(--header-height)] place-items-center rounded-full text-[length:var(--font-lg)] font-bold text-(--color-white)"
                 :style="{ backgroundColor: member.color }"
               >
                 {{ member.name.slice(0, 1) }}
@@ -217,42 +254,55 @@ onMounted(loadPets)
             </div>
           </div>
           <button
-            class="member-avatar-wrap invite-avatar"
+            class="absolute right-0 top-[calc(var(--font-base)+var(--space-4))] flex min-w-[var(--bottom-nav-height)] cursor-pointer flex-col items-center gap-[var(--space-2)] border-0 bg-transparent p-0 text-[length:var(--font-sm)] text-(--color-navy)"
             type="button"
             @click="router.push('/share/invite')"
           >
-            <span class="member-avatar">+</span>
+            <span
+              class="grid size-[var(--header-height)] place-items-center rounded-full bg-(--color-surface) text-(--color-slate-muted)"
+            >
+              <IconPlus :size="26" />
+            </span>
             <strong>초대</strong>
           </button>
         </section>
 
         <section
           v-if="normalizedContributions.length > 0"
-          class="contribution-card"
+          class="mt-[var(--space-8)] grid place-items-center"
           aria-label="이번 달 기여 비율"
         >
           <div
-            class="donut-chart"
+            class="relative grid size-[var(--share-chart-size)] place-items-center rounded-full"
             :style="donutStyle"
           >
-            <div class="donut-label">
-              <strong>기여 비율</strong>
-              <span>이번 달</span>
+            <span
+              class="absolute size-[var(--share-chart-hole-size)] rounded-full bg-(--color-white)"
+            />
+            <div
+              class="relative z-10 flex flex-col items-center gap-[var(--space-1)]"
+            >
+              <strong class="text-[length:var(--font-base)]">기여 비율</strong>
+              <span
+                class="text-[length:var(--font-sm)] text-(--color-slate-muted)"
+              >이번 달</span>
             </div>
           </div>
         </section>
 
-        <section class="contribution-list">
+        <section
+          class="mt-[var(--space-8)] flex flex-col gap-[var(--space-2)]"
+        >
           <p
             v-if="shareStore.contributionError"
-            class="empty-message"
+            class="m-0 py-[var(--space-5)] text-center text-[length:var(--font-sm)] text-(--color-slate-muted)"
             role="status"
           >
             {{ shareStore.contributionError }}
           </p>
           <p
             v-else-if="normalizedContributions.length === 0"
-            class="empty-message"
+            class="m-0 py-[var(--space-5)] text-center text-[length:var(--font-sm)] text-(--color-slate-muted)"
           >
             아직 집계된 기여 내역이 없어요.
           </p>
@@ -260,14 +310,16 @@ onMounted(loadPets)
             v-for="stat in normalizedContributions"
             v-else
             :key="stat.id"
-            class="contribution-row"
+            class="flex min-h-[var(--control-height-lg)] items-center rounded-[var(--radius-lg)] bg-(--color-surface) px-[var(--space-4)] text-[length:var(--font-sm)]"
           >
             <span
-              class="legend-dot"
+              class="mr-[var(--space-3)] size-[var(--font-md)] rounded-full"
               :style="{ backgroundColor: stat.color }"
             />
             <strong>{{ stat.name }}</strong>
-            <span class="ratio">{{ stat.percentage.toFixed(0) }}%</span>
+            <span
+              class="ml-auto font-bold text-(--color-slate-dark)"
+            >{{ stat.percentage.toFixed(0) }}%</span>
           </div>
         </section>
       </template>
@@ -275,208 +327,3 @@ onMounted(loadPets)
   </main>
   <BottomNavBar />
 </template>
-
-<style scoped>
-.share-screen {
-  width: min(100%, var(--mobile-content-width));
-  min-height: 100vh;
-  margin: 0 auto;
-  padding: calc(var(--header-height) + var(--space-1)) var(--space-5)
-    calc(var(--bottom-nav-height) + var(--space-8));
-  background: var(--color-white);
-  color: var(--color-navy);
-  box-sizing: border-box;
-}
-
-.share-heading h1 {
-  margin: 0;
-  font-size: var(--font-xl);
-  line-height: 1.3;
-  font-weight: var(--font-bold);
-}
-
-.share-heading p {
-  margin: var(--space-1) 0 0;
-  color: var(--color-slate-muted);
-  font-size: var(--font-sm);
-}
-
-.page-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-4);
-  padding: var(--space-10) 0;
-  color: var(--color-slate-dark);
-  text-align: center;
-}
-
-.page-state button {
-  padding: var(--space-2) var(--space-4);
-  border: 0;
-  border-radius: var(--radius-md);
-  background: var(--color-navy);
-  color: var(--color-white);
-  font: var(--font-semibold) var(--font-sm) var(--font-family);
-  cursor: pointer;
-}
-
-.pet-switcher {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  margin-top: var(--space-7);
-}
-
-.pet-tab {
-  height: var(--control-height-sm);
-  padding: 0 var(--space-4);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-full);
-  background: var(--color-surface);
-  color: var(--color-slate-dark);
-  font: var(--font-bold) var(--font-sm) var(--font-family);
-  cursor: pointer;
-}
-
-.pet-tab.active {
-  border-color: var(--color-navy);
-  background: var(--color-navy);
-  color: var(--color-white);
-}
-
-.members-block {
-  position: relative;
-  margin-top: var(--space-8);
-  padding-right: calc(var(--header-height) + var(--space-2));
-}
-
-.members-block h2 {
-  margin: 0 0 var(--space-4);
-  font-size: var(--font-base);
-}
-
-.member-avatars {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-4);
-}
-
-.member-avatar-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-2);
-  min-width: var(--bottom-nav-height);
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--color-navy);
-  font-size: var(--font-sm);
-}
-
-.member-avatar {
-  display: grid;
-  place-items: center;
-  width: var(--header-height);
-  height: var(--header-height);
-  border-radius: var(--radius-full);
-  color: var(--color-white);
-  font-size: var(--font-lg);
-  font-weight: var(--font-bold);
-}
-
-.invite-avatar {
-  position: absolute;
-  top: calc(var(--font-base) + var(--space-4));
-  right: 0;
-  cursor: pointer;
-}
-
-.invite-avatar .member-avatar {
-  background: var(--color-surface);
-  color: var(--color-slate-muted);
-  font-size: var(--font-3xl);
-}
-
-.contribution-card {
-  display: grid;
-  place-items: center;
-  margin-top: var(--space-8);
-}
-
-.donut-chart {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: var(--share-chart-size);
-  height: var(--share-chart-size);
-  border-radius: var(--radius-full);
-}
-
-.donut-chart::before {
-  content: '';
-  position: absolute;
-  width: var(--share-chart-hole-size);
-  height: var(--share-chart-hole-size);
-  border-radius: var(--radius-full);
-  background: var(--color-white);
-}
-
-.donut-label {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-1);
-}
-
-.donut-label strong {
-  font-size: var(--font-base);
-}
-
-.donut-label span {
-  color: var(--color-slate-muted);
-  font-size: var(--font-sm);
-}
-
-.contribution-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  margin-top: var(--space-8);
-}
-
-.contribution-row {
-  display: flex;
-  align-items: center;
-  min-height: var(--control-height-lg);
-  padding: 0 var(--space-4);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
-  box-sizing: border-box;
-  font-size: var(--font-sm);
-}
-
-.legend-dot {
-  width: var(--font-md);
-  height: var(--font-md);
-  margin-right: var(--space-3);
-  border-radius: var(--radius-full);
-}
-
-.ratio {
-  margin-left: auto;
-  color: var(--color-slate-dark);
-  font-weight: var(--font-bold);
-}
-
-.empty-message {
-  margin: 0;
-  padding: var(--space-5) 0;
-  color: var(--color-slate-muted);
-  font-size: var(--font-sm);
-  text-align: center;
-}
-</style>

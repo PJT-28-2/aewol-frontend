@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { shareApi } from '@/api/share'
+import IconChevronLeft from '@/components/common/icons/IconChevronLeft.vue'
 
 const router = useRouter()
 const recipient = ref('')
@@ -91,40 +92,58 @@ async function copyLink() {
 </script>
 
 <template>
-  <main class="invite screen">
-    <div class="grabber" />
+  <main
+    class="relative mx-auto min-h-screen w-full max-w-[var(--mobile-content-width)] box-border rounded-[var(--radius-sheet)] bg-(--color-white) px-[var(--space-5)] py-[var(--space-9)] text-(--color-navy)"
+  >
+    <div
+      class="absolute left-1/2 top-[var(--space-4)] h-[var(--space-1)] w-[var(--space-8)] -translate-x-1/2 rounded-[var(--radius-sm)] bg-(--color-border)"
+    />
     <button
-      class="back"
+      class="absolute left-[var(--space-4)] top-[var(--space-8)] cursor-pointer border-0 bg-transparent p-0 text-(--color-navy)"
       type="button"
+      aria-label="뒤로 가기"
       @click="router.back()"
     >
-      ‹
+      <IconChevronLeft :size="28" />
     </button>
-    <h1>가족 초대하기</h1>
-    <p class="sub">
+    <h1 class="m-0 text-[length:var(--font-lg)] font-bold">
+      가족 초대하기
+    </h1>
+    <p
+      class="mb-[var(--space-7)] mt-[var(--space-2)] text-[length:var(--font-sm)] text-(--color-slate-muted)"
+    >
       함께 돌보는 가족을 초대해 지갑을 공유해요
     </p>
-    <label for="recipient">이메일, 전화번호 또는 멤버 ID</label>
+    <label
+      class="mb-[var(--space-2)] block text-[length:var(--font-sm)] font-bold text-(--color-slate-dark)"
+      for="recipient"
+    >이메일, 전화번호 또는 멤버 ID</label>
     <input
       id="recipient"
       v-model="recipient"
+      class="h-[var(--control-height)] w-full box-border rounded-[var(--radius-lg)] border border-(--color-border) bg-(--color-surface) px-[var(--space-4)] [font-family:var(--font-family)] text-[length:var(--font-md)]"
       placeholder="example@aewol.com"
       @input="resetFeedback"
     >
     <button
-      class="primary"
+      class="mt-[var(--space-4)] h-[var(--control-height-lg)] w-full cursor-pointer rounded-[var(--radius-xl)] border-0 bg-(--color-navy) font-bold text-(--color-white) disabled:cursor-not-allowed disabled:opacity-45"
       type="button"
       :disabled="!trimmedRecipient || isSending"
       @click="sendInvite"
     >
       {{ isSending ? '초대 보내는 중...' : '초대 보내기' }}
     </button>
-    <div class="or">
+    <div
+      class="mb-[var(--space-6)] mt-[var(--space-10)] border-t border-(--color-border) pt-[var(--space-4)] text-center text-[length:var(--font-sm)] text-(--color-slate-muted)"
+    >
       또는 링크로 참여 화면 공유
     </div>
-    <div class="link-row">
-      <span>{{ inviteLink }}</span>
+    <div class="flex gap-[var(--space-4)]">
+      <span
+        class="min-h-[var(--control-height)] min-w-0 flex-1 [overflow-wrap:anywhere] rounded-[var(--radius-lg)] border border-(--color-border) bg-(--color-surface) p-[var(--space-4)] text-[length:var(--font-sm)] text-(--color-slate-dark)"
+      >{{ inviteLink }}</span>
       <button
+        class="w-[calc(var(--space-8)*2)] cursor-pointer rounded-[var(--radius-lg)] border-0 bg-(--color-gold) font-bold text-(--color-navy)"
         type="button"
         @click="copyLink"
       >
@@ -133,141 +152,11 @@ async function copyLink() {
     </div>
     <p
       v-if="feedback"
-      class="feedback"
-      :class="{ error: isError }"
+      class="mb-0 mt-[var(--space-4)] text-[length:var(--font-sm)] text-(--color-slate-dark)"
+      :class="{ 'text-(--color-danger)': isError }"
       :role="isError ? 'alert' : 'status'"
     >
       {{ feedback }}
     </p>
   </main>
 </template>
-
-<style scoped>
-.screen {
-  position: relative;
-  width: min(100%, var(--mobile-content-width));
-  min-height: 100vh;
-  margin: 0 auto;
-  padding: var(--space-9) var(--space-5);
-  box-sizing: border-box;
-  color: var(--color-navy);
-  background: var(--color-white);
-  border-radius: var(--radius-sheet);
-}
-
-.grabber {
-  position: absolute;
-  top: var(--space-4);
-  left: calc(50% - var(--space-5));
-  width: var(--space-8);
-  height: var(--space-1);
-  border-radius: var(--radius-sm);
-  background: var(--color-border);
-}
-
-.back {
-  position: absolute;
-  top: var(--space-8);
-  left: var(--space-4);
-  border: 0;
-  background: none;
-  color: var(--color-navy);
-  font-size: var(--font-3xl);
-  cursor: pointer;
-}
-
-.screen h1 {
-  margin: 0;
-  font-size: var(--font-lg);
-}
-
-.sub {
-  margin: var(--space-2) 0 var(--space-7);
-  color: var(--color-slate-muted);
-  font-size: var(--font-sm);
-}
-
-.screen label {
-  display: block;
-  margin-bottom: var(--space-2);
-  color: var(--color-slate-dark);
-  font-size: var(--font-sm);
-  font-weight: var(--font-bold);
-}
-
-.screen input {
-  width: 100%;
-  height: var(--control-height);
-  padding: 0 var(--space-4);
-  box-sizing: border-box;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
-  font: var(--font-md) var(--font-family);
-}
-
-.primary {
-  width: 100%;
-  height: var(--control-height-lg);
-  margin-top: var(--space-4);
-  border: 0;
-  border-radius: var(--radius-xl);
-  background: var(--color-navy);
-  color: var(--color-white);
-  font-weight: var(--font-bold);
-  cursor: pointer;
-}
-
-.primary:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.or {
-  margin: var(--space-10) 0 var(--space-6);
-  border-top: 1px solid var(--color-border);
-  padding-top: var(--space-4);
-  color: var(--color-slate-muted);
-  font-size: var(--font-sm);
-  text-align: center;
-}
-
-.link-row {
-  display: flex;
-  gap: var(--space-4);
-}
-
-.link-row span {
-  flex: 1;
-  min-width: 0;
-  min-height: var(--control-height);
-  padding: var(--space-4);
-  box-sizing: border-box;
-  overflow-wrap: anywhere;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
-  color: var(--color-slate-dark);
-  font-size: var(--font-sm);
-}
-
-.link-row button {
-  width: calc(var(--space-8) * 2);
-  border: 0;
-  border-radius: var(--radius-lg);
-  background: var(--color-gold);
-  color: var(--color-navy);
-  font-weight: var(--font-bold);
-  cursor: pointer;
-}
-
-.feedback {
-  margin: var(--space-4) 0 0;
-  color: var(--color-slate-dark);
-  font-size: var(--font-sm);
-}
-
-.error {
-  color: var(--color-danger);
-}
-</style>
