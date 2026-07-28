@@ -6,9 +6,9 @@ import IconUserCircle from '@/components/common/icons/IconUserCircle.vue';
 const groupPurchases = ref([
   {
     id: 1,
-    title: '프리미엄 사료 15kg',
-    currentCount: 32,
-    targetCount: 50,
+    productName: '프리미엄 사료 15kg',
+    currentQuantity: 32,
+    targetQuantity: 50,
     dDay: 'D-3',
     badgeText: '30% 할인',
   },
@@ -130,10 +130,10 @@ const searchKeyword = ref('');
       >
         <div>
           <h3 class="text-(length:--font-md) font-semibold text-(color:--color-gray-900) mb-(--space-1)">
-            {{ gp.title }}
+            {{ gp.productName }}
           </h3>
           <p class="text-(length:--font-xs) text-(color:--color-gray-500) mb-(--space-2)">
-            {{ gp.currentCount }}/{{ gp.targetCount }}명 참여 · {{ gp.dDay }}
+            {{ gp.currentQuantity }}/{{ gp.targetQuantity }}개 참여 · {{ gp.dDay }}
           </p>
           <span class="text-(length:--font-xs) font-semibold text-(color:--color-gold)">
             {{ gp.badgeText }}
