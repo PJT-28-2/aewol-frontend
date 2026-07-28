@@ -26,10 +26,8 @@ const handleKakaoCallback = async () => {
     KAKAO_OAUTH_STATE_KEY,
   )
 
-  // state는 한 번만 검증할 수 있도록 성공 여부와 관계없이 즉시 제거한다.
-  window.sessionStorage.removeItem(KAKAO_OAUTH_STATE_KEY)
-
   // 로그인 화면에서 시작하지 않은 콜백은 CSRF 요청일 수 있어 API 호출 전에 차단한다.
+  // 검증 전에 저장값을 삭제하면 잘못된 콜백 하나로 정상 로그인 시도가 무효화될 수 있다.
   if (
     !expectedState ||
     !returnedState ||
@@ -38,6 +36,9 @@ const handleKakaoCallback = async () => {
     errorMessage.value = '유효하지 않은 로그인 요청입니다. 다시 시도해주세요.'
     return
   }
+
+  // 일치가 확인된 state는 재사용 공격을 막기 위해 즉시 제거한다.
+  window.sessionStorage.removeItem(KAKAO_OAUTH_STATE_KEY)
 
   // 사용자가 카카오 동의를 취소한 경우 불필요한 인증 코드 처리를 진행하지 않는다.
   if (route.query.error) {
