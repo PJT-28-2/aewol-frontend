@@ -77,6 +77,13 @@
   --space-9: 48px;
   --space-10: 64px;
 
+  /* Iconography */
+  --icon-size-xs: 15px;
+  --icon-size-sm: 16px;
+  --icon-size-md: 24px;
+  --icon-size-lg: 28px;
+  --icon-stroke-width: 2;
+
   /* Border Radius */
   --radius-sm: 4px;
   --radius-md: 8px;
@@ -102,11 +109,13 @@
   --auth-success-find-id-image-offset: -11px;
   --auth-success-title-gap: 9px;
 
-  /* Layout */
-  --bottom-nav-height: 64px;
-  --header-height: 56px;
-  --layout-max-width: 480px;
-  --mobile-content-width: 390px;
+  /* Support Program */
+  --support-card-min-height: 128px;
+  --support-action-height: 24px;
+  --support-action-width: 80px;
+  --support-status-icon-size: 24px;
+  --support-info-icon-offset: 2px;
+
   /* Layout */
   --bottom-nav-height: 64px;
   --header-height: 56px;
