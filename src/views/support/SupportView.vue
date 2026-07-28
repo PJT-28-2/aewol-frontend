@@ -2,6 +2,10 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import BottomNavBar from '@/components/common/BottomNavBar.vue'
+import IconCheck from '@/components/common/icons/IconCheck.vue'
+import IconChevronLeft from '@/components/common/icons/IconChevronLeft.vue'
+import IconClose from '@/components/common/icons/IconClose.vue'
+import IconInfo from '@/components/common/icons/IconInfo.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -93,27 +97,27 @@ const selected = computed(() =>
 
 <template>
   <main
-    class="mx-auto min-h-screen w-full max-w-[var(--mobile-content-width)] box-border bg-[var(--color-white)] px-[var(--space-5)] pb-[calc(var(--bottom-nav-height)+var(--space-8))] pt-[var(--space-10)] text-[var(--color-navy)]"
+    class="mx-auto min-h-screen w-full max-w-[var(--mobile-content-width)] box-border bg-(--color-white) px-[var(--space-5)] pb-[calc(var(--bottom-nav-height)+var(--space-8))] pt-[var(--space-10)] text-(--color-navy)"
   >
     <template v-if="!detail">
       <h1 class="m-0 text-[length:var(--font-xl)] font-bold">
         우리 동네 지원사업
       </h1>
       <p
-        class="mb-[var(--space-8)] mt-[var(--space-1)] text-[length:var(--font-sm)] text-[var(--color-slate-muted)]"
+        class="mb-[var(--space-8)] mt-[var(--space-1)] text-[length:var(--font-sm)] text-(--color-slate-muted)"
       >
         프로필 조건에 맞는 지원사업을 모아봤어요
       </p>
       <article
         v-for="program in programs"
         :key="program.id"
-        class="relative mb-[var(--space-4)] min-h-32 box-border rounded-[var(--radius-xl)] border border-[var(--color-border)] p-[var(--space-4)]"
-        :class="{ 'bg-[var(--color-surface)]': !program.available }"
+        class="relative mb-[var(--space-4)] min-h-32 box-border rounded-[var(--radius-xl)] border border-(--color-border) p-[var(--space-4)]"
+        :class="{ 'bg-(--color-surface)': !program.available }"
       >
         <span
-          class="inline-grid h-[var(--space-5)] place-items-center rounded-[var(--radius-lg)] bg-[var(--color-olive-surface)] px-[var(--space-2)] text-[length:var(--font-xs)] font-bold text-[var(--color-olive-dark)]"
+          class="inline-grid h-[var(--space-5)] place-items-center rounded-[var(--radius-lg)] bg-(--color-olive-surface) px-[var(--space-2)] text-[length:var(--font-xs)] font-bold text-(--color-olive-dark)"
           :class="{
-            'bg-[var(--color-danger-surface)] text-[var(--color-danger-dark)]':
+            'bg-(--color-danger-surface) text-(--color-danger-dark)':
               !program.available,
           }"
         >
@@ -125,15 +129,15 @@ const selected = computed(() =>
           {{ program.title }}
         </h2>
         <p
-          class="m-0 text-[length:var(--font-sm)] text-[var(--color-slate-muted)]"
+          class="m-0 text-[length:var(--font-sm)] text-(--color-slate-muted)"
         >
           {{ program.description }}
         </p>
         <button
           type="button"
-          class="absolute bottom-[var(--space-3)] right-[var(--space-4)] h-6 w-20 cursor-pointer rounded-[var(--radius-md)] border-0 bg-[var(--color-navy)] text-[length:var(--font-xs)] font-bold text-[var(--color-white)]"
+          class="absolute bottom-[var(--space-3)] right-[var(--space-4)] h-6 w-20 cursor-pointer rounded-[var(--radius-md)] border-0 bg-(--color-navy) text-[length:var(--font-xs)] font-bold text-(--color-white)"
           :class="{
-            'border border-[var(--color-border)] bg-[var(--color-white)] text-[var(--color-slate-dark)]':
+            'border border-(--color-border) bg-(--color-white) text-(--color-slate-dark)':
               !program.available,
           }"
           @click="router.push(`/support/${program.id}`)"
@@ -145,16 +149,16 @@ const selected = computed(() =>
 
     <template v-else-if="selected">
       <button
-        class="-ml-[var(--space-2)] -mt-[var(--space-3)] mb-[var(--space-6)] block cursor-pointer border-0 bg-transparent text-[length:var(--font-3xl)] text-[var(--color-navy)]"
+        class="-ml-[var(--space-2)] -mt-[var(--space-3)] mb-[var(--space-6)] block cursor-pointer border-0 bg-transparent text-[length:var(--font-3xl)] text-(--color-navy)"
         type="button"
         @click="router.push('/support')"
       >
-        ‹
+        <IconChevronLeft :size="28" />
       </button>
       <span
-        class="mb-[var(--space-3)] inline-grid h-[var(--space-5)] place-items-center rounded-[var(--radius-lg)] bg-[var(--color-olive-surface)] px-[var(--space-2)] text-[length:var(--font-xs)] font-bold text-[var(--color-olive-dark)]"
+        class="mb-[var(--space-3)] inline-grid h-[var(--space-5)] place-items-center rounded-[var(--radius-lg)] bg-(--color-olive-surface) px-[var(--space-2)] text-[length:var(--font-xs)] font-bold text-(--color-olive-dark)"
         :class="{
-          'bg-[var(--color-danger-surface)] text-[var(--color-danger-dark)]':
+          'bg-(--color-danger-surface) text-(--color-danger-dark)':
             !selected.available,
         }"
       >
@@ -164,16 +168,16 @@ const selected = computed(() =>
         {{ selected.title }}
       </h1>
       <p
-        class="mb-[var(--space-8)] mt-[var(--space-1)] text-[length:var(--font-sm)] text-[var(--color-slate-muted)]"
+        class="mb-[var(--space-8)] mt-[var(--space-1)] text-[length:var(--font-sm)] text-(--color-slate-muted)"
       >
         {{ selected.agency }} · {{ selected.amount }}
       </p>
 
       <section
-        class="mt-[var(--space-7)] rounded-[var(--radius-lg)] bg-[var(--color-surface)] px-[var(--space-4)] py-[var(--space-3)]"
+        class="mt-[var(--space-7)] rounded-[var(--radius-lg)] bg-(--color-surface) px-[var(--space-4)] py-[var(--space-3)]"
       >
         <b
-          class="block text-[length:var(--font-xs)] text-[var(--color-slate-dark)]"
+          class="block text-[length:var(--font-xs)] text-(--color-slate-dark)"
         >신청 기간</b>
         <strong
           class="mt-[var(--space-2)] block text-[length:var(--font-sm)]"
@@ -191,33 +195,50 @@ const selected = computed(() =>
         class="my-[var(--space-4)] flex items-start gap-[var(--space-3)]"
       >
         <b
-          class="grid size-6 shrink-0 place-items-center rounded-full bg-[var(--color-olive-surface)] text-[var(--color-olive-dark)]"
+          class="grid size-6 shrink-0 place-items-center rounded-full bg-(--color-olive-surface) text-(--color-olive-dark)"
           :class="{
-            'bg-[var(--color-danger-surface)] text-[var(--color-danger-dark)]':
+            'bg-(--color-danger-surface) text-(--color-danger-dark)':
               !condition.met,
           }"
-        >{{ condition.met ? '✓' : '✕' }}</b>
+        >
+          <IconCheck
+            v-if="condition.met"
+            :size="15"
+          />
+          <IconClose
+            v-else
+            :size="15"
+          />
+        </b>
         <span class="flex flex-col gap-[var(--space-1)]">
           <strong class="text-[length:var(--font-md)]">{{ condition.title }}</strong>
           <small
-            class="text-[length:var(--font-xs)] text-[var(--color-slate-muted)]"
+            class="text-[length:var(--font-xs)] text-(--color-slate-muted)"
           >{{ condition.description }}</small>
         </span>
       </div>
 
       <div
         v-if="!selected.available"
-        class="mt-[var(--space-7)] rounded-[var(--radius-lg)] bg-[var(--color-surface)] px-[var(--space-4)] py-[var(--space-3)] text-[length:var(--font-xs)] leading-relaxed text-[var(--color-slate-dark)]"
+        class="mt-[var(--space-7)] rounded-[var(--radius-lg)] bg-(--color-surface) px-[var(--space-4)] py-[var(--space-3)] text-[length:var(--font-xs)] leading-relaxed text-(--color-slate-dark)"
       >
-        💡 현재 조건으로는 이 지원사업을 신청할 수 없어요<br>
-        <small class="text-[var(--color-slate-muted)]">
-          비슷한 조건의 다른 지원사업을 확인해보세요
-        </small>
+        <div class="flex items-start gap-[var(--space-2)]">
+          <IconInfo
+            class="mt-0.5 shrink-0 text-(--color-gold-dark)"
+            :size="16"
+          />
+          <span>
+            현재 조건으로는 이 지원사업을 신청할 수 없어요<br>
+            <small class="text-(--color-slate-muted)">
+              비슷한 조건의 다른 지원사업을 확인해보세요
+            </small>
+          </span>
+        </div>
       </div>
 
       <button
         v-if="selected.available"
-        class="mt-[var(--space-4)] h-[var(--control-height-lg)] w-full cursor-not-allowed rounded-[var(--radius-xl)] border-0 bg-[var(--color-navy)] font-bold text-[var(--color-white)] opacity-55"
+        class="mt-[var(--space-4)] h-[var(--control-height-lg)] w-full cursor-not-allowed rounded-[var(--radius-xl)] border-0 bg-(--color-navy) font-bold text-(--color-white) opacity-55"
         type="button"
         disabled
       >
@@ -225,14 +246,14 @@ const selected = computed(() =>
       </button>
       <button
         v-else
-        class="mt-[var(--space-4)] h-[var(--control-height-lg)] w-full cursor-pointer rounded-[var(--radius-xl)] border-0 bg-[var(--color-navy)] font-bold text-[var(--color-white)]"
+        class="mt-[var(--space-4)] h-[var(--control-height-lg)] w-full cursor-pointer rounded-[var(--radius-xl)] border-0 bg-(--color-navy) font-bold text-(--color-white)"
         type="button"
         @click="router.push('/support')"
       >
         비슷한 지원사업 더 보기
       </button>
       <button
-        class="mt-[var(--space-4)] h-[var(--control-height)] w-full cursor-pointer rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-white)] font-bold text-[var(--color-slate-dark)]"
+        class="mt-[var(--space-4)] h-[var(--control-height)] w-full cursor-pointer rounded-[var(--radius-xl)] border border-(--color-border) bg-(--color-white) font-bold text-(--color-slate-dark)"
         type="button"
         @click="router.push('/support')"
       >
@@ -249,12 +270,12 @@ const selected = computed(() =>
           지원사업을 찾을 수 없어요
         </h1>
         <p
-          class="mb-[var(--space-8)] mt-[var(--space-3)] text-[length:var(--font-sm)] text-[var(--color-slate-muted)]"
+          class="mb-[var(--space-8)] mt-[var(--space-3)] text-[length:var(--font-sm)] text-(--color-slate-muted)"
         >
           주소를 확인하거나 지원사업 목록에서 다시 선택해주세요.
         </p>
         <button
-          class="mt-[var(--space-4)] h-[var(--control-height-lg)] w-full cursor-pointer rounded-[var(--radius-xl)] border-0 bg-[var(--color-navy)] font-bold text-[var(--color-white)]"
+          class="mt-[var(--space-4)] h-[var(--control-height-lg)] w-full cursor-pointer rounded-[var(--radius-xl)] border-0 bg-(--color-navy) font-bold text-(--color-white)"
           type="button"
           @click="router.push('/support')"
         >
