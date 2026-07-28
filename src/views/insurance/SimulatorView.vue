@@ -1,289 +1,326 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import IconDog from '@/components/common/icons/IconDog.vue'
+import IconCat from '@/components/common/icons/IconCat.vue'
+import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
+import MedicalHistoryPicker from '@/components/insurance/MedicalHistoryPicker.vue'
 
-const form = ref({
-  breed: '',
-  age: null,
-  species: 'DOG',
-  medicalHistory: [],
-})
-const result = ref(null)
-const isLoading = ref(false)
+const router = useRouter()
 
-const medicalOptions = [
-  { value: 'NONE', label: '없음' },
-  { value: 'ALLERGY', label: '알레르기' },
-  { value: 'JOINT', label: '관절 질환' },
-  { value: 'SKIN', label: '피부 질환' },
-  { value: 'DENTAL', label: '치과 질환' },
-  { value: 'DIGESTIVE', label: '소화기 질환' },
-  { value: 'OTHER', label: '기타' },
-]
-
-const handleSimulate = async () => {
-  // TODO: implement insurance simulation API call
+function goBack() {
+  router.back()
 }
 
-const handleReset = () => {
+// TODO(backend): 보험 시뮬레이터용 반려동물 프로필 조회 GET API가 아직 없어 목업으로 대체.
+// usePetStore는 이 화면에서 쓰지 않음 — 전용 API가 나오면 아래 목업을 그 호출로 교체.
+const pets = ref([
+  { id: 1, name: '포메', species: 'DOG', breed: '포메라니안', age: 3 },
+])
+
+const selectedPetId = ref(pets.value.length === 1 ? pets.value[0].id : null)
+const selectedPet = computed(
+  () => pets.value.find((pet) => pet.id === selectedPetId.value) || null,
+)
+
+const medicalTags = ref([])
+
+const result = ref(null)
+const isLoading = ref(false)
+const errorMessage = ref('')
+
+const verdictLabels = {
+  FAVORABLE: '가입 유리',
+  NEUTRAL: '중립',
+  UNFAVORABLE: '가입 불리',
+}
+
+const verdictColorClasses = {
+  FAVORABLE: 'text-(color:--color-gold-light)',
+  NEUTRAL: 'text-(color:--color-gray-300)',
+  UNFAVORABLE: 'text-(color:--color-danger)',
+}
+
+async function handleSimulate() {
+  if (!selectedPet.value) {
+    errorMessage.value = '반려동물을 선택해주세요.'
+    return
+  }
+
+  isLoading.value = true
+  errorMessage.value = ''
+
+  try {
+    // TODO(backend): POST /insurance/simulate 완성되면 mockSimulate 대신 insuranceApi.simulate(payload) 결과를 사용
+    result.value = await mockSimulate()
+  } catch {
+    errorMessage.value = '시뮬레이션에 실패했어요. 잠시 후 다시 시도해주세요.'
+  } finally {
+    isLoading.value = false
+  }
+}
+
+function handleReset() {
   result.value = null
-  form.value = { breed: '', age: null, species: 'DOG', medicalHistory: [] }
+  medicalTags.value = []
+}
+
+function openProduct(url) {
+  let parsed
+  try {
+    parsed = new URL(url, window.location.origin)
+  } catch {
+    return
+  }
+  if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return
+  window.open(parsed.href, '_blank', 'noopener,noreferrer')
+}
+
+// TODO(backend): recommendedProducts의 badge/joinAgeRange/coverages/productUrl은
+// 요약 응답 스키마 확정 시 백엔드와 재확인 필요 (지금은 화면 검증용 목업 값)
+function mockSimulate() {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({
+        expectedAnnualMedicalCost: 820000,
+        annualPremium: 312000,
+        breakEvenNote: '손익분기 지점: 자기부담금 포함 약 45만원 초과 시부터 이득',
+        insuranceAdvice: {
+          verdict: 'FAVORABLE',
+          message: '가입하는 것이 유리해요',
+        },
+        recommendedProducts: [
+          {
+            productId: 1,
+            companyName: '현대해상',
+            productName:
+              '(무)현대해상다이렉트꼼꼼우리펫보험(재가입용)(HI2605) 2종<반려묘>_표준플랜',
+            premium: 28650,
+            badge: '온라인가입',
+            joinAgeRange: '1~19세',
+            coverages: [
+              '반려묘입원의료비 15백만원',
+              '반려묘의료비확장보장(MRI/CT) 100만원',
+            ],
+            productUrl: 'https://example.com/products/1',
+          },
+          {
+            productId: 2,
+            companyName: '농협손보',
+            productName: '(무)NH다이렉트펫앤미든든보험[2종<고양이>](2604)',
+            premium: 29336,
+            badge: '모바일가입',
+            joinAgeRange: '2~20세',
+            coverages: ['반려묘입원의료비 10백만원'],
+            productUrl: 'https://example.com/products/2',
+          },
+        ],
+      })
+    }, 600)
+  })
 }
 </script>
 
 <template>
-  <div class="simulator-page">
-    <header class="page-header">
-      <h1>보험 시뮬레이션</h1>
-      <p class="page-description">반려동물 정보를 입력하고 예상 보험료를 확인하세요.</p>
+  <div
+    class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))] bg-(--color-bg) min-h-[calc(100vh-var(--header-height)-var(--bottom-nav-height))]"
+  >
+    <button
+      type="button"
+      class="mb-(--space-3) text-(color:--color-navy)"
+      aria-label="뒤로 가기"
+      @click="goBack"
+    >
+      <IconArrowLeft size="24" />
+    </button>
+
+    <header class="mb-(--space-5)">
+      <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">
+        펫보험 손익분기 시뮬레이터
+      </h1>
+      <p class="text-(length:--font-md) text-(color:--color-gray-600) mt-(--space-2)">
+        가입이 유리한지 미리 계산해보세요
+      </p>
     </header>
 
-    <!-- Simulation Form -->
-    <form v-if="!result" class="simulator-form" @submit.prevent="handleSimulate">
-      <div class="form-group">
-        <label>종류</label>
-        <div class="radio-group">
-          <label class="radio-label">
-            <input type="radio" v-model="form.species" value="DOG" />
-            강아지
+    <div
+      v-if="pets.length === 0"
+      class="text-center text-(color:--color-gray-600) bg-(--color-white) rounded-(--radius-lg) p-(--space-5) shadow-(--shadow-sm)"
+    >
+      <p>등록된 반려동물이 없어요.</p>
+      <router-link
+        to="/pets/register"
+        class="inline-block mt-(--space-3) text-(color:--color-navy) font-semibold"
+      >
+        반려동물 등록하러 가기
+      </router-link>
+    </div>
+
+    <template v-else>
+      <form
+        v-if="!result"
+        class="flex flex-col gap-(--space-5)"
+        @submit.prevent="handleSimulate"
+      >
+        <div v-if="pets.length > 1">
+          <label
+            id="pet-select-label"
+            class="block text-(length:--font-sm) font-medium text-(color:--color-gray-700) mb-(--space-2)"
+          >
+            반려동물 선택
           </label>
-          <label class="radio-label">
-            <input type="radio" v-model="form.species" value="CAT" />
-            고양이
-          </label>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label for="breed">품종</label>
-        <input
-          id="breed"
-          v-model="form.breed"
-          type="text"
-          placeholder="예: 골든리트리버"
-          required
-        />
-      </div>
-
-      <div class="form-group">
-        <label for="age">나이 (세)</label>
-        <input
-          id="age"
-          v-model.number="form.age"
-          type="number"
-          min="0"
-          max="30"
-          placeholder="나이"
-          required
-        />
-      </div>
-
-      <div class="form-group">
-        <label>과거 병력</label>
-        <div class="checkbox-group">
-          <label v-for="opt in medicalOptions" :key="opt.value" class="checkbox-label">
-            <input type="checkbox" :value="opt.value" v-model="form.medicalHistory" />
-            {{ opt.label }}
-          </label>
-        </div>
-      </div>
-
-      <button type="submit" class="btn-primary" :disabled="isLoading">
-        {{ isLoading ? '계산 중...' : '시뮬레이션 실행' }}
-      </button>
-    </form>
-
-    <!-- Result Display -->
-    <section v-if="result" class="result-section">
-      <div class="result-card card">
-        <h2>시뮬레이션 결과</h2>
-        <div class="result-summary">
-          <p class="result-label">예상 월 보험료</p>
-          <p class="result-amount">{{ result.monthlyPremium?.toLocaleString() }}원</p>
-        </div>
-        <div class="result-details">
-          <div class="detail-row">
-            <span>보장 범위</span>
-            <span>{{ result.coverageRange || '-' }}</span>
-          </div>
-          <div class="detail-row">
-            <span>자기부담금</span>
-            <span>{{ result.deductible?.toLocaleString() || '-' }}원</span>
-          </div>
-          <div class="detail-row">
-            <span>보장 한도</span>
-            <span>{{ result.coverageLimit?.toLocaleString() || '-' }}원</span>
+          <div
+            class="flex flex-wrap gap-(--space-2)"
+            role="group"
+            aria-labelledby="pet-select-label"
+          >
+            <button
+              v-for="pet in pets"
+              :key="pet.id"
+              type="button"
+              class="inline-flex items-center gap-(--space-1) py-(--space-2) px-(--space-3) border rounded-(--radius-full) text-(length:--font-sm)"
+              :class="
+                pet.id === selectedPetId
+                  ? 'border-(--color-navy) bg-(--color-navy) text-(color:--color-white)'
+                  : 'border-(--color-gray-300) bg-(--color-white) text-(color:--color-gray-700)'
+              "
+              :aria-pressed="pet.id === selectedPetId"
+              @click="selectedPetId = pet.id"
+            >
+              <component
+                :is="pet.species === 'CAT' ? IconCat : IconDog"
+                :size="16"
+                :color="pet.id === selectedPetId ? 'var(--color-white)' : 'var(--color-navy)'"
+              />
+              {{ pet.name }}
+            </button>
           </div>
         </div>
-        <!-- TODO: implement detailed plan comparison -->
-      </div>
 
-      <button class="btn-reset" @click="handleReset">다시 시뮬레이션</button>
-    </section>
+        <div>
+          <label class="block text-(length:--font-sm) font-medium text-(color:--color-gray-700) mb-(--space-2)">
+            견종
+          </label>
+          <div class="py-(--space-3) px-(--space-4) bg-(--color-gray-100) rounded-(--radius-md) text-(length:--font-base) text-(color:--color-gray-800)">
+            {{ selectedPet?.breed }}
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-(length:--font-sm) font-medium text-(color:--color-gray-700) mb-(--space-2)">
+            나이
+          </label>
+          <div class="py-(--space-3) px-(--space-4) bg-(--color-gray-100) rounded-(--radius-md) text-(length:--font-base) text-(color:--color-gray-800)">
+            {{ selectedPet?.age }}세
+          </div>
+        </div>
+
+        <MedicalHistoryPicker v-model="medicalTags" />
+
+        <p
+          v-if="errorMessage"
+          class="text-(color:--color-danger) text-(length:--font-sm)"
+        >
+          {{ errorMessage }}
+        </p>
+
+        <button
+          type="submit"
+          class="w-full py-(--space-3) px-(--space-4) bg-(--color-gold) text-(color:--color-white) rounded-(--radius-md) text-(length:--font-base) font-semibold disabled:opacity-60 disabled:cursor-not-allowed"
+          :disabled="isLoading"
+        >
+          {{ isLoading ? '계산 중...' : '결과 계산하기' }}
+        </button>
+      </form>
+
+      <section
+        v-else
+        class="flex flex-col gap-(--space-5)"
+      >
+        <div class="bg-(--color-navy) text-(color:--color-white) rounded-(--radius-lg) p-(--space-5)">
+          <span
+            class="inline-block py-(--space-1) px-(--space-3) rounded-(--radius-full) text-(length:--font-xs) font-semibold bg-white/15"
+            :class="verdictColorClasses[result.insuranceAdvice.verdict]"
+          >
+            {{ verdictLabels[result.insuranceAdvice.verdict] }}
+          </span>
+          <p class="text-(length:--font-lg) font-bold mt-(--space-3)">
+            {{ result.insuranceAdvice.message }}
+          </p>
+
+          <div class="flex justify-between mt-(--space-5) pt-(--space-4) border-t border-white/15">
+            <div class="flex flex-col gap-(--space-1)">
+              <span class="text-(length:--font-xs) opacity-70">예상 연 의료비</span>
+              <span class="text-(length:--font-lg) font-bold text-(color:--color-gold-light)">
+                {{ result.expectedAnnualMedicalCost.toLocaleString() }}원
+              </span>
+            </div>
+            <div class="flex flex-col gap-(--space-1) text-right">
+              <span class="text-(length:--font-xs) opacity-70">연 보험료</span>
+              <span class="text-(length:--font-lg) font-bold">
+                {{ result.annualPremium.toLocaleString() }}원
+              </span>
+            </div>
+          </div>
+
+          <p class="mt-(--space-4) text-(length:--font-xs) opacity-70">
+            {{ result.breakEvenNote }}
+          </p>
+        </div>
+
+        <button
+          class="w-full py-(--space-3) px-(--space-4) border border-(--color-gray-300) rounded-(--radius-md) text-(length:--font-md) text-(color:--color-gray-600)"
+          @click="handleReset"
+        >
+          다시 계산하기
+        </button>
+
+        <div>
+          <h2 class="text-(length:--font-lg) font-semibold text-(color:--color-navy)">
+            추천 보험
+          </h2>
+          <p class="text-(length:--font-sm) text-(color:--color-gray-500) mt-(--space-1) mb-(--space-4)">
+            이 프로필에 맞는 상품이에요
+          </p>
+
+          <ul class="flex flex-col gap-(--space-4)">
+            <li
+              v-for="product in result.recommendedProducts"
+              :key="product.productId"
+              class="bg-(--color-white) border border-(--color-gray-200) rounded-(--radius-lg) p-(--space-4) shadow-(--shadow-sm)"
+            >
+              <span class="inline-block py-(--space-1) px-(--space-2) bg-(--color-gray-100) text-(color:--color-gray-600) rounded-(--radius-sm) text-(length:--font-xs) font-medium">
+                {{ product.badge }}
+              </span>
+              <p class="text-(length:--font-sm) text-(color:--color-gray-500) mt-(--space-2)">
+                {{ product.companyName }}
+              </p>
+              <p class="text-(length:--font-base) font-semibold text-(color:--color-gray-900) mt-(--space-1)">
+                {{ product.productName }}
+              </p>
+              <p class="text-(length:--font-md) font-bold text-(color:--color-navy) mt-(--space-2)">
+                월 {{ product.premium.toLocaleString() }}원 · 가입연령 {{ product.joinAgeRange }}
+              </p>
+              <ul class="mt-(--space-3) flex flex-col gap-(--space-1)">
+                <li
+                  v-for="coverage in product.coverages"
+                  :key="coverage"
+                  class="text-(length:--font-sm) text-(color:--color-gray-600)"
+                >
+                  {{ coverage }}
+                </li>
+              </ul>
+              <button
+                type="button"
+                class="w-full mt-(--space-4) py-(--space-3) px-(--space-4) bg-(--color-navy) text-(color:--color-white) rounded-(--radius-md) text-(length:--font-base) font-semibold"
+                @click="openProduct(product.productUrl)"
+              >
+                상품 보러가기
+              </button>
+            </li>
+          </ul>
+        </div>
+      </section>
+    </template>
   </div>
 </template>
-
-<style scoped>
-.simulator-page {
-  padding: var(--space-4);
-  padding-bottom: calc(var(--bottom-nav-height) + var(--space-4));
-  background-color: var(--color-bg);
-  min-height: 100vh;
-}
-
-.page-header {
-  margin-bottom: var(--space-5);
-}
-
-.page-header h1 {
-  font-size: var(--font-2xl);
-  font-weight: var(--font-bold);
-  color: var(--color-navy);
-}
-
-.page-description {
-  font-size: var(--font-md);
-  color: var(--color-gray-600);
-  margin-top: var(--space-2);
-}
-
-.simulator-form {
-  max-width: 400px;
-}
-
-.form-group {
-  margin-bottom: var(--space-5);
-}
-
-.form-group > label {
-  display: block;
-  font-size: var(--font-sm);
-  font-weight: var(--font-medium);
-  color: var(--color-gray-700);
-  margin-bottom: var(--space-2);
-}
-
-.form-group input[type="text"],
-.form-group input[type="number"] {
-  width: 100%;
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--color-gray-300);
-  border-radius: var(--radius-md);
-  font-size: var(--font-base);
-  box-sizing: border-box;
-}
-
-.radio-group {
-  display: flex;
-  gap: var(--space-5);
-}
-
-.radio-label {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: var(--font-base);
-  color: var(--color-gray-700);
-  cursor: pointer;
-}
-
-.checkbox-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-}
-
-.checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: var(--font-sm);
-  color: var(--color-gray-700);
-  cursor: pointer;
-}
-
-.btn-primary {
-  width: 100%;
-  padding: var(--space-3) var(--space-4);
-  background-color: var(--color-navy);
-  color: var(--color-white);
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: var(--font-base);
-  font-weight: var(--font-semibold);
-  cursor: pointer;
-}
-
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.card {
-  background-color: var(--color-white);
-  border-radius: var(--radius-lg);
-  padding: var(--space-5);
-  box-shadow: var(--shadow-sm);
-}
-
-.result-card {
-  margin-bottom: var(--space-5);
-}
-
-.result-card h2 {
-  font-size: var(--font-lg);
-  font-weight: var(--font-semibold);
-  color: var(--color-navy);
-  margin-bottom: var(--space-5);
-}
-
-.result-summary {
-  text-align: center;
-  padding: var(--space-5) 0;
-  border-bottom: 1px solid var(--color-gray-200);
-  margin-bottom: var(--space-4);
-}
-
-.result-label {
-  font-size: var(--font-sm);
-  color: var(--color-gray-500);
-}
-
-.result-amount {
-  font-size: var(--font-3xl);
-  font-weight: var(--font-bold);
-  color: var(--color-gold);
-  margin-top: var(--space-2);
-}
-
-.result-details {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.detail-row {
-  display: flex;
-  justify-content: space-between;
-  font-size: var(--font-md);
-}
-
-.detail-row span:first-child {
-  color: var(--color-gray-600);
-}
-
-.detail-row span:last-child {
-  font-weight: var(--font-semibold);
-  color: var(--color-gray-800);
-}
-
-.btn-reset {
-  width: 100%;
-  padding: var(--space-3) var(--space-4);
-  background: none;
-  border: 1px solid var(--color-gray-300);
-  border-radius: var(--radius-md);
-  font-size: var(--font-md);
-  color: var(--color-gray-600);
-  cursor: pointer;
-}
-</style>

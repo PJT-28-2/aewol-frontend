@@ -17,12 +17,35 @@ defineProps({
     stroke-linejoin="round"
     aria-hidden="true"
   >
-    <circle
+    <ellipse
       cx="12"
-      cy="12"
-      r="9"
+      cy="16.5"
+      rx="5"
+      ry="3.5"
     />
-    <path d="M12 11v5" />
-    <path d="M12 8h.01" />
+    <ellipse
+      cx="5.5"
+      cy="10"
+      rx="2"
+      ry="2.5"
+    />
+    <ellipse
+      cx="9.5"
+      cy="6.5"
+      rx="2"
+      ry="2.5"
+    />
+    <ellipse
+      cx="14.5"
+      cy="6.5"
+      rx="2"
+      ry="2.5"
+    />
+    <ellipse
+      cx="18.5"
+      cy="10"
+      rx="2"
+      ry="2.5"
+    />
   </svg>
 </template>
