@@ -20,7 +20,6 @@ const isMain = computed(() => route.path === '/donation')
 const currentCampaign = computed(() => campaigns.find((item) => item.name === selectedCampaign.value) ?? campaigns[0])
 function go(path) { router.push(path) }
 function donate() { balance.value -= amount.value; go('/donation/complete') }
-function copyToClipboard() { navigator.clipboard?.writeText('aewol.app/donate') }
 </script>
 
 <template>
