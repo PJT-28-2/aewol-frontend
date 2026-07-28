@@ -219,7 +219,37 @@ const authRoutes = [
     path: '/donation',
     name: 'Donation',
     component: () => import('@/views/donation/DonationView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', step: 'main' },
+  },
+  {
+    path: '/donation/give',
+    name: 'DonationGive',
+    component: () => import('@/views/donation/DonationView.vue'),
+    meta: { requiresAuth: true, step: 'give' },
+  },
+  {
+    path: '/donation/confirm',
+    name: 'DonationConfirm',
+    component: () => import('@/views/donation/DonationView.vue'),
+    meta: { requiresAuth: true, step: 'confirm' },
+  },
+  {
+    path: '/donation/complete',
+    name: 'DonationComplete',
+    component: () => import('@/views/donation/DonationView.vue'),
+    meta: { requiresAuth: true, step: 'complete' },
+  },
+  {
+    path: '/donation/explore',
+    name: 'DonationExplore',
+    component: () => import('@/views/donation/DonationView.vue'),
+    meta: { requiresAuth: true, step: 'explore' },
+  },
+  {
+    path: '/donation/settings',
+    name: 'DonationSettings',
+    component: () => import('@/views/donation/DonationView.vue'),
+    meta: { requiresAuth: true, step: 'settings' },
   },
   {
     path: '/support',
@@ -266,8 +296,7 @@ const PUBLIC_ROUTE_NAMES = new Set(
 router.beforeEach((to) => {
   const authStore = useAuthStore();
 
-  // TODO: 로그인 화면 구현 전까지 임시 인증 우회 (팀 공용, 다른 화면 개발용)
-  // 로그인 플로우 완성되면 제거 필요
+  // 로그인 화면 구현 전까지 로컬 화면 개발을 위한 인증 우회
   if (import.meta.env.DEV) {
     return;
   }
