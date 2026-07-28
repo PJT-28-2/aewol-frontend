@@ -40,11 +40,14 @@ function petIcon(species) {
 }
 
 function petIconBg(species) {
-  return species === 'CAT' ? '#EEF3E2' : '#DCE6F5';
+  return species === 'CAT'
+    ? 'var(--color-pastel-green)'
+    : 'var(--color-pastel-blue)';
 }
 
 function getAge(birthDate) {
-  const birth = new Date(birthDate);
+  const [year, month, day] = birthDate.split('-').map(Number);
+  const birth = new Date(year, month - 1, day);
   const today = new Date();
   let age = today.getFullYear() - birth.getFullYear();
   const hasHadBirthdayThisYear =
