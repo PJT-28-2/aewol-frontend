@@ -6,8 +6,12 @@
   --color-gold-light: #f0c05a;
   --color-olive: #6a930d;
   --color-slate: #98a4bc;
+  --color-slate-light: #c9d1e3;
   --color-slate-muted: #8a93a6;
   --color-slate-dark: #4a5a7d;
+  --color-olive-surface: #eef3e2;
+  --color-gold-surface: #fbe7c6;
+  --color-info-surface: #dce6f5;
   --color-white: #ffffff;
   --color-bg: #ffffff;
   --color-surface: #fafaf8;
@@ -78,4 +82,11 @@
   --bottom-nav-height: 64px;
   --header-height: 56px;
   --layout-max-width: 480px;
+  --mobile-content-width: 390px;
+  --control-height-sm: 36px;
+  --control-height: 46px;
+  --control-height-lg: 52px;
+  --share-icon-size: 60px;
+  --share-chart-size: 200px;
+  --share-chart-hole-size: 132px;
 }
