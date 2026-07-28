@@ -23,6 +23,8 @@
   --color-danger-dark: #8a3b3b;
   --color-pastel-blue: #dce6f5;
   --color-pastel-green: #eef3e2;
+  --color-kakao: #fee500;
+  --color-kakao-label: #181600;
 
   /* Colors - Gray Scale */
   --color-gray-100: #f8f9fa;
@@ -93,6 +95,12 @@
   --control-height-sm: 36px;
   --control-height-md: 46px;
   --control-height-lg: 52px;
+
+  /* Auth Success Screen */
+  --auth-success-image-size: 149px;
+  --auth-success-password-image-offset: 41px;
+  --auth-success-find-id-image-offset: -11px;
+  --auth-success-title-gap: 9px;
 
   /* Layout */
   --bottom-nav-height: 64px;
