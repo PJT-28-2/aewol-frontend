@@ -284,8 +284,9 @@ onBeforeUnmount(clearTimers)
             placeholder="010-1234-5678"
           />
           <button
-            class="h-[46px] rounded-(--radius-lg) bg-(--color-navy) text-[11.5px] font-(--font-bold) text-(color:--color-white)"
+            class="h-[46px] rounded-(--radius-lg) bg-(--color-navy) text-[11.5px] font-(--font-bold) text-(color:--color-white) disabled:cursor-not-allowed disabled:opacity-55"
             type="button"
+            :disabled="isVerified"
             @click="handleRequestCode"
           >
             {{ isCodeSent ? '다시 받기' : '인증번호 받기' }}
