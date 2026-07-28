@@ -43,12 +43,18 @@ const searchKeyword = ref('');
 </script>
 
 <template>
-  <div class="gp-list-page">
+  <div
+    class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+88px)] bg-(--color-bg) min-h-screen"
+  >
     <!-- 헤더 -->
-    <header class="gp-header">
-      <div class="gp-header__text">
-        <h1>반려동물 용품 공동구매</h1>
-        <p>함께 사면 더 저렴해요</p>
+    <header class="flex items-start justify-between mb-(--space-5)">
+      <div>
+        <h1 class="text-(length:--font-xl) font-bold text-(color:--color-navy)">
+          반려동물 용품 공동구매
+        </h1>
+        <p class="text-(length:--font-sm) text-(color:--color-slate-muted) mt-(--space-1)">
+          함께 사면 더 저렴해요
+        </p>
       </div>
       <router-link
         to="/group-purchase/my"
@@ -58,282 +64,92 @@ const searchKeyword = ref('');
       </router-link>
     </header>
 
-    <!-- 필터 영역 -->
-    <section class="gp-filter-section">
-      <div class="gp-filter-row">
-        <span class="gp-filter-label">카테고리</span>
+    <!-- 카테고리 필터 -->
+    <div class="flex gap-(--space-2) overflow-x-auto mb-(--space-3)">
+      <button
+        v-for="category in categories"
+        :key="category"
+        type="button"
+        class="shrink-0 px-(--space-4) py-(--space-2) rounded-full border text-(length:--font-sm) font-medium"
+        :class="
+          selectedCategory === category
+            ? 'bg-(--color-navy) border-(--color-navy) text-(color:--color-white)'
+            : 'bg-(--color-white) border-(--color-border) text-(color:--color-gray-600)'
+        "
+        @click="selectCategory(category)"
+      >
+        {{ category }}
+      </button>
+    </div>
 
-        <div class="gp-status-dropdown">
-          <button
-            type="button"
-            class="gp-status-btn"
-            @click="toggleStatusDropdown"
-          >
-            {{ statusLabel }}
-            <span class="gp-status-arrow">▾</span>
-          </button>
-          <ul v-if="isStatusOpen" class="gp-status-menu">
-            <li v-for="option in statusOptions" :key="option">
-              <button type="button" @click="selectStatus(option)">
-                {{ option }}
-              </button>
-            </li>
-          </ul>
-        </div>
-      </div>
+    <!-- 검색 + 상태 필터 -->
+    <div class="flex gap-(--space-2) mb-(--space-5)">
+      <input
+        v-model="searchKeyword"
+        type="text"
+        placeholder="상품명으로 검색해보세요"
+        class="flex-1 min-w-0 px-(--space-4) py-(--space-3) bg-(--color-surface) border border-(--color-border) rounded-(--radius-md) text-(length:--font-sm) text-(color:--color-gray-700) placeholder:text-(color:--color-gray-500)"
+      />
 
-      <div class="gp-category-chips">
+      <div class="relative shrink-0">
         <button
-          v-for="category in categories"
-          :key="category"
           type="button"
-          class="gp-chip"
-          :class="{ 'gp-chip--active': selectedCategory === category }"
-          @click="selectCategory(category)"
+          class="inline-flex items-center h-full gap-(--space-1) px-(--space-3) bg-(--color-white) border border-(--color-border) rounded-(--radius-md) text-(length:--font-sm) text-(color:--color-gray-700)"
+          @click="toggleStatusDropdown"
         >
-          {{ category }}
+          {{ statusLabel }}
+          <span class="text-(length:--font-xs) text-(color:--color-gray-500)">▾</span>
         </button>
+        <ul
+          v-if="isStatusOpen"
+          class="absolute top-[calc(100%+var(--space-1))] right-0 z-10 min-w-[96px] list-none m-0 p-(--space-1) bg-(--color-white) border border-(--color-border) rounded-(--radius-md) shadow-(--shadow-md)"
+        >
+          <li v-for="option in statusOptions" :key="option">
+            <button
+              type="button"
+              class="w-full px-(--space-3) py-(--space-2) bg-transparent border-0 rounded-(--radius-sm) text-left text-(length:--font-sm) text-(color:--color-gray-700) hover:bg-(--color-gray-100)"
+              @click="selectStatus(option)"
+            >
+              {{ option }}
+            </button>
+          </li>
+        </ul>
       </div>
-
-      <div class="gp-search">
-        <input
-          v-model="searchKeyword"
-          type="text"
-          placeholder="상품명으로 검색해보세요"
-        />
-      </div>
-    </section>
+    </div>
 
     <!-- 공동구매 목록 -->
-    <ul class="gp-list">
-      <li v-for="gp in groupPurchases" :key="gp.id" class="gp-card">
-        <div class="gp-card__info">
-          <h3>{{ gp.title }}</h3>
-          <p class="gp-card__meta">
+    <ul class="list-none p-0 m-0 flex flex-col gap-(--space-3)">
+      <li
+        v-for="gp in groupPurchases"
+        :key="gp.id"
+        class="flex items-center justify-between gap-(--space-3) p-(--space-4) bg-(--color-surface) border border-(--color-border) rounded-(--radius-lg)"
+      >
+        <div>
+          <h3 class="text-(length:--font-md) font-semibold text-(color:--color-gray-900) mb-(--space-1)">
+            {{ gp.title }}
+          </h3>
+          <p class="text-(length:--font-xs) text-(color:--color-gray-500) mb-(--space-2)">
             {{ gp.currentCount }}/{{ gp.targetCount }}명 참여 · {{ gp.dDay }}
           </p>
-          <span class="gp-card__badge">{{ gp.badgeText }}</span>
+          <span class="text-(length:--font-xs) font-semibold text-(color:--color-gold)">
+            {{ gp.badgeText }}
+          </span>
         </div>
-        <router-link :to="`/group-purchase/${gp.id}`" class="gp-card__join-btn">
+        <router-link
+          :to="`/group-purchase/${gp.id}`"
+          class="shrink-0 px-(--space-4) py-(--space-2) bg-(--color-navy) text-(color:--color-white) rounded-full text-(length:--font-sm) font-semibold no-underline whitespace-nowrap"
+        >
           참여하기
         </router-link>
       </li>
     </ul>
 
     <!-- 글쓰기 버튼 -->
-    <router-link to="/group-purchase/create/step1" class="gp-write-btn">
+    <router-link
+      to="/group-purchase/create/step1"
+      class="fixed bottom-[calc(var(--bottom-nav-height)+var(--space-4))] left-(--space-4) right-(--space-4) flex items-center justify-center p-(--space-4) bg-(--color-gold) text-(color:--color-navy) rounded-(--radius-md) text-(length:--font-base) font-bold no-underline shadow-(--shadow-md)"
+    >
       + 공동구매 글쓰기
     </router-link>
   </div>
 </template>
-
-<style scoped>
-.gp-list-page {
-  padding: var(--space-4);
-  padding-bottom: calc(var(--bottom-nav-height) + 88px);
-  background-color: var(--color-bg);
-  min-height: 100vh;
-}
-
-.gp-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  margin-bottom: var(--space-5);
-}
-
-.gp-header__text h1 {
-  font-size: var(--font-xl);
-  font-weight: var(--font-bold);
-  color: var(--color-navy);
-}
-
-.gp-header__text p {
-  font-size: var(--font-sm);
-  color: var(--color-slate-muted);
-  margin-top: var(--space-1);
-}
-
-.gp-filter-section {
-  margin-bottom: var(--space-5);
-}
-
-.gp-filter-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--space-3);
-}
-
-.gp-filter-label {
-  font-size: var(--font-sm);
-  font-weight: var(--font-semibold);
-  color: var(--color-gray-700);
-}
-
-.gp-status-dropdown {
-  position: relative;
-}
-
-.gp-status-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  padding: var(--space-1) var(--space-3);
-  background-color: var(--color-white);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-full);
-  font-size: var(--font-xs);
-  font-weight: var(--font-medium);
-  color: var(--color-gray-700);
-  cursor: pointer;
-}
-
-.gp-status-arrow {
-  font-size: var(--font-xs);
-  color: var(--color-gray-500);
-}
-
-.gp-status-menu {
-  position: absolute;
-  top: calc(100% + var(--space-1));
-  right: 0;
-  z-index: 10;
-  min-width: 96px;
-  list-style: none;
-  margin: 0;
-  padding: var(--space-1);
-  background-color: var(--color-white);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-md);
-}
-
-.gp-status-menu li button {
-  width: 100%;
-  padding: var(--space-2) var(--space-3);
-  background: none;
-  border: none;
-  border-radius: var(--radius-sm);
-  text-align: left;
-  font-size: var(--font-sm);
-  color: var(--color-gray-700);
-  cursor: pointer;
-}
-
-.gp-status-menu li button:hover {
-  background-color: var(--color-gray-100);
-}
-
-.gp-category-chips {
-  display: flex;
-  gap: var(--space-2);
-  overflow-x: auto;
-  margin-bottom: var(--space-3);
-}
-
-.gp-chip {
-  flex-shrink: 0;
-  padding: var(--space-2) var(--space-4);
-  background-color: var(--color-white);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-full);
-  font-size: var(--font-sm);
-  font-weight: var(--font-medium);
-  color: var(--color-gray-600);
-  cursor: pointer;
-}
-
-.gp-chip--active {
-  background-color: var(--color-navy);
-  border-color: var(--color-navy);
-  color: var(--color-white);
-}
-
-.gp-search input {
-  width: 100%;
-  padding: var(--space-3) var(--space-4);
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  font-size: var(--font-sm);
-  color: var(--color-gray-700);
-}
-
-.gp-search input::placeholder {
-  color: var(--color-gray-500);
-}
-
-.gp-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.gp-card {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding: var(--space-4);
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-}
-
-.gp-card__info h3 {
-  font-size: var(--font-md);
-  font-weight: var(--font-semibold);
-  color: var(--color-gray-900);
-  margin-bottom: var(--space-1);
-}
-
-.gp-card__meta {
-  font-size: var(--font-xs);
-  color: var(--color-gray-500);
-  margin-bottom: var(--space-2);
-}
-
-.gp-card__badge {
-  display: inline-block;
-  padding: var(--space-1) var(--space-2);
-  background-color: var(--color-gold-light);
-  color: var(--color-navy);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-xs);
-  font-weight: var(--font-semibold);
-}
-
-.gp-card__join-btn {
-  flex-shrink: 0;
-  padding: var(--space-2) var(--space-4);
-  background-color: var(--color-navy);
-  color: var(--color-white);
-  border-radius: var(--radius-full);
-  font-size: var(--font-sm);
-  font-weight: var(--font-semibold);
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.gp-write-btn {
-  position: fixed;
-  bottom: calc(var(--bottom-nav-height) + var(--space-4));
-  left: var(--space-4);
-  right: var(--space-4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-4);
-  background-color: var(--color-gold);
-  color: var(--color-navy);
-  border-radius: var(--radius-md);
-  font-size: var(--font-base);
-  font-weight: var(--font-bold);
-  text-decoration: none;
-  box-shadow: var(--shadow-md);
-}
-</style>
