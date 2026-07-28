@@ -1,5 +1,5 @@
 <script setup>
-import { nextTick, ref, useId, watch } from 'vue'
+import { nextTick, ref, useId, watch } from 'vue';
 
 const props = defineProps({
   modelValue: {
@@ -10,50 +10,66 @@ const props = defineProps({
     type: String,
     default: '',
   },
-})
+  size: {
+    type: String,
+    default: 'default',
+    validator: (value) => ['default', 'tall'].includes(value),
+  },
+});
 
-const emit = defineEmits(['update:modelValue'])
+const maxHeightClasses = {
+  default: 'max-h-[50vh]',
+  tall: 'max-h-[90vh]',
+};
 
-const titleId = useId()
-const sheetRef = ref(null)
-let previouslyFocusedElement = null
+const emit = defineEmits(['update:modelValue']);
+
+const titleId = useId();
+const sheetRef = ref(null);
+let previouslyFocusedElement = null;
 
 const FOCUSABLE_SELECTOR =
-  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 function close() {
-  emit('update:modelValue', false)
+  emit('update:modelValue', false);
 }
 
 function onOverlayClick(event) {
   if (event.target === event.currentTarget) {
-    close()
+    close();
   }
 }
 
 function onKeydown(event) {
   if (event.key === 'Escape') {
-    close()
-    return
+    close();
+    return;
   }
-  if (event.key !== 'Tab' || !sheetRef.value) return
+  if (event.key !== 'Tab' || !sheetRef.value) return;
 
-  const focusable = sheetRef.value.querySelectorAll(FOCUSABLE_SELECTOR)
-  if (focusable.length === 0) return
+  const focusable = sheetRef.value.querySelectorAll(
+    FOCUSABLE_SELECTOR,
+  );
+  if (focusable.length === 0) return;
 
-  const first = focusable[0]
-  const last = focusable[focusable.length - 1]
-  const isOnContainer = document.activeElement === sheetRef.value
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  const isOnContainer =
+    document.activeElement === sheetRef.value;
 
-  if (event.shiftKey && (isOnContainer || document.activeElement === first)) {
-    event.preventDefault()
-    last.focus()
+  if (
+    event.shiftKey &&
+    (isOnContainer || document.activeElement === first)
+  ) {
+    event.preventDefault();
+    last.focus();
   } else if (
     !event.shiftKey &&
     (isOnContainer || document.activeElement === last)
   ) {
-    event.preventDefault()
-    first.focus()
+    event.preventDefault();
+    first.focus();
   }
 }
 
@@ -61,16 +77,16 @@ watch(
   () => props.modelValue,
   async (isOpen) => {
     if (isOpen) {
-      previouslyFocusedElement = document.activeElement
-      await nextTick()
-      sheetRef.value?.focus()
+      previouslyFocusedElement = document.activeElement;
+      await nextTick();
+      sheetRef.value?.focus();
     } else if (previouslyFocusedElement) {
-      previouslyFocusedElement.focus()
-      previouslyFocusedElement = null
+      previouslyFocusedElement.focus();
+      previouslyFocusedElement = null;
     }
   },
   { immediate: true },
-)
+);
 </script>
 
 <template>
@@ -92,7 +108,8 @@ watch(
           aria-modal="true"
           :aria-labelledby="title ? titleId : undefined"
           tabindex="-1"
-          class="w-full max-w-(--layout-max-width) mx-auto max-h-[50vh] bg-(--color-white) rounded-t-(--radius-sheet) overflow-hidden flex flex-col pb-[env(safe-area-inset-bottom,0)] outline-none"
+          class="w-full max-w-(--layout-max-width) mx-auto bg-(--color-white) rounded-t-(--radius-sheet) overflow-hidden flex flex-col pb-[env(safe-area-inset-bottom,0)] outline-none"
+          :class="maxHeightClasses[size]"
           @keydown="onKeydown"
         >
           <button
@@ -101,7 +118,9 @@ watch(
             aria-label="닫기"
             @click="close"
           >
-            <span class="w-10 h-1 rounded-full bg-(--color-gray-300)" />
+            <span
+              class="w-10 h-1 rounded-full bg-(--color-gray-300)"
+            />
           </button>
 
           <h2
@@ -112,7 +131,9 @@ watch(
             {{ title }}
           </h2>
 
-          <div class="flex-1 min-h-0 px-(--space-5) pt-(--space-2) pb-(--space-6) overflow-y-auto">
+          <div
+            class="flex-1 min-h-0 px-(--space-5) pt-(--space-2) pb-(--space-6) overflow-y-auto"
+          >
             <slot />
           </div>
         </div>

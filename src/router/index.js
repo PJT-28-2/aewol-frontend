@@ -31,6 +31,11 @@ const publicRoutes = [
       import('@/views/auth/PasswordResetView.vue'),
   },
   {
+    path: '/id/find',
+    name: 'FindId',
+    component: () => import('@/views/auth/FindIdView.vue'),
+  },
+  {
     path: '/callback/kakao',
     name: 'KakaoCallback',
     component: () =>
@@ -58,12 +63,6 @@ const authRoutes = [
     path: '/pets/register',
     name: 'PetRegister',
     component: () => import('@/views/pet/PetRegisterView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
-  },
-  {
-    path: '/pets/:petId',
-    name: 'PetDetail',
-    component: () => import('@/views/pet/PetDetailView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
