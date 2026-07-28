@@ -52,10 +52,29 @@ const form = ref({
   medicalHistory: '',
 });
 
-const vaccinationFileName = ref('');
+const existingVaccinationFileName = ref('');
+const vaccinationFile = ref(null);
+const vaccinationFileName = computed(
+  () => vaccinationFile.value?.name ?? existingVaccinationFileName.value,
+);
 const isSaving = ref(false);
 const errorMessage = ref('');
 const isDeleteModalOpen = ref(false);
+
+const BIRTH_DATE_PATTERN = /^\d{4}\.\d{2}\.\d{2}$/;
+const REG_NUMBER_PATTERN = /^(\d{12}|\d{15})$/;
+
+function validateForm() {
+  if (!form.value.name.trim()) return '이름을 입력해주세요.';
+  if (!form.value.breed.trim()) return '견종을 입력해주세요.';
+  if (!BIRTH_DATE_PATTERN.test(form.value.birthDate)) {
+    return '생년월일을 2023.05.12 형식으로 입력해주세요.';
+  }
+  if (form.value.regNumber && !REG_NUMBER_PATTERN.test(form.value.regNumber)) {
+    return '동물등록번호는 12자리(인식표) 또는 15자리(무선전자인식장치) 숫자로 입력해주세요.';
+  }
+  return '';
+}
 
 watch(
   pet,
@@ -70,7 +89,8 @@ watch(
       neutered: newPet.neutered,
       medicalHistory: newPet.medicalHistory,
     };
-    vaccinationFileName.value = newPet.vaccinationFileName;
+    existingVaccinationFileName.value = newPet.vaccinationFileName;
+    vaccinationFile.value = null;
   },
   { immediate: true },
 );
@@ -86,8 +106,7 @@ function selectNeutered(neutered) {
 }
 
 function onFileChange(event) {
-  const file = event.target.files[0];
-  vaccinationFileName.value = file ? file.name : '';
+  vaccinationFile.value = event.target.files[0] ?? null;
 }
 
 function goBack() {
@@ -95,6 +114,12 @@ function goBack() {
 }
 
 async function handleSave() {
+  const validationError = validateForm();
+  if (validationError) {
+    errorMessage.value = validationError;
+    return;
+  }
+  errorMessage.value = '';
   // TODO: implement pet update with pet API
   router.push('/pets');
 }
@@ -206,7 +231,9 @@ async function handleDelete() {
         <AppInput
           v-model="form.regNumber"
           label="동물등록번호 (선택)"
-          placeholder="15자리 숫자 입력"
+          placeholder="12자리 또는 15자리 숫자 입력"
+          inputmode="numeric"
+          maxlength="15"
         />
         <p
           class="text-(length:--font-xs) text-(color:--color-slate-muted) mt-(--space-1)"

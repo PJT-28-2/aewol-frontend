@@ -24,6 +24,21 @@ const vaccinationFileName = computed(() => vaccinationFile.value?.name ?? '');
 const isLoading = ref(false);
 const errorMessage = ref('');
 
+const BIRTH_DATE_PATTERN = /^\d{4}\.\d{2}\.\d{2}$/;
+const REG_NUMBER_PATTERN = /^(\d{12}|\d{15})$/;
+
+function validateForm() {
+  if (!form.value.name.trim()) return '이름을 입력해주세요.';
+  if (!form.value.breed.trim()) return '견종을 입력해주세요.';
+  if (!BIRTH_DATE_PATTERN.test(form.value.birthDate)) {
+    return '생년월일을 2023.05.12 형식으로 입력해주세요.';
+  }
+  if (form.value.regNumber && !REG_NUMBER_PATTERN.test(form.value.regNumber)) {
+    return '동물등록번호는 12자리(인식표) 또는 15자리(무선전자인식장치) 숫자로 입력해주세요.';
+  }
+  return '';
+}
+
 function selectSpecies(species) {
   form.value.species = species;
 }
@@ -41,6 +56,12 @@ function goBack() {
 }
 
 async function handleSubmit() {
+  const validationError = validateForm();
+  if (validationError) {
+    errorMessage.value = validationError;
+    return;
+  }
+  errorMessage.value = '';
   // TODO: implement pet registration with pet API
   router.push('/pets');
 }
@@ -138,7 +159,9 @@ async function handleSubmit() {
         <AppInput
           v-model="form.regNumber"
           label="동물등록번호 (선택)"
-          placeholder="15자리 숫자 입력"
+          placeholder="12자리 또는 15자리 숫자 입력"
+          inputmode="numeric"
+          maxlength="15"
         />
         <p
           class="text-(length:--font-xs) text-(color:--color-slate-muted) mt-(--space-1)"

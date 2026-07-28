@@ -29,6 +29,14 @@ defineProps({
     type: Boolean,
     default: false,
   },
+  maxlength: {
+    type: [String, Number],
+    default: null,
+  },
+  inputmode: {
+    type: String,
+    default: null,
+  },
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -60,6 +68,8 @@ function onInput(event) {
       :value="modelValue"
       :placeholder="placeholder"
       :required="required"
+      :maxlength="maxlength"
+      :inputmode="inputmode"
       :aria-invalid="error ? 'true' : undefined"
       :aria-describedby="error ? errorId : undefined"
       @input="onInput"
