@@ -394,7 +394,7 @@ onBeforeUnmount(() => {
 }
 
 .verification-label span {
-  color: #d99a2b;
+  color: var(--color-gold);
   font-size: 12px;
   font-weight: var(--font-bold);
 }
