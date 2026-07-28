@@ -2,6 +2,8 @@
 import { ref, computed, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import IconWallet from '@/components/common/icons/IconWallet.vue';
+import IconWarning from '@/components/common/icons/IconWarning.vue';
+import IconDelete from '@/components/common/icons/IconDelete.vue';
 import BottomSheet from '@/components/common/BottomSheet.vue';
 
 const route = useRoute();
@@ -221,9 +223,6 @@ function handlePinComplete() {
   closePinSheet();
   handlePayment();
 }
-
-// TODO: 생체인증 전환 연동 예정
-function handleSwitchToBiometric() {}
 </script>
 
 <template>
@@ -355,9 +354,10 @@ function handleSwitchToBiometric() {}
         class="mt-(--space-3) bg-(--color-danger-bg) rounded-(--radius-lg) p-(--space-4)"
       >
         <p
-          class="text-(length:--font-sm) font-bold text-(color:--color-danger-border)"
+          class="flex items-center gap-(--space-1) text-(length:--font-sm) font-bold text-(color:--color-danger-border)"
         >
-          ⚠️ 잔액이 부족해요
+          <IconWarning :size="14" color="var(--color-danger-border)" />
+          잔액이 부족해요
         </p>
         <p
           class="text-(length:--font-xs) text-(color:--color-danger-text) mt-(--space-1)"
@@ -626,14 +626,6 @@ function handleSwitchToBiometric() {}
             "
           />
         </div>
-
-        <button
-          type="button"
-          class="mt-(--space-6) text-(length:--font-sm) font-bold text-(color:--color-slate-dark)"
-          @click="handleSwitchToBiometric"
-        >
-          🔒 생체인증으로 전환
-        </button>
       </div>
 
       <div class="grid grid-cols-3 gap-(--space-4) mt-(--space-7)">
@@ -646,7 +638,8 @@ function handleSwitchToBiometric() {}
           :class="{ invisible: key === '' }"
           @click="key === '⌫' ? handlePinBackspace() : handlePinKeyPress(key)"
         >
-          {{ key }}
+          <IconDelete v-if="key === '⌫'" :size="20" color="var(--color-navy)" />
+          <template v-else>{{ key }}</template>
         </button>
       </div>
     </BottomSheet>
