@@ -1,8 +1,16 @@
 <script setup>
 import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import IconDog from '@/components/common/icons/IconDog.vue'
 import IconCat from '@/components/common/icons/IconCat.vue'
+import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 import MedicalHistoryPicker from '@/components/insurance/MedicalHistoryPicker.vue'
+
+const router = useRouter()
+
+function goBack() {
+  router.back()
+}
 
 // TODO(backend): 보험 시뮬레이터용 반려동물 프로필 조회 GET API가 아직 없어 목업으로 대체.
 // usePetStore는 이 화면에서 쓰지 않음 — 전용 API가 나오면 아래 목업을 그 호출로 교체.
@@ -117,6 +125,15 @@ function mockSimulate() {
   <div
     class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))] bg-(--color-bg) min-h-[calc(100vh-var(--header-height)-var(--bottom-nav-height))]"
   >
+    <button
+      type="button"
+      class="mb-(--space-3) text-(color:--color-navy)"
+      aria-label="뒤로 가기"
+      @click="goBack"
+    >
+      <IconArrowLeft size="24" />
+    </button>
+
     <header class="mb-(--space-5)">
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">
         펫보험 손익분기 시뮬레이터
