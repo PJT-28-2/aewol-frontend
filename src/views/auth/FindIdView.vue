@@ -106,7 +106,13 @@ const handleFindId = () => {
 const maskedEmail = computed(() => {
   const [localPart, domain] = foundEmail.value.split('@')
   if (!localPart || !domain) return ''
-  return `${localPart.slice(0, 2)}****@${domain}`
+
+  const visibleLength =
+    localPart.length <= 1
+      ? 0
+      : Math.min(2, localPart.length - 1)
+
+  return `${localPart.slice(0, visibleLength)}****@${domain}`
 })
 
 onBeforeUnmount(() => {
