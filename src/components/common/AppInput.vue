@@ -1,4 +1,9 @@
 <script setup>
+import { useId } from 'vue'
+
+const inputId = useId()
+const errorId = useId()
+
 defineProps({
   modelValue: {
     type: [String, Number],
@@ -37,6 +42,7 @@ function onInput(event) {
   <div class="flex flex-col gap-(--space-1) w-full">
     <label
       v-if="label"
+      :for="inputId"
       class="text-(length:--font-sm) font-medium text-(color:--color-slate-dark)"
     >
       {{ label }}
@@ -47,17 +53,21 @@ function onInput(event) {
     </label>
 
     <input
-      class="w-full h-[46px] px-(--space-3) text-(length:--font-md) text-(color:--color-gray-900) bg-(--color-surface) border rounded-(--radius-lg) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy) focus:shadow-[0_0_0_3px_rgba(27,42,73,0.1)]"
+      :id="inputId"
+      class="w-full h-(--control-height-md) px-(--space-3) text-(length:--font-md) text-(color:--color-gray-900) bg-(--color-surface) border rounded-(--radius-lg) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy) focus:shadow-(--shadow-focus)"
       :class="error ? 'border-(--color-danger)' : 'border-(--color-border)'"
       :type="type"
       :value="modelValue"
       :placeholder="placeholder"
       :required="required"
+      :aria-invalid="error ? 'true' : undefined"
+      :aria-describedby="error ? errorId : undefined"
       @input="onInput"
     >
 
     <p
       v-if="error"
+      :id="errorId"
       class="text-(length:--font-xs) text-(color:--color-danger)"
     >
       {{ error }}

@@ -37,7 +37,7 @@ const variantClasses = {
 const sizeClasses = {
   sm: 'h-(--space-7) px-(--space-3) text-(length:--font-sm)',
   md: 'h-(--space-8) px-(--space-5) text-(length:--font-md)',
-  lg: 'h-[52px] px-(--space-6) text-(length:--font-base)',
+  lg: 'h-(--control-height-lg) px-(--space-6) text-(length:--font-base)',
 }
 
 const spinnerColor = ['secondary', 'ghost', 'primary'].includes(props.variant)

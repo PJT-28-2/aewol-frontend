@@ -1,6 +1,7 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { withEulReul } from '@/utils/korean';
 import AppButton from '@/components/common/AppButton.vue';
 import AppInput from '@/components/common/AppInput.vue';
 import ConfirmDeleteModal from '@/components/common/ConfirmDeleteModal.vue';
@@ -10,7 +11,7 @@ import IconDog from '@/components/common/icons/IconDog.vue';
 
 const route = useRoute();
 const router = useRouter();
-const petId = route.params.petId;
+const petId = computed(() => route.params.petId);
 
 // TODO: 백엔드 API 연동 후 mock 데이터 제거하고 실제 fetch로 교체
 const mockPetsById = {
@@ -38,24 +39,43 @@ const mockPetsById = {
   },
 };
 
-const pet = mockPetsById[petId] ?? mockPetsById[1];
+const pet = computed(() => mockPetsById[petId.value]);
+const notFound = computed(() => !pet.value);
 
 const form = ref({
-  species: pet.species,
-  name: pet.name,
-  regNumber: pet.regNumber,
-  breed: pet.breed,
-  birthDate: pet.birthDate,
-  neutered: pet.neutered,
-  medicalHistory: pet.medicalHistory,
+  species: '',
+  name: '',
+  regNumber: '',
+  breed: '',
+  birthDate: '',
+  neutered: null,
+  medicalHistory: '',
 });
 
-const vaccinationFileName = ref(pet.vaccinationFileName);
+const vaccinationFileName = ref('');
 const isSaving = ref(false);
 const errorMessage = ref('');
 const isDeleteModalOpen = ref(false);
 
-const petName = computed(() => form.value.name || pet.name);
+watch(
+  pet,
+  (newPet) => {
+    if (!newPet) return;
+    form.value = {
+      species: newPet.species,
+      name: newPet.name,
+      regNumber: newPet.regNumber,
+      breed: newPet.breed,
+      birthDate: newPet.birthDate,
+      neutered: newPet.neutered,
+      medicalHistory: newPet.medicalHistory,
+    };
+    vaccinationFileName.value = newPet.vaccinationFileName;
+  },
+  { immediate: true },
+);
+
+const petName = computed(() => form.value.name || pet.value?.name || '반려동물');
 
 function selectSpecies(species) {
   form.value.species = species;
@@ -112,7 +132,15 @@ async function handleDelete() {
       </p>
     </header>
 
+    <div
+      v-if="notFound"
+      class="text-center py-(--space-8) text-(color:--color-gray-500)"
+    >
+      <p>반려동물 정보를 찾을 수 없어요.</p>
+    </div>
+
     <form
+      v-else
       class="flex flex-col gap-(--space-5)"
       @submit.prevent="handleSave"
     >
@@ -125,6 +153,7 @@ async function handleDelete() {
         <div class="flex gap-(--space-2)">
           <button
             type="button"
+            :aria-pressed="form.species === 'DOG'"
             class="inline-flex items-center gap-(--space-2) h-[36px] px-(--space-4) rounded-(--radius-full) border text-(length:--font-sm) font-medium"
             :class="
               form.species === 'DOG'
@@ -137,7 +166,7 @@ async function handleDelete() {
               size="16"
               :color="
                 form.species === 'DOG'
-                  ? '#ffffff'
+                  ? 'var(--color-white)'
                   : 'var(--color-slate-dark)'
               "
             />
@@ -145,6 +174,7 @@ async function handleDelete() {
           </button>
           <button
             type="button"
+            :aria-pressed="form.species === 'CAT'"
             class="inline-flex items-center gap-(--space-2) h-[36px] px-(--space-4) rounded-(--radius-full) border text-(length:--font-sm) font-medium"
             :class="
               form.species === 'CAT'
@@ -157,7 +187,7 @@ async function handleDelete() {
               size="16"
               :color="
                 form.species === 'CAT'
-                  ? '#ffffff'
+                  ? 'var(--color-white)'
                   : 'var(--color-slate-dark)'
               "
             />
@@ -208,6 +238,7 @@ async function handleDelete() {
         <div class="flex gap-(--space-2)">
           <button
             type="button"
+            :aria-pressed="form.neutered === true"
             class="inline-flex items-center h-[36px] px-(--space-4) rounded-(--radius-full) border text-(length:--font-sm) font-medium"
             :class="
               form.neutered === true
@@ -220,6 +251,7 @@ async function handleDelete() {
           </button>
           <button
             type="button"
+            :aria-pressed="form.neutered === false"
             class="inline-flex items-center h-[36px] px-(--space-4) rounded-(--radius-full) border text-(length:--font-sm) font-medium"
             :class="
               form.neutered === false
@@ -240,25 +272,25 @@ async function handleDelete() {
       />
 
       <label
-        class="flex items-center justify-between h-[46px] px-(--space-4) rounded-(--radius-lg) border border-(--color-slate-muted) bg-(--color-white) text-(length:--font-sm) text-(color:--color-slate-dark) cursor-pointer"
+        class="flex items-center justify-between h-[46px] px-(--space-4) rounded-(--radius-lg) border border-(--color-slate-muted) bg-(--color-white) text-(length:--font-sm) text-(color:--color-slate-dark) cursor-pointer has-focus-visible:outline-2 has-focus-visible:outline-(--color-navy)"
       >
         <span v-if="vaccinationFileName">{{
           vaccinationFileName
         }}</span>
-        <span v-else class="w-full text-center"
-          >+ 접종증명서 이미지 업로드</span
-        >
+        <span
+          v-else
+          class="w-full text-center"
+        >+ 접종증명서 이미지 업로드</span>
         <span
           v-if="vaccinationFileName"
           class="text-(color:--color-navy) font-medium shrink-0"
-          >변경</span
-        >
+        >변경</span>
         <input
           type="file"
           accept="image/*"
-          class="hidden"
+          class="sr-only"
           @change="onFileChange"
-        />
+        >
       </label>
 
       <p
@@ -289,7 +321,7 @@ async function handleDelete() {
 
     <ConfirmDeleteModal
       v-model="isDeleteModalOpen"
-      :title="`${petName}를 삭제할까요?`"
+      :title="`${withEulReul(petName)} 삭제할까요?`"
       description="삭제하면 아래 정보가 함께 삭제되며 복구할 수 없어요"
       :items="[
         '버킷 잔액 및 지출·결제 내역',

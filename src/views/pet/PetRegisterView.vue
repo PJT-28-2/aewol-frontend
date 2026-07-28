@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import AppButton from '@/components/common/AppButton.vue';
 import AppInput from '@/components/common/AppInput.vue';
@@ -19,7 +19,8 @@ const form = ref({
   medicalHistory: '',
 });
 
-const vaccinationFileName = ref('');
+const vaccinationFile = ref(null);
+const vaccinationFileName = computed(() => vaccinationFile.value?.name ?? '');
 const isLoading = ref(false);
 const errorMessage = ref('');
 
@@ -32,8 +33,7 @@ function selectNeutered(neutered) {
 }
 
 function onFileChange(event) {
-  const file = event.target.files[0];
-  vaccinationFileName.value = file ? file.name : '';
+  vaccinationFile.value = event.target.files[0] ?? null;
 }
 
 function goBack() {
@@ -85,6 +85,7 @@ async function handleSubmit() {
         <div class="flex gap-(--space-2)">
           <button
             type="button"
+            :aria-pressed="form.species === 'DOG'"
             class="inline-flex items-center gap-(--space-2) h-[36px] px-(--space-4) rounded-(--radius-full) border text-(length:--font-sm) font-medium"
             :class="
               form.species === 'DOG'
@@ -97,7 +98,7 @@ async function handleSubmit() {
               size="16"
               :color="
                 form.species === 'DOG'
-                  ? '#ffffff'
+                  ? 'var(--color-white)'
                   : 'var(--color-slate-dark)'
               "
             />
@@ -105,6 +106,7 @@ async function handleSubmit() {
           </button>
           <button
             type="button"
+            :aria-pressed="form.species === 'CAT'"
             class="inline-flex items-center gap-(--space-2) h-[36px] px-(--space-4) rounded-(--radius-full) border text-(length:--font-sm) font-medium"
             :class="
               form.species === 'CAT'
@@ -117,7 +119,7 @@ async function handleSubmit() {
               size="16"
               :color="
                 form.species === 'CAT'
-                  ? '#ffffff'
+                  ? 'var(--color-white)'
                   : 'var(--color-slate-dark)'
               "
             />
@@ -168,6 +170,7 @@ async function handleSubmit() {
         <div class="flex gap-(--space-2)">
           <button
             type="button"
+            :aria-pressed="form.neutered === true"
             class="inline-flex items-center h-[36px] px-(--space-4) rounded-(--radius-full) border text-(length:--font-sm) font-medium"
             :class="
               form.neutered === true
@@ -180,6 +183,7 @@ async function handleSubmit() {
           </button>
           <button
             type="button"
+            :aria-pressed="form.neutered === false"
             class="inline-flex items-center h-[36px] px-(--space-4) rounded-(--radius-full) border text-(length:--font-sm) font-medium"
             :class="
               form.neutered === false
@@ -200,7 +204,7 @@ async function handleSubmit() {
       />
 
       <label
-        class="flex items-center justify-center h-[46px] rounded-(--radius-lg) border border-(--color-slate-muted) bg-(--color-white) text-(length:--font-sm) text-(color:--color-slate-dark) cursor-pointer"
+        class="flex items-center justify-center h-[46px] rounded-(--radius-lg) border border-(--color-slate-muted) bg-(--color-white) text-(length:--font-sm) text-(color:--color-slate-dark) cursor-pointer has-focus-visible:outline-2 has-focus-visible:outline-(--color-navy)"
       >
         {{
           vaccinationFileName
@@ -210,7 +214,7 @@ async function handleSubmit() {
         <input
           type="file"
           accept="image/*"
-          class="hidden"
+          class="sr-only"
           @change="onFileChange"
         >
       </label>
