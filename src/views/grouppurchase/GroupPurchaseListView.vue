@@ -1,168 +1,198 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed } from 'vue';
+import IconUser from '@/components/common/icons/IconUser.vue';
 
-const groupPurchases = ref([])
-const isLoading = ref(true)
+// TODO: 백엔드 API 연동 후 mock 데이터 제거하고 실제 fetch로 교체
+const groupPurchases = ref([
+  {
+    id: 1,
+    productName: '프리미엄 사료 15kg',
+    category: '사료',
+    status: '진행중',
+    currentQuantity: 32,
+    targetQuantity: 50,
+    dDay: 'D-3',
+    badgeText: '30% 할인',
+  },
+  {
+    id: 2,
+    productName: '강아지 관절 영양제 3개월분',
+    category: '영양제',
+    status: '진행중',
+    currentQuantity: 8,
+    targetQuantity: 30,
+    dDay: 'D-7',
+    badgeText: '20% 할인',
+  },
+  {
+    id: 3,
+    productName: '고양이 스크래처 장난감 세트',
+    category: '장난감',
+    status: '마감',
+    currentQuantity: 20,
+    targetQuantity: 20,
+    dDay: 'D-0',
+    badgeText: '15% 할인',
+  },
+]);
 
-onMounted(async () => {
-  // TODO: fetch open group purchases from store/API
-  isLoading.value = false
-})
+// 카테고리 필터: mock 데이터의 category 필드 기준으로 필터링 (현재는 클라이언트에서만 처리)
+const categories = ['전체', '사료', '영양제', '장난감', '기타'];
+const selectedCategory = ref('전체');
+
+// 카테고리 칩 클릭 시 선택 상태 변경
+function selectCategory(category) {
+  selectedCategory.value = category;
+}
+
+// 상태 드롭다운 필터: mock 데이터의 status 필드 기준, 미선택 시 "상태"로 표시(전체 노출)
+const statusOptions = ['전체', '진행중', '마감'];
+const selectedStatus = ref('');
+const isStatusOpen = ref(false);
+
+const statusLabel = computed(() => selectedStatus.value || '상태');
+
+// 상태 드롭다운 버튼 클릭 시 옵션 목록 열기/닫기
+function toggleStatusDropdown() {
+  isStatusOpen.value = !isStatusOpen.value;
+}
+
+// 상태 옵션 선택 후 드롭다운은 자동으로 닫음
+function selectStatus(status) {
+  selectedStatus.value = status;
+  isStatusOpen.value = false;
+}
+
+// 검색어: productName에 검색어가 포함된 게시글만 노출
+const searchKeyword = ref('');
+
+// 카테고리 · 상태 · 검색어 세 조건을 모두 만족하는 게시글만 노출 (DB 연동 후 서버 필터링으로 대체 예정)
+const filteredGroupPurchases = computed(() => {
+  const keyword = searchKeyword.value.trim().toLowerCase();
+
+  return groupPurchases.value.filter((gp) => {
+    const matchesCategory =
+      selectedCategory.value === '전체' || gp.category === selectedCategory.value;
+    const matchesStatus =
+      !selectedStatus.value || selectedStatus.value === '전체' || gp.status === selectedStatus.value;
+    const matchesKeyword =
+      !keyword || gp.productName.toLowerCase().includes(keyword);
+
+    return matchesCategory && matchesStatus && matchesKeyword;
+  });
+});
 </script>
 
 <template>
-  <div class="gp-list-page">
-    <header class="page-header">
-      <h1>공동구매</h1>
-      <router-link to="/group-purchase/create" class="btn-create">+ 만들기</router-link>
+  <div
+    class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+88px)] bg-(--color-bg) min-h-screen"
+  >
+    <!-- 헤더 -->
+    <header class="flex items-start justify-between mb-(--space-5)">
+      <div>
+        <h1 class="text-(length:--font-xl) font-bold text-(color:--color-navy)">
+          반려동물 용품 공동구매
+        </h1>
+        <p class="text-(length:--font-sm) text-(color:--color-slate-muted) mt-(--space-1)">
+          함께 사면 더 저렴해요
+        </p>
+      </div>
+      <!-- 마이페이지 진입 버튼: 텍스트 없이 프로필 아이콘만 표시 -->
+      <router-link
+        to="/group-purchase/my"
+        aria-label="마이페이지"
+        class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-(--color-gray-100) no-underline"
+      >
+        <IconUser :size="24" color="var(--color-navy)" />
+      </router-link>
     </header>
 
-    <div v-if="isLoading" class="loading-state">
-      <p>로딩 중...</p>
+    <!-- 카테고리 필터 -->
+    <div class="flex gap-(--space-2) overflow-x-auto mb-(--space-3)">
+      <button
+        v-for="category in categories"
+        :key="category"
+        type="button"
+        class="shrink-0 px-(--space-4) py-(--space-2) rounded-full border text-(length:--font-sm) font-medium"
+        :class="
+          selectedCategory === category
+            ? 'bg-(--color-navy) border-(--color-navy) text-(color:--color-white)'
+            : 'bg-(--color-white) border-(--color-border) text-(color:--color-gray-600)'
+        "
+        @click="selectCategory(category)"
+      >
+        {{ category }}
+      </button>
     </div>
 
-    <div v-else-if="groupPurchases.length === 0" class="empty-state">
-      <p>현재 진행 중인 공동구매가 없습니다.</p>
+    <!-- 검색 + 상태 필터 -->
+    <div class="flex gap-(--space-2) mb-(--space-5)">
+      <input
+        v-model="searchKeyword"
+        type="text"
+        placeholder="상품명으로 검색해보세요"
+        class="flex-1 min-w-0 px-(--space-4) py-(--space-3) bg-(--color-surface) border border-(--color-border) rounded-(--radius-md) text-(length:--font-sm) text-(color:--color-gray-700) placeholder:text-(color:--color-gray-500)"
+      />
+
+      <div class="relative shrink-0">
+        <button
+          type="button"
+          class="inline-flex items-center h-full gap-(--space-1) px-(--space-3) bg-(--color-white) border border-(--color-border) rounded-(--radius-md) text-(length:--font-sm) text-(color:--color-gray-700)"
+          @click="toggleStatusDropdown"
+        >
+          {{ statusLabel }}
+          <span class="text-(length:--font-xs) text-(color:--color-gray-500)">▾</span>
+        </button>
+        <ul
+          v-if="isStatusOpen"
+          class="absolute top-[calc(100%+var(--space-1))] right-0 z-10 min-w-[96px] list-none m-0 p-(--space-1) bg-(--color-white) border border-(--color-border) rounded-(--radius-md) shadow-(--shadow-md)"
+        >
+          <li v-for="option in statusOptions" :key="option">
+            <button
+              type="button"
+              class="w-full px-(--space-3) py-(--space-2) bg-transparent border-0 rounded-(--radius-sm) text-left text-(length:--font-sm) text-(color:--color-gray-700) hover:bg-(--color-gray-100)"
+              @click="selectStatus(option)"
+            >
+              {{ option }}
+            </button>
+          </li>
+        </ul>
+      </div>
     </div>
 
-    <ul v-else class="gp-list">
-      <li v-for="gp in groupPurchases" :key="gp.id">
-        <router-link :to="`/group-purchase/${gp.id}`" class="gp-card card">
-          <div class="gp-image">
-            <!-- TODO: product image -->
-          </div>
-          <div class="gp-info">
-            <h3>{{ gp.title }}</h3>
-            <p class="gp-price">{{ gp.price?.toLocaleString() }}원</p>
-            <div class="gp-progress">
-              <div class="progress-bar">
-                <div
-                  class="progress-fill"
-                  :style="{ width: `${(gp.currentCount / gp.targetCount) * 100}%` }"
-                ></div>
-              </div>
-              <span class="progress-text">{{ gp.currentCount }}/{{ gp.targetCount }}명</span>
-            </div>
-            <p class="gp-deadline">마감: {{ gp.deadline }}</p>
-          </div>
+    <!-- 공동구매 목록 -->
+    <ul class="list-none p-0 m-0 flex flex-col gap-(--space-3)">
+      <li
+        v-for="gp in filteredGroupPurchases"
+        :key="gp.id"
+        class="flex items-center justify-between gap-(--space-3) p-(--space-4) bg-(--color-surface) border border-(--color-border) rounded-(--radius-lg)"
+      >
+        <div>
+          <h3 class="text-(length:--font-md) font-semibold text-(color:--color-gray-900) mb-(--space-1)">
+            {{ gp.productName }}
+          </h3>
+          <p class="text-(length:--font-xs) text-(color:--color-gray-500) mb-(--space-2)">
+            {{ gp.currentQuantity }}/{{ gp.targetQuantity }}개 참여 · {{ gp.status === '마감' ? '마감' : gp.dDay }}
+          </p>
+          <span class="text-(length:--font-xs) font-semibold text-(color:--color-gold)">
+            {{ gp.badgeText }}
+          </span>
+        </div>
+        <router-link
+          :to="`/group-purchase/${gp.id}`"
+          class="shrink-0 px-(--space-4) py-(--space-2) bg-(--color-navy) text-(color:--color-white) rounded-full text-(length:--font-sm) font-semibold no-underline whitespace-nowrap"
+        >
+          참여하기
         </router-link>
       </li>
     </ul>
+
+    <!-- 글쓰기 버튼 -->
+    <router-link
+      to="/group-purchase/create/step1"
+      class="fixed bottom-[calc(var(--bottom-nav-height)+var(--space-4))] left-(--space-4) right-(--space-4) flex items-center justify-center p-(--space-4) bg-(--color-gold) text-(color:--color-navy) rounded-(--radius-md) text-(length:--font-base) font-bold no-underline shadow-(--shadow-md)"
+    >
+      + 공동구매 글쓰기
+    </router-link>
   </div>
 </template>
-
-<style scoped>
-.gp-list-page {
-  padding: var(--space-4);
-  padding-bottom: calc(var(--bottom-nav-height) + var(--space-4));
-  background-color: var(--color-bg);
-  min-height: 100vh;
-}
-
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--space-5);
-}
-
-.page-header h1 {
-  font-size: var(--font-2xl);
-  font-weight: var(--font-bold);
-  color: var(--color-navy);
-}
-
-.btn-create {
-  font-size: var(--font-sm);
-  color: var(--color-gold);
-  font-weight: var(--font-semibold);
-  text-decoration: none;
-}
-
-.card {
-  background-color: var(--color-white);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  overflow: hidden;
-}
-
-.loading-state,
-.empty-state {
-  text-align: center;
-  padding: var(--space-8) 0;
-  color: var(--color-gray-500);
-}
-
-.gp-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-
-.gp-card {
-  display: flex;
-  text-decoration: none;
-  color: inherit;
-}
-
-.gp-image {
-  width: 100px;
-  height: 100px;
-  background-color: var(--color-gray-200);
-  flex-shrink: 0;
-}
-
-.gp-info {
-  flex: 1;
-  padding: var(--space-3) var(--space-4);
-}
-
-.gp-info h3 {
-  font-size: var(--font-md);
-  font-weight: var(--font-semibold);
-  color: var(--color-gray-900);
-  margin-bottom: var(--space-1);
-}
-
-.gp-price {
-  font-size: var(--font-base);
-  font-weight: var(--font-bold);
-  color: var(--color-navy);
-  margin-bottom: var(--space-2);
-}
-
-.gp-progress {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin-bottom: var(--space-1);
-}
-
-.progress-bar {
-  flex: 1;
-  height: 6px;
-  background-color: var(--color-gray-200);
-  border-radius: var(--radius-full);
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  background-color: var(--color-gold);
-  border-radius: var(--radius-full);
-}
-
-.progress-text {
-  font-size: var(--font-xs);
-  color: var(--color-gray-500);
-  white-space: nowrap;
-}
-
-.gp-deadline {
-  font-size: var(--font-xs);
-  color: var(--color-gray-400);
-}
-</style>
