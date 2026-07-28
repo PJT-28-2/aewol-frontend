@@ -15,6 +15,7 @@ const password = ref('')
 const isLoading = ref(false)
 const errorMessage = ref('')
 const KAKAO_OAUTH_STATE_KEY = 'kakaoOAuthState'
+let loginAttemptId = 0
 
 const createOAuthState = () => {
   const randomBytes = new Uint8Array(32)
@@ -24,18 +25,37 @@ const createOAuthState = () => {
   ).join('')
 }
 
+const openEmailLogin = () => {
+  errorMessage.value = ''
+  showEmailForm.value = true
+}
+
+const closeEmailLogin = () => {
+  loginAttemptId += 1
+  showEmailForm.value = false
+  email.value = ''
+  password.value = ''
+  errorMessage.value = ''
+  isLoading.value = false
+}
+
 const handleEmailLogin = async () => {
+  const currentAttemptId = ++loginAttemptId
   errorMessage.value = ''
   isLoading.value = true
 
   try {
     await authStore.login(email.value, password.value)
+    if (currentAttemptId !== loginAttemptId) return
     await router.push('/home')
   } catch (error) {
+    if (currentAttemptId !== loginAttemptId) return
     errorMessage.value =
       error.response?.data?.message ?? '이메일 또는 비밀번호를 확인해 주세요.'
   } finally {
-    isLoading.value = false
+    if (currentAttemptId === loginAttemptId) {
+      isLoading.value = false
+    }
   }
 }
 
@@ -85,7 +105,7 @@ const handleKakaoLogin = () => {
         <button
           class="login-button login-button--email"
           type="button"
-          @click="showEmailForm = true"
+          @click="openEmailLogin"
         >
           이메일로 로그인
         </button>
@@ -106,7 +126,7 @@ const handleKakaoLogin = () => {
         class="email-login__back"
         type="button"
         aria-label="이전 화면으로 돌아가기"
-        @click="showEmailForm = false"
+        @click="closeEmailLogin"
       >
         <IconArrowLeft :size="26" />
       </button>
@@ -165,7 +185,7 @@ const handleKakaoLogin = () => {
 .login-hero {
   position: relative;
   height: 480px;
-  background: #edf0f7;
+  background: var(--color-pastel-blue);
 }
 
 .login-illustration {
