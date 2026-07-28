@@ -7,6 +7,8 @@ const groupPurchases = ref([
   {
     id: 1,
     productName: '프리미엄 사료 15kg',
+    category: '사료',
+    status: '진행중',
     currentQuantity: 32,
     targetQuantity: 50,
     dDay: 'D-3',
@@ -14,16 +16,16 @@ const groupPurchases = ref([
   },
 ]);
 
-// 카테고리 필터 (백엔드 연동 예정, 현재는 선택 상태만 관리)
+// 카테고리 필터: mock 데이터의 category 필드 기준으로 필터링 (현재는 클라이언트에서만 처리)
 const categories = ['전체', '사료', '영양제', '장난감', '기타'];
 const selectedCategory = ref('전체');
 
-// 카테고리 칩 클릭 시 선택 상태만 변경 (실제 필터링은 백엔드 연동 후 적용)
+// 카테고리 칩 클릭 시 선택 상태 변경
 function selectCategory(category) {
   selectedCategory.value = category;
 }
 
-// 상태 드롭다운 필터: 전체/진행중/마감, 미선택 시 "상태"로 표시 (백엔드 연동 예정)
+// 상태 드롭다운 필터: mock 데이터의 status 필드 기준, 미선택 시 "상태"로 표시(전체 노출)
 const statusOptions = ['전체', '진행중', '마감'];
 const selectedStatus = ref('');
 const isStatusOpen = ref(false);
@@ -41,8 +43,24 @@ function selectStatus(status) {
   isStatusOpen.value = false;
 }
 
-// 검색어 (백엔드 연동 예정)
+// 검색어: productName에 검색어가 포함된 게시글만 노출
 const searchKeyword = ref('');
+
+// 카테고리 · 상태 · 검색어 세 조건을 모두 만족하는 게시글만 노출 (DB 연동 후 서버 필터링으로 대체 예정)
+const filteredGroupPurchases = computed(() => {
+  const keyword = searchKeyword.value.trim().toLowerCase();
+
+  return groupPurchases.value.filter((gp) => {
+    const matchesCategory =
+      selectedCategory.value === '전체' || gp.category === selectedCategory.value;
+    const matchesStatus =
+      !selectedStatus.value || selectedStatus.value === '전체' || gp.status === selectedStatus.value;
+    const matchesKeyword =
+      !keyword || gp.productName.toLowerCase().includes(keyword);
+
+    return matchesCategory && matchesStatus && matchesKeyword;
+  });
+});
 </script>
 
 <template>
@@ -124,7 +142,7 @@ const searchKeyword = ref('');
     <!-- 공동구매 목록 -->
     <ul class="list-none p-0 m-0 flex flex-col gap-(--space-3)">
       <li
-        v-for="gp in groupPurchases"
+        v-for="gp in filteredGroupPurchases"
         :key="gp.id"
         class="flex items-center justify-between gap-(--space-3) p-(--space-4) bg-(--color-surface) border border-(--color-border) rounded-(--radius-lg)"
       >
