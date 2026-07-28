@@ -18,6 +18,7 @@ const groupPurchases = ref([
 const categories = ['전체', '사료', '영양제', '장난감', '기타'];
 const selectedCategory = ref('전체');
 
+// 카테고리 칩 클릭 시 선택 상태만 변경 (실제 필터링은 백엔드 연동 후 적용)
 function selectCategory(category) {
   selectedCategory.value = category;
 }
@@ -29,10 +30,12 @@ const isStatusOpen = ref(false);
 
 const statusLabel = computed(() => selectedStatus.value || '상태');
 
+// 상태 드롭다운 버튼 클릭 시 옵션 목록 열기/닫기
 function toggleStatusDropdown() {
   isStatusOpen.value = !isStatusOpen.value;
 }
 
+// 상태 옵션 선택 후 드롭다운은 자동으로 닫음
 function selectStatus(status) {
   selectedStatus.value = status;
   isStatusOpen.value = false;
@@ -56,6 +59,7 @@ const searchKeyword = ref('');
           함께 사면 더 저렴해요
         </p>
       </div>
+      <!-- 마이페이지 진입 버튼: 텍스트 없이 프로필 아이콘만 표시 -->
       <router-link
         to="/group-purchase/my"
         class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-(--color-gray-100) no-underline"
