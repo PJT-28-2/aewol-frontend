@@ -3,15 +3,16 @@ import { defineStore } from 'pinia'
 // 상품등록 1~3단계가 공유하는 임시 작성 데이터 (등록 완료/이탈 시 reset)
 export const useGroupPurchaseCreateStore = defineStore('groupPurchaseCreate', {
   state: () => ({
-    photos: [],
+    image: null,
     productName: '',
     category: '',
-    originalPrice: '',
+    unitPrice: '',
     groupPrice: '',
     targetQuantity: '2',
     deadline: '',
     deliveryMethod: '택배 배송',
     deliveryFee: '',
+    // DB의 delivery_date(실제 날짜)는 deadline + deliveryEstimateDays로 백엔드에서 계산한다고 가정. 프론트는 일수만 보관
     deliveryEstimateDays: '3',
     description: '',
   }),
@@ -20,10 +21,10 @@ export const useGroupPurchaseCreateStore = defineStore('groupPurchaseCreate', {
     // 1단계(상품 정보) 필수 입력이 모두 채워졌는지 - step2/step3 라우터 가드에서 사용
     isStep1Complete: (state) => {
       const parsePrice = (value) => Number(String(value).replace(/[^0-9]/g, '')) || 0
-      const original = parsePrice(state.originalPrice)
+      const original = parsePrice(state.unitPrice)
       const group = parsePrice(state.groupPrice)
       return (
-        state.photos.length > 0 &&
+        state.image !== null &&
         state.productName.trim() !== '' &&
         state.category.trim() !== '' &&
         original > 0 &&
@@ -41,10 +42,10 @@ export const useGroupPurchaseCreateStore = defineStore('groupPurchaseCreate', {
 
   actions: {
     reset() {
-      this.photos = []
+      this.image = null
       this.productName = ''
       this.category = ''
-      this.originalPrice = ''
+      this.unitPrice = ''
       this.groupPrice = ''
       this.targetQuantity = '2'
       this.deadline = ''

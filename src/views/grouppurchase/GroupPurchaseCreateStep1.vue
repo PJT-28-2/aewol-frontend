@@ -11,7 +11,7 @@ import { useGroupPurchaseCreateStore } from '@/stores/groupPurchase'
 
 // 1~3단계가 공유하는 작성 데이터 (3단계 최종 확인에서 그대로 사용)
 const groupPurchaseCreateStore = useGroupPurchaseCreateStore()
-const { photos, productName, category, originalPrice, groupPrice } = storeToRefs(
+const { image, productName, category, unitPrice, groupPrice } = storeToRefs(
   groupPurchaseCreateStore,
 )
 
@@ -22,14 +22,14 @@ function selectCategory(option) {
   isCategorySheetOpen.value = false
 }
 
-function handlePhotoChange(event) {
-  const files = Array.from(event.target.files || [])
-  photos.value = [...photos.value, ...files].slice(0, 5)
+function handleImageChange(event) {
+  const file = event.target.files?.[0]
+  if (file) image.value = file
   event.target.value = ''
 }
 
-function removePhoto(index) {
-  photos.value = photos.value.filter((_, i) => i !== index)
+function removeImage() {
+  image.value = null
 }
 
 // 콤마/원 등 숫자 외 문자를 제거해 실제 금액만 추출
@@ -40,7 +40,7 @@ function parsePrice(value) {
 
 // 정가 대비 공동구매가 할인율 실시간 계산 (정가가 더 작거나 없으면 표시하지 않음)
 const discountRate = computed(() => {
-  const original = parsePrice(originalPrice.value)
+  const original = parsePrice(unitPrice.value)
   const group = parsePrice(groupPrice.value)
   if (!original || !group || group >= original) return 0
   return Math.round((1 - group / original) * 100)
@@ -48,7 +48,7 @@ const discountRate = computed(() => {
 
 // 공동구매 가격이 정가보다 높은 경우 (둘 다 입력됐을 때만 검사)
 const isGroupPriceTooHigh = computed(() => {
-  const original = parsePrice(originalPrice.value)
+  const original = parsePrice(unitPrice.value)
   const group = parsePrice(groupPrice.value)
   return original > 0 && group > 0 && group > original
 })
@@ -56,10 +56,10 @@ const isGroupPriceTooHigh = computed(() => {
 // 사진, 상품명, 카테고리, 정가, 공동구매가격이 모두 입력되고 가격이 유효해야 다음 단계로 이동 가능
 const isFormValid = computed(
   () =>
-    photos.value.length > 0 &&
+    image.value !== null &&
     productName.value.trim() !== '' &&
     category.value.trim() !== '' &&
-    parsePrice(originalPrice.value) > 0 &&
+    parsePrice(unitPrice.value) > 0 &&
     parsePrice(groupPrice.value) > 0 &&
     !isGroupPriceTooHigh.value,
 )
@@ -114,44 +114,34 @@ function goToNextStep() {
         <input
           type="file"
           accept="image/*"
-          multiple
           class="hidden"
-          @change="handlePhotoChange"
+          @change="handleImageChange"
         >
         <IconImage
           size="20"
           color="var(--color-slate-dark)"
         />
         <span class="text-(length:--font-sm) font-bold text-(color:--color-slate-dark)">
-          {{ photos.length > 0 ? `사진 ${photos.length}장 선택됨` : '사진 추가' }}
-        </span>
-        <span class="text-(length:--font-xs) text-(color:--color-slate-muted)">
-          최대 5장
+          {{ image ? '사진 선택됨' : '사진 추가' }}
         </span>
       </label>
 
-      <!-- 업로드한 파일명 목록 + 삭제 -->
-      <ul
-        v-if="photos.length > 0"
-        class="mt-(--space-2) flex flex-col gap-(--space-1)"
+      <!-- 업로드한 파일명 + 삭제 -->
+      <div
+        v-if="image"
+        class="mt-(--space-2) flex items-center justify-between px-(--space-3) py-(--space-2) rounded-lg bg-(--color-surface)"
       >
-        <li
-          v-for="(photo, index) in photos"
-          :key="`${photo.name}-${index}`"
-          class="flex items-center justify-between px-(--space-3) py-(--space-2) rounded-lg bg-(--color-surface)"
+        <span class="text-(length:--font-xs) text-(color:--color-slate-dark) truncate">
+          {{ image.name }}
+        </span>
+        <button
+          type="button"
+          class="text-(length:--font-xs) font-bold text-(color:--color-slate-muted)"
+          @click="removeImage"
         >
-          <span class="text-(length:--font-xs) text-(color:--color-slate-dark) truncate">
-            {{ photo.name }}
-          </span>
-          <button
-            type="button"
-            class="text-(length:--font-xs) font-bold text-(color:--color-slate-muted)"
-            @click="removePhoto(index)"
-          >
-            삭제
-          </button>
-        </li>
-      </ul>
+          삭제
+        </button>
+      </div>
     </section>
 
     <!-- 상품명 -->
@@ -231,14 +221,14 @@ function goToNextStep() {
     <!-- 정가 -->
     <section class="mb-(--space-5)">
       <label
-        for="original-price"
+        for="unit-price"
         class="block text-(length:--font-sm) font-bold text-(color:--color-slate-dark) mb-(--space-2)"
       >
         정가 *
       </label>
       <input
-        id="original-price"
-        v-model="originalPrice"
+        id="unit-price"
+        v-model="unitPrice"
         type="text"
         inputmode="numeric"
         placeholder="40,000 원"

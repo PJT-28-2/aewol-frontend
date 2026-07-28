@@ -11,10 +11,10 @@ import { useGroupPurchaseCreateStore } from '@/stores/groupPurchase'
 // 1~2단계에서 입력한 데이터를 그대로 가져와 확인 화면을 채움
 const groupPurchaseCreateStore = useGroupPurchaseCreateStore()
 const {
-  photos,
+  image,
   productName,
   category,
-  originalPrice,
+  unitPrice,
   groupPrice,
   targetQuantity,
   deadline,
@@ -23,18 +23,17 @@ const {
   deliveryEstimateDays,
 } = storeToRefs(groupPurchaseCreateStore)
 
-// 1단계에서 업로드한 첫 번째 사진 미리보기 (없으면 아이콘 placeholder)
-// blob URL은 다음 사진으로 바뀌거나 화면을 벗어날 때 revoke해서 메모리에 안 쌓이게 함
+// 1단계에서 업로드한 사진 미리보기 (없으면 아이콘 placeholder)
+// blob URL은 사진이 바뀌거나 화면을 벗어날 때 revoke해서 메모리에 안 쌓이게 함
 const photoPreviewUrl = ref('')
 watchEffect((onCleanup) => {
-  const file = photos.value[0]
-  if (!file) {
+  if (!image.value) {
     photoPreviewUrl.value = ''
     return
   }
-  const url = URL.createObjectURL(file)
+  const url = URL.createObjectURL(image.value)
   photoPreviewUrl.value = url
-  // 다음 사진으로 바뀌거나 컴포넌트가 언마운트될 때 자동으로 호출됨
+  // 사진이 바뀌거나 컴포넌트가 언마운트될 때 자동으로 호출됨
   onCleanup(() => URL.revokeObjectURL(url))
 })
 
@@ -44,7 +43,7 @@ function parsePrice(value) {
 
 // 1단계와 동일한 방식으로 할인율 계산
 const discountRate = computed(() => {
-  const original = parsePrice(originalPrice.value)
+  const original = parsePrice(unitPrice.value)
   const group = parsePrice(groupPrice.value)
   if (!original || !group || group >= original) return 0
   return Math.round((1 - group / original) * 100)
@@ -77,14 +76,16 @@ function goToPrevStep() {
 // TODO: 백엔드 DB 연동 후 아래 API 호출 주석 해제 (async/await 함께 복원)
 function handleSubmit() {
   // const payload = {
+  //   image: image.value,
   //   productName: productName.value,
   //   category: category.value,
-  //   originalPrice: parsePrice(originalPrice.value),
+  //   unitPrice: parsePrice(unitPrice.value),
   //   groupPrice: parsePrice(groupPrice.value),
   //   targetQuantity: Number(targetQuantity.value),
   //   deadline: deadline.value,
   //   deliveryMethod: deliveryMethod.value,
   //   deliveryFee: parsePrice(deliveryFee.value),
+  //   // TODO: DB의 delivery_date(실제 날짜)는 deadline + deliveryEstimateDays로 백엔드에서 계산한다고 가정. 프론트는 일수만 전달
   //   deliveryEstimateDays: Number(deliveryEstimateDays.value),
   //   description: description.value,
   // }
@@ -161,7 +162,7 @@ function handleSubmit() {
           {{ parsePrice(groupPrice).toLocaleString() }}원
         </p>
         <p class="text-(length:--font-xs) text-(color:--color-slate-muted) line-through">
-          {{ parsePrice(originalPrice).toLocaleString() }}원
+          {{ parsePrice(unitPrice).toLocaleString() }}원
         </p>
       </div>
     </div>
