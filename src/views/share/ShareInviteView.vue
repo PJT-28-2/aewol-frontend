@@ -1,250 +1,162 @@
 <script setup>
-import { computed, ref } from "vue";
-import { useRouter } from "vue-router";
+import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { shareApi } from '@/api/share'
+import IconChevronLeft from '@/components/common/icons/IconChevronLeft.vue'
 
-const INVITE_LINK = "https://aewol.app/invite/8f2c91";
-const router = useRouter();
-const recipient = ref("");
-const copied = ref(false);
-const copyError = ref("");
-const inviteStatus = ref("");
-const inviteError = ref("");
-const trimmedRecipient = computed(() => recipient.value.trim());
-const recipientType = computed(() => {
-  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedRecipient.value)) {
-    return "email";
+const router = useRouter()
+const recipient = ref('')
+const copied = ref(false)
+const isSending = ref(false)
+const feedback = ref('')
+const isError = ref(false)
+const inviteLink = `${window.location.origin}/share/join`
+
+const trimmedRecipient = computed(() => recipient.value.trim())
+const isEmail = computed(() =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedRecipient.value),
+)
+const normalizedPhone = computed(() => recipient.value.replace(/\D/g, ''))
+const isPhone = computed(() =>
+  /^01[016789]\d{7,8}$/.test(normalizedPhone.value),
+)
+const isMemberId = computed(() =>
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    trimmedRecipient.value,
+  ),
+)
+const isValidRecipient = computed(
+  () => isEmail.value || isPhone.value || isMemberId.value,
+)
+
+function resetFeedback() {
+  feedback.value = ''
+  isError.value = false
+}
+
+async function sendInvite() {
+  resetFeedback()
+
+  if (!isValidRecipient.value) {
+    feedback.value = '올바른 이메일, 휴대전화 번호 또는 멤버 ID를 입력해주세요.'
+    isError.value = true
+    return
   }
 
-  if (/^(?:\+82|0)1[016789]\d{7,8}$/.test(trimmedRecipient.value.replace(/[-\s]/g, ""))) {
-    return "phone";
+  isSending.value = true
+  try {
+    if (isMemberId.value) {
+      await shareApi.invite({
+        targetMemberId: trimmedRecipient.value,
+        role: 'VIEWER',
+      })
+      feedback.value = '공동육아 초대를 보냈어요.'
+      return
+    }
+
+    const body = encodeURIComponent(
+      `애월에서 함께 돌보기에 초대했어요. ${inviteLink}`,
+    )
+    window.location.href = isEmail.value
+      ? `mailto:${encodeURIComponent(trimmedRecipient.value)}?subject=${encodeURIComponent('애월 함께 돌보기 초대')}&body=${body}`
+      : `sms:${normalizedPhone.value}?body=${body}`
+    feedback.value = '초대 메시지를 보낼 앱을 열었어요.'
+  } catch (error) {
+    feedback.value =
+      error.response?.data?.message ?? '초대를 보내지 못했어요. 다시 시도해주세요.'
+    isError.value = true
+  } finally {
+    isSending.value = false
   }
-
-  return "";
-});
-
-function sendInvite() {
-  if (!trimmedRecipient.value) return;
-
-  inviteStatus.value = "";
-  inviteError.value = "";
-
-  const subject = encodeURIComponent("애월 가족 초대");
-  const body = encodeURIComponent(`함께 반려동물을 돌봐요.\n${INVITE_LINK}`);
-
-  if (recipientType.value === "email") {
-    window.location.href = `mailto:${encodeURIComponent(trimmedRecipient.value)}?subject=${subject}&body=${body}`;
-  } else if (recipientType.value === "phone") {
-    const phoneNumber = trimmedRecipient.value.replace(/[-\s]/g, "");
-    window.location.href = `sms:${encodeURIComponent(phoneNumber)}?body=${body}`;
-  } else {
-    inviteError.value = "올바른 이메일 또는 휴대전화 번호를 입력해주세요.";
-    return;
-  }
-
-  inviteStatus.value = "초대 메시지를 보낼 앱을 열었어요.";
 }
 
 async function copyLink() {
-  copied.value = false;
-  copyError.value = "";
+  resetFeedback()
 
   if (!navigator.clipboard?.writeText) {
-    copyError.value = "이 브라우저에서는 링크 복사를 지원하지 않아요.";
-    return;
+    feedback.value = '이 브라우저에서는 링크 복사를 지원하지 않아요.'
+    isError.value = true
+    return
   }
 
   try {
-    await navigator.clipboard.writeText(INVITE_LINK);
-    copied.value = true;
+    await navigator.clipboard.writeText(inviteLink)
+    copied.value = true
+    feedback.value = '참여 화면 링크를 복사했어요.'
   } catch {
-    copyError.value = "링크를 복사하지 못했어요.";
+    copied.value = false
+    feedback.value = '링크를 복사하지 못했어요. 다시 시도해주세요.'
+    isError.value = true
   }
 }
 </script>
+
 <template>
-  <main class="invite screen">
-    <div class="grabber" />
+  <main
+    class="relative mx-auto min-h-screen w-full max-w-[var(--mobile-content-width)] box-border rounded-[var(--radius-sheet)] bg-(--color-white) px-[var(--space-5)] py-[var(--space-9)] text-(--color-navy)"
+  >
+    <div
+      class="absolute left-1/2 top-[var(--space-4)] h-[var(--space-1)] w-[var(--space-8)] -translate-x-1/2 rounded-[var(--radius-sm)] bg-(--color-border)"
+    />
     <button
-      class="back"
+      class="absolute left-[var(--space-4)] top-[var(--space-8)] cursor-pointer border-0 bg-transparent p-0 text-(--color-navy)"
       type="button"
+      aria-label="뒤로 가기"
       @click="router.back()"
     >
-      ‹
+      <IconChevronLeft :size="28" />
     </button>
-    <h1>가족 초대하기</h1>
-    <p class="sub">
+    <h1 class="m-0 text-[length:var(--font-lg)] font-bold">
+      가족 초대하기
+    </h1>
+    <p
+      class="mb-[var(--space-7)] mt-[var(--space-2)] text-[length:var(--font-sm)] text-(--color-slate-muted)"
+    >
       함께 돌보는 가족을 초대해 지갑을 공유해요
     </p>
-    <label for="recipient">이메일 또는 전화번호</label><input
+    <label
+      class="mb-[var(--space-2)] block text-[length:var(--font-sm)] font-bold text-(--color-slate-dark)"
+      for="recipient"
+    >이메일, 전화번호 또는 멤버 ID</label>
+    <input
       id="recipient"
       v-model="recipient"
+      class="h-[var(--control-height)] w-full box-border rounded-[var(--radius-lg)] border border-(--color-border) bg-(--color-surface) px-[var(--space-4)] [font-family:var(--font-family)] text-[length:var(--font-md)]"
       placeholder="example@aewol.com"
-      @input="
-        inviteError = '';
-        inviteStatus = '';
-      "
-    ><button
-      class="primary"
+      @input="resetFeedback"
+    >
+    <button
+      class="mt-[var(--space-4)] h-[var(--control-height-lg)] w-full cursor-pointer rounded-[var(--radius-xl)] border-0 bg-(--color-navy) font-bold text-(--color-white) disabled:cursor-not-allowed disabled:opacity-45"
       type="button"
-      :disabled="!trimmedRecipient"
+      :disabled="!trimmedRecipient || isSending"
       @click="sendInvite"
     >
-      초대 보내기
+      {{ isSending ? '초대 보내는 중...' : '초대 보내기' }}
     </button>
-    <p
-      v-if="inviteStatus"
-      class="feedback success"
-      role="status"
+    <div
+      class="mb-[var(--space-6)] mt-[var(--space-10)] border-t border-(--color-border) pt-[var(--space-4)] text-center text-[length:var(--font-sm)] text-(--color-slate-muted)"
     >
-      {{ inviteStatus }}
-    </p>
-    <p
-      v-if="inviteError"
-      class="feedback error"
-      role="alert"
-    >
-      {{ inviteError }}
-    </p>
-    <div class="or">
-      또는 링크로 초대
+      또는 링크로 참여 화면 공유
     </div>
-    <div class="link-row">
-      <span>{{ INVITE_LINK }}</span><button
+    <div class="flex gap-[var(--space-4)]">
+      <span
+        class="min-h-[var(--control-height)] min-w-0 flex-1 [overflow-wrap:anywhere] rounded-[var(--radius-lg)] border border-(--color-border) bg-(--color-surface) p-[var(--space-4)] text-[length:var(--font-sm)] text-(--color-slate-dark)"
+      >{{ inviteLink }}</span>
+      <button
+        class="w-[calc(var(--space-8)*2)] cursor-pointer rounded-[var(--radius-lg)] border-0 bg-(--color-gold) font-bold text-(--color-navy)"
         type="button"
         @click="copyLink"
       >
-        {{ copied ? "복사됨" : "복사" }}
+        {{ copied ? '복사됨' : '복사' }}
       </button>
     </div>
     <p
-      v-if="copyError"
-      class="feedback error"
-      role="alert"
+      v-if="feedback"
+      class="mb-0 mt-[var(--space-4)] text-[length:var(--font-sm)] text-(--color-slate-dark)"
+      :class="{ 'text-(--color-danger)': isError }"
+      :role="isError ? 'alert' : 'status'"
     >
-      {{ copyError }}
+      {{ feedback }}
     </p>
   </main>
 </template>
-<style scoped>
-.screen {
-  position: relative;
-  width: min(100%, var(--mobile-content-width));
-  min-height: 460px;
-  margin: 0 auto;
-  padding: 44px 22px;
-  box-sizing: border-box;
-  color: var(--color-navy);
-  background: var(--color-white);
-  border-radius: var(--radius-sheet);
-}
-.grabber {
-  position: absolute;
-  top: 14px;
-  left: calc(50% - 20px);
-  width: 40px;
-  height: 5px;
-  border-radius: var(--radius-sm);
-  background: var(--color-border);
-}
-.back {
-  position: absolute;
-  top: 38px;
-  left: 18px;
-  border: 0;
-  background: none;
-  color: var(--color-navy);
-  font-size: 30px;
-  cursor: pointer;
-}
-.screen h1 {
-  margin: 0;
-  font-size: var(--font-lg);
-}
-.sub {
-  margin: 7px 0 36px;
-  color: var(--color-slate-muted);
-  font-size: 12.5px;
-}
-.screen label {
-  display: block;
-  margin-bottom: var(--space-2);
-  color: var(--color-slate-dark);
-  font-size: 12.5px;
-  font-weight: var(--font-bold);
-}
-.screen input {
-  width: 100%;
-  height: var(--control-height);
-  padding: 0 14px;
-  box-sizing: border-box;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
-  font:
-    13px var(--font-family);
-}
-.primary {
-  width: 100%;
-  height: var(--control-height-lg);
-  margin-top: var(--space-4);
-  border: 0;
-  border-radius: var(--radius-xl);
-  background: var(--color-navy);
-  color: var(--color-white);
-  font-weight: var(--font-bold);
-  cursor: pointer;
-}
-.primary:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-.or {
-  position: relative;
-  margin: 66px 0 26px;
-  border-top: 1px solid var(--color-border);
-  text-align: center;
-  color: var(--color-slate-muted);
-  font-size: 11.5px;
-}
-.or::before {
-  content: "또는 링크로 초대";
-  position: relative;
-  top: -9px;
-  padding: 0 8px;
-  background: var(--color-white);
-}
-.link-row {
-  display: flex;
-  gap: var(--space-4);
-}
-.link-row span {
-  flex: 1;
-  height: var(--control-height);
-  padding: 14px;
-  box-sizing: border-box;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
-  color: var(--color-slate-dark);
-  font-size: 12.5px;
-}
-.link-row button {
-  width: 80px;
-  border: 0;
-  border-radius: var(--radius-lg);
-  background: var(--color-gold);
-  color: var(--color-navy);
-  font-weight: var(--font-bold);
-  cursor: pointer;
-}
-.feedback {
-  margin: var(--space-2) 0 0;
-  font-size: var(--font-sm);
-}
-.feedback.success {
-  color: var(--color-success);
-}
-.feedback.error {
-  color: var(--color-danger);
-}
-</style>

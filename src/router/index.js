@@ -219,7 +219,37 @@ const authRoutes = [
     path: '/donation',
     name: 'Donation',
     component: () => import('@/views/donation/DonationView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', step: 'main' },
+  },
+  {
+    path: '/donation/give',
+    name: 'DonationGive',
+    component: () => import('@/views/donation/DonationView.vue'),
+    meta: { requiresAuth: true, step: 'give' },
+  },
+  {
+    path: '/donation/confirm',
+    name: 'DonationConfirm',
+    component: () => import('@/views/donation/DonationView.vue'),
+    meta: { requiresAuth: true, step: 'confirm' },
+  },
+  {
+    path: '/donation/complete',
+    name: 'DonationComplete',
+    component: () => import('@/views/donation/DonationView.vue'),
+    meta: { requiresAuth: true, step: 'complete' },
+  },
+  {
+    path: '/donation/explore',
+    name: 'DonationExplore',
+    component: () => import('@/views/donation/DonationView.vue'),
+    meta: { requiresAuth: true, step: 'explore' },
+  },
+  {
+    path: '/donation/settings',
+    name: 'DonationSettings',
+    component: () => import('@/views/donation/DonationView.vue'),
+    meta: { requiresAuth: true, step: 'settings' },
   },
   {
     path: '/donation/give',

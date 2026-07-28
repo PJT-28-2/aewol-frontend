@@ -1,6 +1,12 @@
 import api from './index'
 
 export const insuranceApi = {
+  // data: { petId, species, breed, age, medicalHistoryCodes: string[] }
+  // response.data: {
+  //   expectedAnnualMedicalCost, annualPremium, breakEvenNote,
+  //   insuranceAdvice: { verdict: 'FAVORABLE' | 'NEUTRAL' | 'UNFAVORABLE', message },
+  //   recommendedProducts: [{ productId, companyName, productName, premium, ... }]
+  // }
   simulate(data) {
     return api.post('/insurance/simulate', data)
   },
