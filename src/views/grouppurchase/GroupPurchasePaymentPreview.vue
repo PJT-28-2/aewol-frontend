@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import IconWallet from '@/components/common/icons/IconWallet.vue';
+import BottomSheet from '@/components/common/BottomSheet.vue';
 
 // TODO: 사용자 프로필/배송지 DB 연동 예정, 현재는 mock 데이터
 const shippingAddress = ref({
@@ -35,9 +36,44 @@ const discountAmount = computed(
 );
 const totalAmount = computed(() => productAmount.value - discountAmount.value);
 
-// 배송지 변경 모달은 아직 미구현 — 버튼만 배치
+// 배송지 변경 바텀시트 상태 및 입력 폼 (현재 배송지 값으로 초기화)
+const isAddressSheetOpen = ref(false);
+const addressForm = ref({
+  name: '',
+  phone: '',
+  postalCode: '',
+  address: '',
+  addressDetail: '',
+});
+
 function handleChangeAddress() {
-  // TODO: 배송지 변경 모달 구현 예정
+  addressForm.value = {
+    name: shippingAddress.value.recipientName,
+    phone: shippingAddress.value.recipientPhone,
+    postalCode: '',
+    address: shippingAddress.value.address,
+    addressDetail: '',
+  };
+  isAddressSheetOpen.value = true;
+}
+
+// TODO: 우편번호(주소 검색) API 연동 예정
+function handleSearchAddress() {}
+
+function closeAddressSheet() {
+  isAddressSheetOpen.value = false;
+}
+
+// 입력한 배송지로 교체 (현재는 화면 상태만 갱신, DB 저장은 추후 연동)
+function confirmAddress() {
+  shippingAddress.value = {
+    recipientName: addressForm.value.name,
+    recipientPhone: addressForm.value.phone,
+    address: addressForm.value.addressDetail
+      ? `${addressForm.value.address}, ${addressForm.value.addressDetail}`
+      : addressForm.value.address,
+  };
+  isAddressSheetOpen.value = false;
 }
 
 // 결제 API/라우팅은 아직 미구현 — 버튼만 배치
@@ -188,5 +224,89 @@ function handlePayment() {
     >
       {{ totalAmount.toLocaleString() }}원 결제하기
     </button>
+
+    <!-- 배송지 변경 바텀시트 -->
+    <BottomSheet v-model="isAddressSheetOpen" title="배송지 추가">
+      <p class="text-(length:--font-sm) text-(color:--color-gray-500) mb-(--space-4)">
+        상품을 받을 배송지를 입력해주세요
+      </p>
+
+      <div class="mb-(--space-4)">
+        <label class="block text-(length:--font-sm) font-semibold text-(color:--color-slate-dark) mb-(--space-2)">
+          이름
+        </label>
+        <input
+          v-model="addressForm.name"
+          type="text"
+          placeholder="홍길동"
+          class="w-full h-[46px] px-(--space-4) bg-(--color-surface) border border-(--color-border) rounded-(--radius-md) text-(length:--font-sm) text-(color:--color-navy) placeholder:text-(color:--color-gray-500)"
+        />
+      </div>
+
+      <div class="mb-(--space-4)">
+        <label class="block text-(length:--font-sm) font-semibold text-(color:--color-slate-dark) mb-(--space-2)">
+          전화번호
+        </label>
+        <input
+          v-model="addressForm.phone"
+          type="tel"
+          placeholder="010-1234-5678"
+          class="w-full h-[46px] px-(--space-4) bg-(--color-surface) border border-(--color-border) rounded-(--radius-md) text-(length:--font-sm) text-(color:--color-navy) placeholder:text-(color:--color-gray-500)"
+        />
+      </div>
+
+      <div class="mb-(--space-3)">
+        <label class="block text-(length:--font-sm) font-semibold text-(color:--color-slate-dark) mb-(--space-2)">
+          우편번호
+        </label>
+        <div class="flex gap-(--space-2)">
+          <input
+            v-model="addressForm.postalCode"
+            type="text"
+            placeholder="12345"
+            class="flex-1 min-w-0 h-[46px] px-(--space-4) bg-(--color-surface) border border-(--color-border) rounded-(--radius-md) text-(length:--font-sm) text-(color:--color-navy) placeholder:text-(color:--color-gray-500)"
+          />
+          <button
+            type="button"
+            class="shrink-0 w-20 h-[46px] bg-(--color-navy) text-(color:--color-white) rounded-(--radius-md) text-(length:--font-xs) font-bold"
+            @click="handleSearchAddress"
+          >
+            주소 찾기
+          </button>
+        </div>
+      </div>
+
+      <input
+        v-model="addressForm.address"
+        type="text"
+        placeholder="주소"
+        readonly
+        class="w-full h-[46px] px-(--space-4) mb-(--space-3) bg-(--color-surface) border border-(--color-border) rounded-(--radius-md) text-(length:--font-sm) text-(color:--color-navy)"
+      />
+
+      <input
+        v-model="addressForm.addressDetail"
+        type="text"
+        placeholder="동, 호수 등 상세주소 입력"
+        class="w-full h-[46px] px-(--space-4) mb-(--space-5) bg-(--color-surface) border border-(--color-border) rounded-(--radius-md) text-(length:--font-sm) text-(color:--color-navy) placeholder:text-(color:--color-gray-500)"
+      />
+
+      <div class="flex gap-(--space-3)">
+        <button
+          type="button"
+          class="flex-1 h-[52px] bg-(--color-white) border border-(--color-border) rounded-(--radius-lg) text-(length:--font-md) font-bold text-(color:--color-slate-dark)"
+          @click="closeAddressSheet"
+        >
+          취소
+        </button>
+        <button
+          type="button"
+          class="flex-1 h-[52px] bg-(--color-gold) rounded-(--radius-lg) text-(length:--font-md) font-bold text-(color:--color-navy)"
+          @click="confirmAddress"
+        >
+          확인
+        </button>
+      </div>
+    </BottomSheet>
   </div>
 </template>
