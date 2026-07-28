@@ -1,17 +1,16 @@
 <script setup>
 import { computed, ref } from 'vue';
+import { storeToRefs } from 'pinia';
 import { useRouter } from 'vue-router';
 import BottomSheet from '@/components/common/BottomSheet.vue';
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue';
 import IconChevronDown from '@/components/common/icons/IconChevronDown.vue';
+import { useGroupPurchaseCreateStore } from '@/stores/groupPurchaseCreate';
 
-// TODO: 실제 등록 연동은 별도 작업에서 구현
-const targetQuantity = ref('2');
-const deadline = ref(''); // 'YYYY-MM-DD'
-const deliveryMethod = '택배 배송';
-const deliveryFee = ref('');
-const deliveryEstimateDays = ref('3');
-const description = ref('');
+// 1~3단계가 공유하는 작성 데이터 (3단계 최종 확인에서 그대로 사용)
+const groupPurchaseCreateStore = useGroupPurchaseCreateStore();
+const { targetQuantity, deadline, deliveryMethod, deliveryFee, deliveryEstimateDays, description } =
+  storeToRefs(groupPurchaseCreateStore); // deadline: 'YYYY-MM-DD'
 
 function sanitizeDigits(value) {
   return value.replace(/[^0-9]/g, '');

@@ -1,18 +1,19 @@
 <script setup>
 import { computed, ref } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
 import BottomSheet from '@/components/common/BottomSheet.vue'
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 import IconCheck from '@/components/common/icons/IconCheck.vue'
 import IconChevronDown from '@/components/common/icons/IconChevronDown.vue'
 import IconImage from '@/components/common/icons/IconImage.vue'
+import { useGroupPurchaseCreateStore } from '@/stores/groupPurchaseCreate'
 
-// TODO: 실제 등록 연동은 별도 작업에서 구현
-const photos = ref([])
-const productName = ref('')
-const category = ref('')
-const originalPrice = ref('')
-const groupPrice = ref('')
+// 1~3단계가 공유하는 작성 데이터 (3단계 최종 확인에서 그대로 사용)
+const groupPurchaseCreateStore = useGroupPurchaseCreateStore()
+const { photos, productName, category, originalPrice, groupPrice } = storeToRefs(
+  groupPurchaseCreateStore,
+)
 
 const categoryOptions = ['사료', '간식', '영양제', '용품', '기타']
 const isCategorySheetOpen = ref(false)
