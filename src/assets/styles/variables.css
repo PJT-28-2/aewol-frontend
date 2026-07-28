@@ -6,6 +6,7 @@
   --color-gold-light: #f0c05a;
   --color-olive: #6a930d;
   --color-slate: #98a4bc;
+  --color-slate-light: #c9d1e3;
   --color-slate-muted: #8a93a6;
   --color-slate-dark: #4a5a7d;
   --color-white: #ffffff;
@@ -14,6 +15,18 @@
   --color-border: #eaeae4;
   --color-discount-bg: #fbe7c6;
   --color-discount-text: #d99a2b;
+  --color-olive-surface: #eef3e2;
+  --color-olive-dark: #3f5a08;
+  --color-olive-muted: #5c7a2e;
+  --color-gold-surface: #fbe7c6;
+  --color-gold-dark: #d99a2b;
+  --color-info-surface: #dce6f5;
+  --color-danger-surface: #f2e3e3;
+  --color-danger-dark: #8a3b3b;
+  --color-pastel-blue: #dce6f5;
+  --color-pastel-green: #eef3e2;
+  --color-kakao: #fee500;
+  --color-kakao-label: #181600;
 
   /* Colors - Gray Scale */
   --color-gray-100: #f8f9fa;
@@ -29,6 +42,9 @@
   /* Colors - Semantic */
   --color-success: #28a745;
   --color-danger: #dc3545;
+  --color-danger-soft: #f7e5e5;
+  --color-danger-strong: #c24d4d;
+  --color-danger-muted: #8a5252;
   --color-warning: #ffc107;
   --color-info: #17a2b8;
 
@@ -75,9 +91,31 @@
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+  --shadow-focus: 0 0 0 3px rgba(27, 42, 73, 0.1);
+
+  /* Control Heights */
+  --control-height-sm: 36px;
+  --control-height-md: 46px;
+  --control-height-lg: 52px;
+
+  /* Auth Success Screen */
+  --auth-success-image-size: 149px;
+  --auth-success-password-image-offset: 41px;
+  --auth-success-find-id-image-offset: -11px;
+  --auth-success-title-gap: 9px;
 
   /* Layout */
   --bottom-nav-height: 64px;
   --header-height: 56px;
   --layout-max-width: 480px;
+  --mobile-content-width: 390px;
+  /* Layout */
+  --bottom-nav-height: 64px;
+  --header-height: 56px;
+  --layout-max-width: 480px;
+  --mobile-content-width: 390px;
+  --control-height: 46px;
+  --share-icon-size: 60px;
+  --share-chart-size: 200px;
+  --share-chart-hole-size: 132px;
 }

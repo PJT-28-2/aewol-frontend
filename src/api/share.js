@@ -6,7 +6,11 @@ export const shareApi = {
   },
 
   getMembers() {
-    return api.get('/share/members')
+    return api.get('/share')
+  },
+
+  respondInvite(accessId, status) {
+    return api.put(`/share/${accessId}`, null, { params: { status } })
   },
 
   updateRole(memberId, role) {

@@ -17,12 +17,6 @@ defineProps({
     stroke-linejoin="round"
     aria-hidden="true"
   >
-    <circle
-      cx="12"
-      cy="12"
-      r="9"
-    />
-    <path d="M12 11v5" />
-    <path d="M12 8h.01" />
+    <polygon points="12 2 15.1 8.3 22 9.3 17 14.2 18.2 21 12 17.8 5.8 21 7 14.2 2 9.3 8.9 8.3 12 2" />
   </svg>
 </template>

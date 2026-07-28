@@ -32,6 +32,11 @@ const publicRoutes = [
       import('@/views/auth/PasswordResetView.vue'),
   },
   {
+    path: '/id/find',
+    name: 'FindId',
+    component: () => import('@/views/auth/FindIdView.vue'),
+  },
+  {
     path: '/callback/kakao',
     name: 'KakaoCallback',
     component: () =>
@@ -59,12 +64,6 @@ const authRoutes = [
     path: '/pets/register',
     name: 'PetRegister',
     component: () => import('@/views/pet/PetRegisterView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
-  },
-  {
-    path: '/pets/:petId',
-    name: 'PetDetail',
-    component: () => import('@/views/pet/PetDetailView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
@@ -186,6 +185,24 @@ const authRoutes = [
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
+    path: '/share/start',
+    name: 'ShareStart',
+    component: () => import('@/views/share/ShareStartView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/share/join',
+    name: 'ShareJoin',
+    component: () => import('@/views/share/ShareJoinView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/share/invite',
+    name: 'ShareInvite',
+    component: () => import('@/views/share/ShareInviteView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/group-purchase',
     name: 'GroupPurchaseList',
     component: () =>
@@ -236,13 +253,79 @@ const authRoutes = [
     path: '/donation',
     name: 'Donation',
     component: () => import('@/views/donation/DonationView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', step: 'main' },
+  },
+  {
+    path: '/donation/give',
+    name: 'DonationGive',
+    component: () => import('@/views/donation/DonationView.vue'),
+    meta: { requiresAuth: true, step: 'give' },
+  },
+  {
+    path: '/donation/confirm',
+    name: 'DonationConfirm',
+    component: () => import('@/views/donation/DonationView.vue'),
+    meta: { requiresAuth: true, step: 'confirm' },
+  },
+  {
+    path: '/donation/complete',
+    name: 'DonationComplete',
+    component: () => import('@/views/donation/DonationView.vue'),
+    meta: { requiresAuth: true, step: 'complete' },
+  },
+  {
+    path: '/donation/explore',
+    name: 'DonationExplore',
+    component: () => import('@/views/donation/DonationView.vue'),
+    meta: { requiresAuth: true, step: 'explore' },
+  },
+  {
+    path: '/donation/settings',
+    name: 'DonationSettings',
+    component: () => import('@/views/donation/DonationView.vue'),
+    meta: { requiresAuth: true, step: 'settings' },
+  },
+  {
+    path: '/donation/give',
+    name: 'DonationGive',
+    component: () => import('@/views/donation/DonationView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/donation/confirm',
+    name: 'DonationConfirm',
+    component: () => import('@/views/donation/DonationView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/donation/complete',
+    name: 'DonationComplete',
+    component: () => import('@/views/donation/DonationView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/donation/explore',
+    name: 'DonationExplore',
+    component: () => import('@/views/donation/DonationView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/donation/settings',
+    name: 'DonationSettings',
+    component: () => import('@/views/donation/DonationView.vue'),
+    meta: { requiresAuth: true },
   },
   {
     path: '/support',
     name: 'Support',
     component: () => import('@/views/support/SupportView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
+    path: '/support/:programId',
+    name: 'SupportDetail',
+    component: () => import('@/views/support/SupportView.vue'),
+    meta: { requiresAuth: true },
   },
   {
     path: '/emergency',
@@ -283,8 +366,7 @@ const PUBLIC_ROUTE_NAMES = new Set(
 router.beforeEach((to) => {
   const authStore = useAuthStore();
 
-  // TODO: 로그인 화면 구현 전까지 임시 인증 우회 (팀 공용, 다른 화면 개발용)
-  // 로그인 플로우 완성되면 제거 필요
+  // 로그인 화면 구현 전까지 로컬 화면 개발을 위한 인증 우회
   if (import.meta.env.DEV) {
     return;
   }

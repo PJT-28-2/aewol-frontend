@@ -14,15 +14,8 @@ defineProps({
     :stroke="color"
     stroke-width="2"
     stroke-linecap="round"
-    stroke-linejoin="round"
     aria-hidden="true"
   >
-    <circle
-      cx="12"
-      cy="12"
-      r="9"
-    />
-    <path d="M12 11v5" />
-    <path d="M12 8h.01" />
+    <path d="M12 5v14M5 12h14" />
   </svg>
 </template>
