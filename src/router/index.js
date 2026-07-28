@@ -297,6 +297,11 @@ const PUBLIC_ROUTE_NAMES = new Set(
 router.beforeEach((to) => {
   const authStore = useAuthStore();
 
+  // 로그인 화면 구현 전까지 로컬 화면 개발을 위한 인증 우회
+  if (import.meta.env.DEV) {
+    return;
+  }
+
   // Redirect unauthenticated users to login
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     return { path: '/login', query: { redirect: to.fullPath } };
