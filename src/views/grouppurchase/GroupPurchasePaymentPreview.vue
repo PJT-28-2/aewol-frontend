@@ -20,7 +20,7 @@ const product = ref({
 // 잔액부족 상태를 확인하기 위해 결제 금액(28,000원)보다 적은 잔액으로 설정
 const paymentMethod = ref({
   name: '애월 통합 지갑',
-  balance: 15000,
+  balance: 415000,
 });
 
 // 참여 화면에서 전달받은 수량 · 정가 · 할인가 기준으로 결제 금액 계산
@@ -51,6 +51,14 @@ const addressForm = ref({
   address: '',
   addressDetail: '',
 });
+const EMPTY_ADDRESS_FORM_ERRORS = {
+  name: '',
+  phone: '',
+  postalCode: '',
+  address: '',
+  addressDetail: '',
+};
+const addressFormErrors = ref({ ...EMPTY_ADDRESS_FORM_ERRORS });
 
 function handleChangeAddress() {
   addressForm.value = {
@@ -60,24 +68,64 @@ function handleChangeAddress() {
     address: shippingAddress.value?.address ?? '',
     addressDetail: '',
   };
+  addressFormErrors.value = { ...EMPTY_ADDRESS_FORM_ERRORS };
   isAddressSheetOpen.value = true;
 }
 
-// TODO: 우편번호(주소 검색) API 연동 예정
-function handleSearchAddress() {}
+// TODO: 실제 우편번호(주소 검색) API 연동 예정, 현재는 mock 값으로 채움
+function handleSearchAddress() {
+  addressForm.value.postalCode = '12345';
+  addressForm.value.address = '서울특별시 광진구 화양동';
+  addressFormErrors.value.postalCode = '';
+  addressFormErrors.value.address = '';
+}
 
 function closeAddressSheet() {
   isAddressSheetOpen.value = false;
 }
 
+// 필드별 빈 값·형식 검증, 통과 여부를 반환하고 오류 메시지를 채움
+function validateAddressForm() {
+  const form = addressForm.value;
+  const errors = { ...EMPTY_ADDRESS_FORM_ERRORS };
+
+  if (!form.name.trim()) {
+    errors.name = '이름을 입력해주세요';
+  }
+
+  if (!form.phone.trim()) {
+    errors.phone = '전화번호를 입력해주세요';
+  } else if (!/^01[0-9]-\d{3,4}-\d{4}$/.test(form.phone.trim())) {
+    errors.phone = '전화번호 형식이 올바르지 않아요 (예: 010-1234-5678)';
+  }
+
+  if (!form.postalCode.trim()) {
+    errors.postalCode = '우편번호를 입력해주세요';
+  } else if (!/^\d{5}$/.test(form.postalCode.trim())) {
+    errors.postalCode = '우편번호 5자리를 확인해주세요';
+  }
+
+  if (!form.address.trim()) {
+    errors.address = '주소 찾기로 주소를 입력해주세요';
+  }
+
+  if (!form.addressDetail.trim()) {
+    errors.addressDetail = '상세주소를 입력해주세요';
+  }
+
+  addressFormErrors.value = errors;
+
+  return Object.values(errors).every((message) => !message);
+}
+
 // 입력한 배송지로 교체 (현재는 화면 상태만 갱신, DB 저장은 추후 연동)
 function confirmAddress() {
+  if (!validateAddressForm()) return;
+
   shippingAddress.value = {
     recipientName: addressForm.value.name,
     recipientPhone: addressForm.value.phone,
-    address: addressForm.value.addressDetail
-      ? `${addressForm.value.address}, ${addressForm.value.addressDetail}`
-      : addressForm.value.address,
+    address: `${addressForm.value.address}, ${addressForm.value.addressDetail}`,
   };
   isAddressSheetOpen.value = false;
 }
@@ -125,7 +173,8 @@ function handleCharge() {
           </button>
         </div>
         <p class="text-(length:--font-md) font-bold text-(color:--color-navy)">
-          {{ shippingAddress.recipientName }} {{ shippingAddress.recipientPhone }}
+          {{ shippingAddress.recipientName }}
+          {{ shippingAddress.recipientPhone }}
         </p>
         <p
           class="text-(length:--font-sm) text-(color:--color-gray-500) mt-(--space-1)"
@@ -205,7 +254,11 @@ function handleCharge() {
         </p>
         <p
           class="shrink-0 text-(length:--font-xs)"
-          :class="isBalanceInsufficient ? 'font-bold text-(color:--color-danger-border)' : 'text-(color:--color-gray-500)'"
+          :class="
+            isBalanceInsufficient
+              ? 'font-bold text-(color:--color-danger-border)'
+              : 'text-(color:--color-gray-500)'
+          "
         >
           잔액 {{ paymentMethod.balance.toLocaleString() }}원
         </p>
@@ -216,10 +269,14 @@ function handleCharge() {
         v-if="isBalanceInsufficient"
         class="mt-(--space-3) bg-(--color-danger-bg) rounded-(--radius-lg) p-(--space-4)"
       >
-        <p class="text-(length:--font-sm) font-bold text-(color:--color-danger-border)">
+        <p
+          class="text-(length:--font-sm) font-bold text-(color:--color-danger-border)"
+        >
           ⚠️ 잔액이 부족해요
         </p>
-        <p class="text-(length:--font-xs) text-(color:--color-danger-text) mt-(--space-1)">
+        <p
+          class="text-(length:--font-xs) text-(color:--color-danger-text) mt-(--space-1)"
+        >
           {{ shortfallAmount.toLocaleString() }}원을 충전하면 결제할 수 있어요
         </p>
       </div>
@@ -228,10 +285,14 @@ function handleCharge() {
     <!-- 결제 금액: 잔액부족 상태에서는 상세 내역 없이 총액만 표시 -->
     <section v-if="isBalanceInsufficient" class="mb-(--space-4)">
       <div class="flex items-center justify-between">
-        <span class="text-(length:--font-sm) font-semibold text-(color:--color-slate-dark)">
+        <span
+          class="text-(length:--font-sm) font-semibold text-(color:--color-slate-dark)"
+        >
           결제 금액
         </span>
-        <span class="text-(length:--font-lg) font-bold text-(color:--color-navy)">
+        <span
+          class="text-(length:--font-lg) font-bold text-(color:--color-navy)"
+        >
           {{ totalAmount.toLocaleString() }}원
         </span>
       </div>
@@ -302,41 +363,75 @@ function handleCharge() {
       "
       @click="handlePayment"
     >
-      {{ shippingAddress ? `${totalAmount.toLocaleString()}원 결제하기` : '배송지를 먼저 등록해주세요' }}
+      {{
+        shippingAddress
+          ? `${totalAmount.toLocaleString()}원 결제하기`
+          : '배송지를 먼저 등록해주세요'
+      }}
     </button>
 
     <!-- 배송지 변경 바텀시트 -->
     <BottomSheet v-model="isAddressSheetOpen" title="배송지 추가">
-      <p class="text-(length:--font-sm) text-(color:--color-gray-500) mb-(--space-4)">
+      <p
+        class="text-(length:--font-sm) text-(color:--color-gray-500) mb-(--space-4)"
+      >
         상품을 받을 배송지를 입력해주세요
       </p>
 
       <div class="mb-(--space-4)">
-        <label class="block text-(length:--font-sm) font-semibold text-(color:--color-slate-dark) mb-(--space-2)">
+        <label
+          class="block text-(length:--font-sm) font-semibold text-(color:--color-slate-dark) mb-(--space-2)"
+        >
           이름
         </label>
         <input
           v-model="addressForm.name"
           type="text"
           placeholder="홍길동"
-          class="w-full h-[46px] px-(--space-4) bg-(--color-surface) border border-(--color-border) rounded-(--radius-md) text-(length:--font-sm) text-(color:--color-navy) placeholder:text-(color:--color-gray-500)"
+          class="w-full h-[46px] px-(--space-4) bg-(--color-surface) border rounded-(--radius-md) text-(length:--font-sm) text-(color:--color-navy) placeholder:text-(color:--color-gray-500)"
+          :class="
+            addressFormErrors.name
+              ? 'border-(--color-danger)'
+              : 'border-(--color-border)'
+          "
         />
+        <p
+          v-if="addressFormErrors.name"
+          class="text-(length:--font-xs) text-(color:--color-danger) mt-(--space-1)"
+        >
+          {{ addressFormErrors.name }}
+        </p>
       </div>
 
       <div class="mb-(--space-4)">
-        <label class="block text-(length:--font-sm) font-semibold text-(color:--color-slate-dark) mb-(--space-2)">
+        <label
+          class="block text-(length:--font-sm) font-semibold text-(color:--color-slate-dark) mb-(--space-2)"
+        >
           전화번호
         </label>
         <input
           v-model="addressForm.phone"
           type="tel"
           placeholder="010-1234-5678"
-          class="w-full h-[46px] px-(--space-4) bg-(--color-surface) border border-(--color-border) rounded-(--radius-md) text-(length:--font-sm) text-(color:--color-navy) placeholder:text-(color:--color-gray-500)"
+          class="w-full h-[46px] px-(--space-4) bg-(--color-surface) border rounded-(--radius-md) text-(length:--font-sm) text-(color:--color-navy) placeholder:text-(color:--color-gray-500)"
+          :class="
+            addressFormErrors.phone
+              ? 'border-(--color-danger)'
+              : 'border-(--color-border)'
+          "
         />
+        <p
+          v-if="addressFormErrors.phone"
+          class="text-(length:--font-xs) text-(color:--color-danger) mt-(--space-1)"
+        >
+          {{ addressFormErrors.phone }}
+        </p>
       </div>
 
       <div class="mb-(--space-3)">
-        <label class="block text-(length:--font-sm) font-semibold text-(color:--color-slate-dark) mb-(--space-2)">
+        <label
+          class="block text-(length:--font-sm) font-semibold text-(color:--color-slate-dark) mb-(--space-2)"
+        >
           우편번호
         </label>
         <div class="flex gap-(--space-2)">
@@ -344,7 +439,12 @@ function handleCharge() {
             v-model="addressForm.postalCode"
             type="text"
             placeholder="12345"
-            class="flex-1 min-w-0 h-[46px] px-(--space-4) bg-(--color-surface) border border-(--color-border) rounded-(--radius-md) text-(length:--font-sm) text-(color:--color-navy) placeholder:text-(color:--color-gray-500)"
+            class="flex-1 min-w-0 h-[46px] px-(--space-4) bg-(--color-surface) border rounded-(--radius-md) text-(length:--font-sm) text-(color:--color-navy) placeholder:text-(color:--color-gray-500)"
+            :class="
+              addressFormErrors.postalCode
+                ? 'border-(--color-danger)'
+                : 'border-(--color-border)'
+            "
           />
           <button
             type="button"
@@ -354,6 +454,12 @@ function handleCharge() {
             주소 찾기
           </button>
         </div>
+        <p
+          v-if="addressFormErrors.postalCode"
+          class="text-(length:--font-xs) text-(color:--color-danger) mt-(--space-1)"
+        >
+          {{ addressFormErrors.postalCode }}
+        </p>
       </div>
 
       <input
@@ -361,15 +467,39 @@ function handleCharge() {
         type="text"
         placeholder="주소"
         readonly
-        class="w-full h-[46px] px-(--space-4) mb-(--space-3) bg-(--color-surface) border border-(--color-border) rounded-(--radius-md) text-(length:--font-sm) text-(color:--color-navy)"
+        class="w-full h-[46px] px-(--space-4) bg-(--color-surface) border rounded-(--radius-md) text-(length:--font-sm) text-(color:--color-navy)"
+        :class="
+          addressFormErrors.address
+            ? 'border-(--color-danger)'
+            : 'border-(--color-border)'
+        "
       />
+      <p
+        v-if="addressFormErrors.address"
+        class="text-(length:--font-xs) text-(color:--color-danger) mt-(--space-1) mb-(--space-3)"
+      >
+        {{ addressFormErrors.address }}
+      </p>
+      <div v-else class="mb-(--space-3)" />
 
       <input
         v-model="addressForm.addressDetail"
         type="text"
         placeholder="동, 호수 등 상세주소 입력"
-        class="w-full h-[46px] px-(--space-4) mb-(--space-5) bg-(--color-surface) border border-(--color-border) rounded-(--radius-md) text-(length:--font-sm) text-(color:--color-navy) placeholder:text-(color:--color-gray-500)"
+        class="w-full h-[46px] px-(--space-4) bg-(--color-surface) border rounded-(--radius-md) text-(length:--font-sm) text-(color:--color-navy) placeholder:text-(color:--color-gray-500)"
+        :class="
+          addressFormErrors.addressDetail
+            ? 'border-(--color-danger)'
+            : 'border-(--color-border)'
+        "
       />
+      <p
+        v-if="addressFormErrors.addressDetail"
+        class="text-(length:--font-xs) text-(color:--color-danger) mt-(--space-1) mb-(--space-5)"
+      >
+        {{ addressFormErrors.addressDetail }}
+      </p>
+      <div v-else class="mb-(--space-5)" />
 
       <div class="flex gap-(--space-3)">
         <button
