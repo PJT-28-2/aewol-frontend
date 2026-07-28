@@ -198,14 +198,19 @@ function mockSimulate() {
           v-if="pets.length > 1"
           class="form-group"
         >
-          <label>반려동물 선택</label>
-          <div class="pet-select-list">
+          <label id="pet-select-label">반려동물 선택</label>
+          <div
+            class="pet-select-list"
+            role="group"
+            aria-labelledby="pet-select-label"
+          >
             <button
               v-for="pet in pets"
               :key="pet.id"
               type="button"
               class="pet-chip"
               :class="{ 'pet-chip--active': pet.id === selectedPetId }"
+              :aria-pressed="pet.id === selectedPetId"
               @click="selectedPetId = pet.id"
             >
               <component
@@ -232,7 +237,7 @@ function mockSimulate() {
         </div>
 
         <div class="form-group">
-          <label>병력</label>
+          <label id="medical-label">병력</label>
 
           <div
             v-if="medicalTags.length"
@@ -247,7 +252,7 @@ function mockSimulate() {
               <button
                 type="button"
                 class="tag-remove"
-                aria-label="병력 삭제"
+                :aria-label="`${tag.label} 삭제`"
                 @click="removeMedicalTag(tag.id)"
               >
                 ×
@@ -259,6 +264,9 @@ function mockSimulate() {
             <button
               type="button"
               class="tag-select-trigger"
+              aria-haspopup="dialog"
+              :aria-expanded="isMedicalSheetOpen"
+              aria-labelledby="medical-label"
               @click="isMedicalSheetOpen = true"
             >
               <span>{{ pendingLabel }}</span>
