@@ -5,6 +5,7 @@ import { useRouter } from 'vue-router'
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 import IconImage from '@/components/common/icons/IconImage.vue'
 import IconInfo from '@/components/common/icons/IconInfo.vue'
+// import { groupPurchaseApi } from '@/api/groupPurchase'
 import { useGroupPurchaseCreateStore } from '@/stores/groupPurchase'
 
 // 1~2단계에서 입력한 데이터를 그대로 가져와 확인 화면을 채움
@@ -61,6 +62,25 @@ const progressPercent = 0
 const router = useRouter()
 function goToPrevStep() {
   router.push('/group-purchase/create/step2')
+}
+
+// TODO: 백엔드 DB 연동 후 아래 API 호출 주석 해제 (async/await 함께 복원)
+function handleSubmit() {
+  // const payload = {
+  //   productName: productName.value,
+  //   category: category.value,
+  //   originalPrice: parsePrice(originalPrice.value),
+  //   groupPrice: parsePrice(groupPrice.value),
+  //   targetQuantity: Number(targetQuantity.value),
+  //   deadline: deadline.value,
+  //   deliveryMethod: deliveryMethod.value,
+  //   deliveryFee: parsePrice(deliveryFee.value),
+  //   deliveryEstimateDays: Number(deliveryEstimateDays.value),
+  //   description: description.value,
+  // }
+  // await groupPurchaseApi.create(payload) // POST /group-purchase/create
+
+  router.push('/group-purchase/my')
 }
 </script>
 
@@ -203,7 +223,7 @@ function goToPrevStep() {
       </p>
     </div>
 
-    <!-- 이전 / 글 올리기 (등록 API 연동은 별도 작업) -->
+    <!-- 이전 / 글 올리기: API 연동은 주석 처리, 지금은 /group-purchase/my로 이동만 -->
     <div class="flex gap-(--space-3)">
       <button
         type="button"
@@ -215,6 +235,7 @@ function goToPrevStep() {
       <button
         type="button"
         class="flex-1 h-[52px] rounded-2xl bg-(--color-gold) text-(color:--color-navy) text-(length:--font-md) font-bold"
+        @click="handleSubmit"
       >
         글 올리기
       </button>
