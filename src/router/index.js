@@ -42,27 +42,6 @@ const publicRoutes = [
       import('@/views/auth/KakaoCallbackView.vue'),
   },
 
-
-  {
-  path: '/account',
-  name: 'AccountManagement',
-  component: () => import('@/views/account/AccountManagement.vue'),
-},
-{
-  path: '/account/link',
-  name: 'AccountLinkSelect',
-  component: () => import('@/views/account/AccountLinkSelect.vue'),
-},
-{
-  path: '/account/link/verify',
-  name: 'AccountAuthOneWon',
-  component: () => import('@/views/account/AccountAuthOneWon.vue'),
-},
-{
-  path: '/account/link/complete',
-  name: 'AccountLinkComplete',
-  component: () => import('@/views/account/AccountLinkComplete.vue'),
-},
 // TODO: 고객센터 화면 파일들 커밋 후 주석 해제
 // {
 //   path: '/support',
@@ -95,6 +74,30 @@ const publicRoutes = [
 /*  Authenticated routes (require login, use DefaultLayout)           */
 /* ------------------------------------------------------------------ */
 const authRoutes = [
+  {
+    path: '/account',
+    name: 'AccountManagement',
+    component: () => import('@/views/account/AccountManagement.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
+    path: '/account/link',
+    name: 'AccountLinkSelect',
+    component: () => import('@/views/account/AccountLinkSelect.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
+    path: '/account/link/verify',
+    name: 'AccountAuthOneWon',
+    component: () => import('@/views/account/AccountAuthOneWon.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
+    path: '/account/link/complete',
+    name: 'AccountLinkComplete',
+    component: () => import('@/views/account/AccountLinkComplete.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
   {
     path: '/home',
     name: 'Home',
