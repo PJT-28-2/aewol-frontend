@@ -86,6 +86,7 @@
   --header-height: 56px;
   --layout-max-width: 480px;
   --mobile-content-width: 390px;
+  --control-height-sm: 36px;
   --control-height: 46px;
   --control-height-lg: 52px;
 }
