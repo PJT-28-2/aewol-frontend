@@ -13,7 +13,12 @@ const groupPrice = ref('')
 
 function handlePhotoChange(event) {
   const files = Array.from(event.target.files || [])
-  photos.value = files.slice(0, 5)
+  photos.value = [...photos.value, ...files].slice(0, 5)
+  event.target.value = ''
+}
+
+function removePhoto(index) {
+  photos.value = photos.value.filter((_, i) => i !== index)
 }
 
 // 콤마/원 등 숫자 외 문자를 제거해 실제 금액만 추출
@@ -71,7 +76,7 @@ function goToNextStep() {
       </p>
     </header>
 
-    <!-- 사진 업로드 (선택 항목) -->
+    <!-- 사진 업로드 (필수) -->
     <section class="mb-(--space-6)">
       <div class="flex items-center gap-(--space-2) mb-(--space-3)">
         <p class="text-(length:--font-sm) font-bold text-(color:--color-slate-dark)">
@@ -80,7 +85,7 @@ function goToNextStep() {
         <span
           class="px-(--space-2) py-(--space-1) rounded-full bg-(--color-discount-bg) text-(color:--color-discount-text) text-(length:--font-xs) font-bold"
         >
-          선택
+          필수
         </span>
       </div>
       <label
@@ -104,6 +109,29 @@ function goToNextStep() {
           최대 5장
         </span>
       </label>
+
+      <!-- 업로드한 파일명 목록 + 삭제 -->
+      <ul
+        v-if="photos.length > 0"
+        class="mt-(--space-2) flex flex-col gap-(--space-1)"
+      >
+        <li
+          v-for="(photo, index) in photos"
+          :key="`${photo.name}-${index}`"
+          class="flex items-center justify-between px-(--space-3) py-(--space-2) rounded-lg bg-(--color-surface)"
+        >
+          <span class="text-(length:--font-xs) text-(color:--color-slate-dark) truncate">
+            {{ photo.name }}
+          </span>
+          <button
+            type="button"
+            class="text-(length:--font-xs) font-bold text-(color:--color-slate-muted)"
+            @click="removePhoto(index)"
+          >
+            삭제
+          </button>
+        </li>
+      </ul>
     </section>
 
     <!-- 상품명 -->
