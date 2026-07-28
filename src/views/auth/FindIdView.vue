@@ -15,17 +15,31 @@ const isResultVisible = ref(false)
 const foundEmail = ref('')
 const remainingSeconds = ref(0)
 const toast = ref({ visible: false, type: 'success', message: '' })
+// API 연결 전 화면 검수를 위한 개발 전용 인증 우회 플래그다.
 const isDevelopmentPreview = import.meta.env.DEV
 
 let timerId
 let toastTimerId
 
+/**
+ * 남은 인증 유효 시간을 사용자가 읽기 쉬운 분·초 형식으로 제공한다.
+ *
+ * @returns {string} `mm:ss` 형식의 남은 시간
+ */
 const formattedTime = computed(() => {
   const minutes = Math.floor(remainingSeconds.value / 60)
   const seconds = remainingSeconds.value % 60
   return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
 })
 
+/**
+ * 입력 검증 및 인증 결과를 일정 시간 동안 안내한다.
+ * 메시지가 연속 발생하면 이전 종료 타이머를 교체해 최신 안내 시간을 보장한다.
+ *
+ * @param {string} message 사용자에게 표시할 안내 문구
+ * @param {'success'|'error'} [type='error'] 메시지 상태
+ * @returns {void}
+ */
 const showToast = (message, type = 'error') => {
   toast.value = { visible: true, type, message }
   window.clearTimeout(toastTimerId)
@@ -34,6 +48,12 @@ const showToast = (message, type = 'error') => {
   }, 3000)
 }
 
+/**
+ * 인증번호의 3분 유효 시간을 시작한다.
+ * 재전송 시 타이머가 중첩되지 않도록 기존 작업을 먼저 해제한다.
+ *
+ * @returns {void}
+ */
 const startTimer = () => {
   window.clearInterval(timerId)
   remainingSeconds.value = 180
@@ -48,7 +68,16 @@ const startTimer = () => {
   }, 1000)
 }
 
+/**
+ * 이름과 전화번호를 검증하고 본인 확인용 인증번호 발송을 시작한다.
+ * 현재 운영 API 명세가 없어 개발 모드에서만 발송 상태를 모의 처리한다.
+ *
+ * @returns {void}
+ */
 const handleRequestCode = () => {
+  // =========================
+  // 입력값 검증
+  // =========================
   if (!name.value.trim()) {
     showToast('이름을 입력해주세요')
     return
@@ -59,11 +88,16 @@ const handleRequestCode = () => {
     return
   }
 
+  // 운영 API 경로를 임의로 생성하면 계약 불일치 위험이 있어 명세 확정 전 호출을 차단한다.
   if (!isDevelopmentPreview) {
     showToast('아이디 찾기 인증 API 연결이 필요합니다')
     return
   }
 
+  // =========================
+  // 개발용 화면 상태 업데이트
+  // =========================
+  // 재전송 시 이전 인증 결과를 폐기하여 실제 인증 흐름과 같은 상태로 되돌린다.
   isCodeSent.value = true
   isVerified.value = false
   verificationCode.value = ''
@@ -71,19 +105,30 @@ const handleRequestCode = () => {
   showToast('개발용 인증번호는 123456입니다', 'success')
 }
 
+/**
+ * 입력한 인증번호를 확인하고 아이디 찾기 실행 권한을 활성화한다.
+ * 개발 환경에서는 Figma 후속 화면 검수를 위해 고정 번호만 허용한다.
+ *
+ * @returns {void}
+ */
 const handleVerifyCode = () => {
+  // =========================
+  // 인증번호 형식 및 상태 검증
+  // =========================
   if (!/^\d{6}$/.test(verificationCode.value)) {
     showToast('인증번호가 일치하지 않습니다')
     return
   }
 
   if (isDevelopmentPreview && verificationCode.value === '123456') {
+    // 운영 빌드에 우회가 포함되지 않도록 DEV 플래그와 고정 번호를 함께 검사한다.
     isVerified.value = true
     window.clearInterval(timerId)
     showToast('인증되었습니다', 'success')
     return
   }
 
+  // 운영 환경에서는 발송하지 않은 번호를 검증하지 않도록 선제적으로 차단한다.
   if (!isDevelopmentPreview && !isCodeSent.value) {
     showToast('인증번호를 먼저 받아주세요')
     return
@@ -92,17 +137,34 @@ const handleVerifyCode = () => {
   showToast('인증번호가 일치하지 않습니다')
 }
 
+/**
+ * 인증된 사용자의 가입 이메일을 결과 화면에 표시한다.
+ * API 명세 확정 전에는 개발용 응답으로 마스킹 UI만 검수한다.
+ *
+ * @returns {void}
+ */
 const handleFindId = () => {
+  // 상태가 임의로 변경되더라도 인증 전 결과 화면으로 넘어가지 않도록 다시 확인한다.
   if (!isVerified.value) {
     showToast('본인 인증을 완료해주세요')
     return
   }
 
+  // TODO: 아이디 찾기 API 명세 확정 후 서버가 반환한 이메일로 교체한다.
+  // 현재 값은 결과 화면과 마스킹 동작을 검수하기 위한 개발용 응답이다.
   foundEmail.value = 'honggildong@aewol.com'
+
+  // 결과 화면 자체가 성공을 설명하므로 기존 성공 토스트는 숨겨 중복 안내를 피한다.
   toast.value.visible = false
   isResultVisible.value = true
 }
 
+/**
+ * 가입 이메일의 도메인은 유지하고 로컬파트 일부를 숨긴다.
+ * 한 글자 계정이 그대로 노출되는 것을 막기 위해 길이에 따라 공개 범위를 제한한다.
+ *
+ * @returns {string} 마스킹된 이메일
+ */
 const maskedEmail = computed(() => {
   const [localPart, domain] = foundEmail.value.split('@')
   if (!localPart || !domain) return ''
@@ -115,10 +177,18 @@ const maskedEmail = computed(() => {
   return `${localPart.slice(0, visibleLength)}****@${domain}`
 })
 
-onBeforeUnmount(() => {
+/**
+ * 화면 종료 후 인증 및 토스트 타이머를 정리한다.
+ * 언마운트된 화면에서 상태가 변경되는 문제와 불필요한 메모리 점유를 방지한다.
+ *
+ * @returns {void}
+ */
+const clearTimers = () => {
   window.clearInterval(timerId)
   window.clearTimeout(toastTimerId)
-})
+}
+
+onBeforeUnmount(clearTimers)
 </script>
 
 <template>

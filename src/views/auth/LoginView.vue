@@ -17,6 +17,12 @@ const errorMessage = ref('')
 const KAKAO_OAUTH_STATE_KEY = 'kakaoOAuthState'
 let loginAttemptId = 0
 
+/**
+ * 카카오 인증 요청과 콜백을 연결할 일회성 CSRF 방지 값을 생성한다.
+ * 예측 가능성을 낮추기 위해 브라우저의 암호학적 난수 생성기를 사용한다.
+ *
+ * @returns {string} 32바이트 난수를 16진수로 변환한 OAuth state
+ */
 const createOAuthState = () => {
   const randomBytes = new Uint8Array(32)
   window.crypto.getRandomValues(randomBytes)
@@ -25,11 +31,23 @@ const createOAuthState = () => {
   ).join('')
 }
 
+/**
+ * 이메일 로그인 화면을 연다.
+ * 이전 로그인 방식에서 남은 오류가 폼에 노출되지 않도록 함께 초기화한다.
+ *
+ * @returns {void}
+ */
 const openEmailLogin = () => {
   errorMessage.value = ''
   showEmailForm.value = true
 }
 
+/**
+ * 이메일 로그인 화면을 닫고 민감한 입력 상태를 제거한다.
+ * 진행 중인 요청의 지연 응답이 시작 화면을 오염시키지 않도록 요청 식별값도 갱신한다.
+ *
+ * @returns {void}
+ */
 const closeEmailLogin = () => {
   loginAttemptId += 1
   showEmailForm.value = false
@@ -39,16 +57,32 @@ const closeEmailLogin = () => {
   isLoading.value = false
 }
 
+/**
+ * 이메일과 비밀번호로 로그인을 요청한다.
+ * 사용자가 요청 도중 화면을 닫은 경우 해당 응답은 더 이상 유효하지 않으므로 무시한다.
+ *
+ * @returns {Promise<void>}
+ */
 const handleEmailLogin = async () => {
+  // =========================
+  // 요청 상태 초기화
+  // =========================
   const currentAttemptId = ++loginAttemptId
   errorMessage.value = ''
   isLoading.value = true
 
   try {
+    // =========================
+    // 로그인 API 요청
+    // =========================
+    // 서버 인증 성공 후 토큰을 저장하기 위해 Pinia 인증 액션을 호출한다.
     await authStore.login(email.value, password.value)
+
+    // 뒤로가기로 무효화된 요청은 성공하더라도 화면을 이동시키지 않는다.
     if (currentAttemptId !== loginAttemptId) return
     await router.push('/home')
   } catch (error) {
+    // 뒤로간 뒤 도착한 오류가 로그인 선택 화면에 노출되는 것을 방지한다.
     if (currentAttemptId !== loginAttemptId) return
     errorMessage.value =
       error.response?.data?.message ?? '이메일 또는 비밀번호를 확인해 주세요.'
@@ -59,7 +93,16 @@ const handleEmailLogin = async () => {
   }
 }
 
+/**
+ * 카카오 OAuth 인증 화면으로 이동한다.
+ * 콜백 위조를 막기 위해 요청마다 state를 생성하고 현재 탭의 세션에 보관한다.
+ *
+ * @returns {void}
+ */
 const handleKakaoLogin = () => {
+  // =========================
+  // OAuth 설정 검증
+  // =========================
   const clientId = import.meta.env.VITE_KAKAO_REST_API_KEY
   const redirectUri =
     import.meta.env.VITE_KAKAO_REDIRECT_URI ||
@@ -70,9 +113,16 @@ const handleKakaoLogin = () => {
     return
   }
 
+  // =========================
+  // CSRF 방지 상태 생성
+  // =========================
   const state = createOAuthState()
+  // 다른 탭의 OAuth 요청과 섞이지 않도록 현재 탭에 한정된 sessionStorage를 사용한다.
   window.sessionStorage.setItem(KAKAO_OAUTH_STATE_KEY, state)
 
+  // =========================
+  // 카카오 인증 화면 이동
+  // =========================
   const params = new URLSearchParams({
     client_id: clientId,
     redirect_uri: redirectUri,

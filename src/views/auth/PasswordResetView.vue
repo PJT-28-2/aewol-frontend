@@ -17,17 +17,31 @@ const isComplete = ref(false)
 const isLoading = ref(false)
 const remainingSeconds = ref(0)
 const toast = ref({ visible: false, type: 'success', message: '' })
+// 화면 검수용 우회는 Vite 개발 서버에서만 활성화된다.
 const isDevelopmentPreview = import.meta.env.DEV
 
 let timerId
 let toastTimerId
 
+/**
+ * 남은 인증 유효 시간을 사용자가 읽기 쉬운 분·초 형식으로 제공한다.
+ *
+ * @returns {string} `mm:ss` 형식의 남은 시간
+ */
 const formattedTime = computed(() => {
   const minutes = Math.floor(remainingSeconds.value / 60)
   const seconds = remainingSeconds.value % 60
   return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
 })
 
+/**
+ * 유효성 검사 결과를 일정 시간 동안 토스트로 안내한다.
+ * 연속 메시지가 겹치지 않도록 기존 종료 타이머를 취소하고 다시 시작한다.
+ *
+ * @param {string} message 사용자에게 표시할 안내 문구
+ * @param {'success'|'error'} [type='error'] 메시지 상태
+ * @returns {void}
+ */
 const showToast = (message, type = 'error') => {
   toast.value = { visible: true, type, message }
   window.clearTimeout(toastTimerId)
@@ -36,6 +50,12 @@ const showToast = (message, type = 'error') => {
   }, 2600)
 }
 
+/**
+ * 인증번호의 3분 유효 시간을 시작한다.
+ * 재전송 시 기존 타이머가 중복 실행되지 않도록 먼저 정리한다.
+ *
+ * @returns {void}
+ */
 const startTimer = () => {
   window.clearInterval(timerId)
   remainingSeconds.value = 180
@@ -50,8 +70,20 @@ const startTimer = () => {
   }, 1000)
 }
 
+/**
+ * 인증번호를 발송하기 전에 이메일의 기본 형식을 확인한다.
+ *
+ * @param {string} value 검사할 이메일
+ * @returns {boolean} 이메일 기본 형식 충족 여부
+ */
 const isValidEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
 
+/**
+ * 새 비밀번호가 최소 길이와 문자 조합 규칙을 충족하는지 확인한다.
+ *
+ * @param {string} value 검사할 비밀번호
+ * @returns {boolean} 8자 이상이며 문자 종류를 2개 이상 조합했는지 여부
+ */
 const isValidPassword = (value) => {
   const categoryCount = [
     /[A-Za-z]/.test(value),
@@ -62,7 +94,16 @@ const isValidPassword = (value) => {
   return value.length >= 8 && categoryCount >= 2
 }
 
+/**
+ * 입력한 이메일로 비밀번호 재설정 인증번호를 요청한다.
+ * 개발 모드에서는 백엔드 없이 후속 화면을 검수할 수 있도록 발송을 모의 처리한다.
+ *
+ * @returns {Promise<void>}
+ */
 const handleRequestCode = async () => {
+  // =========================
+  // 입력값 검증
+  // =========================
   if (!isValidEmail(email.value)) {
     showToast('올바른 이메일 형식이 아닙니다')
     return
@@ -71,10 +112,19 @@ const handleRequestCode = async () => {
   isLoading.value = true
 
   try {
+    // =========================
+    // 인증번호 발송 API 요청
+    // =========================
+    // 개발 모드에서는 백엔드 없이 전체 화면 흐름을 확인한다.
     if (!isDevelopmentPreview) {
+      // 가입 이메일의 본인 확인을 시작하기 위해 인증번호 발송을 요청한다.
       await authApi.resetPasswordRequest(email.value)
     }
 
+    // =========================
+    // 화면 상태 업데이트
+    // =========================
+    // 재전송 시 이전 인증 결과를 폐기하여 과거 인증번호의 재사용을 막는다.
     isCodeSent.value = true
     isVerified.value = false
     verificationCode.value = ''
@@ -92,7 +142,17 @@ const handleRequestCode = async () => {
   }
 }
 
+/**
+ * 입력한 인증번호를 검증하고 새 비밀번호 설정 단계를 활성화한다.
+ * 운영 환경에서는 발송 여부와 만료 시간을 선검증해 불필요한 API 호출을 줄인다.
+ *
+ * @returns {Promise<void>}
+ */
 const handleVerifyCode = async () => {
+  // =========================
+  // 인증 상태 및 입력값 검증
+  // =========================
+  // 운영 환경에서는 실제 발송한 인증번호만 검증할 수 있어 발송 상태가 필수다.
   if (!isDevelopmentPreview && !isCodeSent.value) {
     showToast('인증번호를 먼저 받아주세요')
     return
@@ -103,6 +163,7 @@ const handleVerifyCode = async () => {
     return
   }
 
+  // 운영 환경의 만료된 인증번호는 서버 요청 전에 차단해 사용자에게 즉시 안내한다.
   if (!isDevelopmentPreview && remainingSeconds.value === 0) {
     showToast('인증번호가 만료되었습니다')
     return
@@ -111,15 +172,24 @@ const handleVerifyCode = async () => {
   isLoading.value = true
 
   try {
+    // =========================
+    // 인증번호 검증 API 요청
+    // =========================
     if (isDevelopmentPreview) {
+      // 개발용 고정 인증번호이며 프로덕션 빌드에서는 실행되지 않는다.
       if (verificationCode.value !== '123456') {
         showToast('인증번호가 일치하지 않습니다')
         return
       }
     } else {
+      // 서버가 이메일과 인증번호의 실제 일치 여부를 검증하도록 요청한다.
       await authApi.verifyEmail(email.value, verificationCode.value)
     }
 
+    // =========================
+    // 화면 상태 업데이트
+    // =========================
+    // 이 값이 true가 된 뒤에만 새 비밀번호 입력 영역을 렌더링한다.
     isVerified.value = true
     window.clearInterval(timerId)
     showToast('인증되었습니다', 'success')
@@ -130,7 +200,17 @@ const handleVerifyCode = async () => {
   }
 }
 
+/**
+ * 인증이 완료된 계정의 비밀번호를 새 값으로 변경한다.
+ * 프론트 검증은 빠른 UX를 위한 것이며 운영 환경의 최종 검증은 서버가 담당한다.
+ *
+ * @returns {Promise<void>}
+ */
 const handleResetPassword = async () => {
+  // =========================
+  // 인증 상태 및 입력값 검증
+  // =========================
+  // 화면 상태가 변조되더라도 인증 전 변경 요청을 만들지 않도록 다시 확인한다.
   if (!isVerified.value) {
     showToast('이메일 인증을 완료해주세요')
     return
@@ -149,6 +229,10 @@ const handleResetPassword = async () => {
   isLoading.value = true
 
   try {
+    // =========================
+    // 비밀번호 변경 API 요청
+    // =========================
+    // 운영 환경에서는 서버가 인증 완료 여부와 비밀번호 규칙을 다시 검증해야 한다.
     if (!isDevelopmentPreview) {
       await authApi.resetPassword({
         email: email.value,
@@ -157,6 +241,10 @@ const handleResetPassword = async () => {
       })
     }
 
+    // =========================
+    // 완료 화면 상태 업데이트
+    // =========================
+    // 성공 안내를 토스트와 중복 표시하지 않고 Figma 완료 화면으로 전환한다.
     toast.value.visible = false
     isComplete.value = true
   } catch (error) {
@@ -166,10 +254,18 @@ const handleResetPassword = async () => {
   }
 }
 
-onBeforeUnmount(() => {
+/**
+ * 화면 종료 후 남은 타이머를 정리한다.
+ * 언마운트된 화면의 상태 변경과 불필요한 메모리 점유를 방지한다.
+ *
+ * @returns {void}
+ */
+const clearTimers = () => {
   window.clearInterval(timerId)
   window.clearTimeout(toastTimerId)
-})
+}
+
+onBeforeUnmount(clearTimers)
 </script>
 
 <template>
