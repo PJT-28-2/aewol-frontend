@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import { useGroupPurchaseCreateStore } from '@/stores/groupPurchase';
 
 /* ------------------------------------------------------------------ */
 /*  Public (no auth required) routes                                  */
@@ -288,6 +289,16 @@ router.beforeEach((to) => {
     to.name !== 'KakaoCallback'
   ) {
     return { path: '/home' };
+  }
+});
+
+// 상품등록 1~3단계(/group-purchase/create*)를 벗어나면 작성 중이던 데이터 초기화
+router.afterEach((to, from) => {
+  const CREATE_FLOW_PREFIX = '/group-purchase/create';
+  const isLeavingCreateFlow =
+    from.path.startsWith(CREATE_FLOW_PREFIX) && !to.path.startsWith(CREATE_FLOW_PREFIX);
+  if (isLeavingCreateFlow) {
+    useGroupPurchaseCreateStore().reset();
   }
 });
 
