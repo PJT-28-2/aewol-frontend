@@ -2,9 +2,7 @@
 import { ref, computed } from 'vue'
 import IconDog from '@/components/common/icons/IconDog.vue'
 import IconCat from '@/components/common/icons/IconCat.vue'
-import IconChevronDown from '@/components/common/icons/IconChevronDown.vue'
-import IconCheck from '@/components/common/icons/IconCheck.vue'
-import BottomSheet from '@/components/common/BottomSheet.vue'
+import MedicalHistoryPicker from '@/components/insurance/MedicalHistoryPicker.vue'
 
 // TODO(backend): 보험 시뮬레이터용 반려동물 프로필 조회 GET API가 아직 없어 목업으로 대체.
 // usePetStore는 이 화면에서 쓰지 않음 — 전용 API가 나오면 아래 목업을 그 호출로 교체.
@@ -17,67 +15,7 @@ const selectedPet = computed(
   () => pets.value.find((pet) => pet.id === selectedPetId.value) || null,
 )
 
-const medicalOptions = [
-  { code: 'DENTAL', label: '치과·구강질환' },
-  { code: 'URINARY', label: '비뇨기질환' },
-  { code: 'FOREIGN_BODY', label: '이물섭취/이물제거' },
-  { code: 'JOINT', label: '슬개골·관절질환' },
-  { code: 'SKIN', label: '피부질환' },
-  { code: 'DIGESTIVE', label: '소화기질환' },
-  { code: 'NONE', label: '병력 없음' },
-  { code: 'OTHER', label: '기타' },
-]
-
-const pendingCode = ref(medicalOptions[0].code)
-const pendingOtherText = ref('')
 const medicalTags = ref([])
-const tagFeedback = ref('')
-let nextTagId = 0
-
-const isMedicalSheetOpen = ref(false)
-const pendingLabel = computed(
-  () => medicalOptions.find((opt) => opt.code === pendingCode.value)?.label ?? '',
-)
-
-function selectPendingCode(code) {
-  pendingCode.value = code
-  isMedicalSheetOpen.value = false
-}
-
-function addMedicalTag() {
-  tagFeedback.value = ''
-
-  const isOther = pendingCode.value === 'OTHER'
-  const label = isOther
-    ? pendingOtherText.value.trim()
-    : medicalOptions.find((opt) => opt.code === pendingCode.value)?.label
-
-  if (isOther && !label) {
-    tagFeedback.value = '병력 내용을 입력해주세요.'
-    return
-  }
-
-  const isDuplicate = medicalTags.value.some((tag) =>
-    isOther ? tag.code === 'OTHER' && tag.label === label : tag.code === pendingCode.value,
-  )
-  if (isDuplicate) {
-    tagFeedback.value = '이미 추가된 병력이에요.'
-    return
-  }
-
-  if (pendingCode.value === 'NONE') {
-    medicalTags.value = []
-  } else {
-    medicalTags.value = medicalTags.value.filter((tag) => tag.code !== 'NONE')
-  }
-
-  medicalTags.value.push({ id: nextTagId++, code: pendingCode.value, label })
-  pendingOtherText.value = ''
-}
-
-function removeMedicalTag(id) {
-  medicalTags.value = medicalTags.value.filter((tag) => tag.id !== id)
-}
 
 const result = ref(null)
 const isLoading = ref(false)
@@ -260,74 +198,7 @@ function mockSimulate() {
           </div>
         </div>
 
-        <div>
-          <label
-            id="medical-label"
-            class="block text-(length:--font-sm) font-medium text-(color:--color-gray-700) mb-(--space-2)"
-          >
-            병력
-          </label>
-
-          <div
-            v-if="medicalTags.length"
-            class="flex flex-wrap gap-(--space-2) mb-(--space-3)"
-          >
-            <span
-              v-for="tag in medicalTags"
-              :key="tag.id"
-              class="inline-flex items-center gap-(--space-2) py-(--space-1) px-(--space-3) bg-(--color-gray-100) rounded-(--radius-full) text-(length:--font-sm) text-(color:--color-gray-800)"
-            >
-              {{ tag.label }}
-              <button
-                type="button"
-                class="text-(color:--color-gray-500) text-(length:--font-md) leading-none"
-                :aria-label="`${tag.label} 삭제`"
-                @click="removeMedicalTag(tag.id)"
-              >
-                ×
-              </button>
-            </span>
-          </div>
-
-          <div class="flex gap-(--space-2)">
-            <button
-              type="button"
-              class="flex-1 min-w-0 flex items-center justify-between gap-(--space-2) py-(--space-3) px-(--space-4) border border-(--color-gray-300) rounded-(--radius-md) text-(length:--font-base) bg-(--color-white) text-(color:--color-gray-800)"
-              aria-haspopup="dialog"
-              :aria-expanded="isMedicalSheetOpen"
-              aria-labelledby="medical-label"
-              @click="isMedicalSheetOpen = true"
-            >
-              <span>{{ pendingLabel }}</span>
-              <IconChevronDown
-                size="16"
-                color="var(--color-gray-500)"
-              />
-            </button>
-            <input
-              v-if="pendingCode === 'OTHER'"
-              v-model="pendingOtherText"
-              type="text"
-              placeholder="병력을 입력해주세요"
-              aria-label="기타 병력 직접 입력"
-              class="flex-1 min-w-0 py-(--space-3) px-(--space-4) border border-(--color-gray-300) rounded-(--radius-md) text-(length:--font-base)"
-            >
-            <button
-              type="button"
-              class="flex-none px-(--space-4) bg-(--color-navy) text-(color:--color-white) rounded-(--radius-md) text-(length:--font-sm) font-semibold"
-              @click="addMedicalTag"
-            >
-              + 추가
-            </button>
-          </div>
-
-          <p
-            v-if="tagFeedback"
-            class="mt-(--space-2) text-(color:--color-danger) text-(length:--font-sm)"
-          >
-            {{ tagFeedback }}
-          </p>
-        </div>
+        <MedicalHistoryPicker v-model="medicalTags" />
 
         <p
           v-if="errorMessage"
@@ -433,36 +304,6 @@ function mockSimulate() {
           </ul>
         </div>
       </section>
-
-      <BottomSheet
-        v-model="isMedicalSheetOpen"
-        title="병력 선택"
-      >
-        <ul>
-          <li
-            v-for="opt in medicalOptions"
-            :key="opt.code"
-          >
-            <button
-              type="button"
-              class="w-full flex items-center justify-between py-(--space-3) text-(length:--font-base)"
-              :class="
-                opt.code === pendingCode
-                  ? 'text-(color:--color-gold) font-bold'
-                  : 'text-(color:--color-slate-dark)'
-              "
-              @click="selectPendingCode(opt.code)"
-            >
-              <span>{{ opt.label }}</span>
-              <IconCheck
-                v-if="opt.code === pendingCode"
-                size="18"
-                color="var(--color-gold)"
-              />
-            </button>
-          </li>
-        </ul>
-      </BottomSheet>
     </template>
   </div>
 </template>
