@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue';
-import IconUserCircle from '@/components/common/icons/IconUserCircle.vue';
+import IconUser from '@/components/common/icons/IconUser.vue';
 
 // TODO: 백엔드 API 연동 후 mock 데이터 제거하고 실제 fetch로 교체
 const groupPurchases = ref([
@@ -100,9 +100,10 @@ const filteredGroupPurchases = computed(() => {
       <!-- 마이페이지 진입 버튼: 텍스트 없이 프로필 아이콘만 표시 -->
       <router-link
         to="/group-purchase/my"
+        aria-label="마이페이지"
         class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-(--color-gray-100) no-underline"
       >
-        <IconUserCircle :size="24" color="var(--color-navy)" />
+        <IconUser :size="24" color="var(--color-navy)" />
       </router-link>
     </header>
 
