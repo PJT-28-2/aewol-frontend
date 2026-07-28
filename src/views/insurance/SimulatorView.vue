@@ -89,6 +89,12 @@ const verdictLabels = {
   UNFAVORABLE: '가입 불리',
 }
 
+const verdictColorClasses = {
+  FAVORABLE: 'text-(color:--color-gold-light)',
+  NEUTRAL: 'text-(color:--color-gray-300)',
+  UNFAVORABLE: 'text-(color:--color-danger)',
+}
+
 async function handleSimulate() {
   if (!selectedPet.value) {
     errorMessage.value = '반려동물을 선택해주세요.'
@@ -170,22 +176,26 @@ function mockSimulate() {
 </script>
 
 <template>
-  <div class="simulator-page">
-    <header class="page-header">
-      <h1>펫보험 손익분기 시뮬레이터</h1>
-      <p class="page-description">
+  <div
+    class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))] bg-(--color-bg) min-h-[calc(100vh-var(--header-height)-var(--bottom-nav-height))]"
+  >
+    <header class="mb-(--space-5)">
+      <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">
+        펫보험 손익분기 시뮬레이터
+      </h1>
+      <p class="text-(length:--font-md) text-(color:--color-gray-600) mt-(--space-2)">
         가입이 유리한지 미리 계산해보세요
       </p>
     </header>
 
     <div
       v-if="pets.length === 0"
-      class="empty-state card"
+      class="text-center text-(color:--color-gray-600) bg-(--color-white) rounded-(--radius-lg) p-(--space-5) shadow-(--shadow-sm)"
     >
       <p>등록된 반려동물이 없어요.</p>
       <router-link
         to="/pets/register"
-        class="btn-link"
+        class="inline-block mt-(--space-3) text-(color:--color-navy) font-semibold"
       >
         반려동물 등록하러 가기
       </router-link>
@@ -194,16 +204,18 @@ function mockSimulate() {
     <template v-else>
       <form
         v-if="!result"
-        class="simulator-form"
+        class="flex flex-col gap-(--space-5)"
         @submit.prevent="handleSimulate"
       >
-        <div
-          v-if="pets.length > 1"
-          class="form-group"
-        >
-          <label id="pet-select-label">반려동물 선택</label>
+        <div v-if="pets.length > 1">
+          <label
+            id="pet-select-label"
+            class="block text-(length:--font-sm) font-medium text-(color:--color-gray-700) mb-(--space-2)"
+          >
+            반려동물 선택
+          </label>
           <div
-            class="pet-select-list"
+            class="flex flex-wrap gap-(--space-2)"
             role="group"
             aria-labelledby="pet-select-label"
           >
@@ -211,8 +223,12 @@ function mockSimulate() {
               v-for="pet in pets"
               :key="pet.id"
               type="button"
-              class="pet-chip"
-              :class="{ 'pet-chip--active': pet.id === selectedPetId }"
+              class="inline-flex items-center gap-(--space-1) py-(--space-2) px-(--space-3) border rounded-(--radius-full) text-(length:--font-sm)"
+              :class="
+                pet.id === selectedPetId
+                  ? 'border-(--color-navy) bg-(--color-navy) text-(color:--color-white)'
+                  : 'border-(--color-gray-300) bg-(--color-white) text-(color:--color-gray-700)'
+              "
               :aria-pressed="pet.id === selectedPetId"
               @click="selectedPetId = pet.id"
             >
@@ -226,36 +242,45 @@ function mockSimulate() {
           </div>
         </div>
 
-        <div class="form-group">
-          <label>견종</label>
-          <div class="readonly-field">
+        <div>
+          <label class="block text-(length:--font-sm) font-medium text-(color:--color-gray-700) mb-(--space-2)">
+            견종
+          </label>
+          <div class="py-(--space-3) px-(--space-4) bg-(--color-gray-100) rounded-(--radius-md) text-(length:--font-base) text-(color:--color-gray-800)">
             {{ selectedPet?.breed }}
           </div>
         </div>
 
-        <div class="form-group">
-          <label>나이</label>
-          <div class="readonly-field">
+        <div>
+          <label class="block text-(length:--font-sm) font-medium text-(color:--color-gray-700) mb-(--space-2)">
+            나이
+          </label>
+          <div class="py-(--space-3) px-(--space-4) bg-(--color-gray-100) rounded-(--radius-md) text-(length:--font-base) text-(color:--color-gray-800)">
             {{ selectedPet?.age }}세
           </div>
         </div>
 
-        <div class="form-group">
-          <label id="medical-label">병력</label>
+        <div>
+          <label
+            id="medical-label"
+            class="block text-(length:--font-sm) font-medium text-(color:--color-gray-700) mb-(--space-2)"
+          >
+            병력
+          </label>
 
           <div
             v-if="medicalTags.length"
-            class="tag-list"
+            class="flex flex-wrap gap-(--space-2) mb-(--space-3)"
           >
             <span
               v-for="tag in medicalTags"
               :key="tag.id"
-              class="tag-chip"
+              class="inline-flex items-center gap-(--space-2) py-(--space-1) px-(--space-3) bg-(--color-gray-100) rounded-(--radius-full) text-(length:--font-sm) text-(color:--color-gray-800)"
             >
               {{ tag.label }}
               <button
                 type="button"
-                class="tag-remove"
+                class="text-(color:--color-gray-500) text-(length:--font-md) leading-none"
                 :aria-label="`${tag.label} 삭제`"
                 @click="removeMedicalTag(tag.id)"
               >
@@ -264,10 +289,10 @@ function mockSimulate() {
             </span>
           </div>
 
-          <div class="tag-input-row">
+          <div class="flex gap-(--space-2)">
             <button
               type="button"
-              class="tag-select-trigger"
+              class="flex-1 min-w-0 flex items-center justify-between gap-(--space-2) py-(--space-3) px-(--space-4) border border-(--color-gray-300) rounded-(--radius-md) text-(length:--font-base) bg-(--color-white) text-(color:--color-gray-800)"
               aria-haspopup="dialog"
               :aria-expanded="isMedicalSheetOpen"
               aria-labelledby="medical-label"
@@ -284,11 +309,12 @@ function mockSimulate() {
               v-model="pendingOtherText"
               type="text"
               placeholder="병력을 입력해주세요"
-              class="tag-other-input"
+              aria-label="기타 병력 직접 입력"
+              class="flex-1 min-w-0 py-(--space-3) px-(--space-4) border border-(--color-gray-300) rounded-(--radius-md) text-(length:--font-base)"
             >
             <button
               type="button"
-              class="btn-add-tag"
+              class="flex-none px-(--space-4) bg-(--color-navy) text-(color:--color-white) rounded-(--radius-md) text-(length:--font-sm) font-semibold"
               @click="addMedicalTag"
             >
               + 추가
@@ -297,7 +323,7 @@ function mockSimulate() {
 
           <p
             v-if="tagFeedback"
-            class="tag-feedback"
+            class="mt-(--space-2) text-(color:--color-danger) text-(length:--font-sm)"
           >
             {{ tagFeedback }}
           </p>
@@ -305,14 +331,14 @@ function mockSimulate() {
 
         <p
           v-if="errorMessage"
-          class="error-text"
+          class="text-(color:--color-danger) text-(length:--font-sm)"
         >
           {{ errorMessage }}
         </p>
 
         <button
           type="submit"
-          class="btn-primary"
+          class="w-full py-(--space-3) px-(--space-4) bg-(--color-gold) text-(color:--color-white) rounded-(--radius-md) text-(length:--font-base) font-semibold disabled:opacity-60 disabled:cursor-not-allowed"
           :disabled="isLoading"
         >
           {{ isLoading ? '계산 중...' : '결과 계산하기' }}
@@ -321,81 +347,84 @@ function mockSimulate() {
 
       <section
         v-else
-        class="result-section"
+        class="flex flex-col gap-(--space-5)"
       >
-        <div class="advice-card">
+        <div class="bg-(--color-navy) text-(color:--color-white) rounded-(--radius-lg) p-(--space-5)">
           <span
-            class="advice-verdict"
-            :class="`advice-verdict--${result.insuranceAdvice.verdict.toLowerCase()}`"
+            class="inline-block py-(--space-1) px-(--space-3) rounded-(--radius-full) text-(length:--font-xs) font-semibold bg-white/15"
+            :class="verdictColorClasses[result.insuranceAdvice.verdict]"
           >
             {{ verdictLabels[result.insuranceAdvice.verdict] }}
           </span>
-          <p class="advice-message">
+          <p class="text-(length:--font-lg) font-bold mt-(--space-3)">
             {{ result.insuranceAdvice.message }}
           </p>
 
-          <div class="advice-figures">
-            <div class="advice-figure">
-              <span class="advice-figure-label">예상 연 의료비</span>
-              <span class="advice-figure-value advice-figure-value--highlight">
+          <div class="flex justify-between mt-(--space-5) pt-(--space-4) border-t border-white/15">
+            <div class="flex flex-col gap-(--space-1)">
+              <span class="text-(length:--font-xs) opacity-70">예상 연 의료비</span>
+              <span class="text-(length:--font-lg) font-bold text-(color:--color-gold-light)">
                 {{ result.expectedAnnualMedicalCost.toLocaleString() }}원
               </span>
             </div>
-            <div class="advice-figure">
-              <span class="advice-figure-label">연 보험료</span>
-              <span class="advice-figure-value">
+            <div class="flex flex-col gap-(--space-1) text-right">
+              <span class="text-(length:--font-xs) opacity-70">연 보험료</span>
+              <span class="text-(length:--font-lg) font-bold">
                 {{ result.annualPremium.toLocaleString() }}원
               </span>
             </div>
           </div>
 
-          <p class="advice-note">
+          <p class="mt-(--space-4) text-(length:--font-xs) opacity-70">
             {{ result.breakEvenNote }}
           </p>
         </div>
 
         <button
-          class="btn-outline"
+          class="w-full py-(--space-3) px-(--space-4) border border-(--color-gray-300) rounded-(--radius-md) text-(length:--font-md) text-(color:--color-gray-600)"
           @click="handleReset"
         >
           다시 계산하기
         </button>
 
-        <div class="product-section">
-          <h2 class="product-section-title">
+        <div>
+          <h2 class="text-(length:--font-lg) font-semibold text-(color:--color-navy)">
             추천 보험
           </h2>
-          <p class="product-section-desc">
+          <p class="text-(length:--font-sm) text-(color:--color-gray-500) mt-(--space-1) mb-(--space-4)">
             이 프로필에 맞는 상품이에요
           </p>
 
-          <ul class="product-list">
+          <ul class="flex flex-col gap-(--space-4)">
             <li
               v-for="product in result.recommendedProducts"
               :key="product.productId"
-              class="product-card"
+              class="bg-(--color-white) border border-(--color-gray-200) rounded-(--radius-lg) p-(--space-4) shadow-(--shadow-sm)"
             >
-              <span class="product-badge">{{ product.badge }}</span>
-              <p class="product-company">
+              <span class="inline-block py-(--space-1) px-(--space-2) bg-(--color-gray-100) text-(color:--color-gray-600) rounded-(--radius-sm) text-(length:--font-xs) font-medium">
+                {{ product.badge }}
+              </span>
+              <p class="text-(length:--font-sm) text-(color:--color-gray-500) mt-(--space-2)">
                 {{ product.companyName }}
               </p>
-              <p class="product-name">
+              <p class="text-(length:--font-base) font-semibold text-(color:--color-gray-900) mt-(--space-1)">
                 {{ product.productName }}
               </p>
-              <p class="product-premium">
+              <p class="text-(length:--font-md) font-bold text-(color:--color-navy) mt-(--space-2)">
                 월 {{ product.premium.toLocaleString() }}원 · 가입연령 {{ product.joinAgeRange }}
               </p>
-              <ul class="product-coverage-list">
+              <ul class="mt-(--space-3) flex flex-col gap-(--space-1)">
                 <li
                   v-for="coverage in product.coverages"
                   :key="coverage"
+                  class="text-(length:--font-sm) text-(color:--color-gray-600)"
                 >
                   {{ coverage }}
                 </li>
               </ul>
               <button
                 type="button"
-                class="btn-view-product"
+                class="w-full mt-(--space-4) py-(--space-3) px-(--space-4) bg-(--color-navy) text-(color:--color-white) rounded-(--radius-md) text-(length:--font-base) font-semibold"
                 @click="openProduct(product.productUrl)"
               >
                 상품 보러가기
@@ -437,365 +466,3 @@ function mockSimulate() {
     </template>
   </div>
 </template>
-
-<style scoped>
-.simulator-page {
-  padding: var(--space-4);
-  padding-bottom: calc(var(--bottom-nav-height) + var(--space-4));
-  background-color: var(--color-bg);
-  min-height: calc(100vh - var(--header-height) - var(--bottom-nav-height));
-}
-
-.page-header {
-  margin-bottom: var(--space-5);
-}
-
-.page-header h1 {
-  font-size: var(--font-2xl);
-  font-weight: var(--font-bold);
-  color: var(--color-navy);
-}
-
-.page-description {
-  font-size: var(--font-md);
-  color: var(--color-gray-600);
-  margin-top: var(--space-2);
-}
-
-.card {
-  background-color: var(--color-white);
-  border-radius: var(--radius-lg);
-  padding: var(--space-5);
-  box-shadow: var(--shadow-sm);
-}
-
-.empty-state {
-  text-align: center;
-  color: var(--color-gray-600);
-}
-
-.btn-link {
-  display: inline-block;
-  margin-top: var(--space-3);
-  color: var(--color-navy);
-  font-weight: var(--font-semibold);
-  text-decoration: none;
-}
-
-.simulator-form {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-5);
-}
-
-.form-group > label {
-  display: block;
-  font-size: var(--font-sm);
-  font-weight: var(--font-medium);
-  color: var(--color-gray-700);
-  margin-bottom: var(--space-2);
-}
-
-.readonly-field {
-  padding: var(--space-3) var(--space-4);
-  background-color: var(--color-gray-100);
-  border-radius: var(--radius-md);
-  font-size: var(--font-base);
-  color: var(--color-gray-800);
-}
-
-.pet-select-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
-
-.pet-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--color-gray-300);
-  border-radius: var(--radius-full);
-  background-color: var(--color-white);
-  color: var(--color-gray-700);
-  font-size: var(--font-sm);
-  cursor: pointer;
-}
-
-.pet-chip--active {
-  border-color: var(--color-navy);
-  background-color: var(--color-navy);
-  color: var(--color-white);
-}
-
-.tag-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  margin-bottom: var(--space-3);
-}
-
-.tag-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-1) var(--space-3);
-  background-color: var(--color-gray-100);
-  border-radius: var(--radius-full);
-  font-size: var(--font-sm);
-  color: var(--color-gray-800);
-}
-
-.tag-remove {
-  background: none;
-  border: none;
-  padding: 0;
-  color: var(--color-gray-500);
-  font-size: var(--font-md);
-  line-height: 1;
-  cursor: pointer;
-}
-
-.tag-input-row {
-  display: flex;
-  gap: var(--space-2);
-}
-
-.tag-select-trigger,
-.tag-other-input {
-  flex: 1;
-  min-width: 0;
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--color-gray-300);
-  border-radius: var(--radius-md);
-  font-size: var(--font-base);
-  box-sizing: border-box;
-}
-
-.tag-select-trigger {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2);
-  background-color: var(--color-white);
-  color: var(--color-gray-800);
-  cursor: pointer;
-}
-
-.btn-add-tag {
-  flex: 0 0 auto;
-  padding: 0 var(--space-4);
-  background-color: var(--color-navy);
-  color: var(--color-white);
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: var(--font-sm);
-  font-weight: var(--font-semibold);
-  cursor: pointer;
-}
-
-.error-text {
-  color: var(--color-danger);
-  font-size: var(--font-sm);
-}
-
-.tag-feedback {
-  margin-top: var(--space-2);
-  color: var(--color-danger);
-  font-size: var(--font-sm);
-}
-
-.btn-primary {
-  width: 100%;
-  padding: var(--space-3) var(--space-4);
-  background-color: var(--color-gold);
-  color: var(--color-white);
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: var(--font-base);
-  font-weight: var(--font-semibold);
-  cursor: pointer;
-}
-
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.result-section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-5);
-}
-
-.advice-card {
-  background-color: var(--color-navy);
-  color: var(--color-white);
-  border-radius: var(--radius-lg);
-  padding: var(--space-5);
-}
-
-.advice-verdict {
-  display: inline-block;
-  padding: var(--space-1) var(--space-3);
-  border-radius: var(--radius-full);
-  font-size: var(--font-xs);
-  font-weight: var(--font-semibold);
-  background-color: rgba(255, 255, 255, 0.15);
-}
-
-.advice-verdict--favorable {
-  color: var(--color-gold-light);
-}
-
-.advice-verdict--neutral {
-  color: var(--color-gray-300);
-}
-
-.advice-verdict--unfavorable {
-  color: var(--color-danger);
-}
-
-.advice-message {
-  font-size: var(--font-lg);
-  font-weight: var(--font-bold);
-  margin-top: var(--space-3);
-}
-
-.advice-figures {
-  display: flex;
-  justify-content: space-between;
-  margin-top: var(--space-5);
-  padding-top: var(--space-4);
-  border-top: 1px solid rgba(255, 255, 255, 0.15);
-}
-
-.advice-figure {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-}
-
-.advice-figure:last-child {
-  text-align: right;
-}
-
-.advice-figure-label {
-  font-size: var(--font-xs);
-  opacity: 0.7;
-}
-
-.advice-figure-value {
-  font-size: var(--font-lg);
-  font-weight: var(--font-bold);
-}
-
-.advice-figure-value--highlight {
-  color: var(--color-gold-light);
-}
-
-.advice-note {
-  margin-top: var(--space-4);
-  font-size: var(--font-xs);
-  opacity: 0.7;
-}
-
-.btn-outline {
-  width: 100%;
-  padding: var(--space-3) var(--space-4);
-  background: none;
-  border: 1px solid var(--color-gray-300);
-  border-radius: var(--radius-md);
-  font-size: var(--font-md);
-  color: var(--color-gray-600);
-  cursor: pointer;
-}
-
-.product-section-title {
-  font-size: var(--font-lg);
-  font-weight: var(--font-semibold);
-  color: var(--color-navy);
-}
-
-.product-section-desc {
-  font-size: var(--font-sm);
-  color: var(--color-gray-500);
-  margin-top: var(--space-1);
-  margin-bottom: var(--space-4);
-}
-
-.product-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-
-.product-card {
-  background-color: var(--color-white);
-  border: 1px solid var(--color-gray-200);
-  border-radius: var(--radius-lg);
-  padding: var(--space-4);
-  box-shadow: var(--shadow-sm);
-}
-
-.product-badge {
-  display: inline-block;
-  padding: var(--space-1) var(--space-2);
-  background-color: var(--color-gray-100);
-  color: var(--color-gray-600);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-xs);
-  font-weight: var(--font-medium);
-}
-
-.product-company {
-  font-size: var(--font-sm);
-  color: var(--color-gray-500);
-  margin-top: var(--space-2);
-}
-
-.product-name {
-  font-size: var(--font-base);
-  font-weight: var(--font-semibold);
-  color: var(--color-gray-900);
-  margin-top: var(--space-1);
-}
-
-.product-premium {
-  font-size: var(--font-md);
-  font-weight: var(--font-bold);
-  color: var(--color-navy);
-  margin-top: var(--space-2);
-}
-
-.product-coverage-list {
-  list-style: none;
-  padding: 0;
-  margin: var(--space-3) 0 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-}
-
-.product-coverage-list li {
-  font-size: var(--font-sm);
-  color: var(--color-gray-600);
-}
-
-.btn-view-product {
-  width: 100%;
-  margin-top: var(--space-4);
-  padding: var(--space-3) var(--space-4);
-  background-color: var(--color-navy);
-  color: var(--color-white);
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: var(--font-base);
-  font-weight: var(--font-semibold);
-  cursor: pointer;
-}
-</style>
