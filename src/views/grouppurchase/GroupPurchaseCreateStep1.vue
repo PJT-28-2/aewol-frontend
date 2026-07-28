@@ -1,7 +1,10 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import BottomSheet from '@/components/common/BottomSheet.vue'
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
+import IconCheck from '@/components/common/icons/IconCheck.vue'
+import IconChevronDown from '@/components/common/icons/IconChevronDown.vue'
 import IconImage from '@/components/common/icons/IconImage.vue'
 
 // TODO: 실제 등록 연동은 별도 작업에서 구현
@@ -10,6 +13,13 @@ const productName = ref('')
 const category = ref('')
 const originalPrice = ref('')
 const groupPrice = ref('')
+
+const categoryOptions = ['사료', '간식', '영양제', '용품', '기타']
+const isCategorySheetOpen = ref(false)
+function selectCategory(option) {
+  category.value = option
+  isCategorySheetOpen.value = false
+}
 
 function handlePhotoChange(event) {
   const files = Array.from(event.target.files || [])
@@ -152,13 +162,53 @@ function goToNextStep() {
       <label class="block text-(length:--font-sm) font-bold text-(color:--color-slate-dark) mb-(--space-2)">
         카테고리 *
       </label>
-      <input
-        v-model="category"
-        type="text"
-        placeholder="사료·간식"
-        class="w-full h-[46px] px-(--space-4) rounded-xl bg-(--color-surface) border border-(--color-border) text-(length:--font-sm) text-(color:--color-navy) placeholder:text-(color:--color-slate-muted)"
+      <button
+        type="button"
+        class="w-full h-[46px] px-(--space-4) rounded-xl bg-(--color-surface) border border-(--color-border) flex items-center justify-between"
+        @click="isCategorySheetOpen = true"
       >
+        <span
+          class="text-(length:--font-sm)"
+          :class="category === '' ? 'text-(color:--color-slate-muted)' : 'text-(color:--color-navy)'"
+        >
+          {{ category === '' ? '카테고리를 선택해주세요' : category }}
+        </span>
+        <IconChevronDown
+          size="14"
+          color="var(--color-slate-muted)"
+        />
+      </button>
     </section>
+
+    <BottomSheet
+      v-model="isCategorySheetOpen"
+      title="카테고리 선택"
+    >
+      <ul>
+        <li
+          v-for="option in categoryOptions"
+          :key="option"
+        >
+          <button
+            type="button"
+            class="w-full flex items-center justify-between py-(--space-3) text-(length:--font-base)"
+            :class="
+              category === option
+                ? 'text-(color:--color-gold) font-bold'
+                : 'text-(color:--color-slate-dark)'
+            "
+            @click="selectCategory(option)"
+          >
+            <span>{{ option }}</span>
+            <IconCheck
+              v-if="category === option"
+              size="18"
+              color="var(--color-gold)"
+            />
+          </button>
+        </li>
+      </ul>
+    </BottomSheet>
 
     <!-- 정가 -->
     <section class="mb-(--space-5)">
