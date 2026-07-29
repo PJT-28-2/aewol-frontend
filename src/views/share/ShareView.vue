@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import ContributionDonutChart from '@/components/share/ContributionDonutChart.vue'
 import BottomNavBar from '@/components/common/BottomNavBar.vue'
@@ -11,12 +11,6 @@ import { useShareStore } from '@/stores/share'
 const router = useRouter()
 const shareStore = useShareStore()
 const selectedPetId = ref(shareStore.pets[0]?.id ?? '')
-
-const selectedPet = computed(
-  () =>
-    shareStore.pets.find((pet) => pet.id === selectedPetId.value) ??
-    shareStore.pets[0],
-)
 
 watch(
   selectedPetId,
@@ -82,7 +76,10 @@ watch(
       </button>
     </div>
 
-    <section class="mt-[var(--space-4)]" aria-labelledby="members-title">
+    <section
+      class="mt-[var(--space-4)]"
+      aria-labelledby="members-title"
+    >
       <h2
         id="members-title"
         class="m-0 text-[length:var(--font-lg)] font-bold"
@@ -150,7 +147,10 @@ watch(
       </div>
     </section>
 
-    <section class="mt-[var(--space-7)]" aria-label="가족별 기여도">
+    <section
+      class="mt-[var(--space-7)]"
+      aria-label="가족별 기여도"
+    >
       <ul class="m-0 list-none space-y-[var(--space-3)] p-0">
         <li
           v-for="contribution in shareStore.contributions"
