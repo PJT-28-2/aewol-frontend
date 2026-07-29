@@ -16,7 +16,7 @@ const claimData = ref({
   businessNumber: draft.businessNumber || null,
   diagnosis:      draft.diagnosis      || '슬개골 탈구 치료',
   accountInfo:    draft.accountInfo    || '프로필 연동',
-  ownerName:      draft.ownerName      || '홍길동',
+  ownerName:      draft.ownerName      || '',
 })
 
 const isGenerating = ref(false)
@@ -114,7 +114,7 @@ const goBack = () => {
               { label: '청구금액',   value: claimData.claimAmount, extra: 'amount' },
               { label: '사업자번호', value: claimData.businessNumber,  extra: 'biz' },
               { label: '진단명',     value: claimData.diagnosis,      extra: null },
-              { label: '계약자 정보', value: claimData.ownerName,     extra: null },
+              { label: '계약자 정보', value: claimData.ownerName || '미입력', extra: null },
               { label: '계좌정보',   value: claimData.accountInfo,    extra: null },
             ]"
             :key="row.label"
