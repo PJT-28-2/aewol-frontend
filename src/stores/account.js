@@ -86,7 +86,7 @@ export const useAccountStore = defineStore('account', {
       if (USE_MOCK_DATA) {
         const masked =
           accountNumber.length > 4
-            ? `${accountNumber.slice(0, 4)}${'*'.repeat(accountNumber.length - 4)}`
+            ? `${'*'.repeat(accountNumber.length - 4)}${accountNumber.slice(-4)}`
             : accountNumber;
         this.linking.verificationId = `mock-${Date.now()}`;
         this.linking.maskedAccountNumber = masked;
