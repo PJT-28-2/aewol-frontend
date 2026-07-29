@@ -92,25 +92,33 @@ async function initKakaoMap(lat, lng) {
   })
 }
 
+// 서울 시청 기본 좌표 (위치 권한 거부 시 fallback)
+const DEFAULT_LAT = 37.5665
+const DEFAULT_LNG = 126.9780
+
 onMounted(async () => {
+  // TODO: 백엔드 API 연동 시 mock 제거 후 아래로 교체
+  // const res = await emergencyApi.searchHospitals({ lat, lng })
+  // hospitals.value = res.data
+  hospitals.value = mockHospitals
+
+  let lat = DEFAULT_LAT
+  let lng = DEFAULT_LNG
+
   try {
     const pos = await new Promise((resolve, reject) => {
       if (!navigator.geolocation) return reject(new Error('not supported'))
       navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 })
     })
-    const { latitude: lat, longitude: lng } = pos.coords
-
-    // TODO: 백엔드 API 연동 시 아래 주석 해제 후 mock 제거
-    // const res = await emergencyApi.searchHospitals({ lat, lng })
-    // hospitals.value = res.data
-    hospitals.value = mockHospitals
-
-    await initKakaoMap(lat, lng)
+    lat = pos.coords.latitude
+    lng = pos.coords.longitude
   } catch {
-    hospitals.value = mockHospitals
+    // 위치 권한 거부 또는 미지원 시 기본 좌표로 지도 표시
   } finally {
     isLoading.value = false
   }
+
+  await initKakaoMap(lat, lng)
 })
 </script>
 
