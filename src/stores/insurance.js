@@ -6,6 +6,7 @@ export const useInsuranceStore = defineStore('insurance', {
     simulations: [],
     claims: [],
     currentClaim: null,
+    claimDraft: null,
   }),
 
   actions: {
@@ -25,6 +26,14 @@ export const useInsuranceStore = defineStore('insurance', {
       const { data } = await insuranceApi.submitClaim(claimData)
       this.claims.unshift(data)
       return data
+    },
+
+    setClaimDraft(draft) {
+      this.claimDraft = draft
+    },
+
+    clearClaimDraft() {
+      this.claimDraft = null
     },
 
     async confirmClaim(id) {

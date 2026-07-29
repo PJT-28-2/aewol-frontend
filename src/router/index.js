@@ -185,6 +185,13 @@ const authRoutes = [
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
+    path: '/insurance/claim/pdf-draft',
+    name: 'ClaimPdfDraft',
+    component: () =>
+      import('@/views/insurance/ClaimPdfDraftView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
     path: '/share',
     name: 'Share',
     component: () => import('@/views/share/ShareView.vue'),
@@ -298,72 +305,41 @@ const authRoutes = [
     meta: { requiresAuth: true, step: 'settings' },
   },
   {
-    path: '/donation/give',
-    name: 'DonationGive',
-    component: () => import('@/views/donation/DonationView.vue'),
-    meta: { requiresAuth: true },
-  },
-  {
-    path: '/donation/confirm',
-    name: 'DonationConfirm',
-    component: () => import('@/views/donation/DonationView.vue'),
-    meta: { requiresAuth: true },
-  },
-  {
-    path: '/donation/complete',
-    name: 'DonationComplete',
-    component: () => import('@/views/donation/DonationView.vue'),
-    meta: { requiresAuth: true },
-  },
-  {
-    path: '/donation/explore',
-    name: 'DonationExplore',
-    component: () => import('@/views/donation/DonationView.vue'),
-    meta: { requiresAuth: true },
-  },
-  {
-    path: '/donation/settings',
-    name: 'DonationSettings',
-    component: () => import('@/views/donation/DonationView.vue'),
-    meta: { requiresAuth: true },
-  },
-  {
     path: '/support',
     name: 'Support',
     component: () => import('@/views/support/SupportView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
-  // TODO: 고객센터 화면 파일들 커밋 후 아래 주석 해제하고 위 Support(SupportView) 라우트는 제거할 것
-  // {
-  //   path: '/support',
-  //   name: 'CustomerCenter',
-  //   component: () => import('@/views/support/CustomerCenter.vue'),
-  //   meta: { requiresAuth: true, layout: 'DefaultLayout' },
-  // },
-  // {
-  //   path: '/support/faqs/:faqId',
-  //   name: 'FaqDetail',
-  //   component: () => import('@/views/support/FaqDetail.vue'),
-  //   meta: { requiresAuth: true, layout: 'DefaultLayout' },
-  // },
-  // {
-  //   path: '/support/inquiry',
-  //   name: 'InquiryForm',
-  //   component: () => import('@/views/support/InquiryForm.vue'),
-  //   meta: { requiresAuth: true, layout: 'DefaultLayout' },
-  // },
-  // {
-  //   path: '/support/inquiries',
-  //   name: 'MyInquiries',
-  //   component: () => import('@/views/support/MyInquiries.vue'),
-  //   meta: { requiresAuth: true, layout: 'DefaultLayout' },
-  // },
-  // {
-  //   path: '/support/inquiry/complete',
-  //   name: 'InquirySubmitted',
-  //   component: () => import('@/views/support/InquirySubmitted.vue'),
-  //   meta: { requiresAuth: true, layout: 'DefaultLayout' },
-  // },
+  {
+    path: '/support',
+    name: 'CustomerCenter',
+    component: () => import('@/views/support/CustomerCenter.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
+    path: '/support/faqs/:faqId',
+    name: 'FaqDetail',
+    component: () => import('@/views/support/FaqDetail.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
+    path: '/support/inquiry',
+    name: 'InquiryForm',
+    component: () => import('@/views/support/InquiryForm.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
+    path: '/support/inquiries',
+    name: 'MyInquiries',
+    component: () => import('@/views/support/MyInquiries.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
+    path: '/support/inquiry/complete',
+    name: 'InquirySubmitted',
+    component: () => import('@/views/support/InquirySubmitted.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
   {
     path: '/support/:programId',
     name: 'SupportDetail',
