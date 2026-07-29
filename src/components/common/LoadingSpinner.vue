@@ -34,8 +34,17 @@ const spinnerStyle = computed(() => ({
 </script>
 
 <template>
-  <div class="spinner-wrapper">
-    <div class="spinner" :style="spinnerStyle" />
+  <div
+    class="spinner-wrapper"
+    role="status"
+    aria-live="polite"
+  >
+    <div
+      class="spinner"
+      :style="spinnerStyle"
+      aria-hidden="true"
+    />
+    <span class="sr-only">로딩 중</span>
   </div>
 </template>
 

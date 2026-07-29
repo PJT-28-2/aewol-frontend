@@ -57,6 +57,7 @@ const spinnerColor = ['secondary', 'ghost', 'primary'].includes(props.variant)
       loading ? 'pointer-events-none' : '',
     ]"
     :disabled="disabled || loading"
+    :aria-busy="loading"
   >
     <LoadingSpinner
       v-if="loading"
@@ -64,8 +65,8 @@ const spinnerColor = ['secondary', 'ghost', 'primary'].includes(props.variant)
       :color="spinnerColor"
     />
     <span
-      v-else
       class="flex items-center gap-(--space-2)"
+      :class="{ 'sr-only': loading }"
     >
       <slot />
     </span>
