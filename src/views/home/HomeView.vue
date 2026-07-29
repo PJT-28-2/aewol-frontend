@@ -109,7 +109,7 @@ const quickActions = [
   },
   {
     label: '지원사업',
-    to: '/support',
+    to: '/support-programs',
     icon: IconSupportProgram,
     bg: 'var(--color-pastel-cream)',
   },
