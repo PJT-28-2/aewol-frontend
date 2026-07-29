@@ -1,5 +1,9 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import AppButton from '@/components/common/AppButton.vue'
+import EmptyState from '@/components/common/EmptyState.vue'
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
+import IconRecurring from '@/components/common/icons/IconRecurring.vue'
 
 const recurringPayments = ref([])
 const isLoading = ref(true)
@@ -32,13 +36,19 @@ const handleCancel = async (_id) => {
   <div class="recurring-page">
     <header class="page-header">
       <h1>정기 결제</h1>
-      <button class="btn-add" @click="showCreateForm = !showCreateForm">
+      <button
+        class="btn-add"
+        @click="showCreateForm = !showCreateForm"
+      >
         {{ showCreateForm ? '취소' : '+ 등록' }}
       </button>
     </header>
 
     <!-- Create Form -->
-    <section v-if="showCreateForm" class="create-form card">
+    <section
+      v-if="showCreateForm"
+      class="create-form card"
+    >
       <h2>정기 결제 등록</h2>
       <form @submit.prevent="handleCreate">
         <div class="form-group">
@@ -49,7 +59,7 @@ const handleCancel = async (_id) => {
             type="text"
             placeholder="예: 바른사료 정기배송"
             required
-          />
+          >
         </div>
         <div class="form-group">
           <label for="amount">금액</label>
@@ -59,31 +69,59 @@ const handleCancel = async (_id) => {
             type="number"
             placeholder="결제 금액"
             required
-          />
+          >
         </div>
         <div class="form-group">
           <label for="dayOfMonth">결제일 (매월)</label>
-          <select id="dayOfMonth" v-model.number="form.dayOfMonth">
-            <option v-for="d in 28" :key="d" :value="d">{{ d }}일</option>
+          <select
+            id="dayOfMonth"
+            v-model.number="form.dayOfMonth"
+          >
+            <option
+              v-for="d in 28"
+              :key="d"
+              :value="d"
+            >
+              {{ d }}일
+            </option>
           </select>
         </div>
         <!-- TODO: implement pet/category selection -->
-        <button type="submit" class="btn-primary">등록하기</button>
+        <AppButton
+          type="submit"
+          variant="navy"
+          size="lg"
+          block
+        >
+          등록하기
+        </AppButton>
       </form>
     </section>
 
     <!-- Recurring Payment List -->
     <section class="recurring-section">
-      <div v-if="isLoading" class="loading-state">
-        <p>로딩 중...</p>
+      <div
+        v-if="isLoading"
+        class="loading-state"
+      >
+        <LoadingSpinner />
       </div>
 
-      <div v-else-if="recurringPayments.length === 0" class="empty-state">
-        <p>등록된 정기 결제가 없습니다.</p>
-      </div>
+      <EmptyState
+        v-else-if="recurringPayments.length === 0"
+        :icon="IconRecurring"
+        message="등록된 정기 결제가 없어요."
+      />
 
-      <ul v-else class="recurring-list">
-        <li v-for="payment in recurringPayments" :key="payment.id" class="recurring-item card">
+      <ul
+        v-else
+        class="recurring-list"
+      >
+        <li
+          v-for="payment in recurringPayments"
+          :key="payment.id"
+          class="recurring-item card"
+        >
           <div class="payment-info">
             <h3>{{ payment.merchantName }}</h3>
             <p class="payment-meta">
@@ -92,8 +130,15 @@ const handleCancel = async (_id) => {
             </p>
           </div>
           <div class="payment-right">
-            <p class="payment-amount">{{ payment.amount?.toLocaleString() }}원</p>
-            <button class="btn-cancel" @click="handleCancel(payment.id)">해지</button>
+            <p class="payment-amount">
+              {{ payment.amount?.toLocaleString() }}원
+            </p>
+            <button
+              class="btn-cancel"
+              @click="handleCancel(payment.id)"
+            >
+              해지
+            </button>
           </div>
         </li>
       </ul>
@@ -172,20 +217,7 @@ const handleCancel = async (_id) => {
   background-color: var(--color-white);
 }
 
-.btn-primary {
-  width: 100%;
-  padding: var(--space-3) var(--space-4);
-  background-color: var(--color-navy);
-  color: var(--color-white);
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: var(--font-base);
-  font-weight: var(--font-semibold);
-  cursor: pointer;
-}
-
-.loading-state,
-.empty-state {
+.loading-state {
   text-align: center;
   padding: var(--space-8) 0;
   color: var(--color-gray-500);

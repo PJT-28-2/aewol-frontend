@@ -41,7 +41,7 @@ function isActive(path) {
         :size="22"
       />
 
-      <span class="text-xs font-medium">{{ tab.label }}</span>
+      <span class="text-(length:--font-sm) font-medium">{{ tab.label }}</span>
     </router-link>
   </nav>
 </template>

@@ -155,7 +155,12 @@ const handleKakaoLogin = () => {
         class="relative h-[480px] bg-(--color-pastel-blue) max-h-[700px]:h-[420px]"
         aria-labelledby="login-title"
       >
-        <h1 id="login-title" class="sr-only">애월 로그인</h1>
+        <h1
+          id="login-title"
+          class="sr-only"
+        >
+          애월 로그인
+        </h1>
 
         <div
           class="absolute top-[93px] left-[89px] h-[174px] w-[180px] overflow-hidden max-h-[700px]:top-[52px]"
@@ -164,16 +169,16 @@ const handleKakaoLogin = () => {
             class="absolute top-[-20.73%] left-[-40.17%] h-[198.31%] w-[191.26%] max-w-none"
             :src="loginIllustration"
             alt=""
-          />
+          >
         </div>
 
         <img
           class="absolute top-[286px] left-1/2 h-[58px] w-[120px] -translate-x-1/2 object-cover max-h-[700px]:top-[245px]"
           :src="aewolLogo"
           alt="애월"
-        />
+        >
         <p
-          class="absolute top-[363px] w-full text-center text-[13px] leading-[1.3] text-(color:--color-slate-dark) max-h-[700px]:top-[322px]"
+          class="absolute top-[363px] w-full text-center text-(length:--auth-font-sm) leading-[1.3] text-(color:--color-slate-dark) max-h-[700px]:top-[322px]"
         >
           반려동물을 위한, 전자 지갑
         </p>
@@ -202,11 +207,17 @@ const handleKakaoLogin = () => {
           class="mt-[9px] flex justify-center gap-[7px] text-[12.5px] leading-[1.3] font-(--font-bold) text-(color:--color-slate-dark)"
           aria-label="회원 메뉴"
         >
-          <router-link to="/signup">회원가입</router-link>
+          <router-link to="/signup">
+            회원가입
+          </router-link>
           <span aria-hidden="true">|</span>
-          <router-link to="/id/find">아이디 찾기</router-link>
+          <router-link to="/id/find">
+            아이디 찾기
+          </router-link>
           <span aria-hidden="true">|</span>
-          <router-link to="/password/reset">비밀번호 찾기</router-link>
+          <router-link to="/password/reset">
+            비밀번호 찾기
+          </router-link>
         </nav>
         <p
           v-if="errorMessage"
@@ -229,7 +240,7 @@ const handleKakaoLogin = () => {
         aria-label="이전 화면으로 돌아가기"
         @click="closeEmailLogin"
       >
-        <IconArrowLeft :size="26" />
+        <IconArrowLeft size="24" />
       </button>
 
       <h2
@@ -242,7 +253,10 @@ const handleKakaoLogin = () => {
         계정 정보를 입력해주세요
       </p>
 
-      <form class="mt-9 flex flex-col" @submit.prevent="handleEmailLogin">
+      <form
+        class="mt-9 flex flex-col"
+        @submit.prevent="handleEmailLogin"
+      >
         <p
           v-if="isDevelopment"
           class="mb-4 rounded-(--radius-lg) bg-(--color-surface) px-3 py-2 text-[12px] leading-[1.5] text-(color:--color-slate-dark)"
@@ -258,12 +272,12 @@ const handleKakaoLogin = () => {
         <input
           id="email"
           v-model="email"
-          class="h-[46px] w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
+          class="h-[46px] w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-(length:--auth-font-sm) text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
           type="email"
           autocomplete="email"
           placeholder="example@aewol.com"
           required
-        />
+        >
         <label
           class="mt-[11px] mb-1 text-[12.5px] leading-[1.3] font-(--font-bold) text-(color:--color-slate-dark)"
           for="password"
@@ -273,13 +287,13 @@ const handleKakaoLogin = () => {
         <input
           id="password"
           v-model="password"
-          class="h-[46px] w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
+          class="h-[46px] w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-(length:--auth-font-sm) text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
           type="password"
           autocomplete="current-password"
           placeholder="8자 이상 입력해주세요"
           minlength="8"
           required
-        />
+        >
         <button
           class="mt-6 flex h-[52px] w-full items-center justify-center rounded-(--radius-xl) bg-(--color-gold) text-[14.5px] leading-[1.3] font-(--font-bold) text-(color:--color-navy) disabled:cursor-wait disabled:opacity-65"
           type="submit"
@@ -293,11 +307,17 @@ const handleKakaoLogin = () => {
         class="mt-[15px] flex justify-center gap-[7px] text-[12.5px] leading-[1.3] font-(--font-bold) text-(color:--color-slate-dark)"
         aria-label="회원 메뉴"
       >
-        <router-link to="/signup">회원가입</router-link>
+        <router-link to="/signup">
+          회원가입
+        </router-link>
         <span aria-hidden="true">|</span>
-        <router-link to="/id/find">아이디 찾기</router-link>
+        <router-link to="/id/find">
+          아이디 찾기
+        </router-link>
         <span aria-hidden="true">|</span>
-        <router-link to="/password/reset">비밀번호 찾기</router-link>
+        <router-link to="/password/reset">
+          비밀번호 찾기
+        </router-link>
       </nav>
 
       <p

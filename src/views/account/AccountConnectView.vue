@@ -1,5 +1,7 @@
 <script setup>
 import { ref } from 'vue'
+import AppButton from '@/components/common/AppButton.vue'
+import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 
 const step = ref(1) // 1: bank selection, 2: account form
 const selectedBank = ref('')
@@ -35,13 +37,24 @@ const handleConnect = async () => {
 <template>
   <div class="account-connect-page">
     <header class="page-header">
-      <router-link to="/accounts" class="back-btn">&lsaquo; 목록</router-link>
+      <router-link
+        to="/accounts"
+        aria-label="뒤로 가기"
+        class="back-btn"
+      >
+        <IconArrowLeft size="24" />
+      </router-link>
       <h1>계좌 연결</h1>
     </header>
 
     <!-- Step 1: Bank Selection -->
-    <section v-if="step === 1" class="bank-selection">
-      <p class="step-description">연결할 은행을 선택하세요.</p>
+    <section
+      v-if="step === 1"
+      class="bank-selection"
+    >
+      <p class="step-description">
+        연결할 은행을 선택하세요.
+      </p>
       <div class="bank-grid">
         <button
           v-for="bank in banks"
@@ -58,13 +71,24 @@ const handleConnect = async () => {
     </section>
 
     <!-- Step 2: Account Form -->
-    <section v-else class="account-form-section">
-      <button class="back-step" @click="step = 1">&lsaquo; 은행 다시 선택</button>
+    <section
+      v-else
+      class="account-form-section"
+    >
+      <button
+        class="back-step"
+        @click="step = 1"
+      >
+        &lsaquo; 은행 다시 선택
+      </button>
       <p class="step-description">
         {{ banks.find(b => b.code === selectedBank)?.name }} 계좌 정보를 입력하세요.
       </p>
 
-      <form class="connect-form" @submit.prevent="handleConnect">
+      <form
+        class="connect-form"
+        @submit.prevent="handleConnect"
+      >
         <div class="form-group">
           <label for="accountNumber">계좌번호</label>
           <input
@@ -73,7 +97,7 @@ const handleConnect = async () => {
             type="text"
             placeholder="계좌번호 입력 (- 제외)"
             required
-          />
+          >
         </div>
 
         <div class="form-group">
@@ -84,20 +108,31 @@ const handleConnect = async () => {
             type="password"
             placeholder="계좌 비밀번호"
             required
-          />
+          >
         </div>
 
         <!-- TODO: implement additional CODEF authentication fields -->
 
-        <p v-if="errorMessage" class="error-text">{{ errorMessage }}</p>
+        <p
+          v-if="errorMessage"
+          class="error-text"
+        >
+          {{ errorMessage }}
+        </p>
 
         <div class="security-notice">
           <p>계좌 정보는 CODEF를 통해 안전하게 연결됩니다.</p>
         </div>
 
-        <button type="submit" class="btn-primary" :disabled="isLoading">
-          {{ isLoading ? '연결 중...' : '계좌 연결하기' }}
-        </button>
+        <AppButton
+          type="submit"
+          variant="navy"
+          size="lg"
+          block
+          :loading="isLoading"
+        >
+          계좌 연결하기
+        </AppButton>
       </form>
     </section>
   </div>
@@ -224,18 +259,6 @@ const handleConnect = async () => {
 .security-notice p {
   font-size: var(--font-xs);
   color: var(--color-gray-600);
-}
-
-.btn-primary {
-  width: 100%;
-  padding: var(--space-3) var(--space-4);
-  background-color: var(--color-navy);
-  color: var(--color-white);
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: var(--font-base);
-  font-weight: var(--font-semibold);
-  cursor: pointer;
 }
 
 .btn-primary:disabled {

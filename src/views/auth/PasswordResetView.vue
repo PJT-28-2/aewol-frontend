@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { authApi } from '@/api/auth'
+import { formatCountdown } from '@/utils/date'
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 import successImage from '@/assets/images/pet-success.png'
 
@@ -28,11 +29,7 @@ let toastTimerId
  *
  * @returns {string} `mm:ss` 형식의 남은 시간
  */
-const formattedTime = computed(() => {
-  const minutes = Math.floor(remainingSeconds.value / 60)
-  const seconds = remainingSeconds.value % 60
-  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
-})
+const formattedTime = computed(() => formatCountdown(remainingSeconds.value))
 
 /**
  * 유효성 검사 결과를 일정 시간 동안 토스트로 안내한다.
@@ -276,15 +273,19 @@ onBeforeUnmount(clearTimers)
   <main
     class="relative mx-auto min-h-svh w-[min(100%,390px)] overflow-hidden rounded-[40px] bg-(--color-white) px-[22px] pt-[108px] pb-12 min-[391px]:my-[max(0px,calc((100svh-844px)/2))] min-[391px]:min-h-[844px] min-[391px]:shadow-(--shadow-lg)"
   >
-    <section v-if="isComplete" class="text-center" aria-labelledby="reset-complete-title">
+    <section
+      v-if="isComplete"
+      class="text-center"
+      aria-labelledby="reset-complete-title"
+    >
       <img
         class="mx-auto mt-(--auth-success-password-image-offset) size-(--auth-success-image-size) object-cover"
         :src="successImage"
         alt=""
-      />
+      >
       <h1
         id="reset-complete-title"
-        class="mt-(--auth-success-title-gap) text-[18px] leading-[1.3] font-(--font-bold) text-(color:--color-navy)"
+        class="mt-(--auth-success-title-gap) text-(length:--font-lg) leading-[1.3] font-(--font-bold) text-(color:--color-navy)"
       >
         비밀번호가 변경됐어요
       </h1>
@@ -306,19 +307,22 @@ onBeforeUnmount(clearTimers)
         aria-label="이전 화면으로 돌아가기"
         @click="router.back()"
       >
-        <IconArrowLeft :size="26" />
+        <IconArrowLeft size="24" />
       </button>
 
       <header>
-        <h1 class="text-[22px] leading-[1.3] font-(--font-bold) text-(color:--color-navy)">
+        <h1 class="text-(length:--auth-font-lg) leading-[1.3] font-(--font-bold) text-(color:--color-navy)">
           비밀번호 찾기
         </h1>
         <p class="mt-0.5 text-[12.5px] leading-[1.45] text-(color:--color-slate-muted)">
-          가입하신 이메일로 본인 확인 후<br />바로 새 비밀번호를 설정해요
+          가입하신 이메일로 본인 확인 후<br>바로 새 비밀번호를 설정해요
         </p>
       </header>
 
-      <section class="mt-[22px]" aria-label="이메일 인증">
+      <section
+        class="mt-[22px]"
+        aria-label="이메일 인증"
+      >
         <label
           class="mb-1 block text-[12.5px] leading-[1.3] font-(--font-bold) text-(color:--color-slate-dark)"
           for="reset-email"
@@ -329,12 +333,12 @@ onBeforeUnmount(clearTimers)
           <input
             id="reset-email"
             v-model.trim="email"
-            class="h-[46px] w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy) disabled:opacity-65"
+            class="h-[46px] w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-(length:--auth-font-sm) text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy) disabled:opacity-65"
             type="email"
             autocomplete="email"
             placeholder="example@aewol.com"
             :disabled="isVerified"
-          />
+          >
           <button
             class="h-[46px] rounded-(--radius-lg) bg-(--color-navy) text-[11.5px] font-(--font-bold) text-(color:--color-white) disabled:cursor-not-allowed disabled:opacity-55"
             type="button"
@@ -356,14 +360,14 @@ onBeforeUnmount(clearTimers)
             <input
               id="verification-code"
               v-model="verificationCode"
-              class="h-[46px] w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] pr-[70px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy) disabled:opacity-65"
+              class="h-[46px] w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] pr-[70px] text-(length:--auth-font-sm) text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy) disabled:opacity-65"
               type="text"
               inputmode="numeric"
               autocomplete="one-time-code"
               maxlength="6"
               placeholder="6자리 숫자 입력"
               :disabled="isVerified"
-            />
+            >
             <span
               v-if="isCodeSent && !isVerified"
               class="absolute top-1/2 right-[14px] -translate-y-1/2 text-[11.5px] font-(--font-bold) text-(color:--color-gold)"
@@ -382,7 +386,10 @@ onBeforeUnmount(clearTimers)
         </div>
       </section>
 
-      <section v-if="isVerified" aria-label="새 비밀번호 설정">
+      <section
+        v-if="isVerified"
+        aria-label="새 비밀번호 설정"
+      >
         <div class="relative mt-[14px] h-7">
           <div class="absolute top-[13px] right-0 left-0 h-px bg-(--color-border)" />
           <span
@@ -392,7 +399,10 @@ onBeforeUnmount(clearTimers)
           </span>
         </div>
 
-        <form class="flex flex-col" @submit.prevent="handleResetPassword">
+        <form
+          class="flex flex-col"
+          @submit.prevent="handleResetPassword"
+        >
           <label
             class="mb-1 block text-[12.5px] leading-[1.3] font-(--font-bold) text-(color:--color-slate-dark)"
             for="new-password"
@@ -402,12 +412,12 @@ onBeforeUnmount(clearTimers)
           <input
             id="new-password"
             v-model="newPassword"
-            class="h-[46px] w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
+            class="h-[46px] w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-(length:--auth-font-sm) text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
             type="password"
             autocomplete="new-password"
             placeholder="2가지 조합 10자리 / 3가지 조합 8자리 이상"
             required
-          />
+          >
 
           <label
             class="mt-[11px] mb-1 block text-[12.5px] leading-[1.3] font-(--font-bold) text-(color:--color-slate-dark)"
@@ -418,12 +428,12 @@ onBeforeUnmount(clearTimers)
           <input
             id="new-password-confirm"
             v-model="newPasswordConfirm"
-            class="h-[46px] w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
+            class="h-[46px] w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-(length:--auth-font-sm) text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
             type="password"
             autocomplete="new-password"
             placeholder="비밀번호를 한번 더 입력해주세요"
             required
-          />
+          >
 
           <button
             class="mt-6 h-[52px] rounded-(--radius-xl) bg-(--color-gold) text-[14.5px] font-(--font-bold) text-(color:--color-navy) disabled:cursor-not-allowed disabled:opacity-55"
@@ -461,7 +471,7 @@ onBeforeUnmount(clearTimers)
             aria-live="assertive"
           >
             <span
-              class="inline-flex size-5 shrink-0 items-center justify-center rounded-full text-[11px]"
+              class="inline-flex size-5 shrink-0 items-center justify-center rounded-full text-(length:--auth-font-xs)"
               :class="
                 toast.type === 'success'
                   ? 'bg-(--color-pastel-green)'

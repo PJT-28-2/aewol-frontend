@@ -3,8 +3,8 @@ import { useRouter } from 'vue-router'
 
 const props = defineProps({
   icon: {
-    type: String,
-    default: '',
+    type: [Object, Function],
+    default: null,
   },
   message: {
     type: String,
@@ -31,8 +31,15 @@ function handleAction() {
 
 <template>
   <div class="empty-state">
-    <span v-if="icon" class="empty-state__icon">{{ icon }}</span>
-    <p class="empty-state__message">{{ message }}</p>
+    <component
+      :is="icon"
+      v-if="icon"
+      class="empty-state__icon"
+      :size="48"
+    />
+    <p class="empty-state__message">
+      {{ message }}
+    </p>
     <button
       v-if="actionText"
       class="empty-state__action"
@@ -54,7 +61,7 @@ function handleAction() {
 }
 
 .empty-state__icon {
-  font-size: 48px;
+  color: var(--color-gray-400);
   margin-bottom: var(--space-4);
 }
 

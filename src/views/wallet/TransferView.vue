@@ -1,4 +1,5 @@
 <script setup>
+import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 // TODO: 이체 대상 선택 및 금액 입력 구현
 </script>
 
@@ -7,9 +8,10 @@
     <header class="flex items-center gap-(--space-4) mb-(--space-5)">
       <router-link
         to="/wallet"
-        class="text-(length:--font-md) text-(color:--color-navy) no-underline font-medium"
+        aria-label="뒤로 가기"
+        class="text-(color:--color-navy)"
       >
-        &lsaquo; 지갑
+        <IconArrowLeft size="24" />
       </router-link>
       <h1 class="text-(length:--font-xl) font-bold text-(color:--color-navy)">
         이체

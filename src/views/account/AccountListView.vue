@@ -1,5 +1,8 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import EmptyState from '@/components/common/EmptyState.vue'
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
+import IconWallet from '@/components/common/icons/IconWallet.vue'
 
 const accounts = ref([])
 const isLoading = ref(true)
@@ -16,30 +19,47 @@ onMounted(async () => {
       <h1>연결 계좌</h1>
     </header>
 
-    <div v-if="isLoading" class="loading-state">
-      <p>로딩 중...</p>
+    <div
+      v-if="isLoading"
+      class="loading-state"
+    >
+      <LoadingSpinner />
     </div>
 
-    <div v-else-if="accounts.length === 0" class="empty-state">
-      <div class="empty-icon"><!-- TODO: bank icon --></div>
-      <p>연결된 계좌가 없습니다.</p>
-      <p class="empty-sub">계좌를 연결하고 자동 관리를 시작하세요.</p>
-    </div>
+    <EmptyState
+      v-else-if="accounts.length === 0"
+      :icon="IconWallet"
+      message="연결된 계좌가 없어요. 계좌를 연결하고 자동 관리를 시작하세요."
+    />
 
-    <ul v-else class="account-list">
-      <li v-for="account in accounts" :key="account.id" class="account-item card">
+    <ul
+      v-else
+      class="account-list"
+    >
+      <li
+        v-for="account in accounts"
+        :key="account.id"
+        class="account-item card"
+      >
         <div class="bank-logo">
           <!-- TODO: implement bank logo by bankCode -->
         </div>
         <div class="account-info">
           <h3>{{ account.bankName }}</h3>
-          <p class="account-number">{{ account.accountNumber }}</p>
+          <p class="account-number">
+            {{ account.accountNumber }}
+          </p>
         </div>
-        <p class="account-balance">{{ account.balance?.toLocaleString() }}원</p>
+        <p class="account-balance">
+          {{ account.balance?.toLocaleString() }}원
+        </p>
       </li>
     </ul>
 
-    <router-link to="/accounts/connect" class="btn-connect card">
+    <router-link
+      to="/accounts/connect"
+      class="btn-connect card"
+    >
       <span class="plus-icon">+</span>
       <span>계좌 연결하기</span>
     </router-link>
@@ -71,25 +91,10 @@ onMounted(async () => {
   box-shadow: var(--shadow-sm);
 }
 
-.loading-state,
-.empty-state {
+.loading-state {
   text-align: center;
   padding: var(--space-8) 0;
   color: var(--color-gray-500);
-}
-
-.empty-icon {
-  width: 64px;
-  height: 64px;
-  border-radius: var(--radius-full);
-  background-color: var(--color-gray-200);
-  margin: 0 auto var(--space-4);
-}
-
-.empty-sub {
-  font-size: var(--font-sm);
-  color: var(--color-gray-400);
-  margin-top: var(--space-2);
 }
 
 .account-list {

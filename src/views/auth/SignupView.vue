@@ -63,7 +63,7 @@ const handleSignup = async () => {
       aria-label="이전 화면으로 돌아가기"
       @click="router.back()"
     >
-      <IconArrowLeft :size="16" />
+      <IconArrowLeft :size="24" />
     </button>
 
     <header class="mt-[25px]">
@@ -237,6 +237,7 @@ const handleSignup = async () => {
           placeholder="우편번호 및 주소"
           required
         >
+
         <button
           class="h-(--control-height-md) w-20 shrink-0 cursor-not-allowed rounded-(--radius-lg) bg-(--color-slate-light) text-[11px] font-(--font-bold) text-(color:--color-slate-muted)"
           type="button"
@@ -329,7 +330,7 @@ const handleSignup = async () => {
     </form>
 
     <p class="mt-[13px] text-center text-[12.5px] font-(--font-bold) text-(color:--color-slate-dark)">
-      이미 계정이 있나요?
+      이미 계정이 있으신가요?
       <router-link
         class="text-(color:--color-navy)"
         to="/login"

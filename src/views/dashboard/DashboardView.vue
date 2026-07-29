@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 
 const selectedMonth = ref(new Date().toISOString().slice(0, 7))
 const monthlySummary = ref({
@@ -29,23 +30,34 @@ const handleMonthChange = async () => {
         type="month"
         class="month-picker"
         @change="handleMonthChange"
-      />
+      >
     </header>
 
-    <div v-if="isLoading" class="loading-state">
-      <p>로딩 중...</p>
+    <div
+      v-if="isLoading"
+      class="loading-state"
+    >
+      <LoadingSpinner />
     </div>
 
     <template v-else>
       <!-- Monthly Summary -->
       <section class="summary-cards">
         <div class="summary-card card">
-          <p class="summary-label">총 지출</p>
-          <p class="summary-value expense">{{ monthlySummary.totalSpent.toLocaleString() }}원</p>
+          <p class="summary-label">
+            총 지출
+          </p>
+          <p class="summary-value expense">
+            {{ monthlySummary.totalSpent.toLocaleString() }}원
+          </p>
         </div>
         <div class="summary-card card">
-          <p class="summary-label">총 수입</p>
-          <p class="summary-value income">{{ monthlySummary.totalIncome.toLocaleString() }}원</p>
+          <p class="summary-label">
+            총 수입
+          </p>
+          <p class="summary-value income">
+            {{ monthlySummary.totalIncome.toLocaleString() }}원
+          </p>
         </div>
       </section>
 
@@ -54,12 +66,20 @@ const handleMonthChange = async () => {
         <h2>카테고리별 지출</h2>
         <div class="chart-placeholder">
           <!-- TODO: implement pie chart (e.g., Chart.js or ECharts) -->
-          <div class="pie-placeholder"></div>
-          <p class="placeholder-text">파이 차트 영역</p>
+          <div class="pie-placeholder" />
+          <p class="placeholder-text">
+            파이 차트 영역
+          </p>
         </div>
         <ul class="category-legend">
-          <li v-for="cat in monthlySummary.categoryBreakdown" :key="cat.category">
-            <span class="legend-dot" :style="{ backgroundColor: cat.color }"></span>
+          <li
+            v-for="cat in monthlySummary.categoryBreakdown"
+            :key="cat.category"
+          >
+            <span
+              class="legend-dot"
+              :style="{ backgroundColor: cat.color }"
+            />
             <span class="legend-label">{{ cat.category }}</span>
             <span class="legend-value">{{ cat.amount?.toLocaleString() }}원</span>
           </li>
@@ -71,8 +91,10 @@ const handleMonthChange = async () => {
         <h2>일별 지출 추이</h2>
         <div class="chart-placeholder">
           <!-- TODO: implement line chart (e.g., Chart.js or ECharts) -->
-          <div class="line-placeholder"></div>
-          <p class="placeholder-text">라인 차트 영역</p>
+          <div class="line-placeholder" />
+          <p class="placeholder-text">
+            라인 차트 영역
+          </p>
         </div>
       </section>
     </template>
