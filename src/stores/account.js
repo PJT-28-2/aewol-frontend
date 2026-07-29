@@ -15,7 +15,10 @@ export const useAccountStore = defineStore('account', {
   state: () => ({
     banks: [],
     accounts: [],
-    isLoading: false,
+    // isLoading은 아래 getter로 계산돼요. 동시에 여러 요청이 겹칠 때
+    // 먼저 끝난 요청의 finally가 아직 진행 중인 다른 요청의 로딩 상태를
+    // 꺼버리지 않도록, 단순 boolean 대신 진행 중인 요청 수를 센 뒤 0일 때만 false예요.
+    pendingRequestCount: 0,
     error: null,
 
     // 계좌 연동 플로우 진행 중 상태
@@ -33,13 +36,14 @@ export const useAccountStore = defineStore('account', {
 
   getters: {
     primaryAccount: (state) => state.accounts.find((a) => a.isPrimary) ?? null,
+    isLoading: (state) => state.pendingRequestCount > 0,
   },
 
   actions: {
     // 실제 API 호출 구간에서 공통으로 쓰는 로딩·에러 상태 래퍼.
     // 목데이터 모드는 즉시 반환이라 실패 자체가 없으므로 각 액션에서 이 래퍼를 타지 않음.
     async _withRequestState(request) {
-      this.isLoading = true;
+      this.pendingRequestCount += 1;
       this.error = null;
       try {
         return await request();
@@ -47,7 +51,7 @@ export const useAccountStore = defineStore('account', {
         this.error = err;
         throw err;
       } finally {
-        this.isLoading = false;
+        this.pendingRequestCount -= 1;
       }
     },
 
@@ -182,21 +186,20 @@ export const useAccountStore = defineStore('account', {
     },
 
     // DELETE /api/accounts/{accountId}
+    // pendingUnlinkAccount는 상태라 도중에 바뀌거나 비워질 수 있으므로,
+    // 요청 시작 시점에 대상 accountId를 지역 변수로 캡처해서 끝까지 그 값만 사용해요.
     async confirmUnlink() {
-      if (!this.pendingUnlinkAccount) return;
+      const targetAccountId = this.pendingUnlinkAccount?.accountId;
+      if (!targetAccountId) return;
 
       if (USE_MOCK_DATA) {
-        this.accounts = this.accounts.filter(
-          (a) => a.accountId !== this.pendingUnlinkAccount.accountId,
-        );
+        this.accounts = this.accounts.filter((a) => a.accountId !== targetAccountId);
         return;
       }
 
       await this._withRequestState(async () => {
-        await unlinkAccount(this.pendingUnlinkAccount.accountId);
-        this.accounts = this.accounts.filter(
-          (a) => a.accountId !== this.pendingUnlinkAccount.accountId,
-        );
+        await unlinkAccount(targetAccountId);
+        this.accounts = this.accounts.filter((a) => a.accountId !== targetAccountId);
       });
     },
   },
