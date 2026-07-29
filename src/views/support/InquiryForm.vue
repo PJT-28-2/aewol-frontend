@@ -74,8 +74,12 @@ onUnmounted(() => {
   attachments.value.forEach((item) => URL.revokeObjectURL(item.previewUrl));
 });
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const isEmailValid = () => EMAIL_PATTERN.test(email.value.trim());
+
 const isFormValid = () =>
-  title.value.trim() && content.value.trim() && email.value.trim();
+  title.value.trim() && content.value.trim() && email.value.trim() && isEmailValid();
 
 async function submit() {
   if (!isFormValid()) return;
@@ -194,6 +198,12 @@ async function submit() {
         placeholder="example@aewol.com"
         class="w-full p-4 rounded-xl bg-(--color-surface) text-(length:--font-md) text-(color:--color-navy) outline-none"
       />
+      <p
+        v-if="email.trim() && !isEmailValid()"
+        class="text-(length:--font-xs) text-(color:--color-danger) mt-1"
+      >
+        올바른 이메일 형식으로 입력해주세요
+      </p>
     </section>
 
     <p v-if="submitError" class="text-(length:--font-sm) text-(color:--color-danger) mb-3">{{ submitError }}</p>
