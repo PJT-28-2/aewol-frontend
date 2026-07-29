@@ -100,7 +100,7 @@ const goBack = () => {
 
     <!-- PDF 미리보기 영역 -->
     <div class="flex-1 p-(--space-5) px-(--space-4) pb-[calc(80px+var(--space-5))] overflow-y-auto">
-      <div ref="previewRef" class="bg-(--color-white) rounded-(--radius-lg) [box-shadow:var(--shadow-md)] p-(--space-6) max-w-[480px] mx-auto">
+      <div ref="previewRef" class="bg-(--color-white) rounded-(--radius-lg) [box-shadow:var(--shadow-md)] p-(--space-6) max-w-(--layout-max-width) mx-auto">
 
         <!-- PDF 헤더 -->
         <div class="flex items-center gap-(--space-4) mb-(--space-5)">
@@ -136,7 +136,7 @@ const goBack = () => {
           >
             <span class="w-[40%] text-(length:--font-sm) text-(color:--color-gray-600) font-medium">{{ row.label }}</span>
             <span
-              class="flex-1 text-right font-semibold"
+              class="flex-1 min-w-0 text-right font-semibold [overflow-wrap:anywhere]"
               :class="row.extra === 'amount'
                 ? 'text-(length:--font-base) text-(color:--color-navy)'
                 : row.extra === 'biz' && !row.value
