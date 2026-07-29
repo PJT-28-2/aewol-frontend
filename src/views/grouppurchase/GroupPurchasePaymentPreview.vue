@@ -128,6 +128,9 @@ async function handleSearchAddress() {
   isPostcodeOpen.value = true;
   await nextTick();
 
+  // embed()는 컨테이너에 append만 하므로, 재오픈 시 이전 위젯이 중첩되지 않도록 먼저 비움
+  postcodeContainerRef.value.replaceChildren();
+
   new window.daum.Postcode({
     oncomplete(data) {
       addressForm.value.zipCode = data.zonecode;
