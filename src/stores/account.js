@@ -32,6 +32,10 @@ export const useAccountStore = defineStore('account', {
 
     // 연동 해제 대상 (바텀시트에서 참조)
     pendingUnlinkAccount: null,
+
+    // 방금 연동 완료된 계좌 ID — AccountLinkComplete.vue에서 "배열의 마지막 항목"
+    // 같은 불안정한 추측 대신 이 값으로 정확히 그 계좌를 찾아요.
+    lastLinkedAccountId: null,
   }),
 
   getters: {
@@ -136,6 +140,7 @@ export const useAccountStore = defineStore('account', {
           isPrimary: this.accounts.length === 0,
         };
         this.accounts.push(mockAccount);
+        this.lastLinkedAccountId = mockAccount.accountId;
         return mockAccount;
       }
       return this._withRequestState(async () => {
@@ -145,6 +150,7 @@ export const useAccountStore = defineStore('account', {
           accountNumber: this.linking.accountNumber,
         });
         this.accounts.push(data.result);
+        this.lastLinkedAccountId = data.result.accountId;
         return data.result;
       });
     },
@@ -157,6 +163,7 @@ export const useAccountStore = defineStore('account', {
         maskedAccountNumber: '',
         expiresInSeconds: 0,
       };
+      this.lastLinkedAccountId = null;
     },
 
     // PATCH /api/accounts/{accountId}

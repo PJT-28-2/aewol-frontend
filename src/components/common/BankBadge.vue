@@ -18,7 +18,7 @@ const meta = computed(() => getBankMeta(props.bankCode, props.fallbackName));
 
 <template>
   <div
-    class="flex items-center justify-center rounded-(--radius-md) font-bold shrink-0"
+    class="flex items-center justify-center rounded-(--radius-md) font-(--font-bold) shrink-0"
     :class="[meta.bg, meta.text]"
     :style="{ width: `${size}px`, height: `${size}px`, fontSize: `${size * BADGE_FONT_RATIO}px` }"
   >

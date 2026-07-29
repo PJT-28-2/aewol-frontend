@@ -174,9 +174,9 @@ function goBack() {
 </script>
 
 <template>
-  <div class="min-h-screen max-w-[420px] mx-auto bg-(--color-bg) px-5 pt-6 pb-10">
+  <div class="min-h-screen max-w-[420px] mx-auto bg-(--color-bg) px-(--space-5) pt-(--space-6) pb-(--space-8)">
     <button
-      class="w-8 h-8 rounded-md bg-(--color-navy) flex items-center justify-center mb-5"
+      class="w-8 h-8 rounded-(--radius-md) bg-(--color-navy) flex items-center justify-center mb-(--space-5)"
       @click="goBack"
     >
       <IconArrowLeft :size="18" color="var(--color-white)" />
@@ -185,15 +185,15 @@ function goBack() {
     <!-- Step 1: 계좌번호 입력 -->
     <template v-if="step === 'accountNumber'">
       <header class="mb-7">
-        <h1 class="text-(length:--font-xl) font-bold text-(color:--color-navy) leading-snug">
+        <h1 class="text-(length:--font-xl) font-(--font-bold) text-(color:--color-navy) leading-snug">
           {{ bankMeta.name }} 계좌번호를 입력해주세요
         </h1>
-        <p class="text-(length:--font-md) text-(color:--color-gray-600) mt-1">1원을 보내 계좌를 확인할게요</p>
+        <p class="text-(length:--font-md) text-(color:--color-gray-600) mt-(--space-1)">1원을 보내 계좌를 확인할게요</p>
       </header>
 
-      <div class="flex items-center gap-3 p-4 rounded-2xl bg-(--color-surface) mb-5">
+      <div class="flex items-center gap-(--space-3) p-(--space-4) rounded-(--radius-xl) bg-(--color-surface) mb-(--space-5)">
         <BankBadge :bank-code="store.linking.bankCode" :size="36" />
-        <span class="font-semibold text-(color:--color-navy) text-(length:--font-md)">{{ bankMeta.name }}</span>
+        <span class="font-(--font-semibold) text-(color:--color-navy) text-(length:--font-md)">{{ bankMeta.name }}</span>
       </div>
 
       <input
@@ -202,13 +202,13 @@ function goBack() {
         inputmode="numeric"
         autocomplete="off"
         placeholder="계좌번호를 입력해주세요 (숫자만)"
-        class="w-full p-4 rounded-xl border border-(--color-border) text-(length:--font-base) text-(color:--color-navy) mb-2 outline-none focus:border-(--color-navy)"
+        class="w-full p-(--space-4) rounded-(--radius-lg) border border-(--color-border) text-(length:--font-base) text-(color:--color-navy) mb-(--space-2) outline-none focus:border-(--color-navy)"
         @input="onAccountNumberInput"
       />
-      <p v-if="requestError" class="text-(length:--font-sm) text-(color:--color-danger) mb-4">{{ requestError }}</p>
+      <p v-if="requestError" class="text-(length:--font-sm) text-(color:--color-danger) mb-(--space-4)">{{ requestError }}</p>
 
       <button
-        class="w-full py-4 rounded-xl bg-(--color-navy) text-(color:--color-white) font-bold mt-4 disabled:opacity-50"
+        class="w-full py-(--space-4) rounded-(--radius-lg) bg-(--color-navy) text-(color:--color-white) font-(--font-bold) mt-(--space-4) disabled:opacity-50"
         :disabled="!isAccountNumberValid || isRequesting"
         @click="submitAccountNumber"
       >
@@ -218,31 +218,31 @@ function goBack() {
 
     <!-- Step 2: 입금자명 4자리 입력 (RF-CM 목업) -->
     <template v-else>
-      <header class="mb-6">
-        <h1 class="text-(length:--font-xl) font-bold text-(color:--color-navy) leading-snug">
+      <header class="mb-(--space-6)">
+        <h1 class="text-(length:--font-xl) font-(--font-bold) text-(color:--color-navy) leading-snug">
           거래내역을 확인 후 입금된 1원의<br />4자리 입금자명을 입력해주세요
         </h1>
       </header>
 
-      <div class="flex items-center gap-3 p-4 rounded-2xl bg-(--color-surface) mb-4">
+      <div class="flex items-center gap-(--space-3) p-(--space-4) rounded-(--radius-xl) bg-(--color-surface) mb-(--space-4)">
         <BankBadge :bank-code="store.linking.bankCode" :size="36" />
         <div>
-          <p class="font-bold text-(color:--color-navy) text-(length:--font-base)">{{ bankMeta.name }}</p>
+          <p class="font-(--font-bold) text-(color:--color-navy) text-(length:--font-base)">{{ bankMeta.name }}</p>
           <p class="text-(length:--font-sm) text-(color:--color-gray-500)">{{ store.linking.maskedAccountNumber }}</p>
         </div>
       </div>
 
-      <div class="flex items-center gap-2 p-3.5 rounded-xl bg-(--color-surface) mb-6">
+      <div class="flex items-center gap-(--space-2) p-3.5 rounded-(--radius-lg) bg-(--color-surface) mb-(--space-6)">
         <IconLock :size="14" color="var(--color-gray-600)" />
         <span class="text-(length:--font-sm) text-(color:--color-gray-700)">{{ bankMeta.name }}으로 1원을 보냈어요</span>
       </div>
 
-      <div class="flex items-center justify-between mb-3">
-        <span class="text-(length:--font-sm) font-semibold text-(color:--color-navy)">입금자명 4자리</span>
-        <span class="text-(length:--font-sm) font-semibold text-(color:--color-danger)">{{ timerLabel }}</span>
+      <div class="flex items-center justify-between mb-(--space-3)">
+        <span class="text-(length:--font-sm) font-(--font-semibold) text-(color:--color-navy)">입금자명 4자리</span>
+        <span class="text-(length:--font-sm) font-(--font-semibold) text-(color:--color-danger)">{{ timerLabel }}</span>
       </div>
 
-      <div class="relative flex justify-center gap-3 mb-3" @click="focusHiddenInput">
+      <div class="relative flex justify-center gap-(--space-3) mb-(--space-3)" @click="focusHiddenInput">
         <input
           ref="hiddenInputRef"
           type="text"
@@ -257,7 +257,7 @@ function goBack() {
         <div
           v-for="(digit, i) in digits"
           :key="i"
-          class="pointer-events-none relative w-14 h-14 shrink-0 rounded-xl border-2 flex items-center justify-center text-center text-(length:--font-xl) font-bold text-(color:--color-navy)"
+          class="pointer-events-none relative w-14 h-14 shrink-0 rounded-(--radius-lg) border-2 flex items-center justify-center text-center text-(length:--font-xl) font-(--font-bold) text-(color:--color-navy)"
           :class="digit ? 'border-(--color-navy)' : 'border-(--color-border)'"
         >
           <span
@@ -268,13 +268,13 @@ function goBack() {
         </div>
       </div>
 
-      <p class="text-(length:--font-xs) text-(color:--color-gray-500) leading-relaxed mb-2">
-        은행 앱 알림이나 입출금 문자에서<br />입금자명(예: 애옹월월)의 앞 4글자를 확인할 수 있어요
+      <p class="text-(length:--font-xs) text-(color:--color-gray-500) leading-relaxed mb-(--space-2)">
+        은행 앱 알림이나 입출금 문자에서<br />입금자명(예: 푸른애월)의 앞 4글자를 확인할 수 있어요
       </p>
-      <p v-if="verifyError" class="text-(length:--font-sm) text-(color:--color-danger) mb-2">{{ verifyError }}</p>
+      <p v-if="verifyError" class="text-(length:--font-sm) text-(color:--color-danger) mb-(--space-2)">{{ verifyError }}</p>
 
       <button
-        class="w-full py-4 rounded-xl bg-(--color-gold) text-(color:--color-navy) font-bold mt-6 disabled:opacity-50"
+        class="w-full py-(--space-4) rounded-(--radius-lg) bg-(--color-gold) text-(color:--color-navy) font-(--font-bold) mt-(--space-6) disabled:opacity-50"
         :disabled="!isVerifyEnabled || isVerifying"
         @click="submitVerification"
       >

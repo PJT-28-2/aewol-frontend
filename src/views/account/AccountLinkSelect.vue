@@ -45,55 +45,55 @@ function selectBank(bankCode) {
 </script>
 
 <template>
-  <div class="min-h-screen max-w-[420px] mx-auto bg-(--color-bg) px-5 pt-6 pb-10">
+  <div class="min-h-screen max-w-[420px] mx-auto bg-(--color-bg) px-(--space-5) pt-(--space-6) pb-(--space-8)">
     <button
-      class="w-8 h-8 rounded-md bg-(--color-navy) flex items-center justify-center mb-5"
+      class="w-8 h-8 rounded-(--radius-md) bg-(--color-navy) flex items-center justify-center mb-(--space-5)"
       @click="router.back()"
     >
       <IconArrowLeft :size="18" color="var(--color-white)" />
     </button>
 
     <header class="mb-7">
-      <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">계좌 연동하기</h1>
-      <p class="text-(length:--font-md) text-(color:--color-gray-600) mt-1">연동할 은행을 선택해주세요</p>
+      <h1 class="text-(length:--font-2xl) font-(--font-bold) text-(color:--color-navy)">계좌 연동하기</h1>
+      <p class="text-(length:--font-md) text-(color:--color-gray-600) mt-(--space-1)">연동할 은행을 선택해주세요</p>
     </header>
 
-    <p v-if="store.isLoading" class="text-(length:--font-sm) text-(color:--color-gray-500) mb-6">
+    <p v-if="store.isLoading" class="text-(length:--font-sm) text-(color:--color-gray-500) mb-(--space-6)">
       불러오는 중이에요…
     </p>
 
-    <div v-else-if="loadError" class="p-4 rounded-2xl bg-(--color-surface) mb-6 text-center">
-      <p class="text-(length:--font-sm) text-(color:--color-danger) mb-3">{{ loadError }}</p>
+    <div v-else-if="loadError" class="p-(--space-4) rounded-(--radius-xl) bg-(--color-surface) mb-(--space-6) text-center">
+      <p class="text-(length:--font-sm) text-(color:--color-danger) mb-(--space-3)">{{ loadError }}</p>
       <button
-        class="px-5 py-2 rounded-xl bg-(--color-navy) text-(color:--color-white) text-(length:--font-sm) font-semibold"
+        class="px-(--space-5) py-(--space-2) rounded-(--radius-lg) bg-(--color-navy) text-(color:--color-white) text-(length:--font-sm) font-(--font-semibold)"
         @click="loadBanks"
       >
         다시 시도
       </button>
     </div>
 
-    <div v-else class="grid grid-cols-2 gap-3 mb-7">
+    <div v-else class="grid grid-cols-2 gap-(--space-3) mb-7">
       <button
         v-for="bank in normalizedBanks"
         :key="bank.code"
-        class="relative flex items-center gap-3 p-4 rounded-2xl bg-(--color-surface) border border-(--color-border) text-left"
+        class="relative flex items-center gap-(--space-3) p-(--space-4) rounded-(--radius-xl) bg-(--color-surface) border border-(--color-border) text-left"
         :class="isEnabled(bank.code) ? '' : 'opacity-50'"
         :disabled="!isEnabled(bank.code)"
         @click="selectBank(bank.code)"
       >
         <BankBadge :bank-code="bank.code" :fallback-name="bank.name" :size="36" />
-        <span class="font-semibold text-(color:--color-navy) text-(length:--font-md)">{{ bank.name }}</span>
+        <span class="font-(--font-semibold) text-(color:--color-navy) text-(length:--font-md)">{{ bank.name }}</span>
         <span
           v-if="!isEnabled(bank.code)"
-          class="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-(--color-gray-200) text-(length:--font-xs) text-(color:--color-gray-600)"
+          class="absolute top-2 right-2 px-(--space-2) py-0.5 rounded-(--radius-full) bg-(--color-gray-200) text-(length:--font-xs) text-(color:--color-gray-600)"
         >
           준비중
         </span>
       </button>
     </div>
 
-    <div class="p-4 rounded-2xl bg-(--color-surface)">
-      <p class="text-(length:--font-sm) font-semibold text-(color:--color-navy) mb-1">
+    <div class="p-(--space-4) rounded-(--radius-xl) bg-(--color-surface)">
+      <p class="text-(length:--font-sm) font-(--font-semibold) text-(color:--color-navy) mb-(--space-1)">
         계좌 데이터는 CODEF API를 통해 조회 전용으로 연동돼요
       </p>
       <p class="text-(length:--font-xs) text-(color:--color-gray-600) leading-relaxed">

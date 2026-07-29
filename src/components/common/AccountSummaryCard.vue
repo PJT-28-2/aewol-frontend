@@ -19,21 +19,21 @@ const bankMeta = computed(() => getBankMeta(props.bankCode));
 
 <template>
   <div
-    class="flex items-start gap-3 p-4 rounded-2xl bg-(--color-surface) text-left"
+    class="flex items-start gap-(--space-3) p-(--space-4) rounded-(--radius-xl) bg-(--color-surface) text-left"
     :class="bordered ? 'border border-(--color-border)' : ''"
   >
     <BankBadge :bank-code="bankCode" :size="badgeSize" />
     <div class="flex-1">
       <div class="flex items-center justify-between">
         <div class="flex items-baseline gap-1.5">
-          <span class="font-bold text-(color:--color-navy) text-(length:--font-base)">{{ bankMeta.name }}</span>
+          <span class="font-(--font-bold) text-(color:--color-navy) text-(length:--font-base)">{{ bankMeta.name }}</span>
           <span v-if="accountNumberMasked" class="text-(length:--font-sm) text-(color:--color-gray-500)">
             {{ accountNumberMasked }}
           </span>
         </div>
         <slot name="action" />
       </div>
-      <p class="text-(length:--font-sm) text-(color:--color-gray-600) mt-1">
+      <p class="text-(length:--font-sm) text-(color:--color-gray-600) mt-(--space-1)">
         {{ formatWon(balance) }}<span v-if="isPrimary"> · 주계좌</span>
       </p>
     </div>
