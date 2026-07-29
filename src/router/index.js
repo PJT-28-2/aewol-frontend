@@ -229,34 +229,41 @@ const authRoutes = [
   },
   {
     path: '/support',
-    name: 'CustomerCenter',
-    component: () => import('@/views/support/CustomerCenter.vue'),
+    name: 'Support',
+    component: () => import('@/views/support/SupportView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
-  {
-    path: '/support/faqs/:faqId',
-    name: 'FaqDetail',
-    component: () => import('@/views/support/FaqDetail.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
-  },
-  {
-    path: '/support/inquiry',
-    name: 'InquiryForm',
-    component: () => import('@/views/support/InquiryForm.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
-  },
-  {
-    path: '/support/inquiries',
-    name: 'MyInquiries',
-    component: () => import('@/views/support/MyInquiries.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
-  },
-  {
-    path: '/support/inquiry/complete',
-    name: 'InquirySubmitted',
-    component: () => import('@/views/support/InquirySubmitted.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
-  },
+  // TODO: 고객센터 화면 파일들 커밋 후 아래 주석 해제하고 위 Support(SupportView) 라우트는 제거할 것
+  // {
+  //   path: '/support',
+  //   name: 'CustomerCenter',
+  //   component: () => import('@/views/support/CustomerCenter.vue'),
+  //   meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  // },
+  // {
+  //   path: '/support/faqs/:faqId',
+  //   name: 'FaqDetail',
+  //   component: () => import('@/views/support/FaqDetail.vue'),
+  //   meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  // },
+  // {
+  //   path: '/support/inquiry',
+  //   name: 'InquiryForm',
+  //   component: () => import('@/views/support/InquiryForm.vue'),
+  //   meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  // },
+  // {
+  //   path: '/support/inquiries',
+  //   name: 'MyInquiries',
+  //   component: () => import('@/views/support/MyInquiries.vue'),
+  //   meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  // },
+  // {
+  //   path: '/support/inquiry/complete',
+  //   name: 'InquirySubmitted',
+  //   component: () => import('@/views/support/InquirySubmitted.vue'),
+  //   meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  // },
   {
     path: '/emergency',
     name: 'Emergency',
