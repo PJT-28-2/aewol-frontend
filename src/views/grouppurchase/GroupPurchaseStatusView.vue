@@ -2,9 +2,9 @@
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import IconCheck from '@/components/common/icons/IconCheck.vue';
-import IconDelete from '@/components/common/icons/IconDelete.vue';
 import BottomSheet from '@/components/common/BottomSheet.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
+import PinAuthSheet from '@/components/common/PinAuthSheet.vue';
 import statusWaitingImage from '@/assets/images/status-waiting.png';
 
 const route = useRoute();
@@ -87,41 +87,11 @@ function goToList() {
   router.push('/group-purchase');
 }
 
-// 참여 취소 비밀번호 인증 바텀시트 (GroupPurchasePaymentPreview.vue와 동일한 PIN 패턴)
-const PIN_LENGTH = 6;
-const pinInput = ref('');
-const keypadKeys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', '⌫'];
+// 참여 취소 비밀번호 인증 바텀시트
 const isPinSheetOpen = ref(false);
 const isCancelSuccessSheetOpen = ref(false);
 
-function openPinSheet() {
-  pinInput.value = '';
-  isPinSheetOpen.value = true;
-}
-
-function closePinSheet() {
-  isPinSheetOpen.value = false;
-}
-
-function handlePinKeyPress(digit) {
-  if (!digit || pinInput.value.length >= PIN_LENGTH) return;
-
-  pinInput.value += digit;
-  if (pinInput.value.length === PIN_LENGTH) {
-    handlePinComplete();
-  }
-}
-
-function handlePinBackspace() {
-  pinInput.value = pinInput.value.slice(0, -1);
-}
-
 // TODO: 저장된 결제 비밀번호와 비교하는 로직 연동 예정 (DB 연동 전이라 현재는 비교 없이 통과)
-function handlePinComplete() {
-  closePinSheet();
-  cancelParticipation();
-}
-
 // TODO: 참여 취소 + 환불 API 연동 예정 (groupPurchaseApi.leave 활용 여부는 취소/환불 정책 확정 후 결정), 현재는 성공 처리만 시뮬레이션
 function cancelParticipation() {
   isCancelSuccessSheetOpen.value = true;
@@ -289,64 +259,17 @@ function confirmCancelSuccess() {
         v-if="status.status === 'waiting'"
         type="button"
         class="w-full h-[50px] rounded-(--radius-lg) bg-(--color-white) border-[1.2px] border-(--color-danger-soft) text-(color:--color-danger-strong) text-(length:--font-sm) font-bold"
-        @click="openPinSheet"
+        @click="isPinSheetOpen = true"
       >
         참여 취소하기
       </button>
 
       <!-- 참여 취소 비밀번호 인증 바텀시트 -->
-      <BottomSheet v-model="isPinSheetOpen">
-        <div class="text-center">
-          <h2
-            class="text-(length:--font-lg) font-bold text-(color:--color-navy)"
-          >
-            비밀번호를 입력해주세요
-          </h2>
-          <p
-            class="text-(length:--font-sm) text-(color:--color-gray-500) mt-(--space-2)"
-          >
-            참여를 취소하고 환불받기 위해 확인해요
-          </p>
-
-          <div
-            class="flex items-center justify-center gap-(--space-2) mt-(--space-6)"
-          >
-            <span
-              v-for="index in PIN_LENGTH"
-              :key="index"
-              class="w-3 h-3 rounded-full"
-              :class="
-                index <= pinInput.length
-                  ? 'bg-(--color-navy)'
-                  : 'border border-(--color-border)'
-              "
-            />
-          </div>
-        </div>
-
-        <div class="grid grid-cols-3 gap-(--space-4) mt-(--space-7)">
-          <template v-for="key in keypadKeys" :key="key || 'blank'">
-            <div v-if="key === ''" class="h-14" aria-hidden="true" />
-            <button
-              v-else
-              type="button"
-              class="h-14 flex items-center justify-center text-(length:--font-2xl) font-bold text-(color:--color-navy)"
-              :aria-label="key === '⌫' ? '지우기' : key"
-              @click="
-                key === '⌫' ? handlePinBackspace() : handlePinKeyPress(key)
-              "
-            >
-              <IconDelete
-                v-if="key === '⌫'"
-                :size="20"
-                color="var(--color-navy)"
-                aria-hidden="true"
-              />
-              <template v-else>{{ key }}</template>
-            </button>
-          </template>
-        </div>
-      </BottomSheet>
+      <PinAuthSheet
+        v-model="isPinSheetOpen"
+        description="참여를 취소하고 환불받기 위해 확인해요"
+        @complete="cancelParticipation"
+      />
 
       <!-- 참여 취소 완료 안내 바텀시트 -->
       <BottomSheet v-model="isCancelSuccessSheetOpen">
