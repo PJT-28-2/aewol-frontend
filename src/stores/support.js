@@ -7,12 +7,23 @@ export const useSupportStore = defineStore('support', {
     // [{ faqId, category, question, answer? }] — answer는 상세 조회 후 채워짐
     faqs: [],
     myInquiries: [],
+    // mock 모드에서 MOCK_INQUIRIES 시드를 이미 채웠는지 여부.
+    // myInquiries.length로 판단하면, 문의를 하나 제출한 뒤(길이가 0이 아니게 됨)
+    // 다음 조회에서 시드 데이터가 영영 안 채워지는 버그가 있어서 별도 플래그로 관리해요.
+    myInquiriesSeeded: false,
     lastSubmittedInquiry: null,
     isLoading: false,
     error: null,
   }),
 
   actions: {
+    // mock 모드에서 MOCK_INQUIRIES 기본 시드를 한 번만 채워요.
+    // submitInquiry/fetchMyInquiries 어느 쪽이 먼저 호출되든 항상 기본 시드가 유지돼요.
+    _ensureMockInquiriesSeeded() {
+      if (this.myInquiriesSeeded) return;
+      this.myInquiries = [...this.myInquiries, ...MOCK_INQUIRIES];
+      this.myInquiriesSeeded = true;
+    },
     // GET /api/support/faqs — API 연동 전엔 USE_MOCK_DATA로 바로 목데이터 사용
     // ⚠️ 실제 API 응답에 category 필드가 없다면 카테고리 필터/뱃지 표시를 위해 추가가 필요해요.
     async fetchFaqs() {
@@ -77,6 +88,7 @@ export const useSupportStore = defineStore('support', {
 
     async submitInquiry({ category, title, content, email, images }) {
       if (USE_MOCK_DATA) {
+        this._ensureMockInquiriesSeeded();
         const now = new Date();
         const dateStr = now.toISOString().slice(0, 10).replaceAll('-', '');
         const mockResult = {
@@ -107,9 +119,7 @@ export const useSupportStore = defineStore('support', {
     // GET /api/support/inquiries — API 연동 전엔 USE_MOCK_DATA로 바로 목데이터 사용
     async fetchMyInquiries() {
       if (USE_MOCK_DATA) {
-        if (this.myInquiries.length === 0) {
-          this.myInquiries = MOCK_INQUIRIES;
-        }
+        this._ensureMockInquiriesSeeded();
         return;
       }
       this.isLoading = true;
