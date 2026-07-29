@@ -12,7 +12,7 @@ const store = useSupportStore();
 
 const CATEGORIES = SUPPORT_CATEGORIES;
 const MAX_ATTACHMENT_COUNT = 3;
-const MAX_TOTAL_ATTACHMENT_SIZE = 50 * 1024 * 1024; // 3장 합쳐서 최대 50MB
+const MAX_TOTAL_ATTACHMENT_SIZE = 10 * 1024 * 1024; // 3장 합쳐서 최대 10MB — 백엔드 multipart 요청 한도에 맞춤
 
 const category = ref('지갑·버킷');
 const title = ref('');
@@ -42,7 +42,7 @@ function onFilesSelected(event) {
 
   for (const file of files.slice(0, remainingSlots)) {
     if (currentTotal + file.size > MAX_TOTAL_ATTACHMENT_SIZE) {
-      attachmentError.value = '첨부 이미지 용량은 3장 합쳐서 최대 50MB까지 가능해요';
+      attachmentError.value = '첨부 이미지 용량은 3장 합쳐서 최대 10MB까지 가능해요';
       break;
     }
     attachments.value.push({ file, previewUrl: URL.createObjectURL(file) });
@@ -150,7 +150,7 @@ async function submit() {
       @click="openFilePicker"
     >
       <IconImage :size="16" color="var(--color-gray-500)" />
-      스크린샷 · 이미지 첨부 (최대 3장, 합쳐서 최대 50MB)
+      스크린샷 · 이미지 첨부 (최대 3장, 합쳐서 최대 10MB)
     </button>
     <p v-if="attachmentError" class="text-(length:--font-xs) text-(color:--color-danger) mb-3">{{ attachmentError }}</p>
 
