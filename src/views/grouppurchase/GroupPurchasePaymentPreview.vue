@@ -5,6 +5,7 @@ import IconWallet from '@/components/common/icons/IconWallet.vue';
 import IconWarning from '@/components/common/icons/IconWarning.vue';
 import IconDelete from '@/components/common/icons/IconDelete.vue';
 import BottomSheet from '@/components/common/BottomSheet.vue';
+import AppButton from '@/components/common/AppButton.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -248,13 +249,9 @@ function handlePinComplete() {
           >
             배송지
           </span>
-          <button
-            type="button"
-            class="text-(length:--font-xs) font-semibold text-(color:--color-slate-dark)"
-            @click="handleChangeAddress"
-          >
+          <AppButton variant="ghost" size="sm" @click="handleChangeAddress">
             변경
-          </button>
+          </AppButton>
         </div>
         <p class="text-(length:--font-md) font-bold text-(color:--color-navy)">
           {{ shippingAddress.recipientName }}
@@ -277,13 +274,9 @@ function handlePinComplete() {
         >
           등록된 배송지가 없어요
         </p>
-        <button
-          type="button"
-          class="w-full h-[46px] bg-(--color-white) border-[1.2px] border-(--color-navy) rounded-(--radius-full) text-(length:--font-xs) font-bold text-(color:--color-navy)"
-          @click="handleChangeAddress"
-        >
+        <AppButton variant="secondary" block @click="handleChangeAddress">
           + 배송지 추가하기
-        </button>
+        </AppButton>
       </template>
     </section>
 
@@ -426,14 +419,16 @@ function handlePinComplete() {
     </p>
 
     <!-- 잔액부족: 충전하러 가기 버튼 -->
-    <button
+    <AppButton
       v-if="isBalanceInsufficient"
-      type="button"
-      class="fixed bottom-[calc(var(--bottom-nav-height)+var(--space-4))] left-(--space-4) right-(--space-4) flex items-center justify-center p-(--space-4) bg-(--color-gold) text-(color:--color-navy) rounded-(--radius-md) text-(length:--font-base) font-bold shadow-(--shadow-md)"
+      variant="primary"
+      size="lg"
+      block
+      class="fixed bottom-[calc(var(--bottom-nav-height)+var(--space-4))] left-(--space-4) right-(--space-4) shadow-(--shadow-md)"
       @click="handleCharge"
     >
       충전하러 가기
-    </button>
+    </AppButton>
 
     <!-- 결제하기 버튼: 배송지 미등록 시 비활성화 -->
     <button
@@ -587,20 +582,12 @@ function handlePinComplete() {
       <div v-else class="mb-(--space-5)" />
 
       <div class="flex gap-(--space-3)">
-        <button
-          type="button"
-          class="flex-1 h-[52px] bg-(--color-white) border border-(--color-border) rounded-(--radius-lg) text-(length:--font-md) font-bold text-(color:--color-slate-dark)"
-          @click="closeAddressSheet"
-        >
+        <AppButton variant="secondary" size="lg" class="flex-1" @click="closeAddressSheet">
           취소
-        </button>
-        <button
-          type="button"
-          class="flex-1 h-[52px] bg-(--color-gold) rounded-(--radius-lg) text-(length:--font-md) font-bold text-(color:--color-navy)"
-          @click="confirmAddress"
-        >
+        </AppButton>
+        <AppButton variant="primary" size="lg" class="flex-1" @click="confirmAddress">
           확인
-        </button>
+        </AppButton>
       </div>
     </BottomSheet>
 
@@ -654,13 +641,7 @@ function handlePinComplete() {
           <span class="text-(length:--font-md) font-semibold text-(color:--color-navy)">
             주소 검색
           </span>
-          <button
-            type="button"
-            class="text-(length:--font-sm) text-(color:--color-slate-dark)"
-            @click="closePostcode"
-          >
-            닫기
-          </button>
+          <AppButton variant="ghost" size="sm" @click="closePostcode">닫기</AppButton>
         </div>
         <div ref="postcodeContainerRef" class="flex-1" />
       </div>
