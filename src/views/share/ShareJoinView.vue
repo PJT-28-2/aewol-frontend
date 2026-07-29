@@ -3,13 +3,13 @@ import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 import IconInfo from '@/components/common/icons/IconInfo.vue'
-import { MOCK_INVITE_CODE } from '@/mocks/share'
+import { buildMockInviteLink, MOCK_INVITE_CODE } from '@/mocks/share'
 import { useShareStore } from '@/stores/share'
 
 const route = useRoute()
 const router = useRouter()
 const shareStore = useShareStore()
-const inviteLink = window.location.origin + '/share/join?invite=' + MOCK_INVITE_CODE
+const inviteLink = buildMockInviteLink()
 const link = ref(route.query.invite === MOCK_INVITE_CODE ? inviteLink : '')
 const isJoining = ref(false)
 const errorMessage = ref('')

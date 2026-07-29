@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
-import { MOCK_INVITE_CODE } from '@/mocks/share'
+import { buildMockInviteLink } from '@/mocks/share'
 import { useShareStore } from '@/stores/share'
 
 const router = useRouter()
@@ -11,7 +11,7 @@ const recipient = ref('')
 const copied = ref(false)
 const feedback = ref('')
 const isError = ref(false)
-const inviteLink = window.location.origin + '/share/join?invite=' + MOCK_INVITE_CODE
+const inviteLink = buildMockInviteLink()
 
 const trimmedRecipient = computed(() => recipient.value.trim())
 const isEmail = computed(() =>
