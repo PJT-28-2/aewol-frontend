@@ -40,13 +40,22 @@ function onFilesSelected(event) {
   const remainingSlots = MAX_ATTACHMENT_COUNT - attachments.value.length;
   let currentTotal = totalAttachmentSize(attachments.value);
 
-  for (const file of files.slice(0, remainingSlots)) {
+  const filesToAdd = files.slice(0, remainingSlots);
+  const droppedCount = files.length - filesToAdd.length;
+
+  for (const file of filesToAdd) {
     if (currentTotal + file.size > MAX_TOTAL_ATTACHMENT_SIZE) {
       attachmentError.value = '첨부 이미지 용량은 3장 합쳐서 최대 10MB까지 가능해요';
       break;
     }
     attachments.value.push({ file, previewUrl: URL.createObjectURL(file) });
     currentTotal += file.size;
+  }
+
+  // 용량 초과로 이미 에러 메시지가 떴으면 그걸 우선하고, 그게 아니라 개수 제한 때문에
+  // 잘려나간 파일이 있으면 왜 다 안 들어갔는지 알려줘요.
+  if (!attachmentError.value && droppedCount > 0) {
+    attachmentError.value = `최대 ${MAX_ATTACHMENT_COUNT}장까지만 첨부할 수 있어서 ${droppedCount}장은 제외됐어요`;
   }
 
   event.target.value = '';
