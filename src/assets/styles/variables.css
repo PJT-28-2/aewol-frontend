@@ -49,9 +49,13 @@
   --color-danger-muted: #8a5252;
   --color-warning: #ffc107;
   --color-info: #17a2b8;
+  --color-danger-bg: #f7e5e5;
+  --color-danger-border: #c24d4d;
+  --color-danger-text: #8a5252;
 
   /* Typography - Font Family */
-  --font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-family:
+    'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
   /* Typography - Font Sizes */
   --font-xs: 10px;
@@ -81,6 +85,13 @@
   --space-9: 48px;
   --space-10: 64px;
 
+  /* Iconography */
+  --icon-size-xs: 15px;
+  --icon-size-sm: 16px;
+  --icon-size-md: 24px;
+  --icon-size-lg: 28px;
+  --icon-stroke-width: 2;
+
   /* Border Radius */
   --radius-sm: 4px;
   --radius-md: 8px;
@@ -106,15 +117,26 @@
   --auth-success-find-id-image-offset: -11px;
   --auth-success-title-gap: 9px;
 
+  /* Support Program */
+  --support-card-min-height: 128px;
+  --support-action-height: 24px;
+  --support-action-width: 80px;
+  --support-status-icon-size: 24px;
+  --support-info-icon-offset: 2px;
+
   /* Layout */
   --bottom-nav-height: 64px;
   --header-height: 56px;
   --layout-max-width: 480px;
-  --mobile-content-width: 390px;
-  /* Layout */
-  --bottom-nav-height: 64px;
-  --header-height: 56px;
-  --layout-max-width: 480px;
+
+  /* Component Sizes */
+  --size-thumb-lg: 110px;
+  --size-progress-bar: 8px;
+  --size-stepper-box: 46px;
+  --size-stepper-btn: 34px;
+  --size-stepper-value: 24px;
+  --size-button-lg: 52px;
+  --size-cta-bar-height: 96px;
   --mobile-content-width: 390px;
   --control-height: 46px;
   --share-icon-size: 60px;
