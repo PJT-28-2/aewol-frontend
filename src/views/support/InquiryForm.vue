@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useSupportStore } from '@/stores/support';
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue';
@@ -57,6 +57,13 @@ function removeAttachment(index) {
   attachments.value.splice(index, 1);
   attachmentError.value = '';
 }
+
+// 제출 성공 후 router.replace로 이동하거나 뒤로가기로 이탈하는 등,
+// removeAttachment를 거치지 않고 화면을 벗어나는 모든 경우를 대비해
+// 남아있는 첨부 미리보기 object URL을 여기서 한 번에 정리해요.
+onUnmounted(() => {
+  attachments.value.forEach((item) => URL.revokeObjectURL(item.previewUrl));
+});
 
 const isFormValid = () =>
   title.value.trim() && content.value.trim() && email.value.trim();
