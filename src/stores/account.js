@@ -36,14 +36,31 @@ export const useAccountStore = defineStore('account', {
   },
 
   actions: {
+    // 실제 API 호출 구간에서 공통으로 쓰는 로딩·에러 상태 래퍼.
+    // 목데이터 모드는 즉시 반환이라 실패 자체가 없으므로 각 액션에서 이 래퍼를 타지 않음.
+    async _withRequestState(request) {
+      this.isLoading = true;
+      this.error = null;
+      try {
+        return await request();
+      } catch (err) {
+        this.error = err;
+        throw err;
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
     // GET /api/banks — API 연동 전엔 USE_MOCK_DATA로 바로 목데이터 사용
     async fetchBanks() {
       if (USE_MOCK_DATA) {
         this.banks = MOCK_BANKS;
         return;
       }
-      const { data } = await getBanks();
-      this.banks = data.result ?? [];
+      await this._withRequestState(async () => {
+        const { data } = await getBanks();
+        this.banks = data.result ?? [];
+      });
     },
 
     // GET /api/accounts — API 연동 전엔 USE_MOCK_DATA로 바로 목데이터 사용
@@ -52,17 +69,10 @@ export const useAccountStore = defineStore('account', {
         this.accounts = structuredClone(MOCK_ACCOUNTS);
         return;
       }
-      this.isLoading = true;
-      this.error = null;
-      try {
+      await this._withRequestState(async () => {
         const { data } = await getAccounts();
         this.accounts = data.result ?? [];
-      } catch (err) {
-        this.error = err;
-        throw err;
-      } finally {
-        this.isLoading = false;
-      }
+      });
     },
 
     selectBankToLink(bankCode) {
@@ -84,14 +94,16 @@ export const useAccountStore = defineStore('account', {
         return { verificationId: this.linking.verificationId };
       }
 
-      const { data } = await requestDepositVerification({
-        bankCode: this.linking.bankCode,
-        accountNumber,
+      return this._withRequestState(async () => {
+        const { data } = await requestDepositVerification({
+          bankCode: this.linking.bankCode,
+          accountNumber,
+        });
+        this.linking.verificationId = data.result.verificationId;
+        this.linking.maskedAccountNumber = data.result.maskedAccountNumber;
+        this.linking.expiresInSeconds = data.result.expiresInSeconds;
+        return data.result;
       });
-      this.linking.verificationId = data.result.verificationId;
-      this.linking.maskedAccountNumber = data.result.maskedAccountNumber;
-      this.linking.expiresInSeconds = data.result.expiresInSeconds;
-      return data.result;
     },
 
     // POST /api/accounts/verify-deposit/confirm — 목데이터 모드에선 4자리만 채우면 통과
@@ -99,11 +111,13 @@ export const useAccountStore = defineStore('account', {
       if (USE_MOCK_DATA) {
         return depositorName.length === 4;
       }
-      const { data } = await confirmDepositVerification({
-        verificationId: this.linking.verificationId,
-        depositorName,
+      return this._withRequestState(async () => {
+        const { data } = await confirmDepositVerification({
+          verificationId: this.linking.verificationId,
+          depositorName,
+        });
+        return data.result.verified;
       });
-      return data.result.verified;
     },
 
     // POST /api/accounts — 목데이터 모드에선 로컬로 계좌를 바로 추가
@@ -120,13 +134,15 @@ export const useAccountStore = defineStore('account', {
         this.accounts.push(mockAccount);
         return mockAccount;
       }
-      const { data } = await registerAccount({
-        verificationId: this.linking.verificationId,
-        bankCode: this.linking.bankCode,
-        accountNumber: this.linking.accountNumber,
+      return this._withRequestState(async () => {
+        const { data } = await registerAccount({
+          verificationId: this.linking.verificationId,
+          bankCode: this.linking.bankCode,
+          accountNumber: this.linking.accountNumber,
+        });
+        this.accounts.push(data.result);
+        return data.result;
       });
-      this.accounts.push(data.result);
-      return data.result;
     },
 
     resetLinkingState() {
@@ -139,14 +155,22 @@ export const useAccountStore = defineStore('account', {
       };
     },
 
+    // PATCH /api/accounts/{accountId}
     async makePrimary(accountId) {
-      if (!USE_MOCK_DATA) {
-        await setPrimaryAccount(accountId);
+      if (USE_MOCK_DATA) {
+        this.accounts = this.accounts.map((a) => ({
+          ...a,
+          isPrimary: a.accountId === accountId,
+        }));
+        return;
       }
-      this.accounts = this.accounts.map((a) => ({
-        ...a,
-        isPrimary: a.accountId === accountId,
-      }));
+      await this._withRequestState(async () => {
+        await setPrimaryAccount(accountId);
+        this.accounts = this.accounts.map((a) => ({
+          ...a,
+          isPrimary: a.accountId === accountId,
+        }));
+      });
     },
 
     openUnlinkConfirm(account) {
@@ -157,14 +181,23 @@ export const useAccountStore = defineStore('account', {
       this.pendingUnlinkAccount = null;
     },
 
+    // DELETE /api/accounts/{accountId}
     async confirmUnlink() {
       if (!this.pendingUnlinkAccount) return;
-      if (!USE_MOCK_DATA) {
-        await unlinkAccount(this.pendingUnlinkAccount.accountId);
+
+      if (USE_MOCK_DATA) {
+        this.accounts = this.accounts.filter(
+          (a) => a.accountId !== this.pendingUnlinkAccount.accountId,
+        );
+        return;
       }
-      this.accounts = this.accounts.filter(
-        (a) => a.accountId !== this.pendingUnlinkAccount.accountId,
-      );
+
+      await this._withRequestState(async () => {
+        await unlinkAccount(this.pendingUnlinkAccount.accountId);
+        this.accounts = this.accounts.filter(
+          (a) => a.accountId !== this.pendingUnlinkAccount.accountId,
+        );
+      });
     },
   },
 });
