@@ -32,9 +32,11 @@ function removeImage() {
   image.value = null
 }
 
-// 콤마/원 등 숫자 외 문자를 제거해 실제 금액만 추출
+// 콤마/원 등 숫자 외 문자를 제거해 실제 금액만 추출, 음수X
 function parsePrice(value) {
-  const digits = value.replace(/[^0-9]/g, '')
+  const raw = String(value).trim()
+  if (raw.includes('-')) return 0
+  const digits = raw.replace(/[^0-9]/g, '')
   return digits ? Number(digits) : 0
 }
 
