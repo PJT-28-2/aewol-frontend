@@ -1,46 +1,89 @@
 <script setup>
-import { computed, ref, onMounted } from 'vue'
-import TransactionList from '@/components/common/TransactionList.vue'
+import { computed, onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
+import BottomSheet from '@/components/common/BottomSheet.vue';
+import TransactionList from '@/components/common/TransactionList.vue';
+import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue';
+import IconCheck from '@/components/common/icons/IconCheck.vue';
+import IconChevronDown from '@/components/common/icons/IconChevronDown.vue';
+
+const router = useRouter();
 
 // TODO: 백엔드 API 연동 후 mock 데이터 제거하고 실제 fetch로 교체
-const transactions = ref([])
-const isLoading = ref(true)
-const isError = ref(false)
+const transactions = ref([]);
+const isLoading = ref(true);
+const isError = ref(false);
 
-const filters = ref({
-  startDate: '',
-  endDate: '',
-  category: '',
-  petId: '',
-})
+// 거래 필터 (전체/충전/출금)
+const filters = [
+  { key: 'all', label: '전체' },
+  { key: 'charge', label: '충전' },
+  { key: 'withdraw', label: '출금' },
+];
+const activeFilter = ref('all');
 
-// 필터 적용 버튼을 눌렀을 때만 반영되는 실제 필터 조건
-const appliedFilters = ref({ ...filters.value })
+// 월 선택 바텀시트
+const isMonthSheetOpen = ref(false);
+const today = new Date();
+const activeMonth = ref({
+  year: today.getFullYear(),
+  month: today.getMonth() + 1,
+});
+
+const monthOptions = computed(() => {
+  const options = [];
+  for (let i = 0; i < 12; i += 1) {
+    const d = new Date(
+      today.getFullYear(),
+      today.getMonth() - i,
+      1,
+    );
+    options.push({
+      year: d.getFullYear(),
+      month: d.getMonth() + 1,
+      label: `${d.getFullYear()}년 ${d.getMonth() + 1}월`,
+    });
+  }
+  return options;
+});
+
+const activeMonthLabel = computed(() => {
+  const isCurrentMonth =
+    activeMonth.value.year === today.getFullYear() &&
+    activeMonth.value.month === today.getMonth() + 1;
+  return isCurrentMonth
+    ? '이번달'
+    : `${activeMonth.value.month}월`;
+});
+
+function isActiveMonth(option) {
+  return (
+    option.year === activeMonth.value.year &&
+    option.month === activeMonth.value.month
+  );
+}
+
+function selectMonth(option) {
+  activeMonth.value = { year: option.year, month: option.month };
+  isMonthSheetOpen.value = false;
+}
 
 const filteredTransactions = computed(() => {
   return transactions.value.filter((tx) => {
-    const matchesStart =
-      !appliedFilters.value.startDate ||
-      tx.date >= appliedFilters.value.startDate
-    const matchesEnd =
-      !appliedFilters.value.endDate ||
-      tx.date <= appliedFilters.value.endDate
-    const matchesCategory =
-      !appliedFilters.value.category ||
-      tx.category === appliedFilters.value.category
-    return matchesStart && matchesEnd && matchesCategory
-  })
-})
+    const [txYear, txMonth] = tx.date.split('-').map(Number);
+    const matchesMonth =
+      txYear === activeMonth.value.year &&
+      txMonth === activeMonth.value.month;
+    const matchesType =
+      activeFilter.value === 'all' ||
+      tx.type === activeFilter.value;
+    return matchesMonth && matchesType;
+  });
+});
 
-const categoryOptions = [
-  { value: '', label: '전체' },
-  { value: 'FOOD', label: '사료/간식' },
-  { value: 'MEDICAL', label: '의료' },
-  { value: 'GROOMING', label: '미용' },
-  { value: 'SUPPLIES', label: '용품' },
-  { value: 'INSURANCE', label: '보험' },
-  { value: 'ETC', label: '기타' },
-]
+function goBack() {
+  router.back();
+}
 
 onMounted(async () => {
   try {
@@ -51,7 +94,9 @@ onMounted(async () => {
         title: '24시 우리동물병원',
         subtitle: '병원비 · 소로 진료',
         amount: -42000,
-        category: 'MEDICAL',
+        type: 'withdraw',
+        petId: 1,
+        petName: '소로',
       },
       {
         id: 2,
@@ -59,209 +104,176 @@ onMounted(async () => {
         title: '펫사료마트',
         subtitle: '사료·간식 · LLM 분류',
         amount: -31200,
-        category: 'FOOD',
+        type: 'withdraw',
+        petId: null,
+        petName: null,
       },
       {
         id: 3,
+        date: '2026-07-17',
+        title: '엄마 · 충전',
+        subtitle: '펫지갑에 100,000원 충전',
+        amount: 100000,
+        type: 'charge',
+        petId: null,
+        petName: null,
+      },
+      {
+        id: 4,
         date: '2026-07-15',
         title: '미미미용실',
         subtitle: '미용비 · 나비 미용',
         amount: -38000,
-        category: 'GROOMING',
-      },
-      {
-        id: 4,
-        date: '2026-06-20',
-        title: '펫프렌즈 보험',
-        subtitle: '반려동물보험 · 월 납입',
-        amount: -25000,
-        category: 'INSURANCE',
+        type: 'withdraw',
+        petId: 2,
+        petName: '나비',
       },
       {
         id: 5,
-        date: '2026-06-05',
-        title: '펫샵 용품점',
-        subtitle: '용품 · 리드줄 구매',
-        amount: -18000,
-        category: 'SUPPLIES',
+        date: '2026-07-12',
+        title: '24시 제주동물병원',
+        subtitle: 'SOS포켓 · 응급진료',
+        amount: -150000,
+        type: 'withdraw',
+        petId: null,
+        petName: null,
       },
-    ]
+      {
+        id: 6,
+        date: '2026-07-10',
+        title: '펫프렌즈',
+        subtitle: '위생용품 · 자동분류',
+        amount: -18900,
+        type: 'withdraw',
+        petId: null,
+        petName: null,
+      },
+      {
+        id: 7,
+        date: '2026-06-20',
+        title: '24시 우리동물병원',
+        subtitle: '병원비 · 나비 진료',
+        amount: -25000,
+        type: 'withdraw',
+        petId: 2,
+        petName: '나비',
+      },
+      {
+        id: 8,
+        date: '2026-06-05',
+        title: '아빠 · 충전',
+        subtitle: '펫지갑에 50,000원 충전',
+        amount: 50000,
+        type: 'charge',
+        petId: null,
+        petName: null,
+      },
+    ];
   } catch {
-    isError.value = true
+    isError.value = true;
   } finally {
-    isLoading.value = false
+    isLoading.value = false;
   }
-})
-
-function handleFilter() {
-  appliedFilters.value = { ...filters.value }
-}
+});
 </script>
 
 <template>
-  <div class="transaction-page">
-    <header class="page-header">
-      <router-link
-        to="/wallet"
-        class="back-btn"
-      >
-        &lsaquo; 지갑
-      </router-link>
-      <h1>거래 내역</h1>
-    </header>
+  <div
+    class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))] bg-(--color-bg) min-h-screen"
+  >
+    <button
+      type="button"
+      class="mb-(--space-3) text-(color:--color-navy)"
+      aria-label="뒤로 가기"
+      @click="goBack"
+    >
+      <IconArrowLeft size="24" />
+    </button>
 
-    <!-- Filters -->
-    <section class="filters card">
-      <div class="filter-row">
-        <div class="filter-item">
-          <label for="startDate">시작일</label>
-          <input
-            id="startDate"
-            v-model="filters.startDate"
-            type="date"
-          >
-        </div>
-        <div class="filter-item">
-          <label for="endDate">종료일</label>
-          <input
-            id="endDate"
-            v-model="filters.endDate"
-            type="date"
-          >
-        </div>
-      </div>
-      <div class="filter-row">
-        <div class="filter-item">
-          <label for="category">카테고리</label>
-          <select
-            id="category"
-            v-model="filters.category"
-          >
-            <option
-              v-for="opt in categoryOptions"
-              :key="opt.value"
-              :value="opt.value"
-            >
-              {{ opt.label }}
-            </option>
-          </select>
-        </div>
-        <!-- TODO: implement pet filter dropdown -->
-      </div>
-      <button
-        class="btn-filter"
-        @click="handleFilter"
-      >
-        필터 적용
-      </button>
-    </section>
+    <h1
+      class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-6)"
+    >
+      전체 결제내역
+    </h1>
 
-    <!-- Transaction List -->
-    <section class="transaction-section">
+    <div
+      v-if="isLoading"
+      class="text-center py-(--space-8) text-(color:--color-gray-500)"
+    >
+      <p>로딩 중...</p>
+    </div>
+
+    <div
+      v-else-if="isError"
+      class="text-center py-(--space-8) text-(color:--color-gray-500)"
+    >
+      <p>거래 내역을 불러오지 못했습니다.</p>
+    </div>
+
+    <template v-else>
       <div
-        v-if="isLoading"
-        class="loading-state"
+        class="flex items-center justify-between mb-(--space-4)"
       >
-        <p>로딩 중...</p>
+        <div class="flex gap-(--space-2)">
+          <button
+            v-for="filter in filters"
+            :key="filter.key"
+            type="button"
+            class="h-(--space-7) px-(--space-4) rounded-full text-(length:--font-sm) font-semibold"
+            :class="
+              activeFilter === filter.key
+                ? 'bg-(--color-navy) text-(color:--color-white)'
+                : 'bg-(--color-surface) text-(color:--color-slate-muted)'
+            "
+            @click="activeFilter = filter.key"
+          >
+            {{ filter.label }}
+          </button>
+        </div>
+        <button
+          type="button"
+          class="flex items-center gap-(--space-1) text-(length:--font-sm) text-(color:--color-slate-muted)"
+          @click="isMonthSheetOpen = true"
+        >
+          {{ activeMonthLabel }}
+          <IconChevronDown
+            size="14"
+            color="var(--color-slate-muted)"
+          />
+        </button>
       </div>
 
-      <div
-        v-else-if="isError"
-        class="loading-state"
-      >
-        <p>거래 내역을 불러오지 못했습니다.</p>
-      </div>
+      <TransactionList :transactions="filteredTransactions" />
+    </template>
 
-      <TransactionList
-        v-else
-        :transactions="filteredTransactions"
-      />
-    </section>
+    <BottomSheet
+      v-model="isMonthSheetOpen"
+      title="월 선택"
+    >
+      <ul>
+        <li
+          v-for="option in monthOptions"
+          :key="`${option.year}-${option.month}`"
+        >
+          <button
+            type="button"
+            class="w-full flex items-center justify-between py-(--space-3) text-(length:--font-base)"
+            :class="
+              isActiveMonth(option)
+                ? 'text-(color:--color-gold) font-bold'
+                : 'text-(color:--color-slate-dark)'
+            "
+            @click="selectMonth(option)"
+          >
+            <span>{{ option.label }}</span>
+            <IconCheck
+              v-if="isActiveMonth(option)"
+              size="18"
+              color="var(--color-gold)"
+            />
+          </button>
+        </li>
+      </ul>
+    </BottomSheet>
   </div>
 </template>
-
-<style scoped>
-.transaction-page {
-  padding: var(--space-4);
-  padding-bottom: calc(var(--bottom-nav-height) + var(--space-4));
-  background-color: var(--color-bg);
-  min-height: 100vh;
-}
-
-.page-header {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  margin-bottom: var(--space-5);
-}
-
-.back-btn {
-  font-size: var(--font-md);
-  color: var(--color-navy);
-  text-decoration: none;
-  font-weight: var(--font-medium);
-}
-
-.page-header h1 {
-  font-size: var(--font-xl);
-  font-weight: var(--font-bold);
-  color: var(--color-navy);
-}
-
-.card {
-  background-color: var(--color-white);
-  border-radius: var(--radius-lg);
-  padding: var(--space-4);
-  box-shadow: var(--shadow-sm);
-}
-
-.filters {
-  margin-bottom: var(--space-5);
-}
-
-.filter-row {
-  display: flex;
-  gap: var(--space-3);
-  margin-bottom: var(--space-3);
-}
-
-.filter-item {
-  flex: 1;
-}
-
-.filter-item label {
-  display: block;
-  font-size: var(--font-xs);
-  font-weight: var(--font-medium);
-  color: var(--color-gray-600);
-  margin-bottom: var(--space-1);
-}
-
-.filter-item input,
-.filter-item select {
-  width: 100%;
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--color-gray-300);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-sm);
-  box-sizing: border-box;
-}
-
-.btn-filter {
-  width: 100%;
-  padding: var(--space-2) var(--space-3);
-  background-color: var(--color-navy);
-  color: var(--color-white);
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: var(--font-sm);
-  font-weight: var(--font-semibold);
-  cursor: pointer;
-}
-
-.loading-state {
-  text-align: center;
-  padding: var(--space-8) 0;
-  color: var(--color-gray-500);
-}
-</style>
