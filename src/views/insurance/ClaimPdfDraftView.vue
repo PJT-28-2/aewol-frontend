@@ -34,11 +34,25 @@ const handleDownload = async () => {
     })
     const imgData = canvas.toDataURL('image/png')
     const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+    const margin = 10
     const pageWidth = pdf.internal.pageSize.getWidth()
     const pageHeight = pdf.internal.pageSize.getHeight()
-    const imgWidth = pageWidth - 20
-    const imgHeight = (canvas.height * imgWidth) / canvas.width
-    pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, Math.min(imgHeight, pageHeight - 20))
+    const contentWidth = pageWidth - margin * 2
+    const contentHeight = pageHeight - margin * 2
+    // 종횡비 유지: 가로 기준으로 높이 계산
+    const imgHeight = (canvas.height * contentWidth) / canvas.width
+    // 페이지 분할: A4 한 장에 들어오는 이미지 높이(mm)만큼 잘라서 각 페이지에 삽입
+    const totalPages = Math.ceil(imgHeight / contentHeight)
+    for (let page = 0; page < totalPages; page++) {
+      if (page > 0) pdf.addPage()
+      pdf.addImage(
+        imgData, 'PNG',
+        margin,
+        margin - page * contentHeight,
+        contentWidth,
+        imgHeight,
+      )
+    }
     pdf.save(`보험금청구서_${claimData.value.hospitalName}_${claimData.value.visitDate}.pdf`)
   } finally {
     isGenerating.value = false
