@@ -42,7 +42,9 @@ export function confirmDepositVerification(payload) {
  * 계좌 등록 — 1원 인증 완료 후 실제 계좌 연동 확정
  * POST /api/accounts
  * body: { verificationId, bankCode, accountNumber }
- * result: { accountId, bankCode, accountNumberMasked, balance, isPrimary }
+ * result: { accountId, bankCode, accountNumberMasked, isPrimary }
+ * ⚠️ 실제 백엔드 AccountResponse엔 balance가 없어요.
+ * 등록 후 잔액이 필요하면 store에서 GET /api/accounts로 다시 조회해 채워요.
  */
 export function registerAccount(payload) {
   return api.post('/api/accounts', payload);

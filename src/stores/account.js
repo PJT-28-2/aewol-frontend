@@ -149,9 +149,15 @@ export const useAccountStore = defineStore('account', {
           bankCode: this.linking.bankCode,
           accountNumber: this.linking.accountNumber,
         });
-        this.accounts.push(data.result);
         this.lastLinkedAccountId = data.result.accountId;
-        return data.result;
+
+        // 백엔드의 POST /api/accounts 응답(AccountResponse)엔 balance가 없어서
+        // 등록 응답을 그대로 쓰면 완료 화면 잔액이 비어요.
+        // GET /api/accounts로 다시 조회해서 balance가 포함된 완전한 데이터로 채워요.
+        const { data: listData } = await getAccounts();
+        this.accounts = listData.result ?? [];
+
+        return this.accounts.find((a) => a.accountId === this.lastLinkedAccountId) ?? data.result;
       });
     },
 
