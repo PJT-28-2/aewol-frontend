@@ -10,9 +10,10 @@ const route = useRoute()
 const router = useRouter()
 
 // TODO: onMounted에서 groupPurchaseApi.getStatus(route.params.gpId) 연동 예정, 현재는 응답 포맷과 동일한 mock 데이터
+// productName은 API 응답의 title 필드에 대응
 const status = ref({
   gpId: route.params.gpId,
-  title: '프리미엄 사료 15kg',
+  productName: '프리미엄 사료 15kg',
   status: 'waiting',
   currentQuantity: 3,
   targetQuantity: 5,
@@ -139,7 +140,7 @@ function confirmCancelSuccess() {
         <h2
           class="text-(length:--font-md) font-bold text-(color:--color-navy)"
         >
-          {{ status.title }}
+          {{ status.productName }}
         </h2>
         <p
           class="text-(length:--font-xs) text-(color:--color-slate-muted) mt-(--space-1)"
