@@ -6,14 +6,25 @@
   --color-gold-light: #f0c05a;
   --color-olive: #6a930d;
   --color-slate: #98a4bc;
+  --color-slate-light: #c9d1e3;
   --color-slate-muted: #8a93a6;
   --color-slate-dark: #4a5a7d;
   --color-white: #ffffff;
   --color-bg: #ffffff;
   --color-surface: #fafaf8;
   --color-border: #eaeae4;
+  --color-olive-surface: #eef3e2;
+  --color-olive-dark: #3f5a08;
+  --color-olive-muted: #5c7a2e;
+  --color-gold-surface: #fbe7c6;
+  --color-gold-dark: #d99a2b;
+  --color-info-surface: #dce6f5;
+  --color-danger-surface: #f2e3e3;
+  --color-danger-dark: #8a3b3b;
   --color-pastel-blue: #dce6f5;
   --color-pastel-green: #eef3e2;
+  --color-kakao: #fee500;
+  --color-kakao-label: #181600;
 
   /* Colors - Gray Scale */
   --color-gray-100: #f8f9fa;
@@ -34,6 +45,9 @@
   --color-danger-muted: #8a5252;
   --color-warning: #ffc107;
   --color-info: #17a2b8;
+  --color-danger-bg: #f7e5e5;
+  --color-danger-border: #c24d4d;
+  --color-danger-text: #8a5252;
 
   /* Colors - Bank Brand (계좌연동 화면 전용) */
     --color-brand-kb: #f2b853;
@@ -79,6 +93,13 @@
   --space-9: 48px;
   --space-10: 64px;
 
+  /* Iconography */
+  --icon-size-xs: 15px;
+  --icon-size-sm: 16px;
+  --icon-size-md: 24px;
+  --icon-size-lg: 28px;
+  --icon-stroke-width: 2;
+
   /* Border Radius */
   --radius-sm: 4px;
   --radius-md: 8px;
@@ -98,8 +119,35 @@
   --control-height-md: 46px;
   --control-height-lg: 52px;
 
+  /* Auth Success Screen */
+  --auth-success-image-size: 149px;
+  --auth-success-password-image-offset: 41px;
+  --auth-success-find-id-image-offset: -11px;
+  --auth-success-title-gap: 9px;
+
+  /* Support Program */
+  --support-card-min-height: 128px;
+  --support-action-height: 24px;
+  --support-action-width: 80px;
+  --support-status-icon-size: 24px;
+  --support-info-icon-offset: 2px;
+
   /* Layout */
   --bottom-nav-height: 64px;
   --header-height: 56px;
   --layout-max-width: 480px;
+
+  /* Component Sizes */
+  --size-thumb-lg: 110px;
+  --size-progress-bar: 8px;
+  --size-stepper-box: 46px;
+  --size-stepper-btn: 34px;
+  --size-stepper-value: 24px;
+  --size-button-lg: 52px;
+  --size-cta-bar-height: 96px;
+  --mobile-content-width: 390px;
+  --control-height: 46px;
+  --share-icon-size: 60px;
+  --share-chart-size: 200px;
+  --share-chart-hole-size: 132px;
 }

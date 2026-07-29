@@ -1,247 +1,584 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { computed } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useRoute, useRouter } from 'vue-router'
+import BottomNavBar from '@/components/common/BottomNavBar.vue'
+import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
+import IconDog from '@/components/common/icons/IconDog.vue'
+import IconHeart from '@/components/common/icons/IconHeart.vue'
+import IconPaw from '@/components/common/icons/IconPaw.vue'
+import IconPlus from '@/components/common/icons/IconPlus.vue'
+import IconSettings from '@/components/common/icons/IconSettings.vue'
+import IconStar from '@/components/common/icons/IconStar.vue'
+import { useDonationStore } from '@/stores/donation'
 
-const piggyBalance = ref(0)
-const donationHistory = ref([])
-const donationAmount = ref(null)
-const isLoading = ref(true)
-const isDonating = ref(false)
+const route = useRoute()
+const router = useRouter()
+const donationStore = useDonationStore()
+const {
+  amount,
+  autoDonate,
+  balance,
+  canDonate,
+  piggyBankEnabled,
+  selectedCampaign,
+} = storeToRefs(donationStore)
+const screen = computed(() => route.meta.step)
+const campaigns = [
+  {
+    name: '행복한 유기동물보호소',
+    title: '겨울나기, 유기견 난방비를 도와주세요',
+    progress: 68,
+  },
+  {
+    name: '동물권행동 카라',
+    title: '구조된 아이들의 병원비를 모아주세요',
+    progress: 42,
+  },
+  {
+    name: '제주 유기견 쉼터',
+    title: '임시보호 물품 지원',
+    progress: 55,
+  },
+  {
+    name: '한국동물구조관리협회',
+    title: '유기묘 중성화 수술',
+    progress: 77,
+  },
+]
+const isMain = computed(() => route.name === 'Donation')
+const currentCampaign = computed(
+  () =>
+    campaigns.find((item) => item.name === selectedCampaign.value) ??
+    campaigns[0],
+)
 
-onMounted(async () => {
-  // TODO: fetch piggy bank balance and donation history
-  isLoading.value = false
-})
+function go(path) {
+  router.push(path)
+}
 
-const handleDonate = async () => {
-  // TODO: implement donation
+function donate() {
+  if (donationStore.donate()) go('/donation/complete')
+}
+
+function saveSettings() {
+  donationStore.saveSettings()
+  go('/donation')
 }
 </script>
 
 <template>
-  <div class="donation-page">
-    <header class="page-header">
-      <h1>기부 저금통</h1>
-    </header>
-
-    <!-- Piggy Bank Balance -->
-    <section class="piggy-card card">
-      <div class="piggy-icon">
-        <!-- TODO: piggy bank illustration -->
-      </div>
-      <p class="piggy-label">저금통 잔액</p>
-      <p class="piggy-balance">{{ piggyBalance.toLocaleString() }}원</p>
-    </section>
-
-    <!-- Donate Form -->
-    <section class="donate-section card">
-      <h2>기부하기</h2>
-      <div class="amount-input-group">
-        <input
-          v-model.number="donationAmount"
-          type="number"
-          placeholder="기부할 금액"
-          min="100"
-        />
-        <span class="currency">원</span>
-      </div>
-      <div class="quick-amounts">
-        <button @click="donationAmount = 1000">1,000원</button>
-        <button @click="donationAmount = 5000">5,000원</button>
-        <button @click="donationAmount = 10000">10,000원</button>
-        <button @click="donationAmount = piggyBalance">전액</button>
-      </div>
-      <button
-        class="btn-donate"
-        :disabled="isDonating || !donationAmount || donationAmount <= 0"
-        @click="handleDonate"
+  <main
+    class="mx-auto min-h-screen w-full max-w-[var(--mobile-content-width)] box-border bg-(--color-white) px-[var(--space-5)] pb-[calc(var(--bottom-nav-height)+var(--space-8))] pt-[calc(var(--header-height)+var(--space-5))] text-(--color-navy)"
+  >
+    <template v-if="isMain">
+      <section
+        class="relative min-h-24 box-border rounded-[var(--radius-xl)] bg-(--color-navy) p-[var(--space-6)] text-(--color-white)"
       >
-        {{ isDonating ? '기부 중...' : '기부하기' }}
+        <button
+          class="absolute right-[var(--space-4)] top-[var(--space-6)] cursor-pointer border-0 bg-transparent text-[length:var(--font-lg)] text-(--color-white)"
+          type="button"
+          aria-label="저금통 설정"
+          @click="go('/donation/settings')"
+        >
+          <IconSettings :size="20" />
+        </button>
+        <strong class="block text-[length:var(--font-lg)]">짜투리 저금통</strong>
+        <span
+          class="mt-[var(--space-1)] block text-[length:var(--font-sm)] text-(--color-slate-light)"
+        >결제할 때마다 잔돈이 자동으로 모여요</span>
+      </section>
+
+      <section
+        class="mt-[var(--space-5)] rounded-[var(--radius-xl)] bg-(--color-olive-surface) p-[var(--space-5)]"
+      >
+        <b
+          class="block text-[length:var(--font-sm)] text-(--color-olive-dark)"
+        >누적 저금액</b>
+        <strong
+          class="mt-[var(--space-1)] block text-[length:var(--font-3xl)] text-(--color-olive)"
+        >{{ balance.toLocaleString() }}원</strong>
+        <span
+          class="block text-[length:var(--font-xs)] text-(--color-olive-muted)"
+        >이번 달 3,200원 모았어요</span>
+        <div class="mt-[var(--space-3)] flex gap-[var(--space-3)]">
+          <button
+            class="h-[var(--control-height-sm)] flex-1 cursor-pointer rounded-full border-0 bg-(--color-olive) font-bold text-(--color-white)"
+            type="button"
+            @click="go('/donation/give')"
+          >
+            기부하기
+          </button>
+          <button
+            class="h-[var(--control-height-sm)] flex-1 cursor-pointer rounded-full border border-(--color-olive) bg-(--color-white) font-bold text-(--color-olive)"
+            type="button"
+            @click="go('/wallet')"
+          >
+            지갑으로 출금
+          </button>
+        </div>
+      </section>
+
+      <section
+        class="mt-[var(--space-5)] flex flex-col gap-[var(--space-2)] rounded-[var(--radius-lg)] bg-(--color-surface) p-[var(--space-4)]"
+      >
+        <b
+          class="text-[length:var(--font-sm)] text-(--color-slate-dark)"
+        >
+          <IconHeart
+            class="mr-[var(--space-1)] inline-block text-(--color-olive)"
+            :size="16"
+          />
+          지금까지 모은 잔돈으로
+        </b>
+        <span
+          class="text-[length:var(--font-xs)] text-(--color-slate-muted)"
+        >유기동물 3마리를 도울 수 있어요</span>
+      </section>
+    </template>
+
+    <template v-else-if="screen === 'give'">
+      <button
+        class="cursor-pointer border-0 bg-transparent text-[length:var(--font-3xl)] text-(--color-navy)"
+        type="button"
+        @click="go('/donation')"
+      >
+        <IconArrowLeft :size="28" />
       </button>
-    </section>
+      <h1
+        class="mb-[var(--space-7)] mt-[var(--space-5)] text-[length:var(--font-xl)]"
+      >
+        기부하기
+      </h1>
 
-    <!-- Donation History -->
-    <section class="history-section">
-      <h2>기부 내역</h2>
+      <section
+        class="rounded-[var(--radius-xl)] bg-(--color-navy) px-[var(--space-5)] py-[var(--space-3)] text-(--color-white)"
+      >
+        <span
+          class="block text-[length:var(--font-sm)] text-(--color-slate-light)"
+        >내 저금통 잔액</span>
+        <strong class="block text-[length:var(--font-2xl)]">
+          ₩{{ balance.toLocaleString() }}
+        </strong>
+        <small
+          class="block text-[length:var(--font-xs)] text-(--color-slate-light)"
+        >잔돈을 모아 좋은 곳에 전해보세요</small>
+      </section>
 
-      <div v-if="donationHistory.length === 0" class="empty-state">
-        <p>아직 기부 내역이 없습니다.</p>
+      <h2
+        class="mb-[var(--space-3)] mt-[var(--space-7)] text-[length:var(--font-md)]"
+      >
+        <span class="inline-flex items-center gap-[var(--space-1)]">
+          <IconStar
+            class="text-(--color-gold)"
+            :size="16"
+          />
+          선호 기부처
+        </span>
+      </h2>
+      <div class="flex flex-wrap gap-[var(--space-2)]">
+        <button
+          v-for="campaign in campaigns.slice(0, 2)"
+          :key="campaign.name"
+          class="h-[var(--control-height-sm)] cursor-pointer rounded-full border border-(--color-border) bg-(--color-surface) px-[var(--space-3)] font-bold text-(--color-slate-dark)"
+          :class="{
+            'border-(--color-navy) bg-(--color-navy) text-(--color-white)':
+              selectedCampaign === campaign.name,
+          }"
+          type="button"
+          @click="selectedCampaign = campaign.name"
+        >
+          <span class="inline-flex items-center gap-[var(--space-1)]">
+            <IconStar :size="14" />
+            {{ campaign.name }}
+          </span>
+        </button>
+        <button
+          class="size-[var(--control-height-sm)] cursor-pointer rounded-full border border-(--color-border) bg-(--color-surface) font-bold text-(--color-slate-dark)"
+          type="button"
+          aria-label="선호 기부처 추가"
+        >
+          <IconPlus
+            class="mx-auto"
+            :size="18"
+          />
+        </button>
       </div>
 
-      <ul v-else class="history-list">
-        <li v-for="item in donationHistory" :key="item.id" class="history-item card">
-          <div class="history-info">
-            <h3>{{ item.organizationName }}</h3>
-            <p class="history-date">{{ item.date }}</p>
+      <h2
+        class="mb-[var(--space-3)] mt-[var(--space-7)] text-[length:var(--font-md)]"
+      >
+        이번주 추천 캠페인
+      </h2>
+      <article
+        class="mt-[var(--space-3)] overflow-hidden rounded-[var(--radius-xl)] bg-(--color-surface) pb-[var(--space-3)]"
+      >
+        <div
+          class="grid h-28 place-items-center bg-(--color-border) text-[length:var(--font-3xl)]"
+        >
+          <IconDog
+            class="text-(--color-slate)"
+            :size="34"
+            color="currentColor"
+          />
+        </div>
+        <b
+          class="mx-[var(--space-4)] mt-[var(--space-3)] block text-[length:var(--font-xs)] text-(--color-gold-dark)"
+        >{{ currentCampaign.name }}</b>
+        <strong
+          class="mx-[var(--space-4)] mt-[var(--space-2)] block text-[length:var(--font-md)]"
+        >{{ currentCampaign.title }}</strong>
+        <div
+          class="mx-[var(--space-4)] mt-[var(--space-3)] h-1.5 overflow-hidden rounded-full bg-(--color-border)"
+        >
+          <i
+            class="block h-full rounded-full bg-(--color-gold)"
+            :style="{ width: `${currentCampaign.progress}%` }"
+          />
+        </div>
+        <small
+          class="mx-[var(--space-4)] mt-[var(--space-3)] block text-[length:var(--font-xs)] text-(--color-slate-muted)"
+        >
+          2,046,000원 모금 · 참여 312명
+          <em
+            class="float-right not-italic text-(--color-gold-dark)"
+          >{{ currentCampaign.progress }}%</em>
+        </small>
+      </article>
+
+      <h3
+        class="mb-[var(--space-3)] mt-[var(--space-6)] text-[length:var(--font-sm)] text-(--color-slate-dark)"
+      >
+        기부 금액 선택
+      </h3>
+      <div class="flex gap-[var(--space-2)]">
+        <button
+          v-for="value in [1000, 3000, 5000]"
+          :key="value"
+          class="h-[var(--control-height-sm)] flex-1 cursor-pointer rounded-[var(--radius-lg)] border border-(--color-border) bg-(--color-surface) px-[var(--space-2)] font-bold text-(--color-slate-dark) disabled:cursor-not-allowed disabled:opacity-45"
+          :class="{
+            'border-(--color-navy) bg-(--color-navy) text-(--color-white)':
+              amount === value,
+          }"
+          type="button"
+          :disabled="value > balance"
+          @click="amount = value"
+        >
+          {{ value.toLocaleString() }}원
+        </button>
+        <button
+          class="h-[var(--control-height-sm)] flex-1 cursor-pointer rounded-[var(--radius-lg)] border border-(--color-border) bg-(--color-surface) px-[var(--space-2)] font-bold text-(--color-slate-dark) disabled:cursor-not-allowed disabled:opacity-45"
+          type="button"
+          :disabled="balance <= 0"
+          @click="amount = balance"
+        >
+          전액
+        </button>
+      </div>
+      <p
+        v-if="!canDonate"
+        class="mt-[var(--space-2)] text-[length:var(--font-sm)] text-(--color-danger)"
+      >
+        잔액 안에서 기부 금액을 선택해주세요.
+      </p>
+      <button
+        class="mt-[var(--space-4)] w-full cursor-pointer border-0 bg-transparent text-right text-[length:var(--font-sm)] font-bold text-(--color-gold-dark)"
+        type="button"
+        @click="go('/donation/explore')"
+      >
+        다른 기부처 둘러보기 ›
+      </button>
+      <button
+        class="mt-[var(--space-5)] h-[var(--control-height-lg)] w-full cursor-pointer rounded-[var(--radius-xl)] border-0 bg-(--color-navy) font-bold text-(--color-white) disabled:cursor-not-allowed disabled:opacity-45"
+        type="button"
+        :disabled="!canDonate"
+        @click="go('/donation/confirm')"
+      >
+        저금통에서 {{ amount.toLocaleString() }}원 기부하기
+      </button>
+    </template>
+
+    <template v-else-if="screen === 'confirm'">
+      <section class="pt-[var(--space-2)] text-center">
+        <div
+          class="mx-auto mb-[var(--space-6)] h-[var(--space-1)] w-[var(--space-8)] rounded-full bg-(--color-border)"
+        />
+        <h1 class="m-0 text-[length:var(--font-xl)]">
+          {{ amount.toLocaleString() }}원을 기부할까요?
+        </h1>
+        <p
+          class="mt-[var(--space-2)] text-[length:var(--font-sm)] text-(--color-slate-muted)"
+        >
+          기부는 완료 후 취소할 수 없어요
+        </p>
+
+        <div
+          class="mt-[var(--space-7)] rounded-[var(--radius-xl)] bg-(--color-surface) p-[var(--space-4)] text-left"
+        >
+          <b class="block">{{ currentCampaign.name }}</b>
+          <span
+            class="mt-[var(--space-2)] block text-[length:var(--font-xs)] text-(--color-slate-muted)"
+          >{{ currentCampaign.title }}</span>
+          <hr class="my-[var(--space-3)] border-0 border-t border-(--color-border)">
+          <div
+            class="flex justify-between text-[length:var(--font-sm)] text-(--color-slate-dark)"
+          >
+            <span>기부 금액</span>
+            <strong>{{ amount.toLocaleString() }}원</strong>
           </div>
-          <p class="history-amount">{{ item.amount?.toLocaleString() }}원</p>
-        </li>
-      </ul>
-    </section>
-  </div>
+        </div>
+
+        <div
+          class="mx-[var(--space-3)] my-[var(--space-7)] flex justify-between text-[length:var(--font-sm)] text-(--color-slate-dark)"
+        >
+          <span>기부 후 저금통 잔액</span>
+          <strong>{{ Math.max(balance - amount, 0).toLocaleString() }}원</strong>
+        </div>
+        <p
+          v-if="!canDonate"
+          class="mt-[var(--space-2)] text-[length:var(--font-sm)] text-(--color-danger)"
+        >
+          잔액이 부족해 기부할 수 없어요.
+        </p>
+        <div class="flex gap-[var(--space-3)]">
+          <button
+            class="h-[var(--control-height-lg)] flex-1 cursor-pointer rounded-[var(--radius-xl)] border border-(--color-border) bg-(--color-white) font-bold text-(--color-slate-dark)"
+            type="button"
+            @click="go('/donation/give')"
+          >
+            취소
+          </button>
+          <button
+            class="h-[var(--control-height-lg)] flex-1 cursor-pointer rounded-[var(--radius-xl)] border-0 bg-(--color-navy) font-bold text-(--color-white) disabled:cursor-not-allowed disabled:opacity-45"
+            type="button"
+            :disabled="!canDonate"
+            @click="donate"
+          >
+            기부하기
+          </button>
+        </div>
+      </section>
+    </template>
+
+    <template v-else-if="screen === 'complete'">
+      <section class="pt-32 text-center">
+        <div
+          class="mx-auto mb-[var(--space-6)] grid size-24 place-items-center rounded-full bg-(--color-olive-surface) text-[length:var(--font-3xl)]"
+        >
+          <IconPaw
+            class="text-(--color-olive)"
+            :size="44"
+          />
+        </div>
+        <h1 class="m-0 text-[length:var(--font-xl)]">
+          기부해주셔서 감사해요
+        </h1>
+        <p
+          class="mt-[var(--space-2)] text-[length:var(--font-sm)] text-(--color-slate-muted)"
+        >
+          {{ currentCampaign.name }}에 {{ amount.toLocaleString() }}원을
+          전달했어요
+        </p>
+        <button
+          class="mt-[var(--space-5)] h-[var(--control-height-lg)] w-full cursor-pointer rounded-[var(--radius-xl)] border-0 bg-(--color-navy) font-bold text-(--color-white)"
+          type="button"
+          @click="go('/donation')"
+        >
+          저금통으로 돌아가기
+        </button>
+      </section>
+    </template>
+
+    <template v-else-if="screen === 'explore'">
+      <button
+        class="cursor-pointer border-0 bg-transparent text-[length:var(--font-3xl)] text-(--color-navy)"
+        type="button"
+        @click="go('/donation/give')"
+      >
+        <IconArrowLeft :size="28" />
+      </button>
+      <h1
+        class="mb-[var(--space-2)] mt-[var(--space-5)] text-[length:var(--font-xl)]"
+      >
+        기부처 둘러보기
+      </h1>
+      <p
+        class="m-0 text-[length:var(--font-sm)] text-(--color-slate-muted)"
+      >
+        우리 아이들을 위한 캠페인을 만나보세요
+      </p>
+      <input
+        class="my-[var(--space-5)] h-[var(--control-height)] w-full box-border rounded-[var(--radius-lg)] border border-(--color-border) bg-(--color-surface) px-[var(--space-4)]"
+        placeholder="기부처 · 캠페인 검색"
+      >
+      <div class="flex flex-wrap gap-[var(--space-2)]">
+        <button
+          class="h-[var(--control-height-sm)] cursor-pointer rounded-full border border-(--color-navy) bg-(--color-navy) px-[var(--space-3)] font-bold text-(--color-white)"
+          type="button"
+        >
+          전체
+        </button>
+        <button
+          v-for="filter in ['유기동물', '환경', '기타']"
+          :key="filter"
+          class="h-[var(--control-height-sm)] cursor-pointer rounded-full border border-(--color-border) bg-(--color-surface) px-[var(--space-3)] font-bold text-(--color-slate-dark)"
+          type="button"
+        >
+          {{ filter }}
+        </button>
+      </div>
+      <div
+        class="mt-[var(--space-5)] grid grid-cols-2 gap-[var(--space-3)]"
+      >
+        <button
+          v-for="item in campaigns"
+          :key="item.name"
+          class="overflow-hidden rounded-[var(--radius-xl)] border-0 bg-(--color-surface) p-0 text-left text-(--color-navy)"
+          type="button"
+          @click="selectedCampaign = item.name; go('/donation/give')"
+        >
+          <span
+            class="grid h-24 place-items-center bg-(--color-border) text-[length:var(--font-2xl)]"
+          >
+            <IconDog
+              class="text-(--color-slate)"
+              :size="30"
+              color="currentColor"
+            />
+          </span>
+          <b
+            class="mx-[var(--space-3)] mt-[var(--space-2)] block text-[length:var(--font-xs)] text-(--color-gold-dark)"
+          >{{ item.name }}</b>
+          <strong
+            class="mx-[var(--space-3)] mt-[var(--space-2)] block text-[length:var(--font-sm)]"
+          >{{ item.title }}</strong>
+          <span
+            class="mx-[var(--space-3)] mt-[var(--space-3)] block h-1.5 overflow-hidden rounded-full bg-(--color-border)"
+          >
+            <i
+              class="block h-full rounded-full bg-(--color-gold)"
+              :style="{ width: `${item.progress}%` }"
+            />
+          </span>
+          <small
+            class="mx-[var(--space-3)] mb-[var(--space-3)] mt-[var(--space-2)] block text-[length:var(--font-xs)] text-(--color-slate-muted)"
+          >{{ item.progress }}% 달성</small>
+        </button>
+      </div>
+    </template>
+
+    <template v-else>
+      <button
+        class="cursor-pointer border-0 bg-transparent text-[length:var(--font-3xl)] text-(--color-navy)"
+        type="button"
+        @click="go('/donation')"
+      >
+        <IconArrowLeft :size="28" />
+      </button>
+      <h1
+        class="mb-[var(--space-2)] mt-[var(--space-5)] text-[length:var(--font-xl)]"
+      >
+        저금통 설정
+      </h1>
+      <p
+        class="m-0 text-[length:var(--font-sm)] text-(--color-slate-muted)"
+      >
+        짜투리 저금 방식을 설정해요
+      </p>
+
+      <section
+        class="relative mt-[var(--space-5)] rounded-[var(--radius-xl)] bg-(--color-surface) py-[var(--space-4)] pl-[var(--space-4)] pr-[calc(var(--header-height)+var(--space-4))]"
+      >
+        <b class="block">짜투리 저금통 사용</b>
+        <span
+          class="mt-[var(--space-2)] block text-[length:var(--font-xs)] text-(--color-slate-muted)"
+        >결제할 때마다 잔돈을 자동으로 모아요</span>
+        <button
+          class="absolute right-[var(--space-4)] top-[var(--space-5)] flex h-6 w-11 cursor-pointer items-center rounded-full border-0 bg-(--color-border) px-1"
+          :class="{
+            'bg-(--color-olive)': piggyBankEnabled,
+          }"
+          type="button"
+          :aria-pressed="piggyBankEnabled"
+          @click="piggyBankEnabled = !piggyBankEnabled"
+        >
+          <span
+            class="block size-4 rounded-full bg-(--color-white) transition-transform"
+            :class="{ 'translate-x-5': piggyBankEnabled }"
+          />
+        </button>
+      </section>
+
+      <h3
+        class="mb-[var(--space-3)] mt-[var(--space-6)] text-[length:var(--font-sm)] text-(--color-slate-dark)"
+      >
+        저금 단위
+      </h3>
+      <div class="flex gap-[var(--space-2)]">
+        <button
+          v-for="unit in ['10원', '100원']"
+          :key="unit"
+          class="h-[var(--control-height-sm)] flex-1 cursor-pointer rounded-[var(--radius-lg)] border border-(--color-border) bg-(--color-surface) font-bold text-(--color-slate-dark)"
+          type="button"
+        >
+          {{ unit }}
+        </button>
+        <button
+          class="h-[var(--control-height-sm)] flex-1 cursor-pointer rounded-[var(--radius-lg)] border border-(--color-navy) bg-(--color-navy) font-bold text-(--color-white)"
+          type="button"
+        >
+          1,000원
+        </button>
+      </div>
+
+      <section
+        class="mt-[var(--space-4)] rounded-[var(--radius-lg)] bg-(--color-olive-surface) p-[var(--space-4)] text-(--color-olive-dark)"
+      >
+        <b class="block">예시</b>
+        <strong
+          class="mt-[var(--space-2)] block text-[length:var(--font-sm)] leading-snug"
+        >
+          31,275원 결제 시, 1,000원 미만 끝자리 275원이 자동으로 저금통에
+          적립돼요
+        </strong>
+        <span
+          class="mt-[var(--space-1)] block text-[length:var(--font-xs)] text-(--color-olive-muted)"
+        >결제 금액 자체는 그대로 나가고, 잔돈만 별도로 모여요</span>
+      </section>
+
+      <div
+        class="mb-[var(--space-3)] mt-[var(--space-7)] border-t border-(--color-border) pt-[var(--space-3)] text-center text-[length:var(--font-sm)] text-(--color-slate-muted)"
+      >
+        자동 기부
+      </div>
+      <section
+        class="relative rounded-[var(--radius-xl)] bg-(--color-surface) py-[var(--space-4)] pl-[var(--space-4)] pr-[calc(var(--header-height)+var(--space-4))]"
+      >
+        <b class="block">매달 자동으로 기부하기</b>
+        <span
+          class="mt-[var(--space-2)] block text-[length:var(--font-xs)] text-(--color-slate-muted)"
+        >매월 말일, 모인 잔돈을 선택한 기부처로 자동 전달해요</span>
+        <button
+          class="absolute right-[var(--space-4)] top-[var(--space-5)] flex h-6 w-11 cursor-pointer items-center rounded-full border-0 bg-(--color-border) px-1"
+          :class="{ 'bg-(--color-olive)': autoDonate }"
+          type="button"
+          :aria-pressed="autoDonate"
+          @click="autoDonate = !autoDonate"
+        >
+          <span
+            class="block size-4 rounded-full bg-(--color-white) transition-transform"
+            :class="{ 'translate-x-5': autoDonate }"
+          />
+        </button>
+      </section>
+      <button
+        class="mt-[var(--space-5)] h-[var(--control-height-lg)] w-full cursor-pointer rounded-[var(--radius-xl)] border-0 bg-(--color-navy) font-bold text-(--color-white)"
+        type="button"
+        @click="saveSettings"
+      >
+        설정 저장하기
+      </button>
+    </template>
+  </main>
+  <BottomNavBar v-if="isMain" />
 </template>
-
-<style scoped>
-.donation-page {
-  padding: var(--space-4);
-  padding-bottom: calc(var(--bottom-nav-height) + var(--space-4));
-  background-color: var(--color-bg);
-  min-height: 100vh;
-}
-
-.page-header {
-  margin-bottom: var(--space-5);
-}
-
-.page-header h1 {
-  font-size: var(--font-2xl);
-  font-weight: var(--font-bold);
-  color: var(--color-navy);
-}
-
-.card {
-  background-color: var(--color-white);
-  border-radius: var(--radius-lg);
-  padding: var(--space-5);
-  box-shadow: var(--shadow-sm);
-}
-
-.piggy-card {
-  text-align: center;
-  margin-bottom: var(--space-5);
-  background: linear-gradient(135deg, var(--color-gold), var(--color-gold-light));
-  color: var(--color-white);
-}
-
-.piggy-icon {
-  width: 64px;
-  height: 64px;
-  border-radius: var(--radius-full);
-  background-color: rgba(255, 255, 255, 0.3);
-  margin: 0 auto var(--space-3);
-}
-
-.piggy-label {
-  font-size: var(--font-sm);
-  opacity: 0.9;
-}
-
-.piggy-balance {
-  font-size: var(--font-3xl);
-  font-weight: var(--font-bold);
-  margin-top: var(--space-2);
-}
-
-.donate-section {
-  margin-bottom: var(--space-6);
-}
-
-.donate-section h2 {
-  font-size: var(--font-lg);
-  font-weight: var(--font-semibold);
-  color: var(--color-navy);
-  margin-bottom: var(--space-4);
-}
-
-.amount-input-group {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin-bottom: var(--space-3);
-}
-
-.amount-input-group input {
-  flex: 1;
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--color-gray-300);
-  border-radius: var(--radius-md);
-  font-size: var(--font-lg);
-  font-weight: var(--font-semibold);
-  text-align: right;
-  box-sizing: border-box;
-}
-
-.currency {
-  font-size: var(--font-lg);
-  color: var(--color-gray-600);
-}
-
-.quick-amounts {
-  display: flex;
-  gap: var(--space-2);
-  margin-bottom: var(--space-5);
-}
-
-.quick-amounts button {
-  flex: 1;
-  padding: var(--space-2);
-  border: 1px solid var(--color-gray-300);
-  border-radius: var(--radius-sm);
-  background: var(--color-white);
-  font-size: var(--font-xs);
-  color: var(--color-gray-600);
-  cursor: pointer;
-}
-
-.btn-donate {
-  width: 100%;
-  padding: var(--space-3) var(--space-4);
-  background-color: var(--color-gold);
-  color: var(--color-white);
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: var(--font-base);
-  font-weight: var(--font-bold);
-  cursor: pointer;
-}
-
-.btn-donate:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.history-section h2 {
-  font-size: var(--font-lg);
-  font-weight: var(--font-semibold);
-  color: var(--color-navy);
-  margin-bottom: var(--space-4);
-}
-
-.empty-state {
-  text-align: center;
-  padding: var(--space-5) 0;
-  color: var(--color-gray-500);
-}
-
-.history-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.history-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.history-info h3 {
-  font-size: var(--font-md);
-  font-weight: var(--font-semibold);
-  color: var(--color-gray-900);
-}
-
-.history-date {
-  font-size: var(--font-xs);
-  color: var(--color-gray-400);
-  margin-top: var(--space-1);
-}
-
-.history-amount {
-  font-size: var(--font-md);
-  font-weight: var(--font-bold);
-  color: var(--color-gold);
-}
-</style>

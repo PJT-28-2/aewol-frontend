@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
-import IconCheck from '@/components/common/icons/IconCheck.vue'
+import successImage from '@/assets/images/pet-success.png'
 
 const router = useRouter()
 
@@ -192,62 +192,126 @@ onBeforeUnmount(clearTimers)
 </script>
 
 <template>
-  <main class="find-id-page">
-    <section v-if="isResultVisible" class="find-id-result" aria-labelledby="find-id-result-title">
-      <div class="find-id-result__icon" aria-hidden="true">
-        <IconCheck :size="32" />
+  <main
+    class="relative mx-auto min-h-svh w-[min(100%,390px)] overflow-hidden rounded-[40px] bg-(--color-white) px-[22px] pt-[108px] pb-12 min-[391px]:my-[max(0px,calc((100svh-844px)/2))] min-[391px]:min-h-[844px] min-[391px]:shadow-(--shadow-lg)"
+  >
+    <section
+      v-if="isResultVisible"
+      class="text-center"
+      aria-labelledby="find-id-result-title"
+    >
+      <img
+        class="mx-auto mt-(--auth-success-find-id-image-offset) size-(--auth-success-image-size) object-cover"
+        :src="successImage"
+        alt=""
+      />
+      <h1
+        id="find-id-result-title"
+        class="mt-(--auth-success-title-gap) text-[18px] leading-[1.3] font-(--font-bold) text-(color:--color-navy)"
+      >
+        본인 확인이 완료됐어요
+      </h1>
+      <p class="mt-2 text-[12.5px] leading-[1.3] text-(color:--color-slate-muted)">
+        {{ name || '홍길동' }}님의 가입 이메일이에요
+      </p>
+      <div
+        class="mt-[27px] flex h-[66px] items-center justify-center rounded-(--radius-xl) bg-(--color-surface) text-(length:--font-base) leading-[1.3] font-(--font-bold) text-(color:--color-navy)"
+      >
+        {{ maskedEmail }}
       </div>
-      <h1 id="find-id-result-title">본인 확인이 완료됐어요</h1>
-      <p>{{ name || '홍길동' }}님의 가입 이메일이에요</p>
-      <div class="find-id-result__email">{{ maskedEmail }}</div>
-      <router-link class="find-id-result__login" to="/login">로그인하러 가기</router-link>
-      <router-link class="find-id-result__password" to="/password/reset">
+      <router-link
+        class="mt-6 flex h-[52px] items-center justify-center rounded-(--radius-xl) bg-(--color-gold) text-[14.5px] font-(--font-bold) text-(color:--color-navy)"
+        to="/login"
+      >
+        로그인하러 가기
+      </router-link>
+      <router-link
+        class="mt-[11px] block text-[11.5px] leading-[1.3] font-(--font-bold) text-(color:--color-slate-dark)"
+        to="/password/reset"
+      >
         비밀번호를 잊으셨나요? 비밀번호 찾기
       </router-link>
     </section>
 
     <template v-else>
-      <button class="find-id-back" type="button" aria-label="이전 화면으로 돌아가기" @click="router.back()">
+      <button
+        class="absolute top-[60px] left-[22px] size-[26px] text-(color:--color-navy)"
+        type="button"
+        aria-label="이전 화면으로 돌아가기"
+        @click="router.back()"
+      >
         <IconArrowLeft :size="26" />
       </button>
 
-      <header class="find-id-header">
-        <h1>아이디 찾기</h1>
-        <p>이름과 전화번호로 본인 확인 후<br />가입하신 이메일을 알려드려요</p>
+      <header>
+        <h1 class="text-[22px] leading-[1.3] font-(--font-bold) text-(color:--color-navy)">
+          아이디 찾기
+        </h1>
+        <p class="mt-0.5 text-[12.5px] leading-[1.45] text-(color:--color-slate-muted)">
+          이름과 전화번호로 본인 확인 후<br />가입하신 이메일을 알려드려요
+        </p>
       </header>
 
-      <form class="find-id-form" @submit.prevent="handleFindId">
-        <label for="find-id-name">이름</label>
+      <form class="mt-[22px] flex flex-col" @submit.prevent="handleFindId">
+        <label
+          class="mb-1 text-[12.5px] leading-[1.3] font-(--font-bold) text-(color:--color-slate-dark)"
+          for="find-id-name"
+        >
+          이름
+        </label>
         <input
           id="find-id-name"
           v-model.trim="name"
+          class="mb-[11px] h-[46px] w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
           type="text"
           autocomplete="name"
           placeholder="홍길동"
         />
 
-        <label for="find-id-phone">전화번호</label>
-        <div class="field-row field-row--phone">
+        <label
+          class="mb-1 text-[12.5px] leading-[1.3] font-(--font-bold) text-(color:--color-slate-dark)"
+          for="find-id-phone"
+        >
+          전화번호
+        </label>
+        <div class="mb-[31px] grid grid-cols-[minmax(0,240px)_90px] gap-4">
           <input
             id="find-id-phone"
             v-model.trim="phone"
+            class="h-[46px] w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
             type="tel"
             autocomplete="tel"
             placeholder="010-1234-5678"
           />
-          <button type="button" @click="handleRequestCode">
+          <button
+            class="h-[46px] rounded-(--radius-lg) bg-(--color-navy) text-[11.5px] font-(--font-bold) text-(color:--color-white) disabled:cursor-not-allowed disabled:opacity-55"
+            type="button"
+            :disabled="isVerified"
+            @click="handleRequestCode"
+          >
             {{ isCodeSent ? '다시 받기' : '인증번호 받기' }}
           </button>
         </div>
 
-        <div class="verification-label">
-          <label for="find-id-code">인증번호</label>
-          <span v-if="isCodeSent && !isVerified">{{ formattedTime }}</span>
+        <div class="flex justify-between">
+          <label
+            class="mb-1 text-[12.5px] leading-[1.3] font-(--font-bold) text-(color:--color-slate-dark)"
+            for="find-id-code"
+          >
+            인증번호
+          </label>
+          <span
+            v-if="isCodeSent && !isVerified"
+            class="text-(length:--font-sm) font-(--font-bold) text-(color:--color-gold)"
+          >
+            {{ formattedTime }}
+          </span>
         </div>
-        <div class="field-row field-row--code">
+        <div class="grid grid-cols-[minmax(0,270px)_60px] gap-4">
           <input
             id="find-id-code"
             v-model="verificationCode"
+            class="h-[46px] w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy) disabled:opacity-65"
             type="text"
             inputmode="numeric"
             autocomplete="one-time-code"
@@ -255,24 +319,58 @@ onBeforeUnmount(clearTimers)
             placeholder="6자리 숫자 입력"
             :disabled="isVerified"
           />
-          <button type="button" :disabled="isVerified" @click="handleVerifyCode">확인</button>
+          <button
+            class="h-[46px] rounded-(--radius-lg) bg-(--color-navy) text-[12.5px] font-(--font-bold) text-(color:--color-white) disabled:opacity-55"
+            type="button"
+            :disabled="isVerified"
+            @click="handleVerifyCode"
+          >
+            확인
+          </button>
         </div>
 
-        <button class="find-id-submit" type="submit">아이디 찾기</button>
+        <button
+          class="mt-6 h-[52px] rounded-(--radius-xl) bg-(--color-gold) text-[14.5px] font-(--font-bold) text-(color:--color-navy)"
+          type="submit"
+        >
+          아이디 찾기
+        </button>
       </form>
 
-      <router-link class="login-link" to="/login">로그인으로 돌아가기</router-link>
+      <router-link
+        class="mt-[15px] block text-center text-[12.5px] font-(--font-bold) text-(color:--color-slate-dark)"
+        to="/login"
+      >
+        로그인으로 돌아가기
+      </router-link>
 
       <Teleport to="body">
-        <Transition name="toast">
+        <Transition
+          enter-active-class="transition-[opacity,transform] duration-200 ease-out"
+          enter-from-class="-translate-y-3 opacity-0"
+          leave-active-class="transition-[opacity,transform] duration-200 ease-in"
+          leave-to-class="-translate-y-3 opacity-0"
+        >
           <div
             v-if="toast.visible"
-            class="validation-toast"
-            :class="`validation-toast--${toast.type}`"
+            class="fixed top-7 left-1/2 z-[1100] flex min-h-14 w-[min(calc(100%-44px),346px)] -translate-x-1/2 items-center gap-2 rounded-[14px] border border-(--color-border) bg-(--color-white) px-4 py-3 text-[12.5px] font-(--font-bold) shadow-(--shadow-lg)"
+            :class="
+              toast.type === 'success'
+                ? 'text-(color:--color-olive)'
+                : 'text-(color:--color-danger-strong)'
+            "
             role="alert"
             aria-live="assertive"
           >
-            <span class="validation-toast__icon" aria-hidden="true">
+            <span
+              class="inline-flex size-5 shrink-0 items-center justify-center rounded-full text-[11px]"
+              :class="
+                toast.type === 'success'
+                  ? 'bg-(--color-pastel-green)'
+                  : 'bg-(--color-danger-soft)'
+              "
+              aria-hidden="true"
+            >
               {{ toast.type === 'success' ? '✓' : '!' }}
             </span>
             <span>{{ toast.message }}</span>
@@ -282,275 +380,3 @@ onBeforeUnmount(clearTimers)
     </template>
   </main>
 </template>
-
-<style scoped>
-.find-id-page {
-  position: relative;
-  width: min(100%, 390px);
-  min-height: 100svh;
-  margin: 0 auto;
-  padding: 108px 22px 48px;
-  overflow: hidden;
-  background: var(--color-white);
-  border-radius: 40px;
-}
-
-.find-id-result {
-  text-align: center;
-}
-
-.find-id-result__icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 88px;
-  height: 88px;
-  margin: 92px auto 0;
-  color: var(--color-olive);
-  background: var(--color-pastel-green);
-  border-radius: 44px;
-  font-size: 32px;
-  font-weight: var(--font-bold);
-  line-height: 1;
-}
-
-.find-id-result h1 {
-  margin-top: 28px;
-  color: var(--color-navy);
-  font-size: 18px;
-  font-weight: var(--font-bold);
-  line-height: 1.3;
-}
-
-.find-id-result p {
-  margin-top: 8px;
-  color: var(--color-slate-muted);
-  font-size: 12.5px;
-  line-height: 1.3;
-}
-
-.find-id-result__email {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 66px;
-  margin-top: 27px;
-  color: var(--color-navy);
-  background: var(--color-surface);
-  border-radius: var(--radius-xl);
-  font-size: 16px;
-  font-weight: var(--font-bold);
-  line-height: 1.3;
-}
-
-.find-id-result__login {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 52px;
-  margin-top: 24px;
-  color: var(--color-navy);
-  background: var(--color-gold);
-  border-radius: var(--radius-xl);
-  font-size: 14.5px;
-  font-weight: var(--font-bold);
-}
-
-.find-id-result__password {
-  display: block;
-  margin-top: 11px;
-  color: var(--color-slate-dark);
-  font-size: 11.5px;
-  font-weight: var(--font-bold);
-  line-height: 1.3;
-}
-
-.find-id-back {
-  position: absolute;
-  top: 60px;
-  left: 22px;
-  width: 26px;
-  height: 26px;
-  color: var(--color-navy);
-}
-
-.find-id-header h1 {
-  color: var(--color-navy);
-  font-size: 22px;
-  font-weight: var(--font-bold);
-  line-height: 1.3;
-}
-
-.find-id-header p {
-  margin-top: 2px;
-  color: var(--color-slate-muted);
-  font-size: 12.5px;
-  line-height: 1.45;
-}
-
-.find-id-form {
-  display: flex;
-  flex-direction: column;
-  margin-top: 22px;
-}
-
-.find-id-form label {
-  margin-bottom: 4px;
-  color: var(--color-slate-dark);
-  font-size: 12.5px;
-  font-weight: var(--font-bold);
-  line-height: 1.3;
-}
-
-.find-id-form > input {
-  margin-bottom: 11px;
-}
-
-.find-id-form input {
-  width: 100%;
-  height: 46px;
-  padding: 0 13px;
-  color: var(--color-navy);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  font-size: 13px;
-  outline: none;
-}
-
-.find-id-form input::placeholder {
-  color: var(--color-slate-muted);
-  opacity: 1;
-}
-
-.find-id-form input:focus {
-  border-color: var(--color-navy);
-}
-
-.field-row {
-  display: grid;
-  gap: 16px;
-}
-
-.field-row--phone {
-  grid-template-columns: minmax(0, 240px) 90px;
-  margin-bottom: 31px;
-}
-
-.field-row--code {
-  grid-template-columns: minmax(0, 270px) 60px;
-}
-
-.field-row button {
-  height: 46px;
-  color: var(--color-white);
-  background: var(--color-navy);
-  border-radius: var(--radius-lg);
-  font-size: 11.5px;
-  font-weight: var(--font-bold);
-}
-
-.field-row--code button {
-  font-size: 12.5px;
-}
-
-.field-row button:disabled {
-  opacity: 0.55;
-}
-
-.verification-label {
-  display: flex;
-  justify-content: space-between;
-}
-
-.verification-label span {
-  color: var(--color-gold);
-  font-size: 12px;
-  font-weight: var(--font-bold);
-}
-
-.find-id-submit {
-  height: 52px;
-  margin-top: 24px;
-  color: var(--color-navy);
-  background: var(--color-gold);
-  border-radius: var(--radius-xl);
-  font-size: 14.5px;
-  font-weight: var(--font-bold);
-}
-
-.login-link {
-  display: block;
-  margin-top: 15px;
-  color: var(--color-slate-dark);
-  font-size: 12.5px;
-  font-weight: var(--font-bold);
-  text-align: center;
-}
-
-.validation-toast {
-  position: fixed;
-  z-index: 1100;
-  top: 28px;
-  left: 50%;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: min(calc(100% - 44px), 346px);
-  min-height: 56px;
-  padding: 12px 16px;
-  background: var(--color-white);
-  border: 1px solid var(--color-border);
-  border-radius: 14px;
-  box-shadow: var(--shadow-lg);
-  font-size: 12.5px;
-  font-weight: var(--font-bold);
-  transform: translateX(-50%);
-}
-
-.validation-toast__icon {
-  display: inline-flex;
-  flex: 0 0 20px;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  font-size: 11px;
-}
-
-.validation-toast--success {
-  color: #3f5a08;
-}
-
-.validation-toast--success .validation-toast__icon {
-  background: #eff5df;
-}
-
-.validation-toast--error {
-  color: #c24d4d;
-}
-
-.validation-toast--error .validation-toast__icon {
-  background: #fde8e8;
-}
-
-.toast-enter-active,
-.toast-leave-active {
-  transition: opacity 0.2s ease, transform 0.2s ease;
-}
-
-.toast-enter-from,
-.toast-leave-to {
-  opacity: 0;
-  transform: translate(-50%, -12px);
-}
-
-@media (min-width: 391px) {
-  .find-id-page {
-    min-height: 844px;
-    margin-block: max(0px, calc((100svh - 844px) / 2));
-    box-shadow: var(--shadow-lg);
-  }
-}
-</style>

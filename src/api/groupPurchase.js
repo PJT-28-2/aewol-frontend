@@ -6,7 +6,7 @@ export const groupPurchaseApi = {
   },
 
   create(data) {
-    return api.post('/group-purchase', data)
+    return api.post('/group-purchase/create', data)
   },
 
   getDetail(id) {
