@@ -10,7 +10,7 @@ const route = useRoute()
 const claimData = ref({
   hospitalName:   route.query.hospitalName   || '24시 제주동물의료센터',
   visitDate:      route.query.visitDate      || '2026.07.10',
-  claimAmount:    route.query.claimAmount    || '168,000',
+  claimAmount:    route.query.claimAmount    || '168,000원',
   businessNumber: route.query.businessNumber || null,
   diagnosis:      route.query.diagnosis      || '슬개골 탈구 치료',
   accountInfo:    route.query.accountInfo    || '프로필 연동',
@@ -123,7 +123,7 @@ const goBack = () => {
             v-for="row in [
               { label: '병원명',     value: claimData.hospitalName,   extra: null },
               { label: '진료일자',   value: claimData.visitDate,      extra: null },
-              { label: '청구금액',   value: claimData.claimAmount + '원', extra: 'amount' },
+              { label: '청구금액',   value: claimData.claimAmount, extra: 'amount' },
               { label: '사업자번호', value: claimData.businessNumber,  extra: 'biz' },
               { label: '진단명',     value: claimData.diagnosis,      extra: null },
               { label: '계약자 정보', value: claimData.ownerName,     extra: null },
