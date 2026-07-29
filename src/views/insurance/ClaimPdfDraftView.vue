@@ -4,6 +4,8 @@ import { useRouter } from 'vue-router'
 import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
 import { useInsuranceStore } from '@/stores/insurance'
+import AppModal from '@/components/common/AppModal.vue'
+import AppButton from '@/components/common/AppButton.vue'
 
 const router = useRouter()
 const insuranceStore = useInsuranceStore()
@@ -21,18 +23,20 @@ const claimData = ref({
 
 // 필수 항목 누락 여부 (사업자번호는 경고만, 저장 차단 안 함)
 const REQUIRED_FIELDS = [
-  { key: 'hospitalName',  label: '병원명' },
-  { key: 'visitDate',     label: '진료일자' },
-  { key: 'claimAmount',   label: '청구금액' },
-  { key: 'diagnosis',     label: '진단명' },
-  { key: 'accountInfo',   label: '계좌정보' },
+  { key: 'hospitalName',   label: '병원명' },
+  { key: 'visitDate',      label: '진료일자' },
+  { key: 'claimAmount',    label: '청구금액' },
+  { key: 'businessNumber', label: '사업자번호' },
+  { key: 'diagnosis',      label: '진단명' },
+  { key: 'accountInfo',    label: '계좌정보' },
 ]
 const missingFields = computed(() =>
-  REQUIRED_FIELDS.filter((f) => !claimData.value[f.key]).map((f) => f.label),
+  REQUIRED_FIELDS.filter((f) => !claimData.value[f.key]?.trim()).map((f) => f.label),
 )
 const canDownload = computed(() => missingFields.value.length === 0)
 
 const isGenerating = ref(false)
+const showSuccessModal = ref(false)
 
 const previewRef = ref(null)
 
@@ -45,28 +49,34 @@ const handleDownload = async () => {
       useCORS: true,
       backgroundColor: '#ffffff',
     })
-    const imgData = canvas.toDataURL('image/png')
     const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
     const margin = 10
     const pageWidth = pdf.internal.pageSize.getWidth()
     const pageHeight = pdf.internal.pageSize.getHeight()
     const contentWidth = pageWidth - margin * 2
     const contentHeight = pageHeight - margin * 2
-    // 종횡비 유지: 가로 기준으로 높이 계산
-    const imgHeight = (canvas.height * contentWidth) / canvas.width
-    // 페이지 분할: A4 한 장에 들어오는 이미지 높이(mm)만큼 잘라서 각 페이지에 삽입
-    const totalPages = Math.ceil(imgHeight / contentHeight)
+    // 1mm당 캔버스 픽셀 수
+    const pxPerMm = canvas.width / contentWidth
+    // 페이지 1장에 해당하는 캔버스 픽셀 높이
+    const canvasPageHeight = Math.floor(contentHeight * pxPerMm)
+    const totalPages = Math.ceil(canvas.height / canvasPageHeight)
     for (let page = 0; page < totalPages; page++) {
       if (page > 0) pdf.addPage()
-      pdf.addImage(
-        imgData, 'PNG',
-        margin,
-        margin - page * contentHeight,
-        contentWidth,
-        imgHeight,
-      )
+      const srcY = page * canvasPageHeight
+      const srcH = Math.min(canvasPageHeight, canvas.height - srcY)
+      // 페이지 슬라이스용 임시 캔버스
+      const slice = document.createElement('canvas')
+      slice.width = canvas.width
+      slice.height = canvasPageHeight
+      const ctx = slice.getContext('2d')
+      ctx.fillStyle = '#ffffff'
+      ctx.fillRect(0, 0, slice.width, slice.height)
+      ctx.drawImage(canvas, 0, srcY, canvas.width, srcH, 0, 0, canvas.width, srcH)
+      const sliceHeight = (slice.height / pxPerMm)
+      pdf.addImage(slice.toDataURL('image/png'), 'PNG', margin, margin, contentWidth, sliceHeight)
     }
     pdf.save(`보험금청구서_${claimData.value.hospitalName}_${claimData.value.visitDate}.pdf`)
+    showSuccessModal.value = true
   } finally {
     isGenerating.value = false
   }
@@ -184,4 +194,15 @@ const goBack = () => {
       </button>
     </div>
   </div>
+
+  <!-- 저장 완료 모달 -->
+  <AppModal v-model="showSuccessModal" title="PDF 저장 완료" :show-close="false">
+    <p class="text-(length:--font-md) text-(color:--color-gray-600)">
+      보험금 청구서 PDF가 저장되었어요.<br />
+      보험사에 제출 전 내용을 다시 한번 확인해 주세요.
+    </p>
+    <template #footer>
+      <AppButton @click="showSuccessModal = false">확인</AppButton>
+    </template>
+  </AppModal>
 </template>
