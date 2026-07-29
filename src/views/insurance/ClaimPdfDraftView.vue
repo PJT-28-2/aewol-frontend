@@ -1,24 +1,23 @@
 <script setup>
 import { ref } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { useRouter } from 'vue-router'
 import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
+import { useInsuranceStore } from '@/stores/insurance'
 
 const router = useRouter()
-const route = useRoute()
+const insuranceStore = useInsuranceStore()
 
+const draft = insuranceStore.claimDraft ?? {}
 const claimData = ref({
-  hospitalName:   route.query.hospitalName   || '24시 제주동물의료센터',
-  visitDate:      route.query.visitDate      || '2026.07.10',
-  claimAmount:    route.query.claimAmount    || '168,000원',
-  businessNumber: route.query.businessNumber || null,
-  diagnosis:      route.query.diagnosis      || '슬개골 탈구 치료',
-  accountInfo:    route.query.accountInfo    || '프로필 연동',
-  ownerName:      route.query.ownerName      || '홍길동',
+  hospitalName:   draft.hospitalName   || '24시 제주동물의료센터',
+  visitDate:      draft.visitDate      || '2026.07.10',
+  claimAmount:    draft.claimAmount    || '168,000원',
+  businessNumber: draft.businessNumber || null,
+  diagnosis:      draft.diagnosis      || '슬개골 탈구 치료',
+  accountInfo:    draft.accountInfo    || '프로필 연동',
+  ownerName:      draft.ownerName      || '홍길동',
 })
-
-// businessNumber가 빈 문자열이면 null로 처리
-if (!claimData.value.businessNumber) claimData.value.businessNumber = null
 
 const isGenerating = ref(false)
 
@@ -60,18 +59,7 @@ const handleDownload = async () => {
 }
 
 const goBack = () => {
-  router.push({
-    path: '/insurance/claim',
-    query: {
-      step:           '3',
-      hospitalName:   claimData.value.hospitalName,
-      visitDate:      claimData.value.visitDate,
-      claimAmount:    claimData.value.claimAmount,
-      businessNumber: claimData.value.businessNumber || '',
-      diagnosis:      claimData.value.diagnosis,
-      accountInfo:    claimData.value.accountInfo,
-    },
-  })
+  router.push({ path: '/insurance/claim', query: { step: '3' } })
 }
 </script>
 
@@ -82,8 +70,8 @@ const goBack = () => {
     <header class="print:hidden sticky top-0 z-10 flex items-center h-(--header-height) px-(--space-4) bg-(--color-white) border-b border-(--color-border)">
       <button
         type="button"
-        class="flex items-center justify-center w-10 h-10 text-(color:--color-navy)"
         aria-label="뒤로가기"
+        class="flex items-center justify-center w-10 h-10 text-(color:--color-navy)"
         @click="goBack"
       >
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none">

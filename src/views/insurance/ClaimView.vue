@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useInsuranceStore } from '@/stores/insurance'
 import AppButton from '@/components/common/AppButton.vue'
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 import OcrResultCard from '@/components/insurance/OcrResultCard.vue'
@@ -9,6 +10,7 @@ import ClaimChecklist from '@/components/insurance/ClaimChecklist.vue'
 
 const router = useRouter()
 const route = useRoute()
+const insuranceStore = useInsuranceStore()
 
 const step = ref(1) // 1: 서류 작성, 2: OCR 확인, 3: 초안
 
@@ -53,14 +55,14 @@ const draftFields = ref([
 ])
 
 // PDF 초안에서 뒤로 왔을 때 step 3 복원
-if (route.query.step === '3') {
-  const q = route.query
-  draftFields.value[0].value = q.hospitalName  || ''
-  draftFields.value[1].value = q.visitDate     || ''
-  draftFields.value[2].value = q.claimAmount   || ''
-  draftFields.value[3].value = q.businessNumber|| ''
-  draftFields.value[4].value = q.diagnosis     || ''
-  draftFields.value[5].value = q.accountInfo   || ''
+if (route.query.step === '3' && insuranceStore.claimDraft) {
+  const d = insuranceStore.claimDraft
+  draftFields.value[0].value = d.hospitalName   || ''
+  draftFields.value[1].value = d.visitDate      || ''
+  draftFields.value[2].value = d.claimAmount    || ''
+  draftFields.value[3].value = d.businessNumber || ''
+  draftFields.value[4].value = d.diagnosis      || ''
+  draftFields.value[5].value = d.accountInfo    || ''
   step.value = 3
 }
 
@@ -85,17 +87,15 @@ const goToDraft = () => {
 
 const goToPdfDraft = () => {
   const f = draftFields.value
-  router.push({
-    path: '/insurance/claim/pdf-draft',
-    query: {
-      hospitalName:  f[0].value || '',
-      visitDate:     f[1].value || '',
-      claimAmount:   f[2].value || '',
-      businessNumber: f[3].value || '',
-      diagnosis:     f[4].value || '',
-      accountInfo:   f[5].value || '',
-    },
+  insuranceStore.setClaimDraft({
+    hospitalName:   f[0].value || '',
+    visitDate:      f[1].value || '',
+    claimAmount:    f[2].value || '',
+    businessNumber: f[3].value || '',
+    diagnosis:      f[4].value || '',
+    accountInfo:    f[5].value || '',
   })
+  router.push('/insurance/claim/pdf-draft')
 }
 
 // 청구 서류 체크리스트
