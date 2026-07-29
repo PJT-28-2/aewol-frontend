@@ -4,15 +4,13 @@ import withdrawalCompleteImage from '@/assets/images/withdrawal-complete.png'
 
 <template>
   <main
-    class="mx-auto min-h-[600px] w-full max-w-[390px] overflow-hidden rounded-[40px] bg-(--color-white) px-[22px] pt-[164px]"
+    class="mx-auto flex min-h-svh w-full max-w-[390px] flex-col justify-center overflow-hidden rounded-[40px] bg-(--color-white) px-[22px] py-12"
   >
-    <div class="mx-auto size-[120px] overflow-hidden">
-      <img
-        class="h-[200px] w-[200px] max-w-none -translate-x-[44px] -translate-y-[30px]"
-        :src="withdrawalCompleteImage"
-        alt="노을을 바라보는 강아지와 고양이"
-      >
-    </div>
+    <img
+      class="mx-auto size-[160px] object-contain object-center"
+      :src="withdrawalCompleteImage"
+      alt="노을을 바라보는 강아지와 고양이"
+    >
 
     <section
       class="mt-[24px] text-center"

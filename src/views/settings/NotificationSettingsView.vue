@@ -98,13 +98,13 @@ const handleBack = () => {
         </span>
         <label
           class="cursor-pointer"
-          aria-label="전체 알림"
         >
           <input
             v-model="isAllEnabled"
             class="peer sr-only"
             type="checkbox"
             role="switch"
+            aria-label="전체 알림"
           >
           <span
             class="block relative h-[24px] w-[44px] shrink-0 rounded-full bg-(--color-border) transition-colors after:absolute after:top-[2px] after:left-[2px] after:size-5 after:rounded-full after:bg-(--color-white) after:shadow-(--shadow-sm) after:transition-transform peer-checked:bg-(--color-gold) peer-checked:after:translate-x-5 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-(--color-navy)"
@@ -149,13 +149,13 @@ const handleBack = () => {
           </span>
           <label
             class="cursor-pointer"
-            :aria-label="setting.title"
           >
             <input
               v-model="setting.isEnabled"
               class="peer sr-only"
               type="checkbox"
               role="switch"
+              :aria-label="setting.title"
             >
             <span
               class="block relative h-[24px] w-[44px] shrink-0 rounded-full bg-(--color-border) transition-colors after:absolute after:top-[2px] after:left-[2px] after:size-5 after:rounded-full after:bg-(--color-white) after:shadow-(--shadow-sm) after:transition-transform peer-checked:bg-(--color-gold) peer-checked:after:translate-x-5 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-(--color-navy)"

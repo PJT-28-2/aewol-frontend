@@ -238,12 +238,20 @@ const handleSignup = async () => {
           required
         >
         <button
-          class="h-(--control-height-md) w-20 shrink-0 rounded-(--radius-lg) bg-(--color-navy) text-[12px] font-(--font-bold) text-(color:--color-white)"
+          class="h-(--control-height-md) w-20 shrink-0 cursor-not-allowed rounded-(--radius-lg) bg-(--color-slate-light) text-[11px] font-(--font-bold) text-(color:--color-slate-muted)"
           type="button"
+          aria-describedby="signup-address-api-status"
+          disabled
         >
-          주소 찾기
+          연동 예정
         </button>
       </div>
+      <p
+        id="signup-address-api-status"
+        class="mt-1 text-[10.5px] text-(color:--color-slate-muted)"
+      >
+        주소 검색 API 연동 예정
+      </p>
 
       <label
         class="sr-only"

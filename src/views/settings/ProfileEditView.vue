@@ -1,11 +1,6 @@
 <script setup>
 import { computed, reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
 import AppButton from '@/components/common/AppButton.vue'
-
-const router = useRouter()
-const authStore = useAuthStore()
 
 const form = reactive({
   name: '김애월',
@@ -20,19 +15,23 @@ const form = reactive({
 const isCurrentPasswordVerified = ref(false)
 const passwordError = ref('')
 const isVerifyingPassword = ref(false)
-const isSaving = ref(false)
+const MOCK_CURRENT_PASSWORD = 'test1234'
 
-const canSave = computed(() => {
-  const hasNewPassword =
-    form.newPassword.length > 0 || form.newPasswordConfirm.length > 0
+const newPasswordCategoryCount = computed(() => {
+  const categories = [
+    /[A-Za-z]/.test(form.newPassword),
+    /\d/.test(form.newPassword),
+    /[^A-Za-z0-9]/.test(form.newPassword),
+  ]
 
-  if (!hasNewPassword) return true
+  return categories.filter(Boolean).length
+})
 
-  return (
-    isCurrentPasswordVerified.value &&
-    form.newPassword.length >= 8 &&
-    form.newPassword === form.newPasswordConfirm
-  )
+const isNewPasswordValid = computed(() => {
+  const length = form.newPassword.length
+  const categoryCount = newPasswordCategoryCount.value
+
+  return (categoryCount >= 2 && length >= 10) || (categoryCount >= 3 && length >= 8)
 })
 
 const handleCurrentPasswordInput = () => {
@@ -53,18 +52,14 @@ const verifyCurrentPassword = async () => {
   isVerifyingPassword.value = true
 
   try {
-    if (import.meta.env.DEV) {
-      if (form.currentPassword !== 'test1234') {
-        passwordError.value = '현재 비밀번호가 일치하지 않습니다.'
-        return
-      }
-    } else {
-      const email = authStore.user?.email
-      if (!email) {
-        passwordError.value = '현재 계정 정보를 확인할 수 없습니다.'
-        return
-      }
-      await authStore.login(email, form.currentPassword)
+    if (!import.meta.env.DEV) {
+      passwordError.value = '비밀번호 확인 API 연동 예정입니다.'
+      return
+    }
+
+    if (form.currentPassword !== MOCK_CURRENT_PASSWORD) {
+      passwordError.value = '현재 비밀번호가 일치하지 않습니다.'
+      return
     }
 
     isCurrentPasswordVerified.value = true
@@ -73,27 +68,6 @@ const verifyCurrentPassword = async () => {
       error.response?.data?.message ?? '현재 비밀번호가 일치하지 않습니다.'
   } finally {
     isVerifyingPassword.value = false
-  }
-}
-
-const handleSave = async () => {
-  passwordError.value = ''
-
-  if (form.newPassword && form.newPassword.length < 8) {
-    passwordError.value = '새 비밀번호는 8자 이상 입력해주세요.'
-    return
-  }
-
-  if (form.newPassword !== form.newPasswordConfirm) {
-    passwordError.value = '새 비밀번호가 일치하지 않습니다.'
-    return
-  }
-
-  isSaving.value = true
-  try {
-    await router.push('/settings')
-  } finally {
-    isSaving.value = false
   }
 }
 </script>
@@ -113,7 +87,7 @@ const handleSave = async () => {
 
     <form
       class="mt-[26px] flex flex-col"
-      @submit.prevent="handleSave"
+      @submit.prevent
     >
       <label
         class="mb-1 text-[12.5px] font-(--font-bold) text-(color:--color-slate-dark)"
@@ -160,12 +134,20 @@ const handleSave = async () => {
           required
         >
         <button
-          class="h-(--control-height-md) w-20 shrink-0 rounded-(--radius-lg) bg-(--color-navy) text-[12px] font-(--font-bold) text-(color:--color-white)"
+          class="h-(--control-height-md) w-20 shrink-0 cursor-not-allowed rounded-(--radius-lg) bg-(--color-slate-light) text-[11px] font-(--font-bold) text-(color:--color-slate-muted)"
           type="button"
+          aria-describedby="address-api-status"
+          disabled
         >
-          주소 찾기
+          연동 예정
         </button>
       </div>
+      <p
+        id="address-api-status"
+        class="mt-1 text-[10.5px] text-(color:--color-slate-muted)"
+      >
+        주소 검색 API 연동 예정
+      </p>
       <label
         class="sr-only"
         for="profile-address"
@@ -263,6 +245,19 @@ const handleSave = async () => {
         placeholder="2가지 조합 10자리 / 3가지 조합 8자리 이상"
         :disabled="!isCurrentPasswordVerified"
       >
+      <p
+        v-if="form.newPassword && !isNewPasswordValid"
+        class="mt-1 text-[11px] text-(color:--color-danger)"
+        role="alert"
+      >
+        영문·숫자·특수문자 중 2가지 조합은 10자리, 3가지 조합은 8자리 이상 입력해주세요.
+      </p>
+      <p
+        v-else-if="form.newPassword && isNewPasswordValid"
+        class="mt-1 text-[11px] text-(color:--color-success)"
+      >
+        사용 가능한 비밀번호입니다.
+      </p>
 
       <label
         class="mt-[11px] mb-1 text-[12.5px] font-(--font-bold) text-(color:--color-slate-dark)"
@@ -282,13 +277,12 @@ const handleSave = async () => {
 
       <AppButton
         class="mt-7"
-        type="submit"
+        type="button"
         size="lg"
         block
-        :disabled="!canSave"
-        :loading="isSaving"
+        disabled
       >
-        저장하기
+        저장하기 · API 연동 예정
       </AppButton>
     </form>
 

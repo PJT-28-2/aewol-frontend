@@ -20,6 +20,7 @@ const profilePassword = ref('')
 const passwordError = ref('')
 const isVerifying = ref(false)
 const PROFILE_VERIFIED_KEY = 'profileEditPasswordVerified'
+const MOCK_CURRENT_PASSWORD = 'test1234'
 
 const menuItems = [
   {
@@ -77,18 +78,14 @@ const verifyProfilePassword = async () => {
   isVerifying.value = true
 
   try {
-    if (import.meta.env.DEV) {
-      if (profilePassword.value !== 'test1234') {
-        passwordError.value = '현재 비밀번호가 일치하지 않습니다.'
-        return
-      }
-    } else {
-      const email = authStore.user?.email
-      if (!email) {
-        passwordError.value = '현재 계정 정보를 확인할 수 없습니다.'
-        return
-      }
-      await authStore.login(email, profilePassword.value)
+    if (!import.meta.env.DEV) {
+      passwordError.value = '비밀번호 확인 API 연동 예정입니다.'
+      return
+    }
+
+    if (profilePassword.value !== MOCK_CURRENT_PASSWORD) {
+      passwordError.value = '현재 비밀번호가 일치하지 않습니다.'
+      return
     }
 
     window.sessionStorage.setItem(PROFILE_VERIFIED_KEY, 'true')

@@ -15,6 +15,7 @@ const canWithdraw = computed(
 )
 const PROFILE_VERIFIED_KEY = 'profileEditPasswordVerified'
 const WITHDRAWAL_COMPLETED_KEY = 'withdrawalCompleted'
+const MOCK_CURRENT_PASSWORD = 'test1234'
 
 const handleCancel = async () => {
   window.sessionStorage.setItem(PROFILE_VERIFIED_KEY, 'true')
@@ -28,23 +29,17 @@ const handleWithdraw = async () => {
   isProcessing.value = true
 
   try {
-    if (import.meta.env.DEV) {
-      if (password.value !== 'test1234') {
-        errorMessage.value = '현재 비밀번호가 일치하지 않습니다.'
-        return
-      }
-      authStore.clearSession()
-    } else {
-      const email = authStore.user?.email
-      if (!email) {
-        errorMessage.value = '현재 계정 정보를 확인할 수 없습니다.'
-        return
-      }
-
-      await authStore.login(email, password.value)
-      await authStore.withdraw()
+    if (!import.meta.env.DEV) {
+      errorMessage.value = '회원탈퇴 API 연동 예정입니다.'
+      return
     }
 
+    if (password.value !== MOCK_CURRENT_PASSWORD) {
+      errorMessage.value = '현재 비밀번호가 일치하지 않습니다.'
+      return
+    }
+
+    authStore.clearSession()
     window.sessionStorage.setItem(WITHDRAWAL_COMPLETED_KEY, 'true')
     await router.push('/withdraw/complete')
   } catch (error) {
