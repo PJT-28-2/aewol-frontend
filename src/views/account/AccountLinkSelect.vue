@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, computed } from 'vue';
+import { onMounted, computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAccountStore } from '@/stores/account';
 import { ENABLED_BANK_CODES } from '@/utils/mockData';
@@ -9,8 +9,19 @@ import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue';
 const router = useRouter();
 const store = useAccountStore();
 
+const loadError = ref('');
+
+async function loadBanks() {
+  loadError.value = '';
+  try {
+    await store.fetchBanks();
+  } catch {
+    loadError.value = '은행 목록을 불러오지 못했어요. 다시 시도해주세요';
+  }
+}
+
 onMounted(() => {
-  store.fetchBanks();
+  loadBanks();
 });
 
 // 실제 GET /api/banks 응답 필드명이 bankCode/bankName이 아닐 수도 있어서
@@ -34,7 +45,7 @@ function selectBank(bankCode) {
 </script>
 
 <template>
-  <div class="min-h-screen bg-(--color-bg) px-5 pt-6 pb-10">
+  <div class="min-h-screen max-w-[420px] mx-auto bg-(--color-bg) px-5 pt-6 pb-10">
     <button
       class="w-8 h-8 rounded-md bg-(--color-navy) flex items-center justify-center mb-5"
       @click="router.back()"
@@ -51,7 +62,17 @@ function selectBank(bankCode) {
       불러오는 중이에요…
     </p>
 
-    <div class="grid grid-cols-2 gap-3 mb-7">
+    <div v-else-if="loadError" class="p-4 rounded-2xl bg-(--color-surface) mb-6 text-center">
+      <p class="text-(length:--font-sm) text-(color:--color-danger) mb-3">{{ loadError }}</p>
+      <button
+        class="px-5 py-2 rounded-xl bg-(--color-navy) text-(color:--color-white) text-(length:--font-sm) font-semibold"
+        @click="loadBanks"
+      >
+        다시 시도
+      </button>
+    </div>
+
+    <div v-else class="grid grid-cols-2 gap-3 mb-7">
       <button
         v-for="bank in normalizedBanks"
         :key="bank.code"
