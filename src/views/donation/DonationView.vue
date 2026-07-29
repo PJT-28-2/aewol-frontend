@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRoute, useRouter } from 'vue-router'
 import BottomNavBar from '@/components/common/BottomNavBar.vue'
-import IconChevronLeft from '@/components/common/icons/IconChevronLeft.vue'
+import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 import IconDog from '@/components/common/icons/IconDog.vue'
 import IconHeart from '@/components/common/icons/IconHeart.vue'
 import IconPaw from '@/components/common/icons/IconPaw.vue'
@@ -143,7 +143,7 @@ function saveSettings() {
         type="button"
         @click="go('/donation')"
       >
-        <IconChevronLeft :size="28" />
+        <IconArrowLeft :size="28" />
       </button>
       <h1
         class="mb-[var(--space-7)] mt-[var(--space-5)] text-[length:var(--font-xl)]"
@@ -395,7 +395,7 @@ function saveSettings() {
         type="button"
         @click="go('/donation/give')"
       >
-        <IconChevronLeft :size="28" />
+        <IconArrowLeft :size="28" />
       </button>
       <h1
         class="mb-[var(--space-2)] mt-[var(--space-5)] text-[length:var(--font-xl)]"
@@ -473,7 +473,7 @@ function saveSettings() {
         type="button"
         @click="go('/donation')"
       >
-        <IconChevronLeft :size="28" />
+        <IconArrowLeft :size="28" />
       </button>
       <h1
         class="mb-[var(--space-2)] mt-[var(--space-5)] text-[length:var(--font-xl)]"

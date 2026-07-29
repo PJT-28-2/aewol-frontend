@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { shareApi } from '@/api/share'
-import IconChevronLeft from '@/components/common/icons/IconChevronLeft.vue'
+import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 import IconInfo from '@/components/common/icons/IconInfo.vue'
 
 const router = useRouter()
@@ -64,7 +64,7 @@ async function joinShare() {
       aria-label="뒤로 가기"
       @click="router.back()"
     >
-      <IconChevronLeft :size="28" />
+      <IconArrowLeft :size="28" />
     </button>
     <h1
       class="mb-[var(--space-1)] mt-[var(--space-7)] text-[length:var(--font-xl)] font-bold"

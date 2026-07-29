@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import BottomNavBar from '@/components/common/BottomNavBar.vue'
 import IconCheck from '@/components/common/icons/IconCheck.vue'
-import IconChevronLeft from '@/components/common/icons/IconChevronLeft.vue'
+import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 import IconClose from '@/components/common/icons/IconClose.vue'
 import IconInfo from '@/components/common/icons/IconInfo.vue'
 
@@ -153,7 +153,7 @@ const selected = computed(() =>
         type="button"
         @click="router.push('/support')"
       >
-        <IconChevronLeft size="var(--icon-size-lg)" />
+        <IconArrowLeft :size="28" />
       </button>
       <span
         class="mb-[var(--space-3)] inline-grid h-[var(--space-5)] place-items-center rounded-[var(--radius-lg)] bg-(--color-olive-surface) px-[var(--space-2)] text-[length:var(--font-xs)] font-bold text-(--color-olive-dark)"
