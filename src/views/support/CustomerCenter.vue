@@ -18,11 +18,22 @@ const keyword = ref('');
 const selectedCategory = ref('전체');
 const expandedFaqId = ref(null);
 const isLoadingAnswer = ref(false);
+const answerError = ref('');
+const loadError = ref('');
 
 const CATEGORY_FILTERS = ['전체', ...SUPPORT_CATEGORIES];
 
+async function loadFaqs() {
+  loadError.value = '';
+  try {
+    await store.fetchFaqs();
+  } catch {
+    loadError.value = 'FAQ 목록을 불러오지 못했어요. 다시 시도해주세요';
+  }
+}
+
 onMounted(() => {
-  store.fetchFaqs();
+  loadFaqs();
 });
 
 // 검색어를 입력했거나 카테고리를 '전체' 외로 선택하면 검색 결과 화면으로 전환돼요.
@@ -49,8 +60,11 @@ async function toggleFaq(faqId) {
   }
   expandedFaqId.value = faqId;
   isLoadingAnswer.value = true;
+  answerError.value = '';
   try {
     await store.ensureFaqAnswer(faqId);
+  } catch {
+    answerError.value = '답변을 불러오지 못했어요. 다시 시도해주세요';
   } finally {
     isLoadingAnswer.value = false;
   }
@@ -174,7 +188,17 @@ function goToFaqDetail(faqId) {
 
       <p v-if="store.isLoading" class="text-(length:--font-sm) text-(color:--color-gray-500)">불러오는 중이에요…</p>
 
-      <ul class="flex flex-col gap-3">
+      <div v-else-if="loadError" class="p-4 rounded-2xl bg-(--color-surface) mb-3 text-center">
+        <p class="text-(length:--font-sm) text-(color:--color-danger) mb-3">{{ loadError }}</p>
+        <button
+          class="px-5 py-2 rounded-xl bg-(--color-navy) text-(color:--color-white) text-(length:--font-sm) font-semibold"
+          @click="loadFaqs"
+        >
+          다시 시도
+        </button>
+      </div>
+
+      <ul v-else class="flex flex-col gap-3">
         <li
           v-for="faq in filteredFaqs"
           :key="faq.faqId"
@@ -195,6 +219,9 @@ function goToFaqDetail(faqId) {
           <div v-if="expandedFaqId === faq.faqId" class="px-4 pb-4">
             <p v-if="isLoadingAnswer && !faq.answer" class="text-(length:--font-sm) text-(color:--color-gray-500)">
               불러오는 중이에요…
+            </p>
+            <p v-else-if="answerError && !faq.answer" class="text-(length:--font-sm) text-(color:--color-danger)">
+              {{ answerError }}
             </p>
             <p v-else class="text-(length:--font-sm) text-(color:--color-gray-600) leading-relaxed">{{ faq.answer }}</p>
           </div>

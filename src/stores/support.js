@@ -42,13 +42,22 @@ export const useSupportStore = defineStore('support', {
         faq.answer = MOCK_FAQ_ANSWERS[faqId] ?? '답변 준비 중이에요.';
         return;
       }
-      const { data } = await getFaqDetail(faqId);
-      faq.answer = data.result.answer;
+
+      this.error = null;
+      try {
+        const { data } = await getFaqDetail(faqId);
+        faq.answer = data.result.answer;
+      } catch (err) {
+        this.error = err;
+        throw err;
+      }
     },
 
     /**
      * FAQ 상세 화면 진입 시 호출. 질문/답변 + 연관 질문 목록을 함께 반환해요.
      * ⚠️ relatedFaqIds는 현재 API 명세에 없어서 mock에서만 채워짐 — 실제 연동 시 상세 API 응답에 추가 필요.
+     * fetchFaqs/ensureFaqAnswer가 실패하면 그대로 throw돼서 여기서 따로 안 잡음 —
+     * 호출하는 화면(FaqDetail.vue)에서 try/catch로 처리해요.
      */
     async fetchFaqDetail(faqId) {
       const numericId = Number(faqId);
@@ -104,9 +113,13 @@ export const useSupportStore = defineStore('support', {
         return;
       }
       this.isLoading = true;
+      this.error = null;
       try {
         const { data } = await getMyInquiries();
         this.myInquiries = data.result ?? [];
+      } catch (err) {
+        this.error = err;
+        throw err;
       } finally {
         this.isLoading = false;
       }

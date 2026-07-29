@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useSupportStore } from '@/stores/support';
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue';
@@ -7,9 +7,19 @@ import IconChevronRight from '@/components/common/icons/IconChevronRight.vue';
 
 const router = useRouter();
 const store = useSupportStore();
+const loadError = ref('');
+
+async function loadInquiries() {
+  loadError.value = '';
+  try {
+    await store.fetchMyInquiries();
+  } catch {
+    loadError.value = '문의 내역을 불러오지 못했어요. 다시 시도해주세요';
+  }
+}
 
 onMounted(() => {
-  store.fetchMyInquiries();
+  loadInquiries();
 });
 
 // status: 'ANSWERED' | 'PENDING' — 실제 enum 값은 API 확정 시 맞춰주면 됩니다.
@@ -30,7 +40,7 @@ function formatDate(dateString) {
 </script>
 
 <template>
-  <div class="min-h-screen bg-(--color-bg) px-5 pt-6 pb-10">
+  <div class="min-h-screen max-w-[420px] mx-auto bg-(--color-bg) px-5 pt-6 pb-10">
     <button
       class="w-8 h-8 rounded-md bg-(--color-navy) flex items-center justify-center mb-5"
       @click="router.back()"
@@ -44,11 +54,22 @@ function formatDate(dateString) {
     </header>
 
     <p v-if="store.isLoading" class="text-(length:--font-sm) text-(color:--color-gray-500) mb-4">불러오는 중이에요…</p>
+
+    <div v-else-if="loadError" class="p-4 rounded-2xl bg-(--color-surface) mb-4 text-center">
+      <p class="text-(length:--font-sm) text-(color:--color-danger) mb-3">{{ loadError }}</p>
+      <button
+        class="px-5 py-2 rounded-xl bg-(--color-navy) text-(color:--color-white) text-(length:--font-sm) font-semibold"
+        @click="loadInquiries"
+      >
+        다시 시도
+      </button>
+    </div>
+
     <p v-else-if="store.myInquiries.length === 0" class="text-(length:--font-sm) text-(color:--color-gray-500) mb-4">
       아직 문의한 내역이 없어요
     </p>
 
-    <ul class="flex flex-col gap-3 mb-8">
+    <ul v-if="!store.isLoading && !loadError" class="flex flex-col gap-3 mb-8">
       <li
         v-for="inquiry in store.myInquiries"
         :key="inquiry.inquiryId"

@@ -14,6 +14,7 @@ const store = useSupportStore();
 const faq = ref(null);
 const relatedFaqs = ref([]);
 const isLoading = ref(true);
+const loadError = ref('');
 
 // 도움됨/아쉬워요 피드백 — 백엔드 API 명세에 없어서 지금은 화면에서만 토글돼요.
 // TODO: 피드백 저장이 필요하면 백엔드에 엔드포인트 추가 요청 필요
@@ -21,11 +22,16 @@ const feedback = ref(null); // 'HELPFUL' | 'NOT_HELPFUL' | null
 
 async function loadFaq(faqId) {
   isLoading.value = true;
+  loadError.value = '';
   feedback.value = null;
+  faq.value = null;
+  relatedFaqs.value = [];
   try {
     const result = await store.fetchFaqDetail(faqId);
     faq.value = result.faq ?? null;
     relatedFaqs.value = result.relatedFaqs ?? [];
+  } catch {
+    loadError.value = '질문을 불러오지 못했어요. 다시 시도해주세요';
   } finally {
     isLoading.value = false;
   }
@@ -55,7 +61,27 @@ function goToRelated(relatedFaqId) {
 
     <p v-if="isLoading" class="text-(length:--font-sm) text-(color:--color-gray-500)">불러오는 중이에요…</p>
 
-    <template v-else-if="faq">
+    <div v-else-if="loadError" class="p-4 rounded-2xl bg-(--color-surface) text-center">
+      <p class="text-(length:--font-sm) text-(color:--color-danger) mb-3">{{ loadError }}</p>
+      <button
+        class="px-5 py-2 rounded-xl bg-(--color-navy) text-(color:--color-white) text-(length:--font-sm) font-semibold"
+        @click="loadFaq(route.params.faqId)"
+      >
+        다시 시도
+      </button>
+    </div>
+
+    <div v-else-if="!faq" class="p-4 rounded-2xl bg-(--color-surface) text-center">
+      <p class="text-(length:--font-sm) text-(color:--color-gray-600) mb-3">질문을 찾을 수 없어요</p>
+      <button
+        class="px-5 py-2 rounded-xl bg-(--color-navy) text-(color:--color-white) text-(length:--font-sm) font-semibold"
+        @click="router.push({ name: 'CustomerCenter' })"
+      >
+        고객센터로 이동
+      </button>
+    </div>
+
+    <template v-else>
       <p class="text-(length:--font-xs) font-semibold text-(color:--color-gray-500) mb-2">{{ faq.category }}</p>
       <h1 class="text-(length:--font-xl) font-bold text-(color:--color-navy) mb-6 leading-snug">
         {{ faq.question }}
