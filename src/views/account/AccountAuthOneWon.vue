@@ -162,6 +162,10 @@ async function submitVerification() {
 function goBack() {
   if (step.value === 'depositorName') {
     clearInterval(timerId);
+    depositorInput.value = '';
+    composingPreview.value = '';
+    isFocused.value = false;
+    verifyError.value = '';
     step.value = 'accountNumber';
   } else {
     router.back();
@@ -265,7 +269,7 @@ function goBack() {
       </div>
 
       <p class="text-(length:--font-xs) text-(color:--color-gray-500) leading-relaxed mb-2">
-        은행 앱 알림이나 입출금 문자에서<br />입금자명(예: 푸른애월)의 앞 4글자를 확인할 수 있어요
+        은행 앱 알림이나 입출금 문자에서<br />입금자명(예: 애옹월월)의 앞 4글자를 확인할 수 있어요
       </p>
       <p v-if="verifyError" class="text-(length:--font-sm) text-(color:--color-danger) mb-2">{{ verifyError }}</p>
 
