@@ -13,8 +13,9 @@ const isLoading = ref(true);
 const isError = ref(false);
 
 // TODO: 백엔드 API 연동 후 mock 데이터 제거하고 groupPurchaseApi.getMyList()로 교체
-// role: group_purchase.member_id(작성자)와 group_purchase_participant.member_id(참여자) 중
-// 로그인 유저 member_id와 일치하는 쪽 기준으로 '작성'/'참여' 결정
+// role: group_purchase_participant에 로그인 유저 member_id의 참여 row가 있으면 '참여',
+// 없이 group_purchase 작성자 member_id만 일치하면 '작성'으로 판정
+// '참여'는 GroupPurchaseStatusView(결제/취소)로, '작성'은 GroupPurchaseDetailView(읽기 전용)로 이동
 const myGroupPurchases = ref([
   {
     gpId: 1,
@@ -213,7 +214,7 @@ watch(selectedStatus, loadMyGroupPurchases);
         :key="gp.gpId"
       >
         <router-link
-          :to="`/group-purchase/${gp.gpId}/status`"
+          :to="gp.role === '참여' ? `/group-purchase/${gp.gpId}/status` : `/group-purchase/${gp.gpId}`"
           class="flex items-center justify-between gap-(--space-3) p-(--space-4) bg-(--color-white) rounded-(--radius-xl) shadow-(--shadow-sm) no-underline"
         >
           <div class="min-w-0">
