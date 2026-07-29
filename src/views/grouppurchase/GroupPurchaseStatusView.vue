@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import IconCheck from '@/components/common/icons/IconCheck.vue'
 import IconDelete from '@/components/common/icons/IconDelete.vue'
 import BottomSheet from '@/components/common/BottomSheet.vue'
-import statusWaitingImage from '@/assets/images/grouppurchase/status-waiting.png'
+import statusWaitingImage from '@/assets/images/status-waiting.png'
 
 const route = useRoute()
 const router = useRouter()

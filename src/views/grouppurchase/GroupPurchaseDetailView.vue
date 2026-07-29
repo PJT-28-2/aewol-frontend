@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import productImage from '@/assets/images/grouppurchase/mock-product-dogfood.png'
+import productImage from '@/assets/images/mock-product-dogfood.png'
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 
 const route = useRoute()
