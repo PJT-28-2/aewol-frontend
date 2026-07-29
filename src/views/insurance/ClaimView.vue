@@ -1,13 +1,17 @@
 <script setup>
 import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
+import { useInsuranceStore } from '@/stores/insurance'
 import AppButton from '@/components/common/AppButton.vue'
+import AppModal from '@/components/common/AppModal.vue'
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 import OcrResultCard from '@/components/insurance/OcrResultCard.vue'
 import ClaimDraftCard from '@/components/insurance/ClaimDraftCard.vue'
 import ClaimChecklist from '@/components/insurance/ClaimChecklist.vue'
 
 const router = useRouter()
+const route = useRoute()
+const insuranceStore = useInsuranceStore()
 
 const step = ref(1) // 1: 서류 작성, 2: OCR 확인, 3: 초안
 
@@ -51,13 +55,25 @@ const draftFields = ref([
   { label: '계약자·계좌정보', value: '', editable: true,  badge: 'linked',   badgeLabel: '연동',     placeholder: '계좌정보 입력' },
 ])
 
+// PDF 초안에서 뒤로 왔을 때 step 3 복원
+if (route.query.step === '3' && insuranceStore.claimDraft) {
+  const d = insuranceStore.claimDraft
+  draftFields.value[0].value = d.hospitalName   || ''
+  draftFields.value[1].value = d.visitDate      || ''
+  draftFields.value[2].value = d.claimAmount    || ''
+  draftFields.value[3].value = d.businessNumber || ''
+  draftFields.value[4].value = d.diagnosis      || ''
+  draftFields.value[5].value = d.accountInfo    || ''
+  step.value = 3
+}
+
 const autoCount = computed(() => draftFields.value.filter(f => !f.editable && f.value).length)
 const requiredCount = computed(() => draftFields.value.filter(f => f.editable && !f.value).length)
 
 const goToDraft = () => {
   ocrItems.value.forEach((item) => {
     const idx = ocrKeyToDraftIndex[item.key]
-    if (idx !== undefined) draftFields.value[idx].value = item.value
+    if (idx !== undefined) draftFields.value[idx].value = item.value?.trim() ?? ''
   })
   draftFields.value.forEach((field) => {
     if (!field.editable && !field.value) {
@@ -68,6 +84,40 @@ const goToDraft = () => {
     }
   })
   step.value = 3
+}
+
+const showValidationModal = ref(false)
+const missingLabels = ref([])
+
+const goToPdfDraft = () => {
+  const f = draftFields.value
+  const requiredIndexes = [
+    { idx: 0, label: '병원명' },
+    { idx: 1, label: '진료일자' },
+    { idx: 2, label: '청구금액' },
+    { idx: 3, label: '사업자번호' },
+    { idx: 4, label: '진단명' },
+    { idx: 5, label: '계약자·계좌정보' },
+  ]
+  const missing = requiredIndexes
+    .filter(({ idx }) => !f[idx].value?.trim())
+    .map(({ label }) => label)
+
+  if (missing.length > 0) {
+    missingLabels.value = missing
+    showValidationModal.value = true
+    return
+  }
+
+  insuranceStore.setClaimDraft({
+    hospitalName:   f[0].value,
+    visitDate:      f[1].value,
+    claimAmount:    f[2].value,
+    businessNumber: f[3].value || '',
+    diagnosis:      f[4].value,
+    accountInfo:    f[5].value,
+  })
+  router.push('/insurance/claim/pdf-draft')
 }
 
 // 청구 서류 체크리스트
@@ -191,7 +241,7 @@ const docChecklist = [
       </div>
     </div>
 
-    <ClaimDraftCard :fields="draftFields" />
+    <ClaimDraftCard :fields="draftFields" @pdf-click="goToPdfDraft" />
 
     <ClaimChecklist :items="docChecklist" />
 
@@ -199,4 +249,24 @@ const docChecklist = [
       홈으로 돌아가기
     </AppButton>
   </div>
+
+  <!-- 필수값 누락 모달 -->
+  <AppModal v-model="showValidationModal" title="입력이 필요한 항목이 있어요">
+    <p class="text-(length:--font-md) text-(color:--color-gray-600) mb-(--space-4)">
+      PDF 초안을 만들기 전에 아래 항목을 채워주세요.
+    </p>
+    <ul class="flex flex-col gap-(--space-2)">
+      <li
+        v-for="label in missingLabels"
+        :key="label"
+        class="flex items-center gap-(--space-2) text-(length:--font-md) text-(color:--color-gray-900)"
+      >
+        <span class="w-1.5 h-1.5 rounded-full bg-(--color-danger) shrink-0" />
+        {{ label }}
+      </li>
+    </ul>
+    <template #footer>
+      <AppButton @click="showValidationModal = false">확인</AppButton>
+    </template>
+  </AppModal>
 </template>

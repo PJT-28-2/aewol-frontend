@@ -8,6 +8,8 @@ const props = defineProps({
   },
 })
 
+const emit = defineEmits(['pdf-click'])
+
 const appendUnit = (field) => {
   if (field.unit && field.value && !field.value.endsWith(field.unit)) {
     field.value = field.value + field.unit
@@ -19,7 +21,7 @@ const appendUnit = (field) => {
   <section class="bg-(--color-white) rounded-(--radius-xl) p-(--space-5) mb-(--space-5) [box-shadow:var(--shadow-md)]">
     <div class="flex justify-between items-center mb-(--space-4)">
       <span class="text-(length:--font-base) font-semibold text-(color:--color-gray-900)">보험금 청구서 초안</span>
-      <button type="button" class="text-(length:--font-sm) text-(color:--color-gray-500)">PDF 초안</button>
+      <button type="button" class="text-(length:--font-sm) text-(color:--color-gray-500)" @click="emit('pdf-click')">PDF 초안</button>
     </div>
 
     <ul>
