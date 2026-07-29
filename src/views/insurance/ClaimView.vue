@@ -1,327 +1,202 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import AppButton from '@/components/common/AppButton.vue'
+import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
+import OcrResultCard from '@/components/insurance/OcrResultCard.vue'
+import ClaimDraftCard from '@/components/insurance/ClaimDraftCard.vue'
+import ClaimChecklist from '@/components/insurance/ClaimChecklist.vue'
 
-const step = ref(1) // 1: upload, 2: OCR preview, 3: confirm
+const router = useRouter()
+
+const step = ref(1) // 1: 서류 작성, 2: OCR 확인, 3: 초안
+
 const receiptFile = ref(null)
-const receiptPreview = ref('')
-const ocrResult = ref({
-  merchantName: '',
-  amount: 0,
-  date: '',
-  items: [],
-})
-const isProcessing = ref(false)
-const errorMessage = ref('')
+const receiptFileName = ref('')
 
+// OCR 추출 결과 (실제 연동 전 임시 데이터)
+const ocrItems = ref([
+  { key: 'date',      label: '진료일',    value: '2026.07.10',         unit: '' },
+  { key: 'hospital',  label: '병원명',    value: '24시 제주동물의료센터', unit: '' },
+  { key: 'treatment', label: '진료 항목', value: '슬개골 탈구 치료',    unit: '' },
+  { key: 'fee',       label: '진료비',    value: '168,000원',           unit: '원' },
+])
 const handleFileSelect = (event) => {
   const file = event.target.files[0]
-  if (file) {
-    receiptFile.value = file
-    receiptPreview.value = URL.createObjectURL(file)
+  event.target.value = ''
+  if (!file) return
+  if (!file.type.startsWith('image/')) {
+    alert('이미지 파일만 업로드할 수 있어요.')
+    return
   }
-}
-
-const handleUpload = async () => {
-  // TODO: implement receipt upload and OCR processing
+  if (file.size > 10 * 1024 * 1024) {
+    alert('파일 크기는 10MB 이하여야 해요.')
+    return
+  }
+  receiptFile.value = file
+  receiptFileName.value = file.name
   step.value = 2
 }
 
-const handleConfirm = async () => {
-  // TODO: implement claim submission
+// OCR 키 → 초안 필드 인덱스 매핑
+const ocrKeyToDraftIndex = { hospital: 0, date: 1, fee: 2, treatment: 4 }
+
+// 청구서 초안 필드
+const draftFields = ref([
+  { label: '병원명',          value: '', editable: false, badge: 'auto',     badgeLabel: '자동',     placeholder: '' },
+  { label: '진료일자',        value: '', editable: false, badge: 'auto',     badgeLabel: '자동',     placeholder: '' },
+  { label: '청구금액',        value: '', editable: false, badge: 'auto',     badgeLabel: '자동',     placeholder: '', unit: '원' },
+  { label: '사업자번호',      value: '', editable: true,  badge: 'required', badgeLabel: '확인필요', placeholder: '사업자번호 입력' },
+  { label: '진단명',          value: '', editable: false, badge: 'auto',     badgeLabel: '자동',     placeholder: '' },
+  { label: '계약자·계좌정보', value: '', editable: true,  badge: 'linked',   badgeLabel: '연동',     placeholder: '계좌정보 입력' },
+])
+
+const autoCount = computed(() => draftFields.value.filter(f => !f.editable && f.value).length)
+const requiredCount = computed(() => draftFields.value.filter(f => f.editable && !f.value).length)
+
+const goToDraft = () => {
+  ocrItems.value.forEach((item) => {
+    const idx = ocrKeyToDraftIndex[item.key]
+    if (idx !== undefined) draftFields.value[idx].value = item.value
+  })
+  draftFields.value.forEach((field) => {
+    if (!field.editable && !field.value) {
+      field.editable = true
+      field.badge = 'required'
+      field.badgeLabel = '확인필요'
+      field.placeholder = `${field.label} 입력`
+    }
+  })
+  step.value = 3
 }
+
+// 청구 서류 체크리스트
+const docChecklist = [
+  { name: '진료 영수증', sub: '이미 확보됨',             checked: true },
+  { name: '진단서',      sub: '병원에서 발급받아야 해요', checked: false },
+  { name: '신분증 사본', sub: '본인 확인용',              checked: false },
+  { name: '통장 사본',   sub: '보험금 입금용',            checked: false },
+]
 </script>
 
 <template>
-  <div class="claim-page">
-    <header class="page-header">
-      <h1>보험 청구</h1>
+  <!-- Step 1: 보험금 청구 서류 작성 -->
+  <div
+    v-if="step === 1"
+    class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))]"
+  >
+    <button
+      type="button"
+      class="mb-(--space-4) text-(color:--color-navy)"
+      aria-label="뒤로가기"
+      @click="router.back()"
+    >
+      <IconArrowLeft :size="24" />
+    </button>
+
+    <header class="mb-(--space-6)">
+      <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-2)">
+        보험금 청구 서류 작성
+      </h1>
+      <p class="text-(length:--font-md) text-(color:--color-gray-600) leading-relaxed">
+        진료 영수증을 업로드하면 AI가 항목을 자동으로 인식해<br />
+        서류 초안을 만들어드려요
+      </p>
     </header>
 
-    <!-- Step 1: Receipt Upload -->
-    <section v-if="step === 1" class="upload-section">
-      <p class="step-description">영수증 사진을 업로드하세요.</p>
+    <section class="bg-(--color-gray-100) rounded-(--radius-xl) p-(--space-5)">
+      <p class="text-(length:--font-base) font-bold text-(color:--color-navy) mb-(--space-2)">진료 영수증 업로드</p>
+      <p class="text-(length:--font-sm) text-(color:--color-gray-600) leading-relaxed mb-(--space-4)">
+        AI가 항목을 자동으로 인식해 서류 초안을 만들어드려요
+      </p>
 
-      <div class="upload-area" @click="$refs.fileInput.click()">
+      <label
+        for="receipt-input"
+        class="flex items-center justify-center w-full py-(--space-4) bg-(--color-white) border-2 border-dashed border-(--color-gray-300) rounded-(--radius-lg) cursor-pointer"
+      >
         <input
-          ref="fileInput"
+          id="receipt-input"
           type="file"
           accept="image/*"
-          class="file-input"
+          class="sr-only"
           @change="handleFileSelect"
         />
-        <div v-if="!receiptPreview" class="upload-placeholder">
-          <div class="upload-icon"><!-- TODO: camera icon --></div>
-          <p>탭하여 영수증 촬영 또는 선택</p>
-        </div>
-        <img v-else :src="receiptPreview" alt="영수증 미리보기" class="receipt-preview" />
-      </div>
-
-      <button
-        class="btn-primary"
-        :disabled="!receiptFile || isProcessing"
-        @click="handleUpload"
-      >
-        {{ isProcessing ? 'OCR 처리 중...' : 'OCR 분석하기' }}
-      </button>
+        <span class="text-(length:--font-base) font-medium text-(color:--color-gray-500)">
+          {{ receiptFileName || '+ 영수증 이미지 첨부' }}
+        </span>
+      </label>
     </section>
+  </div>
 
-    <!-- Step 2: OCR Result Preview -->
-    <section v-else-if="step === 2" class="ocr-section">
-      <p class="step-description">OCR 분석 결과를 확인하고 수정하세요.</p>
+  <!-- Step 2: 보험금 청구 서류 확인 -->
+  <div
+    v-else-if="step === 2"
+    class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))]"
+  >
+    <button
+      type="button"
+      class="mb-(--space-4) text-(color:--color-navy)"
+      aria-label="뒤로가기"
+      @click="step = 1"
+    >
+      <IconArrowLeft :size="24" />
+    </button>
 
-      <div class="ocr-result card">
-        <div class="form-group">
-          <label for="merchantName">가맹점명</label>
-          <input id="merchantName" v-model="ocrResult.merchantName" type="text" />
-        </div>
-        <div class="form-group">
-          <label for="amount">금액</label>
-          <input id="amount" v-model.number="ocrResult.amount" type="number" />
-        </div>
-        <div class="form-group">
-          <label for="date">날짜</label>
-          <input id="date" v-model="ocrResult.date" type="date" />
-        </div>
+    <header class="mb-(--space-6)">
+      <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-2)">
+        보험금 청구 서류 확인
+      </h1>
+      <p class="text-(length:--font-md) text-(color:--color-gray-600)">
+        AI가 인식한 항목을 확인해주세요
+      </p>
+    </header>
 
-        <!-- TODO: implement line items editor -->
-        <ul v-if="ocrResult.items.length > 0" class="item-list">
-          <li v-for="(item, idx) in ocrResult.items" :key="idx">
-            {{ item.name }} - {{ item.amount?.toLocaleString() }}원
-          </li>
-        </ul>
+    <OcrResultCard :file-name="receiptFileName" :items="ocrItems" />
+
+    <AppButton block @click="goToDraft">서류 초안 생성하기</AppButton>
+  </div>
+
+  <!-- Step 3: 보험금 청구 서류 초안 -->
+  <div
+    v-else
+    class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))]"
+  >
+    <button
+      type="button"
+      class="mb-(--space-4) text-(color:--color-navy)"
+      aria-label="뒤로가기"
+      @click="step = 2"
+    >
+      <IconArrowLeft :size="24" />
+    </button>
+
+    <header class="mb-(--space-5)">
+      <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-2)">
+        보험금 청구 서류 초안
+      </h1>
+      <p class="text-(length:--font-md) text-(color:--color-gray-600) leading-relaxed">
+        영수증 정보로 자동 작성했어요 · 부족한 항목만 채워주세요
+      </p>
+    </header>
+
+    <!-- 요약 통계 -->
+    <div class="grid grid-cols-2 gap-(--space-3) mb-(--space-5)">
+      <div class="bg-(--color-olive-surface) rounded-(--radius-lg) p-(--space-4) flex flex-col gap-(--space-1)">
+        <span class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">{{ autoCount }}건</span>
+        <span class="text-(length:--font-sm) text-(color:--color-gray-600)">자동 완성</span>
       </div>
-
-      <div class="step-actions">
-        <button class="btn-secondary" @click="step = 1">다시 촬영</button>
-        <button class="btn-primary" @click="step = 3">확인</button>
+      <div class="bg-(--color-gold-surface) rounded-(--radius-lg) p-(--space-4) flex flex-col gap-(--space-1)">
+        <span class="text-(length:--font-2xl) font-bold text-(color:--color-gold-dark)">{{ requiredCount }}건</span>
+        <span class="text-(length:--font-sm) text-(color:--color-gray-600)">직접 확인 필요</span>
       </div>
-    </section>
-
-    <!-- Step 3: Confirm & Submit -->
-    <section v-else class="confirm-section">
-      <p class="step-description">아래 내용으로 보험 청구를 제출합니다.</p>
-
-      <div class="confirm-card card">
-        <div class="confirm-row">
-          <span>가맹점</span>
-          <strong>{{ ocrResult.merchantName }}</strong>
-        </div>
-        <div class="confirm-row">
-          <span>금액</span>
-          <strong>{{ ocrResult.amount?.toLocaleString() }}원</strong>
-        </div>
-        <div class="confirm-row">
-          <span>날짜</span>
-          <strong>{{ ocrResult.date }}</strong>
-        </div>
-      </div>
-
-      <p v-if="errorMessage" class="error-text">{{ errorMessage }}</p>
-
-      <div class="step-actions">
-        <button class="btn-secondary" @click="step = 2">수정</button>
-        <button class="btn-primary" :disabled="isProcessing" @click="handleConfirm">
-          {{ isProcessing ? '제출 중...' : '청구 제출' }}
-        </button>
-      </div>
-    </section>
-
-    <!-- Step Indicator -->
-    <div class="step-indicator">
-      <span :class="{ active: step >= 1 }">1</span>
-      <span :class="{ active: step >= 2 }">2</span>
-      <span :class="{ active: step >= 3 }">3</span>
     </div>
+
+    <ClaimDraftCard :fields="draftFields" />
+
+    <ClaimChecklist :items="docChecklist" />
+
+    <AppButton block variant="primary" class="mt-(--space-5)" @click="router.push('/home')">
+      홈으로 돌아가기
+    </AppButton>
   </div>
 </template>
-
-<style scoped>
-.claim-page {
-  padding: var(--space-4);
-  padding-bottom: calc(var(--bottom-nav-height) + var(--space-4));
-  background-color: var(--color-bg);
-  min-height: 100vh;
-}
-
-.page-header {
-  margin-bottom: var(--space-5);
-}
-
-.page-header h1 {
-  font-size: var(--font-2xl);
-  font-weight: var(--font-bold);
-  color: var(--color-navy);
-}
-
-.step-description {
-  font-size: var(--font-md);
-  color: var(--color-gray-600);
-  margin-bottom: var(--space-5);
-}
-
-.upload-area {
-  border: 2px dashed var(--color-gray-300);
-  border-radius: var(--radius-lg);
-  padding: var(--space-8);
-  text-align: center;
-  cursor: pointer;
-  margin-bottom: var(--space-5);
-  background-color: var(--color-white);
-  min-height: 200px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.file-input {
-  display: none;
-}
-
-.upload-placeholder {
-  color: var(--color-gray-500);
-}
-
-.upload-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: var(--radius-full);
-  background-color: var(--color-gray-200);
-  margin: 0 auto var(--space-3);
-}
-
-.upload-placeholder p {
-  font-size: var(--font-md);
-}
-
-.receipt-preview {
-  max-width: 100%;
-  max-height: 300px;
-  border-radius: var(--radius-md);
-  object-fit: contain;
-}
-
-.card {
-  background-color: var(--color-white);
-  border-radius: var(--radius-lg);
-  padding: var(--space-5);
-  box-shadow: var(--shadow-sm);
-}
-
-.form-group {
-  margin-bottom: var(--space-4);
-}
-
-.form-group label {
-  display: block;
-  font-size: var(--font-sm);
-  font-weight: var(--font-medium);
-  color: var(--color-gray-700);
-  margin-bottom: var(--space-1);
-}
-
-.form-group input {
-  width: 100%;
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--color-gray-300);
-  border-radius: var(--radius-md);
-  font-size: var(--font-base);
-  box-sizing: border-box;
-}
-
-.item-list {
-  list-style: none;
-  padding: 0;
-  margin: var(--space-3) 0 0;
-}
-
-.item-list li {
-  padding: var(--space-2) 0;
-  font-size: var(--font-sm);
-  color: var(--color-gray-600);
-  border-bottom: 1px solid var(--color-gray-100);
-}
-
-.confirm-card {
-  margin-bottom: var(--space-5);
-}
-
-.confirm-row {
-  display: flex;
-  justify-content: space-between;
-  padding: var(--space-3) 0;
-  border-bottom: 1px solid var(--color-gray-100);
-  font-size: var(--font-md);
-}
-
-.confirm-row span {
-  color: var(--color-gray-600);
-}
-
-.confirm-row strong {
-  color: var(--color-gray-900);
-}
-
-.error-text {
-  color: var(--color-danger);
-  font-size: var(--font-sm);
-  margin-bottom: var(--space-3);
-}
-
-.step-actions {
-  display: flex;
-  gap: var(--space-3);
-}
-
-.btn-primary {
-  flex: 1;
-  padding: var(--space-3) var(--space-4);
-  background-color: var(--color-navy);
-  color: var(--color-white);
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: var(--font-base);
-  font-weight: var(--font-semibold);
-  cursor: pointer;
-}
-
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.btn-secondary {
-  flex: 1;
-  padding: var(--space-3) var(--space-4);
-  background: none;
-  border: 1px solid var(--color-gray-300);
-  border-radius: var(--radius-md);
-  font-size: var(--font-md);
-  color: var(--color-gray-600);
-  cursor: pointer;
-}
-
-.step-indicator {
-  display: flex;
-  justify-content: center;
-  gap: var(--space-3);
-  margin-top: var(--space-7);
-}
-
-.step-indicator span {
-  width: 28px;
-  height: 28px;
-  border-radius: var(--radius-full);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--font-sm);
-  font-weight: var(--font-semibold);
-  background-color: var(--color-gray-200);
-  color: var(--color-gray-500);
-}
-
-.step-indicator span.active {
-  background-color: var(--color-navy);
-  color: var(--color-white);
-}
-</style>
