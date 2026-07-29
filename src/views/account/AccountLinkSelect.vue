@@ -48,7 +48,7 @@ function selectBank(bankCode) {
 <template>
   <div class="min-h-screen max-w-[420px] mx-auto bg-(--color-bg) px-(--space-5) pt-(--space-6) pb-(--space-8)">
     <button
-      class="-ml-2 p-2 flex items-center justify-center mb-(--space-5)"
+      class="-ml-(--space-2) p-(--space-2) flex items-center justify-center mb-(--space-5)"
       aria-label="뒤로 가기"
       @click="router.back()"
     >

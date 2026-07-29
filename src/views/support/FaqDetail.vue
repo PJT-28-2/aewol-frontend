@@ -65,7 +65,8 @@ function goToRelated(relatedFaqId) {
 <template>
   <div class="min-h-screen max-w-[420px] mx-auto bg-(--color-bg) px-5 pt-6 pb-10">
     <button
-      class="-ml-2 p-2 flex items-center justify-center mb-5"
+      class="-ml-(--space-2) p-(--space-2) flex items-center justify-center mb-(--space-5)"
+      aria-label="뒤로 가기"
       @click="router.back()"
     >
       <IconArrowLeft :size="20" color="var(--color-gray-700)" />
