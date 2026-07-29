@@ -150,6 +150,17 @@ function closeAddressSheet() {
   isAddressSheetOpen.value = false;
 }
 
+// 하이픈 유무와 무관하게 검증할 수 있도록 숫자만 추출
+function normalizePhoneDigits(value) {
+  return value.replace(/\D/g, '');
+}
+
+function formatPhoneNumber(digits) {
+  return digits.length === 11
+    ? `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`
+    : `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
+}
+
 // 필드별 빈 값·형식 검증, 통과 여부를 반환하고 오류 메시지를 채움
 function validateAddressForm() {
   const form = addressForm.value;
@@ -159,10 +170,14 @@ function validateAddressForm() {
     errors.name = '이름을 입력해주세요';
   }
 
+  const phoneDigits = normalizePhoneDigits(form.phone);
   if (!form.phone.trim()) {
     errors.phone = '전화번호를 입력해주세요';
-  } else if (!/^01[0-9]-\d{3,4}-\d{4}$/.test(form.phone.trim())) {
+  } else if (!/^01[0-9]\d{7,8}$/.test(phoneDigits)) {
     errors.phone = '전화번호 형식이 올바르지 않아요 (예: 010-1234-5678)';
+  } else {
+    // 하이픈 없이 입력해도 저장 형식은 통일
+    form.phone = formatPhoneNumber(phoneDigits);
   }
 
   if (!form.zipCode.trim()) {
