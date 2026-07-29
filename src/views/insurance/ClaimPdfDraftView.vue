@@ -1,6 +1,8 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import jsPDF from 'jspdf'
+import html2canvas from 'html2canvas'
 
 const router = useRouter()
 const route = useRoute()
@@ -19,38 +21,13 @@ const claimData = ref({
 if (!claimData.value.businessNumber) claimData.value.businessNumber = null
 
 const isGenerating = ref(false)
-const jsPDFLoaded = ref(false)
-const html2canvasLoaded = ref(false)
-
-const loadScript = (src) =>
-  new Promise((resolve, reject) => {
-    if (document.querySelector(`script[src="${src}"]`)) { resolve(); return }
-    const script = document.createElement('script')
-    script.src = src
-    script.onload = resolve
-    script.onerror = reject
-    document.head.appendChild(script)
-  })
-
-onMounted(async () => {
-  await Promise.all([
-    loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js').then(
-      () => (jsPDFLoaded.value = true),
-    ),
-    loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js').then(
-      () => (html2canvasLoaded.value = true),
-    ),
-  ])
-})
 
 const previewRef = ref(null)
 
 const handleDownload = async () => {
-  if (!jsPDFLoaded.value || !html2canvasLoaded.value) return
   isGenerating.value = true
   try {
-    const { jsPDF } = window.jspdf
-    const canvas = await window.html2canvas(previewRef.value, {
+    const canvas = await html2canvas(previewRef.value, {
       scale: 2,
       useCORS: true,
       backgroundColor: '#ffffff',
@@ -179,11 +156,10 @@ const goBack = () => {
       <button
         type="button"
         class="w-full h-(--control-height-lg) bg-(--color-navy) text-(color:--color-white) border-none rounded-(--radius-lg) text-(length:--font-base) font-semibold cursor-pointer transition-opacity disabled:opacity-50 disabled:cursor-not-allowed active:opacity-85"
-        :disabled="isGenerating || !jsPDFLoaded || !html2canvasLoaded"
+        :disabled="isGenerating"
         @click="handleDownload"
       >
         <span v-if="isGenerating">PDF 생성 중...</span>
-        <span v-else-if="!jsPDFLoaded || !html2canvasLoaded">로딩 중...</span>
         <span v-else>PDF 저장</span>
       </button>
     </div>
