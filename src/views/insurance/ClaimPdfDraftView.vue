@@ -76,7 +76,20 @@ const handleDownload = async () => {
   }
 }
 
-const goBack = () => router.back()
+const goBack = () => {
+  router.push({
+    path: '/insurance/claim',
+    query: {
+      step: '3',
+      hospitalName:   claimData.value.hospitalName,
+      visitDate:      claimData.value.visitDate,
+      claimAmount:    claimData.value.claimAmount,
+      businessNumber: claimData.value.businessNumber || '',
+      diagnosis:      claimData.value.diagnosis,
+      accountInfo:    claimData.value.accountInfo,
+    },
+  })
+}
 </script>
 
 <template>
