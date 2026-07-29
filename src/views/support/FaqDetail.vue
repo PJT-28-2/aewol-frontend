@@ -1,0 +1,131 @@
+<script setup>
+import { ref, computed, watch, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { useSupportStore } from '@/stores/support';
+import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue';
+import IconChevronRight from '@/components/common/icons/IconChevronRight.vue';
+import IconThumbsUp from '@/components/common/icons/IconThumbsUp.vue';
+import IconThumbsDown from '@/components/common/icons/IconThumbsDown.vue';
+
+const route = useRoute();
+const router = useRouter();
+const store = useSupportStore();
+
+const faq = ref(null);
+const relatedFaqs = ref([]);
+const isLoading = ref(true);
+
+// 도움됨/아쉬워요 피드백 — 백엔드 API 명세에 없어서 지금은 화면에서만 토글돼요.
+// TODO: 피드백 저장이 필요하면 백엔드에 엔드포인트 추가 요청 필요
+const feedback = ref(null); // 'HELPFUL' | 'NOT_HELPFUL' | null
+
+async function loadFaq(faqId) {
+  isLoading.value = true;
+  feedback.value = null;
+  try {
+    const result = await store.fetchFaqDetail(faqId);
+    faq.value = result.faq ?? null;
+    relatedFaqs.value = result.relatedFaqs ?? [];
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+onMounted(() => loadFaq(route.params.faqId));
+watch(
+  () => route.params.faqId,
+  (newId) => loadFaq(newId),
+);
+
+const answerParagraphs = computed(() => (faq.value?.answer ?? '').split('\n\n').filter(Boolean));
+
+function goToRelated(relatedFaqId) {
+  router.push({ name: 'FaqDetail', params: { faqId: relatedFaqId } });
+}
+</script>
+
+<template>
+  <div class="min-h-screen max-w-[420px] mx-auto bg-(--color-bg) px-5 pt-6 pb-10">
+    <button
+      class="w-8 h-8 rounded-md bg-(--color-navy) flex items-center justify-center mb-5"
+      @click="router.back()"
+    >
+      <IconArrowLeft :size="18" color="var(--color-white)" />
+    </button>
+
+    <p v-if="isLoading" class="text-(length:--font-sm) text-(color:--color-gray-500)">불러오는 중이에요…</p>
+
+    <template v-else-if="faq">
+      <p class="text-(length:--font-xs) font-semibold text-(color:--color-gray-500) mb-2">{{ faq.category }}</p>
+      <h1 class="text-(length:--font-xl) font-bold text-(color:--color-navy) mb-6 leading-snug">
+        {{ faq.question }}
+      </h1>
+
+      <div class="h-px bg-(--color-border) mb-6" />
+
+      <div class="mb-8">
+        <p
+          v-for="(paragraph, i) in answerParagraphs"
+          :key="i"
+          class="text-(length:--font-md) text-(color:--color-gray-700) leading-relaxed mb-4 last:mb-0"
+        >
+          {{ paragraph }}
+        </p>
+      </div>
+
+      <div class="rounded-2xl bg-(--color-surface) p-4 mb-8">
+        <p class="text-(length:--font-sm) font-semibold text-(color:--color-navy) text-center mb-3">
+          이 답변이 도움이 되었나요?
+        </p>
+        <div class="flex gap-2">
+          <button
+            class="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-(length:--font-sm) font-medium"
+            :class="
+              feedback === 'HELPFUL'
+                ? 'bg-(--color-navy) text-(color:--color-white)'
+                : 'bg-(--color-white) text-(color:--color-gray-600)'
+            "
+            @click="feedback = 'HELPFUL'"
+          >
+            <IconThumbsUp :size="16" :color="feedback === 'HELPFUL' ? 'var(--color-white)' : 'var(--color-gray-600)'" />
+            도움됨
+          </button>
+          <button
+            class="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-(length:--font-sm) font-medium"
+            :class="
+              feedback === 'NOT_HELPFUL'
+                ? 'bg-(--color-navy) text-(color:--color-white)'
+                : 'bg-(--color-white) text-(color:--color-gray-600)'
+            "
+            @click="feedback = 'NOT_HELPFUL'"
+          >
+            <IconThumbsDown :size="16" :color="feedback === 'NOT_HELPFUL' ? 'var(--color-white)' : 'var(--color-gray-600)'" />
+            아쉬워요
+          </button>
+        </div>
+      </div>
+
+      <section v-if="relatedFaqs.length" class="mb-8">
+        <h2 class="text-(length:--font-base) font-semibold text-(color:--color-navy) mb-3">관련 질문</h2>
+        <ul class="flex flex-col gap-2">
+          <li v-for="related in relatedFaqs" :key="related.faqId">
+            <button
+              class="w-full flex items-center justify-between gap-3 p-4 rounded-2xl bg-(--color-surface) text-left"
+              @click="goToRelated(related.faqId)"
+            >
+              <span class="text-(length:--font-md) text-(color:--color-navy)">{{ related.question }}</span>
+              <IconChevronRight :size="18" color="var(--color-gray-400)" class="shrink-0" />
+            </button>
+          </li>
+        </ul>
+      </section>
+
+      <button
+        class="w-full py-4 rounded-xl bg-(--color-gold) text-(color:--color-navy) font-bold"
+        @click="router.push({ name: 'InquiryForm' })"
+      >
+        1:1 문의하기
+      </button>
+    </template>
+  </div>
+</template>
