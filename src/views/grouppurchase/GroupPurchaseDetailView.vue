@@ -169,7 +169,7 @@ function goToPaymentPreview() {
         </p>
         <!-- 할인율은 저장된 값이 아니라 discountRate computed로 계산된 값 -->
         <span
-          class="px-(--space-2) py-(--space-1) rounded-full bg-(--color-discount-bg) text-(color:--color-discount-text) text-(length:--font-xs) font-bold"
+          class="px-(--space-2) py-(--space-1) rounded-full bg-(--color-gold-surface) text-(color:--color-gold-dark) text-(length:--font-xs) font-bold"
         >
           {{ discountRate }}% 할인
         </span>
@@ -199,7 +199,7 @@ function goToPaymentPreview() {
           마감까지 {{ deadlineLabel }}
         </p>
         <!-- 목표까지 남은 수량도 선택 수량 반영 기준으로 갱신 -->
-        <p class="text-(length:--font-xs) font-bold text-(color:--color-discount-text)">
+        <p class="text-(length:--font-xs) font-bold text-(color:--color-gold-dark)">
           {{ remainingForConfirm }}개 더 모이면 확정
         </p>
       </div>

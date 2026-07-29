@@ -105,7 +105,7 @@ function goToNextStep() {
           사진 직접 업로드
         </p>
         <span
-          class="px-(--space-2) py-(--space-1) rounded-full bg-(--color-discount-bg) text-(color:--color-discount-text) text-(length:--font-xs) font-bold"
+          class="px-(--space-2) py-(--space-1) rounded-full bg-(--color-gold-surface) text-(color:--color-gold-dark) text-(length:--font-xs) font-bold"
         >
           필수
         </span>
@@ -258,7 +258,7 @@ function goToNextStep() {
         >
         <span
           v-if="discountRate > 0"
-          class="absolute right-(--space-4) top-1/2 -translate-y-1/2 px-(--space-2) py-(--space-1) rounded-full bg-(--color-discount-bg) text-(color:--color-discount-text) text-(length:--font-xs) font-bold"
+          class="absolute right-(--space-4) top-1/2 -translate-y-1/2 px-(--space-2) py-(--space-1) rounded-full bg-(--color-gold-surface) text-(color:--color-gold-dark) text-(length:--font-xs) font-bold"
         >
           {{ discountRate }}% 할인
         </span>
