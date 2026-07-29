@@ -194,5 +194,9 @@ const docChecklist = [
     <ClaimDraftCard :fields="draftFields" />
 
     <ClaimChecklist :items="docChecklist" />
+
+    <AppButton block variant="primary" class="mt-(--space-5)" @click="router.push('/home')">
+      홈으로 돌아가기
+    </AppButton>
   </div>
 </template>
