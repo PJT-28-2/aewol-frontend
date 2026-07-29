@@ -1,5 +1,6 @@
 <script setup>
 import { useRouter } from 'vue-router'
+import IconArrowLeft from './icons/IconArrowLeft.vue'
 
 defineProps({
   title: {
@@ -28,9 +29,7 @@ function goBack() {
         aria-label="뒤로 가기"
         @click="goBack"
       >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M15 18l-6-6 6-6" />
-        </svg>
+        <IconArrowLeft size="24" />
       </button>
     </div>
 
