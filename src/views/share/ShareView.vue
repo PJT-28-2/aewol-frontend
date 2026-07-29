@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import ContributionDonutChart from '@/components/share/ContributionDonutChart.vue'
 import BottomNavBar from '@/components/common/BottomNavBar.vue'
+import IconCat from '@/components/common/icons/IconCat.vue'
 import IconDog from '@/components/common/icons/IconDog.vue'
 import IconPlus from '@/components/common/icons/IconPlus.vue'
 import { useShareStore } from '@/stores/share'
@@ -60,7 +61,15 @@ watch(
         :aria-selected="selectedPetId === pet.id"
         @click="selectedPetId = pet.id"
       >
-        <IconDog :size="16" />
+        <component
+          :is="pet.species === '코리안숏헤어' ? IconCat : IconDog"
+          :size="16"
+          :color="
+            selectedPetId === pet.id
+              ? 'var(--color-white)'
+              : 'var(--color-slate-dark)'
+          "
+        />
         {{ pet.name }}
       </button>
       <button
