@@ -2,9 +2,10 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import AppButton from '@/components/common/AppButton.vue'
-import AppInput from '@/components/common/AppInput.vue'
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
-import IconCheck from '@/components/common/icons/IconCheck.vue'
+import OcrResultCard from '@/components/insurance/OcrResultCard.vue'
+import ClaimDraftCard from '@/components/insurance/ClaimDraftCard.vue'
+import ClaimChecklist from '@/components/insurance/ClaimChecklist.vue'
 
 const router = useRouter()
 
@@ -20,8 +21,6 @@ const ocrItems = ref([
   { key: 'treatment', label: '진료 항목', value: '슬개골 탈구 치료' },
   { key: 'fee',       label: '진료비',    value: '168,000원' },
 ])
-const editingKey = ref(null)
-
 const handleFileSelect = (event) => {
   const file = event.target.files[0]
   if (!file) return
@@ -29,9 +28,6 @@ const handleFileSelect = (event) => {
   receiptFileName.value = file.name
   step.value = 2
 }
-
-const startEdit = (key) => { editingKey.value = key }
-const finishEdit = () => { editingKey.value = null }
 
 // 청구서 초안 필드
 const draftFields = ref([
@@ -124,51 +120,7 @@ const docChecklist = [
       </p>
     </header>
 
-    <!-- OCR 결과 카드 -->
-    <section
-      class="bg-(--color-white) rounded-(--radius-xl) p-(--space-5) mb-(--space-5) [box-shadow:var(--shadow-md)]"
-    >
-      <div class="mb-(--space-4)">
-        <p class="text-(length:--font-base) font-semibold text-(color:--color-gray-900) mb-(--space-1)">
-          {{ receiptFileName || '진료 영수증.jpg' }}
-        </p>
-        <p class="text-(length:--font-sm) text-(color:--color-gray-500) mb-(--space-2)">
-          OCR 인식 완료 · Gemini Vision
-        </p>
-        <span class="inline-block text-(length:--font-xs) font-semibold px-(--space-3) py-[3px] rounded-(--radius-full) bg-(--color-olive-surface) text-(color:--color-olive-dark)">
-          인식 완료
-        </span>
-      </div>
-
-      <div class="h-px bg-(--color-border) mb-(--space-4)" />
-
-      <div class="flex justify-between items-center mb-(--space-3)">
-        <span class="text-(length:--font-sm) font-semibold text-(color:--color-gray-700)">추출된 항목</span>
-        <span class="text-(length:--font-sm) text-(color:--color-gray-500)">탭해서 수정</span>
-      </div>
-
-      <ul>
-        <li
-          v-for="item in ocrItems"
-          :key="item.key"
-          class="flex items-center justify-between py-(--space-3) border-b border-(--color-border) last:border-0 gap-(--space-3) cursor-pointer"
-          @click="startEdit(item.key)"
-        >
-          <span class="text-(length:--font-md) text-(color:--color-gray-600) shrink-0">{{ item.label }}</span>
-          <input
-            v-if="editingKey === item.key"
-            v-model="item.value"
-            class="text-(length:--font-md) font-semibold text-(color:--color-gray-900) text-right border-b border-(--color-navy) outline-none bg-transparent w-full"
-            autofocus
-            @blur="finishEdit"
-            @keyup.enter="finishEdit"
-          />
-          <span v-else class="text-(length:--font-md) font-semibold text-(color:--color-gray-900) text-right">
-            {{ item.value }}
-          </span>
-        </li>
-      </ul>
-    </section>
+    <OcrResultCard :file-name="receiptFileName" :items="ocrItems" />
 
     <AppButton block @click="step = 3">서류 초안 생성하기</AppButton>
   </div>
@@ -208,80 +160,8 @@ const docChecklist = [
       </div>
     </div>
 
-    <!-- 청구서 초안 카드 -->
-    <section
-      class="bg-(--color-white) rounded-(--radius-xl) p-(--space-5) mb-(--space-5) [box-shadow:var(--shadow-md)]"
-    >
-      <div class="flex justify-between items-center mb-(--space-4)">
-        <span class="text-(length:--font-base) font-semibold text-(color:--color-gray-900)">보험금 청구서 초안</span>
-        <button type="button" class="text-(length:--font-sm) text-(color:--color-gray-500)">PDF 초안</button>
-      </div>
+    <ClaimDraftCard :fields="draftFields" />
 
-      <ul>
-        <li
-          v-for="field in draftFields"
-          :key="field.label"
-          class="border-b border-(--color-border) last:border-0"
-        >
-          <!-- 직접 입력 가능한 필드 -->
-          <div v-if="field.editable" class="py-(--space-3)">
-            <div class="flex items-center justify-between mb-(--space-2)">
-              <span class="text-(length:--font-sm) text-(color:--color-gray-600)">{{ field.label }}</span>
-              <span
-                class="text-(length:--font-xs) font-semibold px-(--space-2) py-[3px] rounded-(--radius-full)"
-                :class="{
-                  'bg-(--color-gold-surface) text-(color:--color-gold-dark)': field.badge === 'required',
-                  'bg-(--color-info-surface) text-(color:--color-navy)':      field.badge === 'linked',
-                }"
-              >
-                {{ field.badgeLabel }}
-              </span>
-            </div>
-            <AppInput
-              v-model="field.value"
-              :placeholder="field.placeholder"
-            />
-          </div>
-
-          <!-- 자동 완성 필드 -->
-          <div v-else class="flex items-center py-(--space-3) gap-(--space-2)">
-            <span class="text-(length:--font-md) text-(color:--color-gray-600) flex-1">{{ field.label }}</span>
-            <span class="text-(length:--font-md) font-semibold text-(color:--color-gray-900) text-right">{{ field.value }}</span>
-            <span class="shrink-0 text-(length:--font-xs) font-semibold px-(--space-2) py-[3px] rounded-(--radius-full) bg-(--color-olive-surface) text-(color:--color-olive-dark)">
-              {{ field.badgeLabel }}
-            </span>
-          </div>
-        </li>
-      </ul>
-    </section>
-
-    <!-- 청구 서류 체크리스트 -->
-    <section
-      class="bg-(--color-white) rounded-(--radius-xl) p-(--space-5) [box-shadow:var(--shadow-md)]"
-    >
-      <h2 class="text-(length:--font-base) font-semibold text-(color:--color-gray-900) mb-(--space-4)">
-        청구 서류 체크리스트
-      </h2>
-      <ul class="flex flex-col gap-(--space-4)">
-        <li
-          v-for="doc in docChecklist"
-          :key="doc.name"
-          class="flex items-center gap-(--space-3)"
-        >
-          <span
-            class="w-6 h-6 rounded-(--radius-full) shrink-0 flex items-center justify-center border-2"
-            :class="doc.checked
-              ? 'bg-(--color-success) border-(--color-success)'
-              : 'border-(--color-gray-300)'"
-          >
-            <IconCheck v-if="doc.checked" :size="14" color="var(--color-white)" />
-          </span>
-          <div class="flex flex-col gap-[2px]">
-            <span class="text-(length:--font-md) font-medium text-(color:--color-gray-900)">{{ doc.name }}</span>
-            <span class="text-(length:--font-sm) text-(color:--color-gray-500)">{{ doc.sub }}</span>
-          </div>
-        </li>
-      </ul>
-    </section>
+    <ClaimChecklist :items="docChecklist" />
   </div>
 </template>
