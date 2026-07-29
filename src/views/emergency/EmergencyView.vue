@@ -7,6 +7,7 @@ import EmptyState from '@/components/common/EmptyState.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import IconChevronLeft from '@/components/common/icons/IconChevronLeft.vue'
 import IconHospital from '@/components/common/icons/IconHospital.vue'
+import IconChevronRight from '@/components/common/icons/IconChevronRight.vue'
 import IconPhone from '@/components/common/icons/IconPhone.vue'
 
 const router = useRouter()
@@ -209,15 +210,16 @@ onMounted(async () => {
                   size="sm"
                   @click="handleCall(hospital.phone)"
                 >
-                  <IconPhone :size="13" color="var(--color-navy)" class="shrink-0 translate-y-[1px]" />
-                  전화
+                  <IconPhone :size="13" color="var(--color-navy)" class="shrink-0 translate-y-px" />
+                  <span class="leading-none">전화</span>
                 </AppButton>
                 <AppButton
                   variant="navy"
                   size="sm"
                   @click="handleNavigation(hospital)"
                 >
-                  길찾기 &rsaquo;
+                  길찾기
+                  <IconChevronRight :size="14" color="var(--color-white)" class="translate-y-px" />
                 </AppButton>
               </div>
             </div>
