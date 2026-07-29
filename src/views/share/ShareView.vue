@@ -7,6 +7,7 @@ import EmptyState from '@/components/common/EmptyState.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import IconCat from '@/components/common/icons/IconCat.vue'
 import IconDog from '@/components/common/icons/IconDog.vue'
+import IconPaw from '@/components/common/icons/IconPaw.vue'
 import IconPlus from '@/components/common/icons/IconPlus.vue'
 import { useShareStore } from '@/stores/share'
 
@@ -60,7 +61,7 @@ function retryFetchSharedCare() {
     </section>
 
     <EmptyState
-      v-else-if="pets.length === 0"
+      v-else-if="!hasPets"
       :icon="IconPaw"
       message="함께 돌볼 반려동물이 아직 없어요."
       action-text="반려동물 등록하기"
