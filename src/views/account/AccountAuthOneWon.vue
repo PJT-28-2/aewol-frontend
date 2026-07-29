@@ -23,12 +23,31 @@ const accountNumber = ref('');
 const isRequesting = ref(false);
 const requestError = ref('');
 
+// 계좌번호는 숫자만 허용 (국내 계좌번호는 보통 10~16자리)
+const ACCOUNT_NUMBER_MIN_LENGTH = 10;
+const ACCOUNT_NUMBER_MAX_LENGTH = 16;
+
+function onAccountNumberInput(event) {
+  const digitsOnly = event.target.value.replace(/[^0-9]/g, '').slice(0, ACCOUNT_NUMBER_MAX_LENGTH);
+  accountNumber.value = digitsOnly;
+  event.target.value = digitsOnly;
+}
+
+const isAccountNumberValid = computed(
+  () =>
+    accountNumber.value.length >= ACCOUNT_NUMBER_MIN_LENGTH &&
+    accountNumber.value.length <= ACCOUNT_NUMBER_MAX_LENGTH,
+);
+
 async function submitAccountNumber() {
-  if (!accountNumber.value.trim()) return;
+  if (!isAccountNumberValid.value) {
+    requestError.value = `계좌번호는 숫자 ${ACCOUNT_NUMBER_MIN_LENGTH}~${ACCOUNT_NUMBER_MAX_LENGTH}자리로 입력해주세요`;
+    return;
+  }
   isRequesting.value = true;
   requestError.value = '';
   try {
-    await store.requestDepositAuth(accountNumber.value.trim());
+    await store.requestDepositAuth(accountNumber.value);
     step.value = 'depositorName';
     startTimer();
     await nextTick();
@@ -174,17 +193,19 @@ function goBack() {
       </div>
 
       <input
-        v-model="accountNumber"
+        :value="accountNumber"
         type="text"
         inputmode="numeric"
-        placeholder="계좌번호를 입력해주세요"
+        autocomplete="off"
+        placeholder="계좌번호를 입력해주세요 (숫자만)"
         class="w-full p-4 rounded-xl border border-(--color-border) text-(length:--font-base) text-(color:--color-navy) mb-2 outline-none focus:border-(--color-navy)"
+        @input="onAccountNumberInput"
       />
       <p v-if="requestError" class="text-(length:--font-sm) text-(color:--color-danger) mb-4">{{ requestError }}</p>
 
       <button
         class="w-full py-4 rounded-xl bg-(--color-navy) text-(color:--color-white) font-bold mt-4 disabled:opacity-50"
-        :disabled="!accountNumber.trim() || isRequesting"
+        :disabled="!isAccountNumberValid || isRequesting"
         @click="submitAccountNumber"
       >
         {{ isRequesting ? '1원 보내는 중…' : '1원 인증 시작하기' }}
@@ -244,7 +265,7 @@ function goBack() {
       </div>
 
       <p class="text-(length:--font-xs) text-(color:--color-gray-500) leading-relaxed mb-2">
-        은행 앱 알림이나 입출금 문자에서<br />입금자명(예: 애옹월월)의 앞 4글자를 확인할 수 있어요
+        은행 앱 알림이나 입출금 문자에서<br />입금자명(예: 푸른애월)의 앞 4글자를 확인할 수 있어요
       </p>
       <p v-if="verifyError" class="text-(length:--font-sm) text-(color:--color-danger) mb-2">{{ verifyError }}</p>
 
