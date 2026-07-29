@@ -2,7 +2,6 @@
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-  import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 import withdrawalConfirmImage from '@/assets/images/withdrawal-confirm.png'
 
 const router = useRouter()
