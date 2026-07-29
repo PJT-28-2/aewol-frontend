@@ -76,6 +76,7 @@ function handleChangeAddress() {
     addressDetail: shippingAddress.value?.addressDetail ?? '',
   };
   addressFormErrors.value = { ...EMPTY_ADDRESS_FORM_ERRORS };
+  postcodeLoadError.value = '';
   isAddressSheetOpen.value = true;
 }
 
@@ -84,29 +85,46 @@ const DAUM_POSTCODE_SCRIPT_SRC =
   '//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
 const isPostcodeOpen = ref(false);
 const postcodeContainerRef = ref(null);
+const postcodeLoadError = ref('');
+
+// 로딩 중인 스크립트 Promise를 캐싱 — DOM의 load/error 이벤트는 한 번만 발생하므로
+// 이미 붙어있는 <script> 태그를 재검사하는 방식은 두 번째 호출부터 영원히 대기하게 됨
+let daumPostcodeLoadPromise = null;
 
 function loadDaumPostcodeScript() {
   if (window.daum?.Postcode) return Promise.resolve();
 
-  const existingScript = document.querySelector(
-    `script[src="${DAUM_POSTCODE_SCRIPT_SRC}"]`,
-  );
-  if (existingScript) {
-    return new Promise((resolve) => existingScript.addEventListener('load', resolve));
+  if (!daumPostcodeLoadPromise) {
+    daumPostcodeLoadPromise = new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = DAUM_POSTCODE_SCRIPT_SRC;
+      script.onload = () => resolve();
+      script.onerror = () => {
+        script.remove();
+        reject(new Error('우편번호 서비스를 불러오지 못했습니다'));
+      };
+      document.head.appendChild(script);
+    }).catch((error) => {
+      // 실패 시 캐시를 비워 다음 시도에서 스크립트를 다시 붙일 수 있게 함
+      daumPostcodeLoadPromise = null;
+      throw error;
+    });
   }
 
-  return new Promise((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = DAUM_POSTCODE_SCRIPT_SRC;
-    script.onload = resolve;
-    script.onerror = () => reject(new Error('우편번호 서비스를 불러오지 못했습니다'));
-    document.head.appendChild(script);
-  });
+  return daumPostcodeLoadPromise;
 }
 
 // 우편번호 찾기 레이어를 열고 카카오 우편번호 서비스를 그 안에 임베드
 async function handleSearchAddress() {
-  await loadDaumPostcodeScript();
+  postcodeLoadError.value = '';
+
+  try {
+    await loadDaumPostcodeScript();
+  } catch {
+    postcodeLoadError.value = '우편번호 서비스를 불러오지 못했어요. 잠시 후 다시 시도해주세요.';
+    return;
+  }
+
   isPostcodeOpen.value = true;
   await nextTick();
 
@@ -539,6 +557,12 @@ function handlePinComplete() {
           class="text-(length:--font-xs) text-(color:--color-danger) mt-(--space-1)"
         >
           {{ addressFormErrors.zipCode }}
+        </p>
+        <p
+          v-if="postcodeLoadError"
+          class="text-(length:--font-xs) text-(color:--color-danger) mt-(--space-1)"
+        >
+          {{ postcodeLoadError }}
         </p>
       </div>
 
