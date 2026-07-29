@@ -670,18 +670,19 @@ function handlePinComplete() {
       </div>
 
       <div class="grid grid-cols-3 gap-(--space-4) mt-(--space-7)">
-        <button
-          v-for="key in keypadKeys"
-          :key="key || 'blank'"
-          type="button"
-          :disabled="key === ''"
-          class="h-14 flex items-center justify-center text-(length:--font-2xl) font-bold text-(color:--color-navy)"
-          :class="{ invisible: key === '' }"
-          @click="key === '⌫' ? handlePinBackspace() : handlePinKeyPress(key)"
-        >
-          <IconDelete v-if="key === '⌫'" :size="20" color="var(--color-navy)" />
-          <template v-else>{{ key }}</template>
-        </button>
+        <template v-for="key in keypadKeys" :key="key || 'blank'">
+          <div v-if="key === ''" class="h-14" aria-hidden="true" />
+          <button
+            v-else
+            type="button"
+            class="h-14 flex items-center justify-center text-(length:--font-2xl) font-bold text-(color:--color-navy)"
+            :aria-label="key === '⌫' ? '지우기' : key"
+            @click="key === '⌫' ? handlePinBackspace() : handlePinKeyPress(key)"
+          >
+            <IconDelete v-if="key === '⌫'" :size="20" color="var(--color-navy)" aria-hidden="true" />
+            <template v-else>{{ key }}</template>
+          </button>
+        </template>
       </div>
     </BottomSheet>
 
