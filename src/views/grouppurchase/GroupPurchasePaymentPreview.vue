@@ -3,9 +3,9 @@ import { ref, computed, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import IconWallet from '@/components/common/icons/IconWallet.vue';
 import IconWarning from '@/components/common/icons/IconWarning.vue';
-import IconDelete from '@/components/common/icons/IconDelete.vue';
 import BottomSheet from '@/components/common/BottomSheet.vue';
 import AppButton from '@/components/common/AppButton.vue';
+import PinAuthSheet from '@/components/common/PinAuthSheet.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -225,41 +225,10 @@ function handleCharge() {
 }
 
 // 송금 비밀번호 인증 바텀시트
-const PIN_LENGTH = 6;
-const pinInput = ref('');
-const keypadKeys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', '⌫'];
 const isPinSheetOpen = ref(false);
 
-function openPinSheet() {
-  pinInput.value = '';
-  isPinSheetOpen.value = true;
-}
-
-function closePinSheet() {
-  isPinSheetOpen.value = false;
-}
-
-function handlePinKeyPress(digit) {
-  if (!digit || pinInput.value.length >= PIN_LENGTH) return;
-
-  pinInput.value += digit;
-  if (pinInput.value.length === PIN_LENGTH) {
-    handlePinComplete();
-  }
-}
-
-function handlePinBackspace() {
-  pinInput.value = pinInput.value.slice(0, -1);
-}
-
 // TODO: 사용자가 설정해둔 결제 비밀번호와 비교하는 로직 (DB 연동 전이라 현재는 비교 없이 통과)
-// const isPasswordValid = pinInput.value === savedPaymentPassword;
-// if (!isPasswordValid) { ...비밀번호 불일치 처리... ; return; }
 // 지금은 6자리 입력이 완료되면 바로 결제 진행
-function handlePinComplete() {
-  closePinSheet();
-  handlePayment();
-}
 </script>
 
 <template>
@@ -477,7 +446,7 @@ function handlePinComplete() {
           ? 'bg-(--color-navy) text-(color:--color-white)'
           : 'bg-(--color-border) text-(color:--color-slate-muted) cursor-not-allowed'
       "
-      @click="openPinSheet"
+      @click="isPinSheetOpen = true"
     >
       {{
         shippingAddress
@@ -646,45 +615,11 @@ function handlePinComplete() {
     </BottomSheet>
 
     <!-- 송금 비밀번호 인증 바텀시트 -->
-    <BottomSheet v-model="isPinSheetOpen">
-      <div class="text-center">
-        <h2 class="text-(length:--font-lg) font-bold text-(color:--color-navy)">
-          비밀번호를 입력해주세요
-        </h2>
-        <p class="text-(length:--font-sm) text-(color:--color-gray-500) mt-(--space-2)">
-          {{ totalAmount.toLocaleString() }}원을 안전하게 보내기 위해 확인해요
-        </p>
-
-        <div class="flex items-center justify-center gap-(--space-2) mt-(--space-6)">
-          <span
-            v-for="index in PIN_LENGTH"
-            :key="index"
-            class="w-3 h-3 rounded-full"
-            :class="
-              index <= pinInput.length
-                ? 'bg-(--color-navy)'
-                : 'border border-(--color-border)'
-            "
-          />
-        </div>
-      </div>
-
-      <div class="grid grid-cols-3 gap-(--space-4) mt-(--space-7)">
-        <template v-for="key in keypadKeys" :key="key || 'blank'">
-          <div v-if="key === ''" class="h-14" aria-hidden="true" />
-          <button
-            v-else
-            type="button"
-            class="h-14 flex items-center justify-center text-(length:--font-2xl) font-bold text-(color:--color-navy)"
-            :aria-label="key === '⌫' ? '지우기' : key"
-            @click="key === '⌫' ? handlePinBackspace() : handlePinKeyPress(key)"
-          >
-            <IconDelete v-if="key === '⌫'" :size="20" color="var(--color-navy)" aria-hidden="true" />
-            <template v-else>{{ key }}</template>
-          </button>
-        </template>
-      </div>
-    </BottomSheet>
+    <PinAuthSheet
+      v-model="isPinSheetOpen"
+      :description="`${totalAmount.toLocaleString()}원을 안전하게 보내기 위해 확인해요`"
+      @complete="handlePayment"
+    />
 
     <!-- 카카오 우편번호 검색 레이어 -->
     <Teleport to="body">

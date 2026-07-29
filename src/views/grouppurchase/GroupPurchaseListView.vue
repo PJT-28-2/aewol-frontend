@@ -28,11 +28,21 @@ const groupPurchases = ref([
     id: 3,
     productName: '고양이 스크래처 장난감 세트',
     category: '장난감',
-    status: '마감',
+    status: '마감(성공)',
     currentQuantity: 20,
     targetQuantity: 20,
     dDay: 'D-0',
     badgeText: '15% 할인',
+  },
+  {
+    id: 4,
+    productName: '강아지 방한 조끼',
+    category: '기타',
+    status: '마감(미달)',
+    currentQuantity: 12,
+    targetQuantity: 30,
+    dDay: 'D-0',
+    badgeText: '25% 할인',
   },
 ]);
 
@@ -46,7 +56,7 @@ function selectCategory(category) {
 }
 
 // 상태 드롭다운 필터: mock 데이터의 status 필드 기준, 미선택 시 "상태"로 표시(전체 노출)
-const statusOptions = ['전체', '진행중', '마감'];
+const statusOptions = ['전체', '진행중', '마감(성공)', '마감(미달)'];
 const selectedStatus = ref('');
 const isStatusOpen = ref(false);
 
@@ -172,18 +182,26 @@ const filteredGroupPurchases = computed(() => {
             {{ gp.productName }}
           </h3>
           <p class="text-(length:--font-xs) text-(color:--color-gray-500) mb-(--space-2)">
-            {{ gp.currentQuantity }}/{{ gp.targetQuantity }}개 참여 · {{ gp.status === '마감' ? '마감' : gp.dDay }}
+            {{ gp.currentQuantity }}/{{ gp.targetQuantity }}개 참여 · {{ gp.status === '진행중' ? gp.dDay : gp.status }}
           </p>
           <span class="text-(length:--font-xs) font-semibold text-(color:--color-gold)">
             {{ gp.badgeText }}
           </span>
         </div>
         <router-link
+          v-if="gp.status === '진행중'"
           :to="`/group-purchase/${gp.id}`"
           class="shrink-0 px-(--space-4) py-(--space-2) bg-(--color-navy) text-(color:--color-white) rounded-full text-(length:--font-sm) font-semibold no-underline whitespace-nowrap"
         >
           참여하기
         </router-link>
+        <!-- 마감된 게시글은 새로 참여할 수 없어 비활성화 표시만 함 -->
+        <span
+          v-else
+          class="shrink-0 px-(--space-4) py-(--space-2) bg-(--color-gray-200) text-(color:--color-gray-500) rounded-full text-(length:--font-sm) font-semibold whitespace-nowrap"
+        >
+          마감
+        </span>
       </li>
     </ul>
 
