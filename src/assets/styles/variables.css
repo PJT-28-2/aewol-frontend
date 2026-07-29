@@ -13,8 +13,6 @@
   --color-bg: #ffffff;
   --color-surface: #fafaf8;
   --color-border: #eaeae4;
-  --color-discount-bg: #fbe7c6;
-  --color-discount-text: #d99a2b;
   --color-olive-surface: #eef3e2;
   --color-olive-dark: #3f5a08;
   --color-olive-muted: #5c7a2e;
@@ -108,6 +106,15 @@
   --bottom-nav-height: 64px;
   --header-height: 56px;
   --layout-max-width: 480px;
+
+  /* Component Sizes */
+  --size-thumb-lg: 110px;
+  --size-progress-bar: 8px;
+  --size-stepper-box: 46px;
+  --size-stepper-btn: 34px;
+  --size-stepper-value: 24px;
+  --size-button-lg: 52px;
+  --size-cta-bar-height: 96px;
   --mobile-content-width: 390px;
   --control-height: 46px;
   --share-icon-size: 60px;
