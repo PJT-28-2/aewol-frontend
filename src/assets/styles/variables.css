@@ -13,6 +13,8 @@
   --color-bg: #ffffff;
   --color-surface: #fafaf8;
   --color-border: #eaeae4;
+  --color-discount-bg: #fbe7c6;
+  --color-discount-text: #d99a2b;
   --color-olive-surface: #eef3e2;
   --color-olive-dark: #3f5a08;
   --color-olive-muted: #5c7a2e;
@@ -102,11 +104,6 @@
   --auth-success-find-id-image-offset: -11px;
   --auth-success-title-gap: 9px;
 
-  /* Layout */
-  --bottom-nav-height: 64px;
-  --header-height: 56px;
-  --layout-max-width: 480px;
-  --mobile-content-width: 390px;
   /* Layout */
   --bottom-nav-height: 64px;
   --header-height: 56px;
