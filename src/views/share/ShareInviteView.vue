@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { shareApi } from '@/api/share'
-import IconChevronLeft from '@/components/common/icons/IconChevronLeft.vue'
+import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 
 const router = useRouter()
 const recipient = ref('')
@@ -104,7 +104,7 @@ async function copyLink() {
       aria-label="뒤로 가기"
       @click="router.back()"
     >
-      <IconChevronLeft :size="28" />
+      <IconArrowLeft :size="28" />
     </button>
     <h1 class="m-0 text-[length:var(--font-lg)] font-bold">
       가족 초대하기

@@ -351,7 +351,7 @@ async function handleDelete() {
       :title="`${withEulReul(petName)} 삭제할까요?`"
       description="삭제하면 아래 정보가 함께 삭제되며 복구할 수 없어요"
       :items="[
-        '버킷 잔액 및 지출·결제 내역',
+        '카테고리별 지출·결제 내역',
         '동물등록증 · 접종증명서 등 증명서',
         '자동 분류된 태깅 기록',
       ]"

@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import BottomNavBar from '@/components/common/BottomNavBar.vue'
 import IconCheck from '@/components/common/icons/IconCheck.vue'
-import IconChevronLeft from '@/components/common/icons/IconChevronLeft.vue'
+import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 import IconClose from '@/components/common/icons/IconClose.vue'
 import IconInfo from '@/components/common/icons/IconInfo.vue'
 
@@ -111,7 +111,7 @@ const selected = computed(() =>
       <article
         v-for="program in programs"
         :key="program.id"
-        class="relative mb-[var(--space-4)] min-h-32 box-border rounded-[var(--radius-xl)] border border-(--color-border) p-[var(--space-4)]"
+        class="relative mb-[var(--space-4)] min-h-[var(--support-card-min-height)] box-border rounded-[var(--radius-xl)] border border-(--color-border) p-[var(--space-4)]"
         :class="{ 'bg-(--color-surface)': !program.available }"
       >
         <span
@@ -135,7 +135,7 @@ const selected = computed(() =>
         </p>
         <button
           type="button"
-          class="absolute bottom-[var(--space-3)] right-[var(--space-4)] h-6 w-20 cursor-pointer rounded-[var(--radius-md)] border-0 bg-(--color-navy) text-[length:var(--font-xs)] font-bold text-(--color-white)"
+          class="absolute bottom-[var(--space-3)] right-[var(--space-4)] h-[var(--support-action-height)] w-[var(--support-action-width)] cursor-pointer rounded-[var(--radius-md)] border-0 bg-(--color-navy) text-[length:var(--font-xs)] font-bold text-(--color-white)"
           :class="{
             'border border-(--color-border) bg-(--color-white) text-(--color-slate-dark)':
               !program.available,
@@ -153,7 +153,7 @@ const selected = computed(() =>
         type="button"
         @click="router.push('/support')"
       >
-        <IconChevronLeft :size="28" />
+        <IconArrowLeft :size="28" />
       </button>
       <span
         class="mb-[var(--space-3)] inline-grid h-[var(--space-5)] place-items-center rounded-[var(--radius-lg)] bg-(--color-olive-surface) px-[var(--space-2)] text-[length:var(--font-xs)] font-bold text-(--color-olive-dark)"
@@ -195,7 +195,7 @@ const selected = computed(() =>
         class="my-[var(--space-4)] flex items-start gap-[var(--space-3)]"
       >
         <b
-          class="grid size-6 shrink-0 place-items-center rounded-full bg-(--color-olive-surface) text-(--color-olive-dark)"
+          class="grid size-[var(--support-status-icon-size)] shrink-0 place-items-center rounded-full bg-(--color-olive-surface) text-(--color-olive-dark)"
           :class="{
             'bg-(--color-danger-surface) text-(--color-danger-dark)':
               !condition.met,
@@ -203,11 +203,11 @@ const selected = computed(() =>
         >
           <IconCheck
             v-if="condition.met"
-            :size="15"
+            size="var(--icon-size-xs)"
           />
           <IconClose
             v-else
-            :size="15"
+            size="var(--icon-size-xs)"
           />
         </b>
         <span class="flex flex-col gap-[var(--space-1)]">
@@ -224,8 +224,8 @@ const selected = computed(() =>
       >
         <div class="flex items-start gap-[var(--space-2)]">
           <IconInfo
-            class="mt-0.5 shrink-0 text-(--color-gold-dark)"
-            :size="16"
+            class="mt-[var(--support-info-icon-offset)] shrink-0 text-(--color-gold-dark)"
+            size="var(--icon-size-sm)"
           />
           <span>
             현재 조건으로는 이 지원사업을 신청할 수 없어요<br>
