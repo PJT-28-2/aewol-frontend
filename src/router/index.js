@@ -166,14 +166,12 @@ const authRoutes = [
     component: () => import('@/views/share/ShareView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
-  // 공동 구매 게시글 리스트
   {
     path: '/group-purchase',
     name: 'GroupPurchaseList',
     component: () => import('@/views/grouppurchase/GroupPurchaseListView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
-  // 공동구매 상세보기
   {
     path: '/group-purchase/:gpId',
     name: 'GroupPurchaseDetail',
@@ -181,7 +179,6 @@ const authRoutes = [
       import('@/views/grouppurchase/GroupPurchaseDetailView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
-  // 결제 확인 미리보기 화면
   {
     path: '/group-purchase/:gpId/paymentPreview',
     name: 'GroupPurchasePayment',
