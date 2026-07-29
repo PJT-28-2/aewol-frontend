@@ -134,7 +134,7 @@ const verifyCurrentPassword = async () => {
           required
         >
         <button
-          class="h-(--control-height-md) w-20 shrink-0 cursor-not-allowed rounded-(--radius-lg) bg-(--color-slate-light) text-[11px] font-(--font-bold) text-(color:--color-slate-muted)"
+          class="h-(--control-height-md) w-(--size-form-action-width) shrink-0 cursor-not-allowed rounded-(--radius-lg) bg-(--color-slate-light) text-(length:--font-xs) font-(--font-bold) text-(color:--color-slate-muted)"
           type="button"
           aria-describedby="address-api-status"
           disabled
@@ -144,7 +144,7 @@ const verifyCurrentPassword = async () => {
       </div>
       <p
         id="address-api-status"
-        class="mt-1 text-[10.5px] text-(color:--color-slate-muted)"
+        class="mt-(--space-1) text-(length:--font-xs) text-(color:--color-slate-muted)"
       >
         주소 검색 API 연동 예정
       </p>
