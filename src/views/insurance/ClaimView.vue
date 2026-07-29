@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import AppButton from '@/components/common/AppButton.vue'
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
@@ -16,10 +16,10 @@ const receiptFileName = ref('')
 
 // OCR 추출 결과 (실제 연동 전 임시 데이터)
 const ocrItems = ref([
-  { key: 'date',      label: '진료일',    value: '2026.07.10' },
-  { key: 'hospital',  label: '병원명',    value: '24시 제주동물의료센터' },
-  { key: 'treatment', label: '진료 항목', value: '슬개골 탈구 치료' },
-  { key: 'fee',       label: '진료비',    value: '168,000원' },
+  { key: 'date',      label: '진료일',    value: '2026.07.10',         unit: '' },
+  { key: 'hospital',  label: '병원명',    value: '24시 제주동물의료센터', unit: '' },
+  { key: 'treatment', label: '진료 항목', value: '슬개골 탈구 치료',    unit: '' },
+  { key: 'fee',       label: '진료비',    value: '168,000원',           unit: '원' },
 ])
 const handleFileSelect = (event) => {
   const file = event.target.files[0]
@@ -45,16 +45,27 @@ const ocrKeyToDraftIndex = { hospital: 0, date: 1, fee: 2, treatment: 4 }
 const draftFields = ref([
   { label: '병원명',          value: '', editable: false, badge: 'auto',     badgeLabel: '자동',     placeholder: '' },
   { label: '진료일자',        value: '', editable: false, badge: 'auto',     badgeLabel: '자동',     placeholder: '' },
-  { label: '청구금액',        value: '', editable: false, badge: 'auto',     badgeLabel: '자동',     placeholder: '' },
+  { label: '청구금액',        value: '', editable: false, badge: 'auto',     badgeLabel: '자동',     placeholder: '', unit: '원' },
   { label: '사업자번호',      value: '', editable: true,  badge: 'required', badgeLabel: '확인필요', placeholder: '사업자번호 입력' },
   { label: '진단명',          value: '', editable: false, badge: 'auto',     badgeLabel: '자동',     placeholder: '' },
   { label: '계약자·계좌정보', value: '', editable: true,  badge: 'linked',   badgeLabel: '연동',     placeholder: '계좌정보 입력' },
 ])
 
+const autoCount = computed(() => draftFields.value.filter(f => !f.editable && f.value).length)
+const requiredCount = computed(() => draftFields.value.filter(f => f.editable && !f.value).length)
+
 const goToDraft = () => {
   ocrItems.value.forEach((item) => {
     const idx = ocrKeyToDraftIndex[item.key]
     if (idx !== undefined) draftFields.value[idx].value = item.value
+  })
+  draftFields.value.forEach((field) => {
+    if (!field.editable && !field.value) {
+      field.editable = true
+      field.badge = 'required'
+      field.badgeLabel = '확인필요'
+      field.placeholder = `${field.label} 입력`
+    }
   })
   step.value = 3
 }
@@ -171,11 +182,11 @@ const docChecklist = [
     <!-- 요약 통계 -->
     <div class="grid grid-cols-2 gap-(--space-3) mb-(--space-5)">
       <div class="bg-(--color-olive-surface) rounded-(--radius-lg) p-(--space-4) flex flex-col gap-(--space-1)">
-        <span class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">4건</span>
+        <span class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">{{ autoCount }}건</span>
         <span class="text-(length:--font-sm) text-(color:--color-gray-600)">자동 완성</span>
       </div>
       <div class="bg-(--color-gold-surface) rounded-(--radius-lg) p-(--space-4) flex flex-col gap-(--space-1)">
-        <span class="text-(length:--font-2xl) font-bold text-(color:--color-gold-dark)">2건</span>
+        <span class="text-(length:--font-2xl) font-bold text-(color:--color-gold-dark)">{{ requiredCount }}건</span>
         <span class="text-(length:--font-sm) text-(color:--color-gray-600)">직접 확인 필요</span>
       </div>
     </div>

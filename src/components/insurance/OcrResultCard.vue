@@ -20,7 +20,13 @@ const startEdit = async (key) => {
   await nextTick()
   inputRef.value?.focus()
 }
-const finishEdit = () => { editingKey.value = null }
+const finishEdit = () => {
+  const item = props.items.find(i => i.key === editingKey.value)
+  if (item?.unit && item.value && !item.value.endsWith(item.unit)) {
+    item.value = item.value + item.unit
+  }
+  editingKey.value = null
+}
 </script>
 
 <template>

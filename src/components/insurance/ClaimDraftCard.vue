@@ -7,6 +7,12 @@ const props = defineProps({
     required: true,
   },
 })
+
+const appendUnit = (field) => {
+  if (field.unit && field.value && !field.value.endsWith(field.unit)) {
+    field.value = field.value + field.unit
+  }
+}
 </script>
 
 <template>
@@ -36,7 +42,18 @@ const props = defineProps({
               {{ field.badgeLabel }}
             </span>
           </div>
-          <AppInput v-model="field.value" :placeholder="field.placeholder" />
+          <AppInput
+            v-if="!field.unit"
+            v-model="field.value"
+            :placeholder="field.placeholder"
+          />
+          <input
+            v-else
+            v-model="field.value"
+            :placeholder="field.placeholder"
+            class="w-full h-(--control-height-md) px-(--space-3) text-(length:--font-md) text-(color:--color-gray-900) bg-(--color-surface) border border-(--color-border) rounded-(--radius-lg) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
+            @blur="appendUnit(field)"
+          />
         </div>
 
         <!-- 자동 완성 필드 -->
