@@ -1,6 +1,10 @@
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import AppButton from '@/components/common/AppButton.vue'
+import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
+
+const router = useRouter()
 
 const step = ref(1) // 1: 서류 작성, 2: OCR 확인, 3: 초안
 
@@ -59,6 +63,9 @@ const docChecklist = [
   >
     <!-- 페이지 헤더 -->
     <header class="mb-(--space-6)">
+      <button class="mb-(--space-3) text-(color:--color-navy)" aria-label="뒤로가기" @click="router.back()">
+        <IconArrowLeft :size="24" />
+      </button>
       <div class="w-5 h-5 rounded-(--radius-sm) bg-(--color-navy) mb-(--space-3)" aria-hidden="true" />
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) leading-snug mb-(--space-2)">
         보험금 청구 서류 작성
@@ -108,6 +115,9 @@ const docChecklist = [
   >
     <!-- 페이지 헤더 -->
     <header class="mb-(--space-6)">
+      <button class="mb-(--space-3) text-(color:--color-navy)" aria-label="뒤로가기" @click="step = 1">
+        <IconArrowLeft :size="24" />
+      </button>
       <div class="w-5 h-5 rounded-(--radius-sm) bg-(--color-navy) mb-(--space-3)" aria-hidden="true" />
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) leading-snug mb-(--space-2)">
         보험금 청구 서류 확인
@@ -183,6 +193,9 @@ const docChecklist = [
   >
     <!-- 페이지 헤더 -->
     <header class="mb-(--space-5)">
+      <button class="mb-(--space-3) text-(color:--color-navy)" aria-label="뒤로가기" @click="step = 2">
+        <IconArrowLeft :size="24" />
+      </button>
       <div class="w-5 h-5 rounded-(--radius-sm) bg-(--color-navy) mb-(--space-3)" aria-hidden="true" />
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) leading-snug mb-(--space-2)">
         보험금 청구 서류 초안
