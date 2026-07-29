@@ -2,8 +2,8 @@
 import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAccountStore } from '@/stores/account';
-import { getBankMeta, formatWon } from '@/utils/bankMeta';
-import BankBadge from '@/components/common/BankBadge.vue';
+import { getBankMeta } from '@/utils/bankMeta';
+import AccountSummaryCard from '@/components/common/AccountSummaryCard.vue';
 import BottomSheet from '@/components/common/BottomSheet.vue';
 import IconLock from '@/components/common/icons/IconLock.vue';
 import petDeleteWarning from '@/assets/images/pet-delete-warning.png';
@@ -124,31 +124,23 @@ function goToLink() {
         </p>
 
         <ul v-if="!store.isLoading && !loadError" class="flex flex-col gap-3">
-          <li
-            v-for="account in store.accounts"
-            :key="account.accountId"
-            class="flex items-start gap-3 p-4 rounded-2xl bg-(--color-surface) border border-(--color-border)"
-          >
-            <BankBadge :bank-code="account.bankCode" :size="40" />
-            <div class="flex-1">
-              <div class="flex items-center justify-between">
-                <div class="flex items-baseline gap-1.5">
-                  <span class="font-bold text-(color:--color-navy) text-(length:--font-base)">
-                    {{ getBankMeta(account.bankCode).name }}
-                  </span>
-                  <span class="text-(length:--font-sm) text-(color:--color-gray-500)">{{ account.accountNumberMasked }}</span>
-                </div>
+          <li v-for="account in store.accounts" :key="account.accountId">
+            <AccountSummaryCard
+              :bank-code="account.bankCode"
+              :account-number-masked="account.accountNumberMasked"
+              :balance="account.balance"
+              :is-primary="account.isPrimary"
+              bordered
+            >
+              <template #action>
                 <button
                   class="text-(length:--font-sm) text-(color:--color-gray-500) underline underline-offset-2"
                   @click="openUnlink(account)"
                 >
                   해제
                 </button>
-              </div>
-              <p class="text-(length:--font-sm) text-(color:--color-gray-600) mt-1">
-                {{ formatWon(account.balance) }}<span v-if="account.isPrimary"> · 주계좌</span>
-              </p>
-            </div>
+              </template>
+            </AccountSummaryCard>
           </li>
         </ul>
       </section>
@@ -177,17 +169,12 @@ function goToLink() {
         <h3 class="text-(length:--font-lg) font-bold text-(color:--color-navy) mb-1">계좌 연동을 해제할까요?</h3>
         <p class="text-(length:--font-sm) text-(color:--color-gray-600) mb-5">해제 후에도 언제든 다시 연동할 수 있어요</p>
 
-        <div class="w-full flex items-center gap-3 p-4 rounded-2xl bg-(--color-surface) mb-4 text-left">
-          <BankBadge :bank-code="pendingAccount.bankCode" :size="40" />
-          <div>
-            <p class="font-bold text-(color:--color-navy) text-(length:--font-base)">
-              {{ getBankMeta(pendingAccount.bankCode).name }}
-            </p>
-            <p class="text-(length:--font-sm) text-(color:--color-gray-600)">
-              {{ formatWon(pendingAccount.balance) }}<span v-if="pendingAccount.isPrimary"> · 주계좌</span>
-            </p>
-          </div>
-        </div>
+        <AccountSummaryCard
+          :bank-code="pendingAccount.bankCode"
+          :balance="pendingAccount.balance"
+          :is-primary="pendingAccount.isPrimary"
+          class="w-full mb-4"
+        />
 
         <ul class="w-full flex flex-col gap-2 mb-6 text-left">
           <li class="flex items-start gap-2 text-(length:--font-sm) text-(color:--color-gray-600)">

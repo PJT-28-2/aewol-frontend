@@ -9,14 +9,18 @@ const props = defineProps({
   size: { type: Number, default: 44 },
 });
 
+// 뱃지 안 텍스트(KB, 신한 등)가 박스 크기에 비례해 보이도록 잡은 비율이에요.
+// 고정 폰트 크기 대신 이 비율로 계산해서 size prop(36/40/44 등)이 바뀌어도 항상 자연스럽게 맞아요.
+const BADGE_FONT_RATIO = 0.32;
+
 const meta = computed(() => getBankMeta(props.bankCode, props.fallbackName));
 </script>
 
 <template>
   <div
-    class="flex items-center justify-center rounded-lg font-bold shrink-0"
+    class="flex items-center justify-center rounded-(--radius-md) font-bold shrink-0"
     :class="[meta.bg, meta.text]"
-    :style="{ width: `${size}px`, height: `${size}px`, fontSize: `${size * 0.32}px` }"
+    :style="{ width: `${size}px`, height: `${size}px`, fontSize: `${size * BADGE_FONT_RATIO}px` }"
   >
     {{ meta.label }}
   </div>

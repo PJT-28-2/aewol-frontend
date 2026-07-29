@@ -25,9 +25,10 @@ export function getFaqDetail(faqId) {
  * result: { inquiryId, inquiryNumber, submittedAt }
  */
 export function submitInquiry(formData) {
-  return api.post('/api/support/inquiries', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
+  // FormData를 넘기면 Axios(브라우저)가 Content-Type과 boundary를 자동으로 설정해요.
+  // 여기서 'multipart/form-data'만 직접 지정하면 boundary가 빠져서
+  // 서버가 파일을 못 읽거나 400/빈 첨부로 처리될 수 있어 헤더를 아예 지정하지 않아요.
+  return api.post('/api/support/inquiries', formData);
 }
 
 /**
