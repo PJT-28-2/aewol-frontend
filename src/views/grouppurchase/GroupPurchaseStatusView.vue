@@ -1,10 +1,10 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import IconHourglass from '@/components/common/icons/IconHourglass.vue'
 import IconCheck from '@/components/common/icons/IconCheck.vue'
 import IconDelete from '@/components/common/icons/IconDelete.vue'
 import BottomSheet from '@/components/common/BottomSheet.vue'
+import statusWaitingImage from '@/assets/images/grouppurchase/status-waiting.png'
 
 const route = useRoute()
 const router = useRouter()
@@ -108,12 +108,14 @@ function confirmCancelSuccess() {
 
 <template>
   <div class="p-(--space-4) pb-(--space-6) bg-(--color-bg) min-h-screen">
-    <!-- 상태 아이콘 -->
+    <!-- 상태 이미지 -->
     <div class="flex justify-center mt-(--space-6) mb-(--space-5)">
-      <div
-        class="flex items-center justify-center size-22 rounded-full bg-(--color-gold-surface)"
-      >
-        <IconHourglass :size="32" color="var(--color-gold-dark)" />
+      <div class="w-[139px] h-[139px] overflow-hidden">
+        <img
+          :src="statusWaitingImage"
+          alt=""
+          class="w-full h-full object-cover"
+        >
       </div>
     </div>
 
