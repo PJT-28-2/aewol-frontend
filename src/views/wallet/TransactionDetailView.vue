@@ -29,6 +29,7 @@ const mockTransactionsById = {
     category: 'MEDICAL',
     petId: 1,
     paymentMethod: '애월 통합 지갑',
+    autoTagged: true,
   },
   2: {
     id: 2,
@@ -41,6 +42,7 @@ const mockTransactionsById = {
     category: 'FOOD',
     petId: null,
     paymentMethod: '애월 통합 지갑',
+    autoTagged: true,
   },
   3: {
     id: 3,
@@ -63,6 +65,7 @@ const mockTransactionsById = {
     category: 'GROOMING',
     petId: 2,
     paymentMethod: '애월 통합 지갑',
+    autoTagged: true,
   },
   5: {
     id: 5,
@@ -75,6 +78,7 @@ const mockTransactionsById = {
     category: 'SOS',
     petId: null,
     paymentMethod: '애월 통합 지갑',
+    autoTagged: false,
   },
   6: {
     id: 6,
@@ -87,6 +91,7 @@ const mockTransactionsById = {
     category: 'SUPPLIES',
     petId: null,
     paymentMethod: '애월 통합 지갑',
+    autoTagged: true,
   },
   7: {
     id: 7,
@@ -99,6 +104,7 @@ const mockTransactionsById = {
     category: 'MEDICAL',
     petId: 2,
     paymentMethod: '애월 통합 지갑',
+    autoTagged: true,
   },
   8: {
     id: 8,
@@ -121,6 +127,7 @@ const mockTransactionsById = {
     category: 'MEDICAL',
     petId: 1,
     paymentMethod: '애월 통합 지갑',
+    autoTagged: true,
   },
   10: {
     id: 10,
@@ -133,6 +140,7 @@ const mockTransactionsById = {
     category: 'FOOD',
     petId: null,
     paymentMethod: '애월 통합 지갑',
+    autoTagged: true,
   },
   11: {
     id: 11,
@@ -155,6 +163,7 @@ const mockTransactionsById = {
     category: 'GROOMING',
     petId: 2,
     paymentMethod: '애월 통합 지갑',
+    autoTagged: true,
   },
   13: {
     id: 13,
@@ -167,6 +176,7 @@ const mockTransactionsById = {
     category: 'MEDICAL',
     petId: 2,
     paymentMethod: '애월 통합 지갑',
+    autoTagged: true,
   },
   14: {
     id: 14,
@@ -189,10 +199,16 @@ const mockTransactionsById = {
     category: 'FOOD',
     petId: null,
     paymentMethod: '애월 통합 지갑',
+    autoTagged: true,
   },
 };
 
-const transaction = computed(() => mockTransactionsById[txId.value]);
+const transaction = computed(() => {
+  const id = txId.value;
+  return Object.prototype.hasOwnProperty.call(mockTransactionsById, id)
+    ? mockTransactionsById[id]
+    : undefined;
+});
 const notFound = computed(() => !transaction.value);
 const isWithdraw = computed(() => transaction.value?.type === 'withdraw');
 
@@ -209,10 +225,30 @@ const categories = [
     icon: IconHospital,
     bg: 'var(--color-pastel-blue)',
   },
-  { key: 'GROOMING', label: '미용비', icon: IconBarberShop, bg: '#F5E6EE' },
-  { key: 'FOOD', label: '사료·간식', icon: IconDogBowl, bg: '#FDECD8' },
-  { key: 'SUPPLIES', label: '위생용품', icon: IconShowerGel, bg: '#E3F1F1' },
-  { key: 'SOS', label: 'SOS포켓', icon: IconSos, bg: '#FCE3E1' },
+  {
+    key: 'GROOMING',
+    label: '미용비',
+    icon: IconBarberShop,
+    bg: 'var(--color-pastel-lilac)',
+  },
+  {
+    key: 'FOOD',
+    label: '사료·간식',
+    icon: IconDogBowl,
+    bg: 'var(--color-pastel-peach)',
+  },
+  {
+    key: 'SUPPLIES',
+    label: '위생용품',
+    icon: IconShowerGel,
+    bg: 'var(--color-pastel-mint)',
+  },
+  {
+    key: 'SOS',
+    label: 'SOS포켓',
+    icon: IconSos,
+    bg: 'var(--color-pastel-coral)',
+  },
 ];
 
 const selectedCategory = ref('');
@@ -308,7 +344,7 @@ async function handleSave() {
     <template v-else>
       <div class="flex flex-col items-center mb-(--space-6)">
         <span
-          class="flex items-center justify-center w-[56px] h-[56px] rounded-(--radius-xl) mb-(--space-4)"
+          class="flex items-center justify-center w-(--icon-badge-size) h-(--icon-badge-size) rounded-(--radius-xl) mb-(--space-4)"
           :style="{ backgroundColor: headerBg }"
         >
           <component
@@ -350,6 +386,7 @@ async function handleSave() {
               카테고리
             </p>
             <p
+              v-if="transaction.autoTagged"
               class="text-(length:--font-xs) text-(color:--color-slate-muted)"
             >
               자동 분류됨
@@ -361,7 +398,7 @@ async function handleSave() {
               :key="category.key"
               type="button"
               :aria-pressed="selectedCategory === category.key"
-              class="inline-flex items-center gap-(--space-2) h-[36px] px-(--space-4) rounded-(--radius-full) border text-(length:--font-sm) font-medium"
+              class="inline-flex items-center gap-(--space-2) h-(--control-height-sm) px-(--space-4) rounded-(--radius-full) border text-(length:--font-sm) font-medium"
               :class="
                 selectedCategory === category.key
                   ? 'bg-(--color-navy) border-(--color-navy) text-(color:--color-white)'
@@ -390,7 +427,7 @@ async function handleSave() {
               :key="pet.id"
               type="button"
               :aria-pressed="selectedPetId === pet.id"
-              class="inline-flex items-center gap-(--space-2) h-[36px] px-(--space-4) rounded-(--radius-full) border text-(length:--font-sm) font-medium"
+              class="inline-flex items-center gap-(--space-2) h-(--control-height-sm) px-(--space-4) rounded-(--radius-full) border text-(length:--font-sm) font-medium"
               :class="
                 selectedPetId === pet.id
                   ? 'bg-(--color-navy) border-(--color-navy) text-(color:--color-white)'
