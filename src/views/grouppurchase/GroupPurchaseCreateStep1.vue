@@ -167,15 +167,18 @@ function goToNextStep() {
         id="category-label"
         class="block text-(length:--font-sm) font-bold text-(color:--color-slate-dark) mb-(--space-2)"
       >
-        카테고리 *
+      카테고리 *
       </label>
       <button
         type="button"
         class="w-full h-[46px] px-(--space-4) rounded-xl bg-(--color-surface) border border-(--color-border) flex items-center justify-between"
-        aria-labelledby="category-label"
+        <!-- 수정: 라벨 id와 선택값 span의 id를 공백으로 구분하여 함께 참조 -->
+        aria-labelledby="category-label category-value"
         @click="isCategorySheetOpen = true"
       >
         <span
+          <!-- 수정: span에 id 부여 -->
+          id="category-value"
           class="text-(length:--font-sm)"
           :class="category === '' ? 'text-(color:--color-slate-muted)' : 'text-(color:--color-navy)'"
         >
