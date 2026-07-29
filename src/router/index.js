@@ -237,7 +237,7 @@ const authRoutes = [
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
-    path: '/group-purchase/:gpId/paymentPreview',
+    path: '/group-purchase/:gpId/payment-preview',
     name: 'GroupPurchasePayment',
     component: () =>
       import('@/views/grouppurchase/GroupPurchasePaymentPreview.vue'),
