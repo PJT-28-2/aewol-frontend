@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue';
 import IconChevronDown from '@/components/common/icons/IconChevronDown.vue';
 import IconChevronRight from '@/components/common/icons/IconChevronRight.vue';
@@ -10,6 +10,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import BottomSheet from '@/components/common/BottomSheet.vue';
 
 const isLoading = ref(true);
+const isError = ref(false);
 
 // TODO: 백엔드 API 연동 후 mock 데이터 제거하고 groupPurchaseApi.getMyList()로 교체
 // role: group_purchase.member_id(작성자)와 group_purchase_participant.member_id(참여자) 중
@@ -87,11 +88,21 @@ const filteredGroupPurchases = computed(() => {
 
 async function loadMyGroupPurchases() {
   isLoading.value = true;
-  // TODO: const { data } = await groupPurchaseApi.getMyList({ status: selectedStatus.value })
-  isLoading.value = false;
+  isError.value = false;
+
+  try {
+    // TODO: const { data } = await groupPurchaseApi.getMyList({ status: selectedStatus.value })
+    // myGroupPurchases.value = data
+  } catch {
+    isError.value = true;
+  } finally {
+    isLoading.value = false;
+  }
 }
 
 onMounted(loadMyGroupPurchases);
+// 상태 필터가 바뀌면 서버 기준으로 다시 조회 (지금은 mock이라 클라이언트 필터로도 동작하지만, API 연동 후에도 이어지도록 연결)
+watch(selectedStatus, loadMyGroupPurchases);
 </script>
 
 <template>
@@ -164,6 +175,23 @@ onMounted(loadMyGroupPurchases);
       class="flex justify-center py-(--space-9)"
     >
       <LoadingSpinner />
+    </div>
+
+    <!-- 에러 상태 -->
+    <div
+      v-else-if="isError"
+      class="flex flex-col items-center justify-center gap-(--space-4) min-h-[40vh] px-(--space-4) text-center"
+    >
+      <p class="text-(length:--font-sm) text-(color:--color-slate-muted)">
+        공동구매 내역을 불러오지 못했어요
+      </p>
+      <button
+        type="button"
+        class="px-(--space-5) py-(--space-3) rounded-(--radius-lg) bg-(--color-navy) text-(color:--color-white) text-(length:--font-sm) font-bold"
+        @click="loadMyGroupPurchases"
+      >
+        다시 시도
+      </button>
     </div>
 
     <!-- 빈 상태 -->
