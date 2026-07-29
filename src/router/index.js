@@ -244,6 +244,13 @@ const authRoutes = [
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
+    path: '/group-purchase/:gpId/status',
+    name: 'GroupPurchaseStatus',
+    component: () =>
+      import('@/views/grouppurchase/GroupPurchaseStatusView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
     path: '/donation',
     name: 'Donation',
     component: () => import('@/views/donation/DonationView.vue'),
