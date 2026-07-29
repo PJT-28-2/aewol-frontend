@@ -1,309 +1,268 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+import AppButton from '@/components/common/AppButton.vue'
+import AppModal from '@/components/common/AppModal.vue'
+import IconChevronLeft from '@/components/common/icons/IconChevronLeft.vue'
+import IconPaw from '@/components/common/icons/IconPaw.vue'
+import IconRecurring from '@/components/common/icons/IconRecurring.vue'
+import IconSettings from '@/components/common/icons/IconSettings.vue'
+import IconSupportProgram from '@/components/common/icons/IconSupportProgram.vue'
+import IconUser from '@/components/common/icons/IconUser.vue'
+import IconWallet from '@/components/common/icons/IconWallet.vue'
 
-const user = ref({
-  name: '',
-  email: '',
-  phone: '',
-})
-const notifications = ref({
-  payment: true,
-  insurance: true,
-  groupPurchase: true,
-  support: false,
-})
-const linkedAccounts = ref([])
-const isLoading = ref(true)
+const router = useRouter()
+const authStore = useAuthStore()
+const showPasswordModal = ref(false)
+const showLogoutModal = ref(false)
+const profilePassword = ref('')
+const passwordError = ref('')
+const isVerifying = ref(false)
+const PROFILE_VERIFIED_KEY = 'profileEditPasswordVerified'
 
-onMounted(async () => {
-  // TODO: fetch user profile and settings from store/API
-  isLoading.value = false
-})
+const menuItems = [
+  {
+    title: '반려동물 관리',
+    description: '반려동물 프로필 등록 및 수정',
+    path: '/pets',
+    icon: IconPaw,
+  },
+  {
+    title: '프로필 수정',
+    description: '이름 · 전화번호 · 비밀번호 변경 · 회원탈퇴',
+    action: 'verifyProfile',
+    icon: IconUser,
+  },
+  {
+    title: '알림 설정',
+    description: '푸시 알림 켜기 / 끄기',
+    path: '/settings/notifications',
+    icon: IconSettings,
+  },
+  {
+    title: '계좌 관리',
+    description: '연동된 계좌 확인 및 등록',
+    path: '/accounts',
+    icon: IconWallet,
+  },
+  {
+    title: '정기 결제 관리',
+    description: '구독형 결제 내역 확인',
+    path: '/payment/recurring',
+    icon: IconRecurring,
+  },
+  {
+    title: '고객센터',
+    description: '자주 묻는 질문 및 문의',
+    icon: IconSupportProgram,
+  },
+]
 
-const handleSaveNotifications = async () => {
-  // TODO: implement notification settings update
+const handleMenuClick = (item) => {
+  if (item.action === 'verifyProfile') {
+    profilePassword.value = ''
+    passwordError.value = ''
+    showPasswordModal.value = true
+    return
+  }
+
+  if (item.path) {
+    router.push(item.path)
+  }
 }
 
-const handleLogout = async () => {
-  // TODO: implement logout
+const verifyProfilePassword = async () => {
+  passwordError.value = ''
+  isVerifying.value = true
+
+  try {
+    if (import.meta.env.DEV) {
+      if (profilePassword.value !== 'test1234') {
+        passwordError.value = '현재 비밀번호가 일치하지 않습니다.'
+        return
+      }
+    } else {
+      const email = authStore.user?.email
+      if (!email) {
+        passwordError.value = '현재 계정 정보를 확인할 수 없습니다.'
+        return
+      }
+      await authStore.login(email, profilePassword.value)
+    }
+
+    window.sessionStorage.setItem(PROFILE_VERIFIED_KEY, 'true')
+    showPasswordModal.value = false
+    await router.push('/settings/profile')
+  } catch (error) {
+    passwordError.value =
+      error.response?.data?.message ?? '현재 비밀번호가 일치하지 않습니다.'
+  } finally {
+    isVerifying.value = false
+  }
+}
+
+const handleLogout = () => {
+  showLogoutModal.value = true
+}
+
+const confirmLogout = () => {
+  showLogoutModal.value = false
+  authStore.logout()
 }
 </script>
 
 <template>
-  <div class="settings-page">
-    <header class="page-header">
-      <h1>설정</h1>
+  <section
+    class="mx-auto min-h-[calc(100svh-var(--bottom-nav-height))] w-full max-w-[390px] bg-(--color-white) px-[22px] pt-[61px] pb-[27px]"
+    aria-labelledby="mypage-title"
+  >
+    <header class="flex items-start justify-between">
+      <div>
+        <h1
+          id="mypage-title"
+          class="text-[20px] leading-[1.3] font-(--font-bold) text-(color:--color-navy)"
+        >
+          마이페이지
+        </h1>
+        <p class="mt-[5px] text-[12.5px] leading-[1.3] text-(color:--color-slate-muted)">
+          계정과 반려동물 정보를 관리해요
+        </p>
+      </div>
+      <button
+        class="mt-[5px] text-[11.5px] leading-[1.3] font-(--font-bold) text-(color:--color-slate-muted) focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--color-navy)"
+        type="button"
+        @click="handleLogout"
+      >
+        로그아웃
+      </button>
     </header>
 
-    <div v-if="isLoading" class="loading-state">
-      <p>로딩 중...</p>
-    </div>
+    <article
+      class="mt-[25px] flex h-[94px] items-center gap-[14px] rounded-[18px] bg-(--color-surface) px-4"
+      aria-label="회원 정보"
+    >
+      <div
+        class="flex size-[60px] shrink-0 items-center justify-center rounded-full bg-(--color-navy) text-[20px] font-(--font-bold) text-(color:--color-white)"
+        aria-hidden="true"
+      >
+        애
+      </div>
+      <div class="min-w-0">
+        <p class="truncate text-[15px] leading-[1.3] font-(--font-bold) text-(color:--color-navy)">
+          김애월
+        </p>
+        <p class="mt-[5px] truncate text-[12px] leading-[1.3] text-(color:--color-slate-muted)">
+          example@aewol.com
+        </p>
+      </div>
+    </article>
 
-    <template v-else>
-      <!-- Profile Section -->
-      <section class="section card">
-        <h2>프로필</h2>
-        <div class="profile-info">
-          <div class="profile-avatar">
-            <!-- TODO: user avatar -->
-          </div>
-          <div class="profile-details">
-            <p class="profile-name">{{ user.name || '이름 없음' }}</p>
-            <p class="profile-email">{{ user.email }}</p>
-            <p class="profile-phone">{{ user.phone }}</p>
-          </div>
-        </div>
-        <!-- TODO: implement profile edit -->
-      </section>
+    <nav
+      class="mt-6 flex flex-col gap-[11px]"
+      aria-label="마이페이지 메뉴"
+    >
+      <button
+        v-for="item in menuItems"
+        :key="item.title"
+        class="flex h-[66px] w-full items-center rounded-[14px] border border-(--color-border) bg-(--color-white) px-[17px] text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-navy)"
+        :class="
+          item.path || item.action
+            ? 'cursor-pointer hover:bg-(--color-surface)'
+            : 'cursor-default'
+        "
+        type="button"
+        :aria-disabled="item.path || item.action ? undefined : 'true'"
+        @click="handleMenuClick(item)"
+      >
+        <component
+          :is="item.icon"
+          class="shrink-0 text-(color:--color-navy)"
+          :size="24"
+        />
+        <span class="ml-[19px] min-w-0 flex-1">
+          <strong
+            class="block truncate text-[13.5px] leading-[1.3] font-(--font-bold) text-(color:--color-navy)"
+          >
+            {{ item.title }}
+          </strong>
+          <span
+            class="mt-[3px] block truncate text-[11px] leading-[1.3] text-(color:--color-slate-muted)"
+          >
+            {{ item.description }}
+          </span>
+        </span>
+        <IconChevronLeft
+          class="ml-2 shrink-0 rotate-180 text-(color:--color-slate-muted)"
+          :size="16"
+        />
+      </button>
+    </nav>
 
-      <!-- Notification Settings -->
-      <section class="section card">
-        <h2>알림 설정</h2>
-        <div class="toggle-list">
-          <div class="toggle-item">
-            <span>결제 알림</span>
-            <label class="switch">
-              <input type="checkbox" v-model="notifications.payment" @change="handleSaveNotifications" />
-              <span class="slider"></span>
-            </label>
-          </div>
-          <div class="toggle-item">
-            <span>보험 알림</span>
-            <label class="switch">
-              <input type="checkbox" v-model="notifications.insurance" @change="handleSaveNotifications" />
-              <span class="slider"></span>
-            </label>
-          </div>
-          <div class="toggle-item">
-            <span>공동구매 알림</span>
-            <label class="switch">
-              <input type="checkbox" v-model="notifications.groupPurchase" @change="handleSaveNotifications" />
-              <span class="slider"></span>
-            </label>
-          </div>
-          <div class="toggle-item">
-            <span>지원 프로그램 알림</span>
-            <label class="switch">
-              <input type="checkbox" v-model="notifications.support" @change="handleSaveNotifications" />
-              <span class="slider"></span>
-            </label>
-          </div>
-        </div>
-      </section>
+    <AppModal
+      v-model="showPasswordModal"
+      title="비밀번호 확인"
+    >
+      <form @submit.prevent="verifyProfilePassword">
+        <p class="text-[13px] leading-[1.5] text-(color:--color-slate-dark)">
+          프로필 수정을 위해 현재 비밀번호를 입력해주세요.
+        </p>
+        <label
+          class="mt-4 mb-1 block text-[12.5px] font-(--font-bold) text-(color:--color-slate-dark)"
+          for="profile-password"
+        >
+          현재 비밀번호
+        </label>
+        <input
+          id="profile-password"
+          v-model="profilePassword"
+          class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none focus:border-(--color-navy)"
+          type="password"
+          autocomplete="current-password"
+          required
+        >
+        <p
+          v-if="passwordError"
+          class="mt-2 text-[12px] text-(color:--color-danger)"
+          role="alert"
+        >
+          {{ passwordError }}
+        </p>
+        <AppButton
+          class="mt-5"
+          type="submit"
+          block
+          :loading="isVerifying"
+        >
+          확인
+        </AppButton>
+      </form>
+    </AppModal>
 
-      <!-- Linked Accounts -->
-      <section class="section card">
-        <h2>연결된 계좌</h2>
-        <div v-if="linkedAccounts.length === 0" class="empty-inline">
-          <p>연결된 계좌가 없습니다.</p>
-        </div>
-        <ul v-else class="account-list">
-          <li v-for="account in linkedAccounts" :key="account.id" class="account-item">
-            <span>{{ account.bankName }}</span>
-            <span class="account-number">{{ account.accountNumber }}</span>
-          </li>
-        </ul>
-        <router-link to="/accounts" class="settings-link">계좌 관리 &rsaquo;</router-link>
-      </section>
+    <AppModal
+      v-model="showLogoutModal"
+      title="로그아웃"
+      :show-close="false"
+    >
+      <p class="text-center text-[14px] leading-[1.5] text-(color:--color-navy)">
+        로그아웃 하시겠습니까?
+      </p>
 
-      <!-- Danger Zone -->
-      <section class="section">
-        <button class="btn-logout" @click="handleLogout">로그아웃</button>
-        <router-link to="/settings/withdraw" class="withdraw-link">회원 탈퇴</router-link>
-      </section>
-    </template>
-  </div>
+      <template #footer>
+        <AppButton
+          type="button"
+          @click="confirmLogout"
+        >
+          로그아웃
+        </AppButton>
+        <AppButton
+          type="button"
+          variant="secondary"
+          @click="showLogoutModal = false"
+        >
+          취소
+        </AppButton>
+      </template>
+    </AppModal>
+  </section>
 </template>
-
-<style scoped>
-.settings-page {
-  padding: var(--space-4);
-  padding-bottom: calc(var(--bottom-nav-height) + var(--space-4));
-  background-color: var(--color-bg);
-  min-height: 100vh;
-}
-
-.page-header {
-  margin-bottom: var(--space-5);
-}
-
-.page-header h1 {
-  font-size: var(--font-2xl);
-  font-weight: var(--font-bold);
-  color: var(--color-navy);
-}
-
-.loading-state {
-  text-align: center;
-  padding: var(--space-8) 0;
-  color: var(--color-gray-500);
-}
-
-.section {
-  margin-bottom: var(--space-5);
-}
-
-.card {
-  background-color: var(--color-white);
-  border-radius: var(--radius-lg);
-  padding: var(--space-5);
-  box-shadow: var(--shadow-sm);
-}
-
-.section h2 {
-  font-size: var(--font-base);
-  font-weight: var(--font-semibold);
-  color: var(--color-navy);
-  margin-bottom: var(--space-4);
-}
-
-.profile-info {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-}
-
-.profile-avatar {
-  width: 56px;
-  height: 56px;
-  border-radius: var(--radius-full);
-  background-color: var(--color-gray-200);
-  flex-shrink: 0;
-}
-
-.profile-name {
-  font-size: var(--font-base);
-  font-weight: var(--font-semibold);
-  color: var(--color-gray-900);
-}
-
-.profile-email {
-  font-size: var(--font-sm);
-  color: var(--color-gray-600);
-  margin-top: var(--space-1);
-}
-
-.profile-phone {
-  font-size: var(--font-sm);
-  color: var(--color-gray-500);
-  margin-top: var(--space-1);
-}
-
-.toggle-list {
-  display: flex;
-  flex-direction: column;
-}
-
-.toggle-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--space-3) 0;
-  border-bottom: 1px solid var(--color-gray-100);
-  font-size: var(--font-md);
-  color: var(--color-gray-700);
-}
-
-.toggle-item:last-child {
-  border-bottom: none;
-}
-
-.switch {
-  position: relative;
-  display: inline-block;
-  width: 44px;
-  height: 24px;
-}
-
-.switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: var(--color-gray-300);
-  border-radius: var(--radius-full);
-  transition: 0.3s;
-}
-
-.slider::before {
-  content: '';
-  position: absolute;
-  height: 18px;
-  width: 18px;
-  left: 3px;
-  bottom: 3px;
-  background-color: var(--color-white);
-  border-radius: var(--radius-full);
-  transition: 0.3s;
-}
-
-.switch input:checked + .slider {
-  background-color: var(--color-navy);
-}
-
-.switch input:checked + .slider::before {
-  transform: translateX(20px);
-}
-
-.empty-inline {
-  padding: var(--space-3) 0;
-  color: var(--color-gray-500);
-  font-size: var(--font-sm);
-}
-
-.account-list {
-  list-style: none;
-  padding: 0;
-  margin: 0 0 var(--space-3);
-}
-
-.account-item {
-  display: flex;
-  justify-content: space-between;
-  padding: var(--space-2) 0;
-  font-size: var(--font-sm);
-  color: var(--color-gray-700);
-  border-bottom: 1px solid var(--color-gray-100);
-}
-
-.account-number {
-  color: var(--color-gray-500);
-}
-
-.settings-link {
-  display: block;
-  font-size: var(--font-sm);
-  color: var(--color-navy);
-  text-decoration: none;
-  font-weight: var(--font-medium);
-  margin-top: var(--space-2);
-}
-
-.btn-logout {
-  width: 100%;
-  padding: var(--space-3) var(--space-4);
-  background: none;
-  border: 1px solid var(--color-gray-300);
-  border-radius: var(--radius-md);
-  font-size: var(--font-md);
-  color: var(--color-gray-700);
-  cursor: pointer;
-  margin-bottom: var(--space-4);
-}
-
-.withdraw-link {
-  display: block;
-  text-align: center;
-  font-size: var(--font-sm);
-  color: var(--color-danger);
-  text-decoration: none;
-}
-</style>

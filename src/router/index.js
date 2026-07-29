@@ -42,6 +42,20 @@ const publicRoutes = [
     component: () =>
       import('@/views/auth/KakaoCallbackView.vue'),
   },
+  {
+    path: '/withdraw/complete',
+    name: 'WithdrawalComplete',
+    component: () =>
+      import('@/views/settings/WithdrawalCompleteView.vue'),
+    beforeEnter: () => {
+      const completionKey = 'withdrawalCompleted';
+      const isCompleted = window.sessionStorage.getItem(completionKey) === 'true';
+
+      if (!isCompleted) return '/login';
+
+      window.sessionStorage.removeItem(completionKey);
+    },
+  },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -338,13 +352,33 @@ const authRoutes = [
     path: '/settings',
     name: 'Settings',
     component: () => import('@/views/settings/SettingsView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', hideHeader: true },
+  },
+  {
+    path: '/settings/profile',
+    name: 'ProfileEdit',
+    component: () => import('@/views/settings/ProfileEditView.vue'),
+    meta: { requiresAuth: true },
+    beforeEnter: () => {
+      const verificationKey = 'profileEditPasswordVerified';
+      const isVerified = window.sessionStorage.getItem(verificationKey) === 'true';
+
+      if (!isVerified) return '/settings';
+
+      window.sessionStorage.removeItem(verificationKey);
+    },
+  },
+  {
+    path: '/settings/notifications',
+    name: 'NotificationSettings',
+    component: () => import('@/views/settings/NotificationSettingsView.vue'),
+    meta: { requiresAuth: true },
   },
   {
     path: '/settings/withdraw',
     name: 'Withdraw',
     component: () => import('@/views/settings/WithdrawView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true },
   },
 ];
 

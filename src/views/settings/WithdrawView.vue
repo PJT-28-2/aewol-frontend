@@ -1,167 +1,157 @@
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+import withdrawalConfirmImage from '@/assets/images/withdrawal-confirm.png'
 
-const confirmText = ref('')
+const router = useRouter()
+const authStore = useAuthStore()
+
+const password = ref('')
 const isProcessing = ref(false)
 const errorMessage = ref('')
+const canWithdraw = computed(
+  () => password.value.length > 0 && !isProcessing.value,
+)
+const PROFILE_VERIFIED_KEY = 'profileEditPasswordVerified'
+const WITHDRAWAL_COMPLETED_KEY = 'withdrawalCompleted'
 
-const isConfirmed = () => confirmText.value === '탈퇴합니다'
+const handleCancel = async () => {
+  window.sessionStorage.setItem(PROFILE_VERIFIED_KEY, 'true')
+  await router.push('/settings/profile')
+}
 
 const handleWithdraw = async () => {
-  if (!isConfirmed()) return
-  // TODO: implement account withdrawal with authApi.withdraw()
+  if (!canWithdraw.value) return
+
+  errorMessage.value = ''
+  isProcessing.value = true
+
+  try {
+    if (import.meta.env.DEV) {
+      if (password.value !== 'test1234') {
+        errorMessage.value = '현재 비밀번호가 일치하지 않습니다.'
+        return
+      }
+      authStore.clearSession()
+    } else {
+      const email = authStore.user?.email
+      if (!email) {
+        errorMessage.value = '현재 계정 정보를 확인할 수 없습니다.'
+        return
+      }
+
+      await authStore.login(email, password.value)
+      await authStore.withdraw()
+    }
+
+    window.sessionStorage.setItem(WITHDRAWAL_COMPLETED_KEY, 'true')
+    await router.push('/withdraw/complete')
+  } catch (error) {
+    errorMessage.value =
+      error.response?.data?.message ?? '회원탈퇴 처리에 실패했습니다.'
+  } finally {
+    isProcessing.value = false
+  }
 }
 </script>
 
 <template>
-  <div class="withdraw-page">
-    <header class="page-header">
-      <router-link to="/settings" class="back-btn">&lsaquo; 설정</router-link>
-      <h1>회원 탈퇴</h1>
-    </header>
+  <main
+    class="mx-auto min-h-svh w-full max-w-[390px] overflow-hidden rounded-[32px] bg-(--color-white) px-[22px] pt-4 pb-8"
+  >
+    <div
+      class="mx-auto h-[5px] w-10 rounded-(--radius-sm) bg-(--color-border)"
+      aria-hidden="true"
+    />
 
-    <section class="warning-section card">
-      <h2>정말 탈퇴하시겠습니까?</h2>
-      <ul class="warning-list">
-        <li>모든 반려동물 정보가 삭제됩니다.</li>
-        <li>지갑 잔액 및 거래 내역이 삭제됩니다.</li>
-        <li>보험 청구 내역이 삭제됩니다.</li>
-        <li>삭제된 데이터는 복구할 수 없습니다.</li>
-      </ul>
-    </section>
+    <img
+      class="mx-auto mt-[45px] size-[139px] object-contain"
+      :src="withdrawalConfirmImage"
+      alt=""
+    >
 
-    <section class="confirm-section card">
-      <p class="confirm-instruction">
-        탈퇴를 확인하려면 아래에 <strong>"탈퇴합니다"</strong>를 입력하세요.
-      </p>
-      <div class="form-group">
-        <input
-          v-model="confirmText"
-          type="text"
-          placeholder="탈퇴합니다"
-        />
-      </div>
-
-      <p v-if="errorMessage" class="error-text">{{ errorMessage }}</p>
-
-      <button
-        class="btn-danger"
-        :disabled="!isConfirmed() || isProcessing"
-        @click="handleWithdraw"
+    <section
+      class="mt-[10px] text-center"
+      aria-labelledby="withdraw-title"
+    >
+      <h1
+        id="withdraw-title"
+        class="text-[18px] leading-[1.3] font-(--font-bold) text-(color:--color-navy)"
       >
-        {{ isProcessing ? '처리 중...' : '회원 탈퇴' }}
-      </button>
+        정말 탈퇴하시겠어요?
+      </h1>
+      <p class="mt-[7px] text-[12.5px] leading-[1.45] text-(color:--color-slate-muted)">
+        탈퇴하면 아래 정보가 모두 삭제되며<br>
+        복구할 수 없어요
+      </p>
     </section>
-  </div>
+
+    <ul
+      class="mt-[22px] flex h-[124px] flex-col justify-center gap-[11px] rounded-[14px] bg-(--color-danger-soft) px-4 text-[11.5px] leading-[1.3] text-(color:--color-danger-muted)"
+    >
+      <li class="flex items-center gap-[9px]">
+        <span class="size-[5px] shrink-0 rounded-full bg-(--color-danger-strong)" />
+        <span>펫지갑 잔액, 버킷, SOS포켓, 저금통 전체</span>
+      </li>
+      <li class="flex items-center gap-[9px]">
+        <span class="size-[5px] shrink-0 rounded-full bg-(--color-danger-strong)" />
+        <span>결제 · 정산 내역 및 반려동물 프로필</span>
+      </li>
+      <li class="flex items-center gap-[9px]">
+        <span class="size-[5px] shrink-0 rounded-full bg-(--color-danger-strong)" />
+        <span>가족 공유(공동양육) 연결 정보</span>
+      </li>
+      <li class="flex items-center gap-[9px]">
+        <span class="size-[5px] shrink-0 rounded-full bg-(--color-danger-strong)" />
+        <span>연동된 계좌 정보</span>
+      </li>
+    </ul>
+
+    <form
+      class="mt-[13px]"
+      @submit.prevent="handleWithdraw"
+    >
+      <label
+        class="mb-[6px] block text-[12.5px] font-(--font-bold) text-(color:--color-slate-dark)"
+        for="withdraw-password"
+      >
+        본인 확인을 위해 비밀번호를 입력해주세요
+      </label>
+      <input
+        id="withdraw-password"
+        v-model="password"
+        class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
+        type="password"
+        autocomplete="current-password"
+        placeholder="비밀번호 입력"
+        required
+      >
+      <p
+        v-if="errorMessage"
+        class="mt-2 text-[12px] text-(color:--color-danger)"
+        role="alert"
+      >
+        {{ errorMessage }}
+      </p>
+
+      <div class="mt-[14px] grid grid-cols-2 gap-3">
+        <button
+          class="h-(--control-height-lg) rounded-(--radius-xl) border border-(--color-border) bg-(--color-white) text-[14.5px] font-(--font-bold) text-(color:--color-slate-dark)"
+          type="button"
+          :disabled="isProcessing"
+          @click="handleCancel"
+        >
+          취소
+        </button>
+        <button
+          class="h-(--control-height-lg) rounded-(--radius-xl) bg-(--color-danger-strong) text-[14.5px] font-(--font-bold) text-(color:--color-white) disabled:cursor-not-allowed disabled:opacity-50"
+          type="submit"
+          :disabled="!canWithdraw"
+        >
+          {{ isProcessing ? '처리 중...' : '탈퇴하기' }}
+        </button>
+      </div>
+    </form>
+  </main>
 </template>
-
-<style scoped>
-.withdraw-page {
-  padding: var(--space-4);
-  padding-bottom: calc(var(--bottom-nav-height) + var(--space-4));
-  background-color: var(--color-bg);
-  min-height: 100vh;
-}
-
-.page-header {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  margin-bottom: var(--space-5);
-}
-
-.back-btn {
-  font-size: var(--font-md);
-  color: var(--color-navy);
-  text-decoration: none;
-  font-weight: var(--font-medium);
-}
-
-.page-header h1 {
-  font-size: var(--font-xl);
-  font-weight: var(--font-bold);
-  color: var(--color-danger);
-}
-
-.card {
-  background-color: var(--color-white);
-  border-radius: var(--radius-lg);
-  padding: var(--space-5);
-  box-shadow: var(--shadow-sm);
-}
-
-.warning-section {
-  margin-bottom: var(--space-5);
-  border: 1px solid var(--color-danger);
-}
-
-.warning-section h2 {
-  font-size: var(--font-lg);
-  font-weight: var(--font-semibold);
-  color: var(--color-danger);
-  margin-bottom: var(--space-4);
-}
-
-.warning-list {
-  padding-left: var(--space-5);
-  margin: 0;
-}
-
-.warning-list li {
-  font-size: var(--font-md);
-  color: var(--color-gray-700);
-  padding: var(--space-2) 0;
-  line-height: 1.5;
-}
-
-.confirm-section {
-  margin-bottom: var(--space-5);
-}
-
-.confirm-instruction {
-  font-size: var(--font-md);
-  color: var(--color-gray-700);
-  margin-bottom: var(--space-4);
-  line-height: 1.5;
-}
-
-.confirm-instruction strong {
-  color: var(--color-danger);
-}
-
-.form-group {
-  margin-bottom: var(--space-4);
-}
-
-.form-group input {
-  width: 100%;
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--color-gray-300);
-  border-radius: var(--radius-md);
-  font-size: var(--font-base);
-  box-sizing: border-box;
-}
-
-.error-text {
-  color: var(--color-danger);
-  font-size: var(--font-sm);
-  margin-bottom: var(--space-3);
-}
-
-.btn-danger {
-  width: 100%;
-  padding: var(--space-3) var(--space-4);
-  background-color: var(--color-danger);
-  color: var(--color-white);
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: var(--font-base);
-  font-weight: var(--font-semibold);
-  cursor: pointer;
-}
-
-.btn-danger:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-</style>

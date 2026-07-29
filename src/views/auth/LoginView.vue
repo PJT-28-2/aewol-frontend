@@ -15,6 +15,9 @@ const password = ref('')
 const isLoading = ref(false)
 const errorMessage = ref('')
 const KAKAO_OAUTH_STATE_KEY = 'kakaoOAuthState'
+const DEV_MOCK_EMAIL = 'test@aewol.com'
+const DEV_MOCK_PASSWORD = 'test1234'
+const isDevelopment = import.meta.env.DEV
 let loginAttemptId = 0
 
 /**
@@ -72,6 +75,15 @@ const handleEmailLogin = async () => {
   isLoading.value = true
 
   try {
+    if (
+      isDevelopment &&
+      email.value === DEV_MOCK_EMAIL &&
+      password.value === DEV_MOCK_PASSWORD
+    ) {
+      await router.push('/home')
+      return
+    }
+
     // =========================
     // 로그인 API 요청
     // =========================
@@ -231,6 +243,12 @@ const handleKakaoLogin = () => {
       </p>
 
       <form class="mt-9 flex flex-col" @submit.prevent="handleEmailLogin">
+        <p
+          v-if="isDevelopment"
+          class="mb-4 rounded-(--radius-lg) bg-(--color-surface) px-3 py-2 text-[12px] leading-[1.5] text-(color:--color-slate-dark)"
+        >
+          개발용 계정: test@aewol.com / test1234
+        </p>
         <label
           class="mb-1 text-[12.5px] leading-[1.3] font-(--font-bold) text-(color:--color-slate-dark)"
           for="email"

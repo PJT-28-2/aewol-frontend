@@ -1,174 +1,333 @@
 <script setup>
-import { ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import AppButton from '@/components/common/AppButton.vue'
+import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 
-const form = ref({
-  email: '',
-  password: '',
-  passwordConfirm: '',
-  name: '',
-  phone: '',
-})
+const router = useRouter()
+
+const isKakaoSignup = ref(false)
 const isLoading = ref(false)
 const errorMessage = ref('')
+const form = reactive({
+  name: '',
+  phone: '',
+  email: '',
+  verificationCode: '',
+  password: '',
+  passwordConfirm: '',
+  address: '',
+  addressDetail: '',
+})
+const agreements = reactive({
+  terms: false,
+  privacy: false,
+  marketing: false,
+})
+
+const isAllAgreed = computed(
+  () => agreements.terms && agreements.privacy && agreements.marketing,
+)
+
+const handleKakaoSignup = () => {
+  isKakaoSignup.value = true
+  form.name = '홍길동'
+  form.phone = '010-1234-5678'
+  form.email = 'kakao@example.com'
+  form.verificationCode = ''
+  form.password = ''
+  form.passwordConfirm = ''
+  errorMessage.value = ''
+}
+
+const toggleAllAgreements = () => {
+  const nextValue = !isAllAgreed.value
+  agreements.terms = nextValue
+  agreements.privacy = nextValue
+  agreements.marketing = nextValue
+}
 
 const handleSignup = async () => {
-  // TODO: implement signup logic with authApi.signup()
+  errorMessage.value = ''
+  await router.push('/login')
 }
 </script>
 
 <template>
-  <div class="signup-page">
-    <header class="page-header">
-      <h1>회원가입</h1>
+  <main
+    class="mx-auto min-h-svh w-[min(100%,390px)] overflow-hidden bg-(--color-white) px-[22px] pt-[58px] pb-6 min-[391px]:my-6 min-[391px]:rounded-[40px] min-[391px]:shadow-(--shadow-lg)"
+  >
+    <button
+      class="flex size-6 items-center justify-center text-(color:--color-navy)"
+      type="button"
+      aria-label="이전 화면으로 돌아가기"
+      @click="router.back()"
+    >
+      <IconArrowLeft :size="16" />
+    </button>
+
+    <header class="mt-[25px]">
+      <h1
+        class="text-[22px] leading-[1.3] font-(--font-bold) text-(color:--color-navy)"
+      >
+        회원가입
+      </h1>
+      <p class="mt-[3px] text-[12.5px] leading-[1.3] text-(color:--color-slate-dark)">
+        반려동물을 위한, 전용 전자지갑을 시작하세요
+      </p>
     </header>
 
-    <form class="signup-form" @submit.prevent="handleSignup">
-      <div class="form-group">
-        <label for="email">이메일</label>
+    <button
+      class="mt-6 flex h-(--control-height-lg) w-full items-center justify-center rounded-(--radius-xl) bg-(--color-kakao) text-[14.5px] leading-[1.3] font-(--font-bold) text-(color:--color-kakao-label) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-navy)"
+      type="button"
+      @click="handleKakaoSignup"
+    >
+      카카오로 3초만에 시작하기
+    </button>
+
+    <div
+      v-if="!isKakaoSignup"
+      class="my-[14px] flex items-center gap-3 text-[11.5px] leading-[1.3] font-(--font-bold) text-(color:--color-slate-muted)"
+    >
+      <span
+        class="h-px flex-1 bg-(--color-border)"
+        aria-hidden="true"
+      />
+      <span>또는 이메일로 가입</span>
+      <span
+        class="h-px flex-1 bg-(--color-border)"
+        aria-hidden="true"
+      />
+    </div>
+    <p
+      v-else
+      class="my-[14px] text-center text-[11.5px] leading-[1.3] font-(--font-bold) text-(color:--color-slate-muted)"
+    >
+      카카오 회원정보로 가입
+    </p>
+
+    <form
+      class="flex flex-col"
+      @submit.prevent="handleSignup"
+    >
+      <label
+        class="mb-1 text-[12.5px] font-(--font-bold) text-(color:--color-slate-dark)"
+        for="signup-name"
+      >
+        이름
+      </label>
+      <input
+        id="signup-name"
+        v-model="form.name"
+        class="h-(--control-height-md) rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy) read-only:cursor-default read-only:text-(color:--color-slate-muted)"
+        type="text"
+        autocomplete="name"
+        placeholder="홍길동"
+        :readonly="isKakaoSignup"
+        required
+      >
+
+      <label
+        class="mt-[11px] mb-1 text-[12.5px] font-(--font-bold) text-(color:--color-slate-dark)"
+        for="signup-phone"
+      >
+        전화번호
+      </label>
+      <input
+        id="signup-phone"
+        v-model="form.phone"
+        class="h-(--control-height-md) rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy) read-only:cursor-default read-only:text-(color:--color-slate-muted)"
+        type="tel"
+        autocomplete="tel"
+        inputmode="tel"
+        placeholder="010-1234-5678"
+        :readonly="isKakaoSignup"
+        required
+      >
+
+      <label
+        class="mt-[11px] mb-1 text-[12.5px] font-(--font-bold) text-(color:--color-slate-dark)"
+        for="signup-email"
+      >
+        이메일
+      </label>
+      <div class="flex gap-(--space-4)">
         <input
-          id="email"
+          id="signup-email"
           v-model="form.email"
+          class="h-(--control-height-md) min-w-0 flex-1 rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy) read-only:cursor-default read-only:text-(color:--color-slate-muted)"
           type="email"
-          placeholder="이메일을 입력하세요"
+          autocomplete="email"
+          placeholder="name@aewol.com"
+          :readonly="isKakaoSignup"
           required
-        />
+        >
+        <button
+          v-if="!isKakaoSignup"
+          class="h-(--control-height-md) w-20 shrink-0 rounded-(--radius-lg) bg-(--color-navy) text-[12.5px] font-(--font-bold) text-(color:--color-white)"
+          type="button"
+        >
+          인증
+        </button>
       </div>
 
-      <div class="form-group">
-        <label for="password">비밀번호</label>
+      <template v-if="!isKakaoSignup">
+        <label
+          class="mt-[27px] mb-1 text-[12.5px] font-(--font-bold) text-(color:--color-slate-dark)"
+          for="signup-code"
+        >
+          인증번호
+        </label>
         <input
-          id="password"
-          v-model="form.password"
-          type="password"
-          placeholder="비밀번호 (8자 이상)"
-          required
-        />
-      </div>
-
-      <div class="form-group">
-        <label for="passwordConfirm">비밀번호 확인</label>
-        <input
-          id="passwordConfirm"
-          v-model="form.passwordConfirm"
-          type="password"
-          placeholder="비밀번호를 다시 입력하세요"
-          required
-        />
-      </div>
-
-      <div class="form-group">
-        <label for="name">이름</label>
-        <input
-          id="name"
-          v-model="form.name"
+          id="signup-code"
+          v-model="form.verificationCode"
+          class="h-(--control-height-md) rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
           type="text"
-          placeholder="이름을 입력하세요"
+          inputmode="numeric"
+          maxlength="6"
+          placeholder="6자리 숫자 입력"
           required
-        />
-      </div>
+        >
 
-      <div class="form-group">
-        <label for="phone">전화번호</label>
+        <label
+          class="mt-[11px] mb-1 text-[12.5px] font-(--font-bold) text-(color:--color-slate-dark)"
+          for="signup-password"
+        >
+          비밀번호
+        </label>
         <input
-          id="phone"
-          v-model="form.phone"
-          type="tel"
-          placeholder="010-0000-0000"
+          id="signup-password"
+          v-model="form.password"
+          class="h-(--control-height-md) rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
+          type="password"
+          autocomplete="new-password"
+          placeholder="2가지 조합 10자리 / 3가지 조합 8자리 이상"
           required
-        />
+        >
+
+        <label
+          class="mt-[11px] mb-1 text-[12.5px] font-(--font-bold) text-(color:--color-slate-dark)"
+          for="signup-password-confirm"
+        >
+          비밀번호 확인
+        </label>
+        <input
+          id="signup-password-confirm"
+          v-model="form.passwordConfirm"
+          class="h-(--control-height-md) rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
+          type="password"
+          autocomplete="new-password"
+          placeholder="비밀번호를 한번 더 입력해주세요"
+          required
+        >
+      </template>
+
+      <label
+        class="mt-[11px] mb-1 text-[12.5px] font-(--font-bold) text-(color:--color-slate-dark)"
+        for="signup-address"
+      >
+        주소
+      </label>
+      <div class="flex gap-(--space-4)">
+        <input
+          id="signup-address"
+          v-model="form.address"
+          class="h-(--control-height-md) min-w-0 flex-1 rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
+          type="text"
+          placeholder="우편번호 및 주소"
+          required
+        >
+        <button
+          class="h-(--control-height-md) w-20 shrink-0 rounded-(--radius-lg) bg-(--color-navy) text-[12px] font-(--font-bold) text-(color:--color-white)"
+          type="button"
+        >
+          주소 찾기
+        </button>
       </div>
 
-      <p v-if="errorMessage" class="error-text">{{ errorMessage }}</p>
+      <label
+        class="sr-only"
+        for="signup-address-detail"
+      >상세주소</label>
+      <input
+        id="signup-address-detail"
+        v-model="form.addressDetail"
+        class="mt-(--space-2) h-(--control-height-md) rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
+        type="text"
+        autocomplete="address-line2"
+        placeholder="상세주소"
+        required
+      >
 
-      <button type="submit" class="btn-primary" :disabled="isLoading">
-        {{ isLoading ? '가입 중...' : '가입하기' }}
-      </button>
+      <fieldset class="mt-10 rounded-(--radius-xl) bg-(--color-surface) px-[18px] py-4">
+        <legend class="sr-only">
+          약관 동의
+        </legend>
+        <div class="flex items-center justify-between">
+          <span class="text-[13px] font-(--font-bold) text-(color:--color-navy)">전체 동의</span>
+          <input
+            class="size-[18px] accent-(--color-navy)"
+            type="checkbox"
+            :checked="isAllAgreed"
+            aria-label="모든 약관에 동의"
+            @change="toggleAllAgreements"
+          >
+        </div>
+        <label class="mt-3 flex items-center gap-[10px] text-[11.5px] text-(color:--color-slate-dark)">
+          <input
+            v-model="agreements.terms"
+            class="size-4 accent-(--color-navy)"
+            type="checkbox"
+            required
+          >
+          <span>(필수) 이용약관 동의</span>
+        </label>
+        <label class="mt-[10px] flex items-center gap-[10px] text-[11.5px] text-(color:--color-slate-dark)">
+          <input
+            v-model="agreements.privacy"
+            class="size-4 accent-(--color-navy)"
+            type="checkbox"
+            required
+          >
+          <span>(필수) 개인정보 처리방침 동의</span>
+        </label>
+        <label class="mt-[10px] flex items-center gap-[10px] text-[11.5px] text-(color:--color-slate-dark)">
+          <input
+            v-model="agreements.marketing"
+            class="size-4 accent-(--color-navy)"
+            type="checkbox"
+          >
+          <span>(선택) 마케팅 정보 수신 동의</span>
+        </label>
+      </fieldset>
+
+      <p
+        v-if="errorMessage"
+        class="mt-3 text-center text-(length:--font-sm) text-(color:--color-danger)"
+        role="alert"
+      >
+        {{ errorMessage }}
+      </p>
+
+      <AppButton
+        class="mt-6"
+        type="submit"
+        size="lg"
+        block
+        :loading="isLoading"
+      >
+        가입하기
+      </AppButton>
     </form>
 
-    <p class="login-link">
-      이미 계정이 있으신가요?
-      <router-link to="/login">로그인</router-link>
+    <p class="mt-[13px] text-center text-[12.5px] font-(--font-bold) text-(color:--color-slate-dark)">
+      이미 계정이 있나요?
+      <router-link
+        class="text-(color:--color-navy)"
+        to="/login"
+      >
+        로그인
+      </router-link>
     </p>
-  </div>
+  </main>
 </template>
-
-<style scoped>
-.signup-page {
-  min-height: 100vh;
-  padding: var(--space-6);
-  background-color: var(--color-bg);
-}
-
-.page-header {
-  margin-bottom: var(--space-7);
-}
-
-.page-header h1 {
-  font-size: var(--font-2xl);
-  font-weight: var(--font-bold);
-  color: var(--color-navy);
-}
-
-.signup-form {
-  max-width: 360px;
-  margin: 0 auto;
-}
-
-.form-group {
-  margin-bottom: var(--space-4);
-}
-
-.form-group label {
-  display: block;
-  font-size: var(--font-sm);
-  font-weight: var(--font-medium);
-  color: var(--color-gray-700);
-  margin-bottom: var(--space-1);
-}
-
-.form-group input {
-  width: 100%;
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--color-gray-300);
-  border-radius: var(--radius-md);
-  font-size: var(--font-base);
-  box-sizing: border-box;
-}
-
-.error-text {
-  color: var(--color-danger);
-  font-size: var(--font-sm);
-  margin-bottom: var(--space-3);
-}
-
-.btn-primary {
-  width: 100%;
-  padding: var(--space-3) var(--space-4);
-  background-color: var(--color-navy);
-  color: var(--color-white);
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: var(--font-base);
-  font-weight: var(--font-semibold);
-  cursor: pointer;
-  margin-top: var(--space-4);
-}
-
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.login-link {
-  text-align: center;
-  margin-top: var(--space-6);
-  font-size: var(--font-sm);
-  color: var(--color-gray-600);
-}
-
-.login-link a {
-  color: var(--color-navy);
-  font-weight: var(--font-semibold);
-  text-decoration: none;
-}
-</style>
