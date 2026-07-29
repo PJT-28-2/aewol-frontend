@@ -20,20 +20,32 @@ const loadError = ref('');
 // TODO: 피드백 저장이 필요하면 백엔드에 엔드포인트 추가 요청 필요
 const feedback = ref(null); // 'HELPFUL' | 'NOT_HELPFUL' | null
 
+// 관련 질문을 빠르게 연달아 이동하면 이전 요청과 새 요청이 동시에 떠 있을 수 있어요.
+// 매 호출마다 토큰을 증가시키고, 응답이 왔을 때 그게 "가장 최신 호출"일 때만
+// faq/relatedFaqs/loadError/isLoading에 반영해서 느린 응답이 최신 화면을 덮어쓰지 못하게 해요.
+let latestRequestToken = 0;
+
 async function loadFaq(faqId) {
+  const requestToken = ++latestRequestToken;
+
   isLoading.value = true;
   loadError.value = '';
   feedback.value = null;
   faq.value = null;
   relatedFaqs.value = [];
+
   try {
     const result = await store.fetchFaqDetail(faqId);
+    if (requestToken !== latestRequestToken) return; // 그 사이 더 최신 요청이 시작됐으면 결과 버림
     faq.value = result.faq ?? null;
     relatedFaqs.value = result.relatedFaqs ?? [];
   } catch {
+    if (requestToken !== latestRequestToken) return;
     loadError.value = '질문을 불러오지 못했어요. 다시 시도해주세요';
   } finally {
-    isLoading.value = false;
+    if (requestToken === latestRequestToken) {
+      isLoading.value = false;
+    }
   }
 }
 
