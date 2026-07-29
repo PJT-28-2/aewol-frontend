@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
@@ -10,20 +10,34 @@ const insuranceStore = useInsuranceStore()
 
 const draft = insuranceStore.claimDraft ?? {}
 const claimData = ref({
-  hospitalName:   draft.hospitalName   || '24시 제주동물의료센터',
-  visitDate:      draft.visitDate      || '2026.07.10',
-  claimAmount:    draft.claimAmount    || '168,000원',
-  businessNumber: draft.businessNumber || null,
-  diagnosis:      draft.diagnosis      || '슬개골 탈구 치료',
-  accountInfo:    draft.accountInfo    || '프로필 연동',
+  hospitalName:   draft.hospitalName   || '',
+  visitDate:      draft.visitDate      || '',
+  claimAmount:    draft.claimAmount    || '',
+  businessNumber: draft.businessNumber || '',
+  diagnosis:      draft.diagnosis      || '',
+  accountInfo:    draft.accountInfo    || '',
   ownerName:      draft.ownerName      || '',
 })
+
+// 필수 항목 누락 여부 (사업자번호는 경고만, 저장 차단 안 함)
+const REQUIRED_FIELDS = [
+  { key: 'hospitalName',  label: '병원명' },
+  { key: 'visitDate',     label: '진료일자' },
+  { key: 'claimAmount',   label: '청구금액' },
+  { key: 'diagnosis',     label: '진단명' },
+  { key: 'accountInfo',   label: '계좌정보' },
+]
+const missingFields = computed(() =>
+  REQUIRED_FIELDS.filter((f) => !claimData.value[f.key]).map((f) => f.label),
+)
+const canDownload = computed(() => missingFields.value.length === 0)
 
 const isGenerating = ref(false)
 
 const previewRef = ref(null)
 
 const handleDownload = async () => {
+  if (!canDownload.value) return
   isGenerating.value = true
   try {
     const canvas = await html2canvas(previewRef.value, {
@@ -154,11 +168,15 @@ const goBack = () => {
     </div>
 
     <!-- 하단 다운로드 버튼 -->
-    <div class="print:hidden fixed bottom-(--bottom-nav-height) left-0 right-0 p-(--space-4) bg-(--color-white) border-t border-(--color-border)">
+    <div class="print:hidden fixed bottom-(--bottom-nav-height) left-0 right-0 px-(--space-4) pt-(--space-3) pb-(--space-4) bg-(--color-white) border-t border-(--color-border)">
+      <!-- 필수값 누락 안내 -->
+      <p v-if="missingFields.length > 0" class="text-(length:--font-xs) text-(color:--color-danger) text-center mb-(--space-2)">
+        누락된 항목이 있어요: {{ missingFields.join(', ') }} · 이전 화면에서 채워주세요
+      </p>
       <button
         type="button"
         class="w-full h-(--control-height-lg) bg-(--color-navy) text-(color:--color-white) border-none rounded-(--radius-lg) text-(length:--font-base) font-semibold cursor-pointer transition-opacity disabled:opacity-50 disabled:cursor-not-allowed active:opacity-85"
-        :disabled="isGenerating"
+        :disabled="isGenerating || !canDownload"
         @click="handleDownload"
       >
         <span v-if="isGenerating">PDF 생성 중...</span>
