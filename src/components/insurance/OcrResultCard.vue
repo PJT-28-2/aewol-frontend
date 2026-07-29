@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, nextTick } from 'vue'
 
 const props = defineProps({
   fileName: {
@@ -13,8 +13,13 @@ const props = defineProps({
 })
 
 const editingKey = ref(null)
+const inputRef = ref(null)
 
-const startEdit = (key) => { editingKey.value = key }
+const startEdit = async (key) => {
+  editingKey.value = key
+  await nextTick()
+  inputRef.value?.focus()
+}
 const finishEdit = () => { editingKey.value = null }
 </script>
 
@@ -47,14 +52,19 @@ const finishEdit = () => { editingKey.value = null }
         v-for="item in props.items"
         :key="item.key"
         class="flex items-center justify-between py-(--space-3) border-b border-(--color-border) last:border-0 gap-(--space-3) cursor-pointer"
+        tabindex="0"
+        role="button"
+        :aria-label="`${item.label} 수정`"
         @click="startEdit(item.key)"
+        @keyup.enter="startEdit(item.key)"
+        @keyup.space.prevent="startEdit(item.key)"
       >
         <span class="text-(length:--font-md) text-(color:--color-gray-600) shrink-0">{{ item.label }}</span>
         <input
           v-if="editingKey === item.key"
+          ref="inputRef"
           v-model="item.value"
-          class="text-(length:--font-md) font-semibold text-(color:--color-gray-900) text-right border-b border-(--color-navy) outline-none bg-transparent w-full"
-          autofocus
+          class="text-(length:--font-md) font-semibold text-(color:--color-gray-900) text-right outline-none border-none bg-transparent w-full"
           @blur="finishEdit"
           @keyup.enter="finishEdit"
         />
