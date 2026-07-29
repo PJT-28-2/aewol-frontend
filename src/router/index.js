@@ -222,6 +222,12 @@ const authRoutes = [
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
+    path: '/group-purchase/my',
+    name: 'GroupPurchaseMy',
+    component: () => import('@/views/grouppurchase/GroupPurchaseMyView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
     path: '/group-purchase/create',
     name: 'GroupPurchaseCreateStep1',
     component: () =>
