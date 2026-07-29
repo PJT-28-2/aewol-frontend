@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import { useGroupPurchaseCreateStore } from '@/stores/groupPurchase';
 
 /* ------------------------------------------------------------------ */
 /*  Public (no auth required) routes                                  */
@@ -27,8 +28,7 @@ const publicRoutes = [
   {
     path: '/password/reset',
     name: 'PasswordReset',
-    component: () =>
-      import('@/views/auth/PasswordResetView.vue'),
+    component: () => import('@/views/auth/PasswordResetView.vue'),
   },
   {
     path: '/id/find',
@@ -38,8 +38,7 @@ const publicRoutes = [
   {
     path: '/callback/kakao',
     name: 'KakaoCallback',
-    component: () =>
-      import('@/views/auth/KakaoCallbackView.vue'),
+    component: () => import('@/views/auth/KakaoCallbackView.vue'),
   },
 ];
 
@@ -92,29 +91,25 @@ const authRoutes = [
   {
     path: '/wallet/history',
     name: 'TransactionHistory',
-    component: () =>
-      import('@/views/wallet/TransactionHistoryView.vue'),
+    component: () => import('@/views/wallet/TransactionHistoryView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
     path: '/wallet/history/:txId',
     name: 'TransactionDetail',
-    component: () =>
-      import('@/views/wallet/TransactionDetailView.vue'),
+    component: () => import('@/views/wallet/TransactionDetailView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
     path: '/accounts',
     name: 'AccountList',
-    component: () =>
-      import('@/views/account/AccountListView.vue'),
+    component: () => import('@/views/account/AccountListView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
     path: '/accounts/connect',
     name: 'AccountConnect',
-    component: () =>
-      import('@/views/account/AccountConnectView.vue'),
+    component: () => import('@/views/account/AccountConnectView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
@@ -132,29 +127,25 @@ const authRoutes = [
   {
     path: '/dashboard',
     name: 'Dashboard',
-    component: () =>
-      import('@/views/dashboard/DashboardView.vue'),
+    component: () => import('@/views/dashboard/DashboardView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
     path: '/dashboard/pet/:petId',
     name: 'PetDashboard',
-    component: () =>
-      import('@/views/dashboard/PetDashboardView.vue'),
+    component: () => import('@/views/dashboard/PetDashboardView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
     path: '/insurance',
     name: 'InsuranceHome',
-    component: () =>
-      import('@/views/insurance/InsuranceHomeView.vue'),
+    component: () => import('@/views/insurance/InsuranceHomeView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
     path: '/insurance/simulator',
     name: 'Simulator',
-    component: () =>
-      import('@/views/insurance/SimulatorView.vue'),
+    component: () => import('@/views/insurance/SimulatorView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
@@ -166,8 +157,7 @@ const authRoutes = [
   {
     path: '/insurance/claims',
     name: 'ClaimList',
-    component: () =>
-      import('@/views/insurance/ClaimListView.vue'),
+    component: () => import('@/views/insurance/ClaimListView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
@@ -197,15 +187,54 @@ const authRoutes = [
   {
     path: '/group-purchase',
     name: 'GroupPurchaseList',
-    component: () =>
-      import('@/views/grouppurchase/GroupPurchaseListView.vue'),
+    component: () => import('@/views/grouppurchase/GroupPurchaseListView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
+    path: '/group-purchase/create',
+    name: 'GroupPurchaseCreateStep1',
+    component: () =>
+      import('@/views/grouppurchase/GroupPurchaseCreateStep1.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
+    path: '/group-purchase/create/step2',
+    name: 'GroupPurchaseCreateStep2',
+    component: () =>
+      import('@/views/grouppurchase/GroupPurchaseCreateStep2.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    // URL 직접 입력/새로고침으로 1단계를 건너뛰고 들어오는 것을 막음
+    beforeEnter: () => {
+      if (!useGroupPurchaseCreateStore().isStep1Complete) {
+        return '/group-purchase/create';
+      }
+    },
+  },
+  {
+    path: '/group-purchase/create/step3',
+    name: 'GroupPurchaseCreateStep3',
+    component: () =>
+      import('@/views/grouppurchase/GroupPurchaseCreateStep3.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    // URL 직접 입력/새로고침으로 1~2단계를 건너뛰고 들어오는 것을 막음
+    beforeEnter: () => {
+      const store = useGroupPurchaseCreateStore();
+      if (!store.isStep1Complete) return '/group-purchase/create';
+      if (!store.isStep2Complete) return '/group-purchase/create/step2';
+    },
   },
   {
     path: '/group-purchase/:gpId',
     name: 'GroupPurchaseDetail',
     component: () =>
       import('@/views/grouppurchase/GroupPurchaseDetailView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
+    path: '/group-purchase/:gpId/paymentPreview',
+    name: 'GroupPurchasePayment',
+    component: () =>
+      import('@/views/grouppurchase/GroupPurchasePaymentPreview.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
@@ -289,8 +318,7 @@ const authRoutes = [
   {
     path: '/emergency',
     name: 'Emergency',
-    component: () =>
-      import('@/views/emergency/EmergencyView.vue'),
+    component: () => import('@/views/emergency/EmergencyView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
@@ -342,6 +370,16 @@ router.beforeEach((to) => {
     to.name !== 'KakaoCallback'
   ) {
     return { path: '/home' };
+  }
+});
+
+// 상품등록 1~3단계(/group-purchase/create*)를 벗어나면 작성 중이던 데이터 초기화
+router.afterEach((to, from) => {
+  const CREATE_FLOW_PREFIX = '/group-purchase/create';
+  const isLeavingCreateFlow =
+    from.path.startsWith(CREATE_FLOW_PREFIX) && !to.path.startsWith(CREATE_FLOW_PREFIX);
+  if (isLeavingCreateFlow) {
+    useGroupPurchaseCreateStore().reset();
   }
 });
 

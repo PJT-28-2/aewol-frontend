@@ -1,6 +1,6 @@
 <script setup>
 defineProps({
-  size: { type: [String, Number], default: 24 },
+  size: { type: [String, Number], default: 'var(--icon-size-md)' },
   color: { type: String, default: 'currentColor' },
 })
 </script>
@@ -12,7 +12,7 @@ defineProps({
     viewBox="0 0 24 24"
     fill="none"
     :stroke="color"
-    stroke-width="2"
+    stroke-width="var(--icon-stroke-width)"
     stroke-linecap="round"
     aria-hidden="true"
   >

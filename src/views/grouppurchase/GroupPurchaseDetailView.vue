@@ -1,280 +1,265 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { computed, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import productImage from '@/assets/images/grouppurchase/mock-product-dogfood.png'
+import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 
-const groupPurchase = ref(null)
-const participants = ref([])
-const isLoading = ref(true)
-const isJoining = ref(false)
-const hasJoined = ref(false)
+const route = useRoute()
+const router = useRouter()
 
-onMounted(async () => {
-  // TODO: fetch group purchase detail and participants
-  isLoading.value = false
+// TODO: 백엔드 API 연동 후 mock 데이터 제거하고 실제 fetch로 교체 (상세 데이터 연동은 별도 작업에서 진행)
+// 필드명은 group_purchase 테이블 컬럼(gp_id, delivery_method, delivery_fee, delivery_date, deadline 등) 기준
+const groupPurchase = ref({
+  productName: '프리미엄 사료 15kg',
+  image: productImage,
+  groupPrice: 28000,
+  unitPrice: 40000,
+  currentQuantity: 32,
+  targetQuantity: 50,
+  deadline: '2026-08-01',
+  deliveryMethod: '공동구매 마감 후 3일 이내 발송',
+  deliveryFee: 0,
+  deliveryDate: '2026-08-04',
 })
 
-const handleJoin = async () => {
-  // TODO: implement join group purchase
+const WEEKDAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
+
+// 'YYYY-MM-DD' 문자열을 UTC 파싱으로 인한 날짜 밀림 없이 로컬 자정 Date로 변환
+function toLocalDate(dateString) {
+  const [year, month, day] = dateString.split('-').map(Number)
+  return new Date(year, month - 1, day)
 }
 
-const handleLeave = async () => {
-  // TODO: implement leave group purchase
+function startOfToday() {
+  const now = new Date()
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate())
+}
+
+const quantity = ref(1)
+
+function decreaseQuantity() {
+  if (quantity.value > 1) quantity.value -= 1 // 최소 수량 1개 미만으로는 내려가지 않도록 제한
+}
+
+function increaseQuantity() {
+  const nextQuantity = quantity.value + 1
+  if (groupPurchase.value.currentQuantity + nextQuantity > groupPurchase.value.targetQuantity) {
+    alert('목표 수량을 초과하여 더 이상 선택할 수 없습니다.') // 목표 수량 초과 선택 차단
+    return
+  }
+  quantity.value = nextQuantity
+}
+
+// 정가 대비 공동구매가 할인율을 직접 저장하지 않고 계산으로 도출
+const discountRate = computed(() =>
+  Math.round(
+    (1 - groupPurchase.value.groupPrice / groupPurchase.value.unitPrice) * 100,
+  ),
+)
+
+// 내가 선택한 수량을 반영했을 때의 참여 현황(미리보기)
+const displayedCurrentQuantity = computed(
+  () => groupPurchase.value.currentQuantity + quantity.value,
+)
+
+// 목표 수량까지 남은 개수 (음수 방지)
+const remainingForConfirm = computed(() =>
+  Math.max(
+    groupPurchase.value.targetQuantity - displayedCurrentQuantity.value,
+    0,
+  ),
+)
+
+// 진행률 바 너비(%) 계산, 100% 초과 방지
+const progressPercent = computed(() =>
+  Math.min(
+    (displayedCurrentQuantity.value / groupPurchase.value.targetQuantity) * 100,
+    100,
+  ),
+)
+
+// 선택 수량에 따라 실시간으로 바뀌는 결제 금액
+const totalPrice = computed(
+  () => groupPurchase.value.groupPrice * quantity.value,
+)
+
+// raw deadline 값에서 남은 일수를 D-day 라벨로 변환
+const deadlineLabel = computed(() => {
+  const diffDays = Math.ceil(
+    (toLocalDate(groupPurchase.value.deadline) - startOfToday()) / (1000 * 60 * 60 * 24),
+  )
+
+  // 남은 일수가 0일 이하인 경우 "마감" 반환
+  if (diffDays <= 0) {
+    return '마감'
+  }
+
+  return `D-${diffDays}`
+})
+
+// delivery_fee가 0원이면 무료로 표시
+const deliveryFeeLabel = computed(() =>
+  groupPurchase.value.deliveryFee === 0
+    ? '무료'
+    : `${groupPurchase.value.deliveryFee.toLocaleString()}원`,
+)
+
+// delivery_method와 배송비 유무를 합친 안내 문구
+const shippingSummaryLabel = computed(() => {
+  const feeSuffix = groupPurchase.value.deliveryFee === 0 ? '무료배송' : '유료배송'
+  return `${groupPurchase.value.deliveryMethod} · ${feeSuffix}`
+})
+
+// raw delivery_date를 'M/D(요일) 도착 보장' 형식으로 변환
+const arrivalDateLabel = computed(() => {
+  const date = toLocalDate(groupPurchase.value.deliveryDate)
+  return `${date.getMonth() + 1}/${date.getDate()}(${WEEKDAY_LABELS[date.getDay()]}) 도착 보장`
+})
+
+function goToPaymentPreview() {
+  router.push(`/group-purchase/${route.params.gpId}/payment-preview`)
 }
 </script>
 
 <template>
-  <div class="gp-detail-page">
-    <header class="page-header">
-      <router-link to="/group-purchase" class="back-btn">&lsaquo; 목록</router-link>
-      <h1>공동구매 상세</h1>
+  <div class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--size-cta-bar-height))] bg-(--color-bg) min-h-screen">
+    <header class="mb-(--space-5)">
+      <router-link
+        to="/group-purchase"
+        aria-label="뒤로 가기"
+        class="inline-flex items-center mb-(--space-3) text-(color:--color-navy)"
+      >
+        <IconArrowLeft size="24" />
+      </router-link>
+      <h1 class="text-(length:--font-xl) font-bold text-(color:--color-navy)">
+        공동구매 참여
+      </h1>
     </header>
 
-    <div v-if="isLoading" class="loading-state">
-      <p>로딩 중...</p>
-    </div>
-
-    <template v-else-if="groupPurchase">
-      <!-- Product Info -->
-      <section class="product-section">
-        <div class="product-image">
-          <!-- TODO: product image -->
-        </div>
-        <div class="product-info card">
-          <h2>{{ groupPurchase.title }}</h2>
-          <p class="product-price">{{ groupPurchase.price?.toLocaleString() }}원</p>
-          <p class="product-description">{{ groupPurchase.description }}</p>
-
-          <div class="progress-section">
-            <div class="progress-bar">
-              <div
-                class="progress-fill"
-                :style="{ width: `${(groupPurchase.currentCount / groupPurchase.targetCount) * 100}%` }"
-              ></div>
-            </div>
-            <p class="progress-text">
-              {{ groupPurchase.currentCount }} / {{ groupPurchase.targetCount }}명 참여
-            </p>
-          </div>
-
-          <p class="deadline">마감일: {{ groupPurchase.deadline }}</p>
-        </div>
-      </section>
-
-      <!-- Participants -->
-      <section class="participants-section">
-        <h2>참여자 ({{ participants.length }}명)</h2>
-        <ul class="participant-list">
-          <li v-for="p in participants" :key="p.id" class="participant-item">
-            <div class="participant-avatar"><!-- TODO: avatar --></div>
-            <span class="participant-name">{{ p.name }}</span>
-          </li>
-        </ul>
-      </section>
-
-      <!-- Join/Leave Button -->
-      <div class="action-area">
-        <button
-          v-if="!hasJoined"
-          class="btn-join"
-          :disabled="isJoining"
-          @click="handleJoin"
+    <!-- 상품 정보 -->
+    <section class="flex flex-col items-start mb-(--space-6)">
+      <div class="w-(--size-thumb-lg) h-(--size-thumb-lg) rounded-2xl bg-(--color-surface) overflow-hidden mb-(--space-4)">
+        <img
+          :src="groupPurchase.image"
+          alt="groupPurchase.productName"
+          class="w-full h-full object-cover"
         >
-          {{ isJoining ? '참여 중...' : '참여하기' }}
-        </button>
-        <button
-          v-else
-          class="btn-leave"
-          @click="handleLeave"
-        >
-          참여 취소
-        </button>
       </div>
-    </template>
+      <h2 class="text-(length:--font-md) font-bold text-(color:--color-navy) mb-(--space-2)">
+        {{ groupPurchase.productName }}
+      </h2>
+      <div class="flex items-center gap-(--space-2)">
+        <p class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">
+          {{ groupPurchase.groupPrice.toLocaleString() }}원
+        </p>
+        <p class="text-(length:--font-sm) text-(color:--color-slate-muted) line-through">
+          {{ groupPurchase.unitPrice.toLocaleString() }}원
+        </p>
+        <!-- 할인율은 저장된 값이 아니라 discountRate computed로 계산된 값 -->
+        <span
+          class="px-(--space-2) py-(--space-1) rounded-full bg-(--color-discount-bg) text-(color:--color-discount-text) text-(length:--font-xs) font-bold"
+        >
+          {{ discountRate }}% 할인
+        </span>
+      </div>
+    </section>
 
-    <div v-else class="empty-state">
-      <p>공동구매 정보를 찾을 수 없습니다.</p>
+    <!-- 참여 현황 -->
+    <section class="p-(--space-4) rounded-2xl bg-(--color-surface) mb-(--space-6)">
+      <div class="flex items-center justify-between mb-(--space-3)">
+        <p class="text-(length:--font-sm) font-bold text-(color:--color-slate-dark)">
+          현재 수량
+        </p>
+        <!-- 내가 선택한 수량이 더해진 현재 수량(미리보기) -->
+        <p class="text-(length:--font-sm) font-bold text-(color:--color-navy)">
+          {{ displayedCurrentQuantity }}/{{ groupPurchase.targetQuantity }}개
+        </p>
+      </div>
+      <!-- 진행률 바도 선택 수량 반영 기준으로 실시간 갱신 -->
+      <div class="h-(--size-progress-bar) rounded-full bg-(--color-border) overflow-hidden mb-(--space-2)">
+        <div
+          class="h-full rounded-full bg-(--color-gold)"
+          :style="{ width: `${progressPercent}%` }"
+        />
+      </div>
+      <div class="flex items-center justify-between">
+        <p class="text-(length:--font-xs) text-(color:--color-slate-muted)">
+          마감까지 {{ deadlineLabel }}
+        </p>
+        <!-- 목표까지 남은 수량도 선택 수량 반영 기준으로 갱신 -->
+        <p class="text-(length:--font-xs) font-bold text-(color:--color-discount-text)">
+          {{ remainingForConfirm }}개 더 모이면 확정
+        </p>
+      </div>
+    </section>
+
+    <!-- 수량 선택 -->
+    <section class="mb-(--space-6)">
+      <p class="text-(length:--font-sm) font-bold text-(color:--color-slate-dark) mb-(--space-3)">
+        수량 선택
+      </p>
+      <div
+        class="flex items-center justify-between h-(--size-stepper-box) px-(--space-4) rounded-xl bg-(--color-surface) border border-(--color-border)"
+      >
+        <p class="text-(length:--font-sm) font-bold text-(color:--color-navy)">
+          {{ quantity }}개
+        </p>
+        <!-- 수량 스테퍼: -는 1개에서 비활성화, +는 목표 초과 시 alert로 차단 -->
+        <div class="flex items-center gap-(--space-3)">
+          <button
+            type="button"
+            class="size-(--size-stepper-btn) rounded-lg bg-(--color-white) border border-(--color-border) text-(length:--font-md) font-bold text-(color:--color-slate-dark) disabled:opacity-40"
+            :disabled="quantity <= 1"
+            @click="decreaseQuantity"
+          >
+            −
+          </button>
+          <p class="w-(--size-stepper-value) text-center text-(length:--font-sm) font-bold text-(color:--color-navy)">
+            {{ quantity }}
+          </p>
+          <button
+            type="button"
+            class="size-(--size-stepper-btn) rounded-lg bg-(--color-white) border border-(--color-border) text-(length:--font-md) font-bold text-(color:--color-slate-dark)"
+            @click="increaseQuantity"
+          >
+            +
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 배송 안내 -->
+    <section class="p-(--space-4) rounded-2xl bg-(--color-surface) mb-(--space-6)">
+      <p class="text-(length:--font-sm) font-bold text-(color:--color-navy) pb-(--space-3) mb-(--space-3) border-b border-(--color-border)">
+        {{ shippingSummaryLabel }}
+      </p>
+      <div class="flex items-center justify-between mb-(--space-2)">
+        <p class="text-(length:--font-xs) text-(color:--color-slate-muted)">
+          배송비
+        </p>
+        <p class="text-(length:--font-xs) font-bold text-(color:--color-navy)">
+          {{ deliveryFeeLabel }}
+        </p>
+      </div>
+      <div class="flex items-center justify-between">
+        <p class="text-(length:--font-xs) text-(color:--color-slate-muted)">
+          도착 예정일
+        </p>
+        <p class="text-(length:--font-xs) font-bold text-(color:--color-navy)">
+          {{ arrivalDateLabel }}
+        </p>
+      </div>
+    </section>
+
+    <!-- 결제 버튼: 금액은 groupPrice * 선택 수량으로 실시간 계산 -->
+    <div class="fixed bottom-(--bottom-nav-height) inset-x-0 p-(--space-4) bg-(--color-white)">
+      <button
+        type="button"
+        class="w-full h-(--size-button-lg) rounded-2xl bg-(--color-navy) text-(color:--color-white) text-(length:--font-md) font-bold"
+        @click="goToPaymentPreview"
+      >
+        {{ totalPrice.toLocaleString() }}원 결제하기
+      </button>
     </div>
   </div>
 </template>
-
-<style scoped>
-.gp-detail-page {
-  padding: var(--space-4);
-  padding-bottom: calc(var(--bottom-nav-height) + var(--space-8));
-  background-color: var(--color-bg);
-  min-height: 100vh;
-}
-
-.page-header {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  margin-bottom: var(--space-5);
-}
-
-.back-btn {
-  font-size: var(--font-md);
-  color: var(--color-navy);
-  text-decoration: none;
-  font-weight: var(--font-medium);
-}
-
-.page-header h1 {
-  font-size: var(--font-xl);
-  font-weight: var(--font-bold);
-  color: var(--color-navy);
-}
-
-.card {
-  background-color: var(--color-white);
-  border-radius: var(--radius-lg);
-  padding: var(--space-5);
-  box-shadow: var(--shadow-sm);
-}
-
-.loading-state,
-.empty-state {
-  text-align: center;
-  padding: var(--space-8) 0;
-  color: var(--color-gray-500);
-}
-
-.product-image {
-  width: 100%;
-  height: 200px;
-  background-color: var(--color-gray-200);
-  border-radius: var(--radius-lg);
-  margin-bottom: var(--space-4);
-}
-
-.product-info {
-  margin-bottom: var(--space-5);
-}
-
-.product-info h2 {
-  font-size: var(--font-xl);
-  font-weight: var(--font-bold);
-  color: var(--color-gray-900);
-  margin-bottom: var(--space-2);
-}
-
-.product-price {
-  font-size: var(--font-2xl);
-  font-weight: var(--font-bold);
-  color: var(--color-navy);
-  margin-bottom: var(--space-3);
-}
-
-.product-description {
-  font-size: var(--font-md);
-  color: var(--color-gray-600);
-  line-height: 1.6;
-  margin-bottom: var(--space-5);
-}
-
-.progress-section {
-  margin-bottom: var(--space-3);
-}
-
-.progress-bar {
-  height: 8px;
-  background-color: var(--color-gray-200);
-  border-radius: var(--radius-full);
-  overflow: hidden;
-  margin-bottom: var(--space-2);
-}
-
-.progress-fill {
-  height: 100%;
-  background-color: var(--color-gold);
-  border-radius: var(--radius-full);
-  transition: width 0.3s ease;
-}
-
-.progress-text {
-  font-size: var(--font-sm);
-  color: var(--color-gray-600);
-  font-weight: var(--font-medium);
-}
-
-.deadline {
-  font-size: var(--font-sm);
-  color: var(--color-gray-500);
-}
-
-.participants-section {
-  margin-bottom: var(--space-6);
-}
-
-.participants-section h2 {
-  font-size: var(--font-base);
-  font-weight: var(--font-semibold);
-  color: var(--color-navy);
-  margin-bottom: var(--space-3);
-}
-
-.participant-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-}
-
-.participant-item {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.participant-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-full);
-  background-color: var(--color-gray-200);
-}
-
-.participant-name {
-  font-size: var(--font-sm);
-  color: var(--color-gray-700);
-}
-
-.action-area {
-  position: fixed;
-  bottom: var(--bottom-nav-height);
-  left: 0;
-  right: 0;
-  padding: var(--space-4);
-  background-color: var(--color-white);
-  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.08);
-}
-
-.btn-join {
-  width: 100%;
-  padding: var(--space-4);
-  background-color: var(--color-gold);
-  color: var(--color-white);
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: var(--font-base);
-  font-weight: var(--font-bold);
-  cursor: pointer;
-}
-
-.btn-join:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.btn-leave {
-  width: 100%;
-  padding: var(--space-4);
-  background-color: transparent;
-  color: var(--color-danger);
-  border: 1px solid var(--color-danger);
-  border-radius: var(--radius-md);
-  font-size: var(--font-base);
-  font-weight: var(--font-semibold);
-  cursor: pointer;
-}
-</style>
