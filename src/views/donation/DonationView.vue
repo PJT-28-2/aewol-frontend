@@ -141,9 +141,10 @@ function saveSettings() {
       <button
         class="cursor-pointer border-0 bg-transparent text-[length:var(--font-3xl)] text-(--color-navy)"
         type="button"
+        aria-label="뒤로 가기"
         @click="go('/donation')"
       >
-        <IconArrowLeft :size="28" />
+        <IconArrowLeft size="24" />
       </button>
       <h1
         class="mb-[var(--space-7)] mt-[var(--space-5)] text-[length:var(--font-xl)]"
@@ -393,9 +394,10 @@ function saveSettings() {
       <button
         class="cursor-pointer border-0 bg-transparent text-[length:var(--font-3xl)] text-(--color-navy)"
         type="button"
+        aria-label="뒤로 가기"
         @click="go('/donation/give')"
       >
-        <IconArrowLeft :size="28" />
+        <IconArrowLeft size="24" />
       </button>
       <h1
         class="mb-[var(--space-2)] mt-[var(--space-5)] text-[length:var(--font-xl)]"
@@ -471,9 +473,10 @@ function saveSettings() {
       <button
         class="cursor-pointer border-0 bg-transparent text-[length:var(--font-3xl)] text-(--color-navy)"
         type="button"
+        aria-label="뒤로 가기"
         @click="go('/donation')"
       >
-        <IconArrowLeft :size="28" />
+        <IconArrowLeft size="24" />
       </button>
       <h1
         class="mb-[var(--space-2)] mt-[var(--space-5)] text-[length:var(--font-xl)]"

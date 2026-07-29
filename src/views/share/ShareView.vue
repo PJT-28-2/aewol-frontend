@@ -2,6 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import BottomNavBar from '@/components/common/BottomNavBar.vue'
+import EmptyState from '@/components/common/EmptyState.vue'
 import IconDog from '@/components/common/icons/IconDog.vue'
 import IconPaw from '@/components/common/icons/IconPaw.vue'
 import IconPlus from '@/components/common/icons/IconPlus.vue'
@@ -150,25 +151,13 @@ onMounted(loadPets)
       </button>
     </section>
 
-    <section
+    <EmptyState
       v-else-if="pets.length === 0"
-      class="flex flex-col items-center gap-[var(--space-4)] py-[var(--space-10)] text-center text-(--color-slate-muted)"
-    >
-      <IconPaw
-        class="text-(--color-slate)"
-        :size="40"
-      />
-      <p class="m-0 text-[length:var(--font-sm)]">
-        함께 돌볼 반려동물이 아직 없어요.
-      </p>
-      <button
-        class="cursor-pointer rounded-[var(--radius-md)] border-0 bg-(--color-navy) px-[var(--space-4)] py-[var(--space-2)] font-semibold text-(--color-white)"
-        type="button"
-        @click="router.push('/pets/register')"
-      >
-        반려동물 등록하기
-      </button>
-    </section>
+      :icon="IconPaw"
+      message="함께 돌볼 반려동물이 아직 없어요."
+      action-text="반려동물 등록하기"
+      action-route="/pets/register"
+    />
 
     <template v-else>
       <div

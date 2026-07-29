@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue'
+import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 
 const confirmText = ref('')
 const isProcessing = ref(false)
@@ -16,7 +17,13 @@ const handleWithdraw = async () => {
 <template>
   <div class="withdraw-page">
     <header class="page-header">
-      <router-link to="/settings" class="back-btn">&lsaquo; 설정</router-link>
+      <router-link
+        to="/settings"
+        aria-label="뒤로 가기"
+        class="back-btn"
+      >
+        <IconArrowLeft size="24" />
+      </router-link>
       <h1>회원 탈퇴</h1>
     </header>
 
@@ -39,10 +46,15 @@ const handleWithdraw = async () => {
           v-model="confirmText"
           type="text"
           placeholder="탈퇴합니다"
-        />
+        >
       </div>
 
-      <p v-if="errorMessage" class="error-text">{{ errorMessage }}</p>
+      <p
+        v-if="errorMessage"
+        class="error-text"
+      >
+        {{ errorMessage }}
+      </p>
 
       <button
         class="btn-danger"

@@ -1,5 +1,8 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import EmptyState from '@/components/common/EmptyState.vue'
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
+import IconInsurance from '@/components/common/icons/IconInsurance.vue'
 
 const claims = ref([])
 const isLoading = ref(true)
@@ -34,7 +37,12 @@ const handleFilterChange = async () => {
   <div class="claim-list-page">
     <header class="page-header">
       <h1>청구 내역</h1>
-      <router-link to="/insurance/claim" class="btn-new">+ 새 청구</router-link>
+      <router-link
+        to="/insurance/claim"
+        class="btn-new"
+      >
+        + 새 청구
+      </router-link>
     </header>
 
     <!-- Status Filter -->
@@ -49,17 +57,30 @@ const handleFilterChange = async () => {
       </button>
     </div>
 
-    <div v-if="isLoading" class="loading-state">
-      <p>로딩 중...</p>
+    <div
+      v-if="isLoading"
+      class="loading-state"
+    >
+      <LoadingSpinner />
     </div>
 
-    <div v-else-if="claims.length === 0" class="empty-state">
-      <p>청구 내역이 없습니다.</p>
-      <router-link to="/insurance/claim" class="btn-link">보험 청구하기</router-link>
-    </div>
+    <EmptyState
+      v-else-if="claims.length === 0"
+      :icon="IconInsurance"
+      message="청구 내역이 없어요."
+      action-text="보험 청구하기"
+      action-route="/insurance/claim"
+    />
 
-    <ul v-else class="claim-list">
-      <li v-for="claim in claims" :key="claim.id" class="claim-item card">
+    <ul
+      v-else
+      class="claim-list"
+    >
+      <li
+        v-for="claim in claims"
+        :key="claim.id"
+        class="claim-item card"
+      >
         <div class="claim-info">
           <div class="claim-header">
             <h3>{{ claim.merchantName }}</h3>
@@ -67,8 +88,12 @@ const handleFilterChange = async () => {
               {{ statusLabels[claim.status] || claim.status }}
             </span>
           </div>
-          <p class="claim-amount">{{ claim.amount?.toLocaleString() }}원</p>
-          <p class="claim-date">{{ claim.date }}</p>
+          <p class="claim-amount">
+            {{ claim.amount?.toLocaleString() }}원
+          </p>
+          <p class="claim-date">
+            {{ claim.date }}
+          </p>
         </div>
       </li>
     </ul>
@@ -134,20 +159,10 @@ const handleFilterChange = async () => {
   box-shadow: var(--shadow-sm);
 }
 
-.loading-state,
-.empty-state {
+.loading-state {
   text-align: center;
   padding: var(--space-8) 0;
   color: var(--color-gray-500);
-}
-
-.btn-link {
-  display: inline-block;
-  margin-top: var(--space-3);
-  color: var(--color-navy);
-  font-weight: var(--font-semibold);
-  text-decoration: none;
-  font-size: var(--font-sm);
 }
 
 .claim-list {
@@ -185,17 +200,17 @@ const handleFilterChange = async () => {
 }
 
 .status-submitted {
-  background-color: #e3f2fd;
+  background-color: var(--color-status-info-bg);
   color: var(--color-info);
 }
 
 .status-approved {
-  background-color: #e8f5e9;
+  background-color: var(--color-status-success-bg);
   color: var(--color-success);
 }
 
 .status-rejected {
-  background-color: #fce4ec;
+  background-color: var(--color-status-danger-bg);
   color: var(--color-danger);
 }
 

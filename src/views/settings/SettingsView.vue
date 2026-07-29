@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 
 const user = ref({
   name: '',
@@ -35,8 +36,11 @@ const handleLogout = async () => {
       <h1>설정</h1>
     </header>
 
-    <div v-if="isLoading" class="loading-state">
-      <p>로딩 중...</p>
+    <div
+      v-if="isLoading"
+      class="loading-state"
+    >
+      <LoadingSpinner />
     </div>
 
     <template v-else>
@@ -48,9 +52,15 @@ const handleLogout = async () => {
             <!-- TODO: user avatar -->
           </div>
           <div class="profile-details">
-            <p class="profile-name">{{ user.name || '이름 없음' }}</p>
-            <p class="profile-email">{{ user.email }}</p>
-            <p class="profile-phone">{{ user.phone }}</p>
+            <p class="profile-name">
+              {{ user.name || '이름 없음' }}
+            </p>
+            <p class="profile-email">
+              {{ user.email }}
+            </p>
+            <p class="profile-phone">
+              {{ user.phone }}
+            </p>
           </div>
         </div>
         <!-- TODO: implement profile edit -->
@@ -63,29 +73,45 @@ const handleLogout = async () => {
           <div class="toggle-item">
             <span>결제 알림</span>
             <label class="switch">
-              <input type="checkbox" v-model="notifications.payment" @change="handleSaveNotifications" />
-              <span class="slider"></span>
+              <input
+                v-model="notifications.payment"
+                type="checkbox"
+                @change="handleSaveNotifications"
+              >
+              <span class="slider" />
             </label>
           </div>
           <div class="toggle-item">
             <span>보험 알림</span>
             <label class="switch">
-              <input type="checkbox" v-model="notifications.insurance" @change="handleSaveNotifications" />
-              <span class="slider"></span>
+              <input
+                v-model="notifications.insurance"
+                type="checkbox"
+                @change="handleSaveNotifications"
+              >
+              <span class="slider" />
             </label>
           </div>
           <div class="toggle-item">
             <span>공동구매 알림</span>
             <label class="switch">
-              <input type="checkbox" v-model="notifications.groupPurchase" @change="handleSaveNotifications" />
-              <span class="slider"></span>
+              <input
+                v-model="notifications.groupPurchase"
+                type="checkbox"
+                @change="handleSaveNotifications"
+              >
+              <span class="slider" />
             </label>
           </div>
           <div class="toggle-item">
             <span>지원 프로그램 알림</span>
             <label class="switch">
-              <input type="checkbox" v-model="notifications.support" @change="handleSaveNotifications" />
-              <span class="slider"></span>
+              <input
+                v-model="notifications.support"
+                type="checkbox"
+                @change="handleSaveNotifications"
+              >
+              <span class="slider" />
             </label>
           </div>
         </div>
@@ -94,22 +120,47 @@ const handleLogout = async () => {
       <!-- Linked Accounts -->
       <section class="section card">
         <h2>연결된 계좌</h2>
-        <div v-if="linkedAccounts.length === 0" class="empty-inline">
+        <div
+          v-if="linkedAccounts.length === 0"
+          class="empty-inline"
+        >
           <p>연결된 계좌가 없습니다.</p>
         </div>
-        <ul v-else class="account-list">
-          <li v-for="account in linkedAccounts" :key="account.id" class="account-item">
+        <ul
+          v-else
+          class="account-list"
+        >
+          <li
+            v-for="account in linkedAccounts"
+            :key="account.id"
+            class="account-item"
+          >
             <span>{{ account.bankName }}</span>
             <span class="account-number">{{ account.accountNumber }}</span>
           </li>
         </ul>
-        <router-link to="/accounts" class="settings-link">계좌 관리 &rsaquo;</router-link>
+        <router-link
+          to="/accounts"
+          class="settings-link"
+        >
+          계좌 관리 &rsaquo;
+        </router-link>
       </section>
 
       <!-- Danger Zone -->
       <section class="section">
-        <button class="btn-logout" @click="handleLogout">로그아웃</button>
-        <router-link to="/settings/withdraw" class="withdraw-link">회원 탈퇴</router-link>
+        <button
+          class="btn-logout"
+          @click="handleLogout"
+        >
+          로그아웃
+        </button>
+        <router-link
+          to="/settings/withdraw"
+          class="withdraw-link"
+        >
+          회원 탈퇴
+        </router-link>
       </section>
     </template>
   </div>

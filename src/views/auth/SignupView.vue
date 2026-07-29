@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue'
+import AppButton from '@/components/common/AppButton.vue'
 
 const form = ref({
   email: '',
@@ -22,7 +23,10 @@ const handleSignup = async () => {
       <h1>회원가입</h1>
     </header>
 
-    <form class="signup-form" @submit.prevent="handleSignup">
+    <form
+      class="signup-form"
+      @submit.prevent="handleSignup"
+    >
       <div class="form-group">
         <label for="email">이메일</label>
         <input
@@ -31,7 +35,7 @@ const handleSignup = async () => {
           type="email"
           placeholder="이메일을 입력하세요"
           required
-        />
+        >
       </div>
 
       <div class="form-group">
@@ -42,7 +46,7 @@ const handleSignup = async () => {
           type="password"
           placeholder="비밀번호 (8자 이상)"
           required
-        />
+        >
       </div>
 
       <div class="form-group">
@@ -53,7 +57,7 @@ const handleSignup = async () => {
           type="password"
           placeholder="비밀번호를 다시 입력하세요"
           required
-        />
+        >
       </div>
 
       <div class="form-group">
@@ -64,7 +68,7 @@ const handleSignup = async () => {
           type="text"
           placeholder="이름을 입력하세요"
           required
-        />
+        >
       </div>
 
       <div class="form-group">
@@ -75,19 +79,33 @@ const handleSignup = async () => {
           type="tel"
           placeholder="010-0000-0000"
           required
-        />
+        >
       </div>
 
-      <p v-if="errorMessage" class="error-text">{{ errorMessage }}</p>
+      <p
+        v-if="errorMessage"
+        class="error-text"
+      >
+        {{ errorMessage }}
+      </p>
 
-      <button type="submit" class="btn-primary" :disabled="isLoading">
-        {{ isLoading ? '가입 중...' : '가입하기' }}
-      </button>
+      <AppButton
+        type="submit"
+        variant="navy"
+        size="lg"
+        block
+        class="mt-(--space-4)"
+        :loading="isLoading"
+      >
+        가입하기
+      </AppButton>
     </form>
 
     <p class="login-link">
       이미 계정이 있으신가요?
-      <router-link to="/login">로그인</router-link>
+      <router-link to="/login">
+        로그인
+      </router-link>
     </p>
   </div>
 </template>
@@ -139,24 +157,6 @@ const handleSignup = async () => {
   color: var(--color-danger);
   font-size: var(--font-sm);
   margin-bottom: var(--space-3);
-}
-
-.btn-primary {
-  width: 100%;
-  padding: var(--space-3) var(--space-4);
-  background-color: var(--color-navy);
-  color: var(--color-white);
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: var(--font-base);
-  font-weight: var(--font-semibold);
-  cursor: pointer;
-  margin-top: var(--space-4);
-}
-
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
 }
 
 .login-link {

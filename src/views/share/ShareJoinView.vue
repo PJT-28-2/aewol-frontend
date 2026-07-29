@@ -64,7 +64,7 @@ async function joinShare() {
       aria-label="뒤로 가기"
       @click="router.back()"
     >
-      <IconArrowLeft :size="28" />
+      <IconArrowLeft size="24" />
     </button>
     <h1
       class="mb-[var(--space-1)] mt-[var(--space-7)] text-[length:var(--font-xl)] font-bold"
