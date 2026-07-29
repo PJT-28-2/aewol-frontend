@@ -23,6 +23,10 @@
   --color-danger-dark: #8a3b3b;
   --color-pastel-blue: #dce6f5;
   --color-pastel-green: #eef3e2;
+  --color-pastel-lilac: #f5e6ee;
+  --color-pastel-peach: #fdecd8;
+  --color-pastel-mint: #e3f1f1;
+  --color-pastel-coral: #fce3e1;
   --color-kakao: #fee500;
   --color-kakao-label: #181600;
 
@@ -45,8 +49,24 @@
   --color-danger-muted: #8a5252;
   --color-warning: #ffc107;
   --color-info: #17a2b8;
+  --color-danger-bg: #f7e5e5;
+  --color-danger-border: #c24d4d;
+  --color-danger-text: #8a5252;
 
-  /* Typography - Font Family */
+  /* Colors - Bank Brand (계좌연동 화면 전용) */
+    --color-brand-kb: #f2b853;
+    --color-brand-shinhan: #0046ff;
+    --color-brand-woori: #0067ac;
+    --color-brand-hana: #00857e;
+    --color-brand-nh: #00a366;
+    --color-brand-kakaobank: #fee500;
+    --color-brand-toss: #0064ff;
+    --color-brand-ibk: #004a95;
+    --color-brand-kb-text: #1b2a49;
+    --color-brand-kakaobank-text: #1b2a49;
+    --color-brand-text-on-dark: #ffffff;
+  
+    /* Typography - Font Family */
   --font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
   /* Typography - Font Sizes */
@@ -132,6 +152,7 @@
   --mobile-content-width: 390px;
   --control-height: 46px;
   --share-icon-size: 60px;
+  --icon-badge-size: 56px;
   --share-chart-size: 200px;
   --share-chart-hole-size: 132px;
 }
