@@ -78,13 +78,6 @@ const authRoutes = [
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
-    path: '/wallet/buckets',
-    name: 'BucketManage',
-    component: () =>
-      import('@/views/wallet/BucketManageView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
-  },
-  {
     path: '/wallet/charge',
     name: 'Charge',
     component: () => import('@/views/wallet/ChargeView.vue'),
