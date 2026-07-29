@@ -23,7 +23,16 @@ const ocrItems = ref([
 ])
 const handleFileSelect = (event) => {
   const file = event.target.files[0]
+  event.target.value = ''
   if (!file) return
+  if (!file.type.startsWith('image/')) {
+    alert('이미지 파일만 업로드할 수 있어요.')
+    return
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    alert('파일 크기는 10MB 이하여야 해요.')
+    return
+  }
   receiptFile.value = file
   receiptFileName.value = file.name
   step.value = 2
