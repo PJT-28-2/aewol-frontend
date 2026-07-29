@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import AppButton from '@/components/common/AppButton.vue'
 import AppInput from '@/components/common/AppInput.vue'
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
+import IconCheck from '@/components/common/icons/IconCheck.vue'
 
 const router = useRouter()
 
@@ -125,8 +126,7 @@ const docChecklist = [
 
     <!-- OCR 결과 카드 -->
     <section
-      class="bg-(--color-white) rounded-(--radius-xl) p-(--space-5) mb-(--space-5)"
-      style="box-shadow: var(--shadow-md)"
+      class="bg-(--color-white) rounded-(--radius-xl) p-(--space-5) mb-(--space-5) [box-shadow:var(--shadow-md)]"
     >
       <div class="mb-(--space-4)">
         <p class="text-(length:--font-base) font-semibold text-(color:--color-gray-900) mb-(--space-1)">
@@ -210,8 +210,7 @@ const docChecklist = [
 
     <!-- 청구서 초안 카드 -->
     <section
-      class="bg-(--color-white) rounded-(--radius-xl) p-(--space-5) mb-(--space-5)"
-      style="box-shadow: var(--shadow-md)"
+      class="bg-(--color-white) rounded-(--radius-xl) p-(--space-5) mb-(--space-5) [box-shadow:var(--shadow-md)]"
     >
       <div class="flex justify-between items-center mb-(--space-4)">
         <span class="text-(length:--font-base) font-semibold text-(color:--color-gray-900)">보험금 청구서 초안</span>
@@ -258,8 +257,7 @@ const docChecklist = [
 
     <!-- 청구 서류 체크리스트 -->
     <section
-      class="bg-(--color-white) rounded-(--radius-xl) p-(--space-5)"
-      style="box-shadow: var(--shadow-md)"
+      class="bg-(--color-white) rounded-(--radius-xl) p-(--space-5) [box-shadow:var(--shadow-md)]"
     >
       <h2 class="text-(length:--font-base) font-semibold text-(color:--color-gray-900) mb-(--space-4)">
         청구 서류 체크리스트
@@ -271,12 +269,12 @@ const docChecklist = [
           class="flex items-center gap-(--space-3)"
         >
           <span
-            class="w-6 h-6 rounded-(--radius-full) shrink-0 flex items-center justify-center text-(length:--font-xs) font-bold border-2"
+            class="w-6 h-6 rounded-(--radius-full) shrink-0 flex items-center justify-center border-2"
             :class="doc.checked
-              ? 'bg-(--color-success) border-(--color-success) text-(color:--color-white)'
+              ? 'bg-(--color-success) border-(--color-success)'
               : 'border-(--color-gray-300)'"
           >
-            <span v-if="doc.checked">✓</span>
+            <IconCheck v-if="doc.checked" :size="14" color="var(--color-white)" />
           </span>
           <div class="flex flex-col gap-[2px]">
             <span class="text-(length:--font-md) font-medium text-(color:--color-gray-900)">{{ doc.name }}</span>
