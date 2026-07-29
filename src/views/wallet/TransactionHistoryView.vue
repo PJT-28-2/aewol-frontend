@@ -2,7 +2,9 @@
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import BottomSheet from '@/components/common/BottomSheet.vue';
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import TransactionList from '@/components/common/TransactionList.vue';
+import { formatYearMonth } from '@/utils/date';
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue';
 import IconCheck from '@/components/common/icons/IconCheck.vue';
 import IconChevronDown from '@/components/common/icons/IconChevronDown.vue';
@@ -41,7 +43,7 @@ const monthOptions = computed(() => {
     options.push({
       year: d.getFullYear(),
       month: d.getMonth() + 1,
-      label: `${d.getFullYear()}년 ${d.getMonth() + 1}월`,
+      label: formatYearMonth(d.getFullYear(), d.getMonth() + 1),
     });
   }
   return options;
@@ -198,9 +200,9 @@ onMounted(async () => {
 
     <div
       v-if="isLoading"
-      class="text-center py-(--space-8) text-(color:--color-gray-500)"
+      class="py-(--space-8)"
     >
-      <p>로딩 중...</p>
+      <LoadingSpinner />
     </div>
 
     <div

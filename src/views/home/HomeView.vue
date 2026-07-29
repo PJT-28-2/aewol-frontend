@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue';
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import IconCat from '@/components/common/icons/IconCat.vue';
 import IconCertificate from '@/components/common/icons/IconCertificate.vue';
 import IconDog from '@/components/common/icons/IconDog.vue';
@@ -25,8 +26,8 @@ const isLoading = ref(true);
 const petColors = [
   'var(--color-navy)',
   'var(--color-olive)',
-  '#4A6FA5',
-  '#B25CC9',
+  'var(--color-chart-blue)',
+  'var(--color-chart-purple)',
 ];
 
 // 펫별 지출 비율 계산
@@ -86,37 +87,37 @@ const quickActions = [
     label: '증명서',
     to: null,
     icon: IconCertificate,
-    bg: '#EFEAE3',
+    bg: 'var(--color-pastel-beige)',
   },
   {
     label: 'SOS 포켓',
     to: '/emergency',
     icon: IconSos,
-    bg: '#FCE3E1',
+    bg: 'var(--color-pastel-coral)',
   },
   {
     label: '저금통',
     to: '/donation',
     icon: IconSavings,
-    bg: '#E1F2E7',
+    bg: 'var(--color-pastel-sage)',
   },
   {
     label: '가족관리',
     to: '/share',
     icon: IconFamily,
-    bg: '#E5EAF6',
+    bg: 'var(--color-pastel-sky)',
   },
   {
     label: '지원사업',
     to: '/support',
     icon: IconSupportProgram,
-    bg: '#FBEED9',
+    bg: 'var(--color-pastel-cream)',
   },
   {
     label: '공동구매',
     to: '/group-purchase',
     icon: IconGroupPurchase,
-    bg: '#EBE4F5',
+    bg: 'var(--color-pastel-violet)',
   },
 ];
 
@@ -165,9 +166,9 @@ onMounted(async () => {
     <!-- 로딩 상태 -->
     <div
       v-if="isLoading"
-      class="text-center py-(--space-8) text-(color:--color-gray-500)"
+      class="py-(--space-8)"
     >
-      <p>로딩 중...</p>
+      <LoadingSpinner />
     </div>
 
     <template v-else>

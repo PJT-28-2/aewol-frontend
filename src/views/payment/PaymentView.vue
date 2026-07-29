@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue'
+import AppButton from '@/components/common/AppButton.vue'
 
 const form = ref({
   merchantName: '',
@@ -37,7 +38,10 @@ const handlePayment = async () => {
       <h1>결제 등록</h1>
     </header>
 
-    <form class="payment-form" @submit.prevent="handlePayment">
+    <form
+      class="payment-form"
+      @submit.prevent="handlePayment"
+    >
       <div class="form-group">
         <label for="merchantName">가맹점명</label>
         <input
@@ -47,14 +51,22 @@ const handlePayment = async () => {
           placeholder="예: 바른동물병원"
           required
           @input="handleMerchantInput"
-        />
+        >
       </div>
 
       <!-- Auto-tagging Preview -->
-      <div v-if="autoTagPreview" class="auto-tag-preview card">
-        <p class="preview-label">자동 분류</p>
+      <div
+        v-if="autoTagPreview"
+        class="auto-tag-preview card"
+      >
+        <p class="preview-label">
+          자동 분류
+        </p>
         <span class="tag">{{ autoTagPreview.category }}</span>
-        <span v-if="autoTagPreview.petName" class="tag pet-tag">{{ autoTagPreview.petName }}</span>
+        <span
+          v-if="autoTagPreview.petName"
+          class="tag pet-tag"
+        >{{ autoTagPreview.petName }}</span>
       </div>
 
       <div class="form-group">
@@ -65,14 +77,23 @@ const handlePayment = async () => {
           type="number"
           placeholder="결제 금액"
           required
-        />
+        >
       </div>
 
       <div class="form-group">
         <label for="petId">반려동물 선택</label>
-        <select id="petId" v-model="form.petId">
-          <option value="">선택 안 함</option>
-          <option v-for="pet in pets" :key="pet.id" :value="pet.id">
+        <select
+          id="petId"
+          v-model="form.petId"
+        >
+          <option value="">
+            선택 안 함
+          </option>
+          <option
+            v-for="pet in pets"
+            :key="pet.id"
+            :value="pet.id"
+          >
             {{ pet.name }}
           </option>
         </select>
@@ -80,9 +101,22 @@ const handlePayment = async () => {
 
       <div class="form-group">
         <label for="category">카테고리</label>
-        <select id="category" v-model="form.category" required>
-          <option value="" disabled>카테고리 선택</option>
-          <option v-for="opt in categoryOptions" :key="opt.value" :value="opt.value">
+        <select
+          id="category"
+          v-model="form.category"
+          required
+        >
+          <option
+            value=""
+            disabled
+          >
+            카테고리 선택
+          </option>
+          <option
+            v-for="opt in categoryOptions"
+            :key="opt.value"
+            :value="opt.value"
+          >
             {{ opt.label }}
           </option>
         </select>
@@ -95,14 +129,26 @@ const handlePayment = async () => {
           v-model="form.memo"
           type="text"
           placeholder="메모를 입력하세요"
-        />
+        >
       </div>
 
-      <p v-if="errorMessage" class="error-text">{{ errorMessage }}</p>
+      <p
+        v-if="errorMessage"
+        class="error-text"
+      >
+        {{ errorMessage }}
+      </p>
 
-      <button type="submit" class="btn-primary" :disabled="isLoading">
-        {{ isLoading ? '등록 중...' : '결제 등록' }}
-      </button>
+      <AppButton
+        type="submit"
+        variant="navy"
+        size="lg"
+        block
+        class="mt-(--space-4)"
+        :loading="isLoading"
+      >
+        결제 등록
+      </AppButton>
     </form>
   </div>
 </template>
@@ -192,21 +238,4 @@ const handlePayment = async () => {
   margin-bottom: var(--space-3);
 }
 
-.btn-primary {
-  width: 100%;
-  padding: var(--space-3) var(--space-4);
-  background-color: var(--color-navy);
-  color: var(--color-white);
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: var(--font-base);
-  font-weight: var(--font-semibold);
-  cursor: pointer;
-  margin-top: var(--space-4);
-}
-
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
 </style>

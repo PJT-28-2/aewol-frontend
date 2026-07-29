@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 import { useAccountStore } from '@/stores/account';
 import { ENABLED_BANK_CODES } from '@/utils/mockData';
 import BankBadge from '@/components/common/BankBadge.vue';
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue';
 
 const router = useRouter();
@@ -48,22 +49,35 @@ function selectBank(bankCode) {
   <div class="min-h-screen max-w-[420px] mx-auto bg-(--color-bg) px-(--space-5) pt-(--space-6) pb-(--space-8)">
     <button
       class="-ml-2 p-2 flex items-center justify-center mb-(--space-5)"
+      aria-label="뒤로 가기"
       @click="router.back()"
     >
       <IconArrowLeft :size="20" color="var(--color-gray-700)" />
     </button>
 
     <header class="mb-7">
-      <h1 class="text-(length:--font-2xl) font-(--font-bold) text-(color:--color-navy)">계좌 연동하기</h1>
-      <p class="text-(length:--font-md) text-(color:--color-gray-600) mt-(--space-1)">연동할 은행을 선택해주세요</p>
+      <h1 class="text-(length:--font-2xl) font-(--font-bold) text-(color:--color-navy)">
+        계좌 연동하기
+      </h1>
+      <p class="text-(length:--font-md) text-(color:--color-gray-600) mt-(--space-1)">
+        연동할 은행을 선택해주세요
+      </p>
     </header>
 
-    <p v-if="store.isLoading" class="text-(length:--font-sm) text-(color:--color-gray-500) mb-(--space-6)">
-      불러오는 중이에요…
-    </p>
+    <div
+      v-if="store.isLoading"
+      class="py-(--space-8) mb-(--space-6)"
+    >
+      <LoadingSpinner />
+    </div>
 
-    <div v-else-if="loadError" class="p-(--space-4) rounded-(--radius-xl) bg-(--color-surface) mb-(--space-6) text-center">
-      <p class="text-(length:--font-sm) text-(color:--color-danger) mb-(--space-3)">{{ loadError }}</p>
+    <div
+      v-else-if="loadError"
+      class="p-(--space-4) rounded-(--radius-xl) bg-(--color-surface) mb-(--space-6) text-center"
+    >
+      <p class="text-(length:--font-sm) text-(color:--color-danger) mb-(--space-3)">
+        {{ loadError }}
+      </p>
       <button
         class="px-(--space-5) py-(--space-2) rounded-(--radius-lg) bg-(--color-navy) text-(color:--color-white) text-(length:--font-sm) font-(--font-semibold)"
         @click="loadBanks"
@@ -72,7 +86,10 @@ function selectBank(bankCode) {
       </button>
     </div>
 
-    <div v-else class="grid grid-cols-2 gap-(--space-3) mb-7">
+    <div
+      v-else
+      class="grid grid-cols-2 gap-(--space-3) mb-7"
+    >
       <button
         v-for="bank in normalizedBanks"
         :key="bank.code"
@@ -81,7 +98,11 @@ function selectBank(bankCode) {
         :disabled="!isEnabled(bank.code)"
         @click="selectBank(bank.code)"
       >
-        <BankBadge :bank-code="bank.code" :fallback-name="bank.name" :size="36" />
+        <BankBadge
+          :bank-code="bank.code"
+          :fallback-name="bank.name"
+          :size="36"
+        />
         <span class="font-(--font-semibold) text-(color:--color-navy) text-(length:--font-md)">{{ bank.name }}</span>
         <span
           v-if="!isEnabled(bank.code)"

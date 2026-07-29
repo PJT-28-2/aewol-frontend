@@ -185,6 +185,13 @@ const authRoutes = [
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
+    path: '/insurance/claim/pdf-draft',
+    name: 'ClaimPdfDraft',
+    component: () =>
+      import('@/views/insurance/ClaimPdfDraftView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
     path: '/share',
     name: 'Share',
     component: () => import('@/views/share/ShareView.vue'),
@@ -255,10 +262,17 @@ const authRoutes = [
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
-    path: '/group-purchase/:gpId/paymentPreview',
+    path: '/group-purchase/:gpId/payment-preview',
     name: 'GroupPurchasePayment',
     component: () =>
       import('@/views/grouppurchase/GroupPurchasePaymentPreview.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
+    path: '/group-purchase/:gpId/status',
+    name: 'GroupPurchaseStatus',
+    component: () =>
+      import('@/views/grouppurchase/GroupPurchaseStatusView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
@@ -296,36 +310,6 @@ const authRoutes = [
     name: 'DonationSettings',
     component: () => import('@/views/donation/DonationView.vue'),
     meta: { requiresAuth: true, step: 'settings' },
-  },
-  {
-    path: '/donation/give',
-    name: 'DonationGive',
-    component: () => import('@/views/donation/DonationView.vue'),
-    meta: { requiresAuth: true },
-  },
-  {
-    path: '/donation/confirm',
-    name: 'DonationConfirm',
-    component: () => import('@/views/donation/DonationView.vue'),
-    meta: { requiresAuth: true },
-  },
-  {
-    path: '/donation/complete',
-    name: 'DonationComplete',
-    component: () => import('@/views/donation/DonationView.vue'),
-    meta: { requiresAuth: true },
-  },
-  {
-    path: '/donation/explore',
-    name: 'DonationExplore',
-    component: () => import('@/views/donation/DonationView.vue'),
-    meta: { requiresAuth: true },
-  },
-  {
-    path: '/donation/settings',
-    name: 'DonationSettings',
-    component: () => import('@/views/donation/DonationView.vue'),
-    meta: { requiresAuth: true },
   },
   {
     path: '/support',

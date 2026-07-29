@@ -13,6 +13,10 @@ export const groupPurchaseApi = {
     return api.get(`/group-purchase/${id}`)
   },
 
+  getStatus(id) {
+    return api.get(`/group-purchase/${id}/status`)
+  },
+
   join(id) {
     return api.post(`/group-purchase/${id}/join`)
   },

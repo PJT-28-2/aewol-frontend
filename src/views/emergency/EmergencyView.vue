@@ -29,7 +29,11 @@ const handleCall = (phone) => {
     <!-- 24h Filter -->
     <div class="filter-bar">
       <label class="toggle-label">
-        <input type="checkbox" v-model="is24hOnly" @change="handleFilter24h" />
+        <input
+          v-model="is24hOnly"
+          type="checkbox"
+          @change="handleFilter24h"
+        >
         <span class="toggle-text">24시간 진료만 보기</span>
       </label>
     </div>
@@ -38,8 +42,12 @@ const handleCall = (phone) => {
     <section class="map-section card">
       <div class="map-placeholder">
         <!-- TODO: implement map (Kakao Maps / Naver Maps API) -->
-        <p class="placeholder-text">지도 영역</p>
-        <p class="placeholder-sub">주변 응급 동물병원이 표시됩니다.</p>
+        <p class="placeholder-text">
+          지도 영역
+        </p>
+        <p class="placeholder-sub">
+          주변 응급 동물병원이 표시됩니다.
+        </p>
       </div>
     </section>
 
@@ -47,25 +55,48 @@ const handleCall = (phone) => {
     <section class="hospital-section">
       <h2>주변 병원 목록</h2>
 
-      <div v-if="isLoading" class="loading-state">
+      <div
+        v-if="isLoading"
+        class="loading-state"
+      >
         <p>위치 정보를 가져오는 중...</p>
       </div>
 
-      <div v-else-if="hospitals.length === 0" class="empty-state">
+      <div
+        v-else-if="hospitals.length === 0"
+        class="empty-state"
+      >
         <p>주변에 응급 동물병원이 없습니다.</p>
       </div>
 
-      <ul v-else class="hospital-list">
-        <li v-for="hospital in hospitals" :key="hospital.id" class="hospital-item card">
+      <ul
+        v-else
+        class="hospital-list"
+      >
+        <li
+          v-for="hospital in hospitals"
+          :key="hospital.id"
+          class="hospital-item card"
+        >
           <div class="hospital-info">
             <div class="hospital-header">
               <h3>{{ hospital.name }}</h3>
-              <span v-if="hospital.is24h" class="badge-24h">24시</span>
+              <span
+                v-if="hospital.is24h"
+                class="badge-24h"
+              >24시</span>
             </div>
-            <p class="hospital-address">{{ hospital.address }}</p>
-            <p class="hospital-distance">{{ hospital.distance }}km</p>
+            <p class="hospital-address">
+              {{ hospital.address }}
+            </p>
+            <p class="hospital-distance">
+              {{ hospital.distance }}km
+            </p>
           </div>
-          <button class="btn-call" @click="handleCall(hospital.phone)">
+          <button
+            class="btn-call"
+            @click="handleCall(hospital.phone)"
+          >
             전화
           </button>
         </li>
@@ -187,7 +218,7 @@ const handleCall = (phone) => {
   font-size: var(--font-xs);
   font-weight: var(--font-bold);
   color: var(--color-danger);
-  background-color: #fce4ec;
+  background-color: var(--color-status-danger-bg);
   padding: 1px var(--space-2);
   border-radius: var(--radius-sm);
 }

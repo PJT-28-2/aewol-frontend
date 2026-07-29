@@ -2,7 +2,9 @@
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import BottomSheet from '@/components/common/BottomSheet.vue';
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import TransactionList from '@/components/common/TransactionList.vue';
+import { formatYearMonth } from '@/utils/date';
 import IconCheck from '@/components/common/icons/IconCheck.vue';
 import IconStats from '@/components/common/icons/IconStats.vue';
 import IconSavings from '@/components/common/icons/IconSavings.vue';
@@ -113,7 +115,7 @@ const monthOptions = computed(() => {
     options.push({
       year: d.getFullYear(),
       month: d.getMonth() + 1,
-      label: `${d.getFullYear()}년 ${d.getMonth() + 1}월`,
+      label: formatYearMonth(d.getFullYear(), d.getMonth() + 1),
     });
   }
   return options;
@@ -183,7 +185,7 @@ onMounted(async () => {
       class="flex items-center justify-between mb-(--space-4)"
     >
       <h1
-        class="text-(length:--font-lg) font-bold text-(color:--color-navy)"
+        class="text-(length:--font-2xl) font-bold text-(color:--color-navy)"
       >
         펫지갑
       </h1>
@@ -244,9 +246,9 @@ onMounted(async () => {
 
     <div
       v-if="isLoading"
-      class="text-center py-(--space-8) text-(color:--color-gray-500)"
+      class="py-(--space-8)"
     >
-      <p>로딩 중...</p>
+      <LoadingSpinner />
     </div>
 
     <template v-else>

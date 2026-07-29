@@ -1,9 +1,12 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import EmptyState from '@/components/common/EmptyState.vue';
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue';
 import IconCat from '@/components/common/icons/IconCat.vue';
 import IconDog from '@/components/common/icons/IconDog.vue';
+import IconPaw from '@/components/common/icons/IconPaw.vue';
 
 const router = useRouter();
 
@@ -96,24 +99,16 @@ onMounted(async () => {
 
     <div
       v-if="isLoading"
-      class="text-center py-(--space-8) text-(color:--color-gray-500)"
+      class="py-(--space-8)"
     >
-      <p>로딩 중...</p>
+      <LoadingSpinner />
     </div>
 
-    <div
+    <EmptyState
       v-else-if="pets.length === 0"
-      class="text-center py-(--space-10)"
-    >
-      <p class="text-(color:--color-gray-700)">
-        아직 등록된 반려동물이 없습니다.
-      </p>
-      <p
-        class="text-(length:--font-sm) text-(color:--color-gray-500) mt-(--space-2)"
-      >
-        반려동물을 등록하고 관리를 시작하세요!
-      </p>
-    </div>
+      :icon="IconPaw"
+      message="아직 등록된 반려동물이 없어요. 반려동물을 등록하고 관리를 시작하세요!"
+    />
 
     <ul
       v-else

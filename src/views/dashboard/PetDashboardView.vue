@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 
 const route = useRoute()
 const petId = ref(route.params.id || '')
@@ -33,23 +34,41 @@ const handlePetChange = async () => {
 
     <!-- Pet Selector -->
     <div class="pet-selector">
-      <select v-model="petId" @change="handlePetChange" class="pet-select">
-        <option value="" disabled>반려동물 선택</option>
-        <option v-for="pet in pets" :key="pet.id" :value="pet.id">
+      <select
+        v-model="petId"
+        class="pet-select"
+        @change="handlePetChange"
+      >
+        <option
+          value=""
+          disabled
+        >
+          반려동물 선택
+        </option>
+        <option
+          v-for="pet in pets"
+          :key="pet.id"
+          :value="pet.id"
+        >
           {{ pet.name }}
         </option>
       </select>
     </div>
 
-    <div v-if="isLoading" class="loading-state">
-      <p>로딩 중...</p>
+    <div
+      v-if="isLoading"
+      class="loading-state"
+    >
+      <LoadingSpinner />
     </div>
 
     <template v-else-if="petId">
       <!-- Spending Summary -->
       <section class="spending-summary card">
         <h2>{{ selectedPetData.name }} 총 지출</h2>
-        <p class="total-amount">{{ selectedPetData.totalSpent.toLocaleString() }}원</p>
+        <p class="total-amount">
+          {{ selectedPetData.totalSpent.toLocaleString() }}원
+        </p>
       </section>
 
       <!-- Category Breakdown -->
@@ -57,11 +76,16 @@ const handlePetChange = async () => {
         <h2>카테고리별 분석</h2>
         <div class="chart-placeholder">
           <!-- TODO: implement category breakdown chart -->
-          <div class="bar-placeholder"></div>
-          <p class="placeholder-text">카테고리 차트 영역</p>
+          <div class="bar-placeholder" />
+          <p class="placeholder-text">
+            카테고리 차트 영역
+          </p>
         </div>
         <ul class="breakdown-list">
-          <li v-for="cat in selectedPetData.categoryBreakdown" :key="cat.category">
+          <li
+            v-for="cat in selectedPetData.categoryBreakdown"
+            :key="cat.category"
+          >
             <span class="cat-name">{{ cat.category }}</span>
             <span class="cat-amount">{{ cat.amount?.toLocaleString() }}원</span>
           </li>
@@ -73,23 +97,33 @@ const handlePetChange = async () => {
         <h2>월별 추이</h2>
         <div class="chart-placeholder">
           <!-- TODO: implement monthly trend line chart -->
-          <div class="line-placeholder"></div>
-          <p class="placeholder-text">월별 지출 추이 차트 영역</p>
+          <div class="line-placeholder" />
+          <p class="placeholder-text">
+            월별 지출 추이 차트 영역
+          </p>
         </div>
       </section>
 
       <!-- Comparison with Other Pets -->
-      <section v-if="comparisonData" class="comparison-section card">
+      <section
+        v-if="comparisonData"
+        class="comparison-section card"
+      >
         <h2>반려동물 비교</h2>
         <!-- TODO: implement comparison bar chart -->
         <div class="chart-placeholder">
-          <div class="bar-placeholder"></div>
-          <p class="placeholder-text">비교 차트 영역</p>
+          <div class="bar-placeholder" />
+          <p class="placeholder-text">
+            비교 차트 영역
+          </p>
         </div>
       </section>
     </template>
 
-    <div v-else class="empty-state">
+    <div
+      v-else
+      class="empty-state"
+    >
       <p>위에서 반려동물을 선택하세요.</p>
     </div>
   </div>
