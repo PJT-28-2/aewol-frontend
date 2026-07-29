@@ -65,10 +65,10 @@ function goToRelated(relatedFaqId) {
 <template>
   <div class="min-h-screen max-w-[420px] mx-auto bg-(--color-bg) px-5 pt-6 pb-10">
     <button
-      class="w-8 h-8 rounded-md bg-(--color-navy) flex items-center justify-center mb-5"
+      class="-ml-2 p-2 flex items-center justify-center mb-5"
       @click="router.back()"
     >
-      <IconArrowLeft :size="18" color="var(--color-white)" />
+      <IconArrowLeft :size="20" color="var(--color-gray-700)" />
     </button>
 
     <p v-if="isLoading" class="text-(length:--font-sm) text-(color:--color-gray-500)">불러오는 중이에요…</p>

@@ -176,10 +176,10 @@ function goBack() {
 <template>
   <div class="min-h-screen max-w-[420px] mx-auto bg-(--color-bg) px-(--space-5) pt-(--space-6) pb-(--space-8)">
     <button
-      class="w-8 h-8 rounded-(--radius-md) bg-(--color-navy) flex items-center justify-center mb-(--space-5)"
+      class="-ml-2 p-2 flex items-center justify-center mb-(--space-5)"
       @click="goBack"
     >
-      <IconArrowLeft :size="18" color="var(--color-white)" />
+      <IconArrowLeft :size="20" color="var(--color-gray-700)" />
     </button>
 
     <!-- Step 1: 계좌번호 입력 -->
