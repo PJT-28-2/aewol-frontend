@@ -178,6 +178,13 @@ const authRoutes = [
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
+    path: '/insurance/claim/pdf-draft',
+    name: 'ClaimPdfDraft',
+    component: () =>
+      import('@/views/insurance/ClaimPdfDraftView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
     path: '/share',
     name: 'Share',
     component: () => import('@/views/share/ShareView.vue'),
