@@ -135,7 +135,7 @@ function goToPaymentPreview() {
       <div class="w-(--size-thumb-lg) h-(--size-thumb-lg) rounded-2xl bg-(--color-surface) overflow-hidden mb-(--space-4)">
         <img
           :src="groupPurchase.image"
-          alt=""
+          alt="groupPurchase.productName"
           class="w-full h-full object-cover"
         >
       </div>
