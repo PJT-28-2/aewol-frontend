@@ -66,7 +66,7 @@ const docChecklist = [
       <button class="mb-(--space-3) text-(color:--color-navy)" aria-label="뒤로가기" @click="router.back()">
         <IconArrowLeft :size="24" />
       </button>
-      <div class="w-5 h-5 rounded-(--radius-sm) bg-(--color-navy) mb-(--space-3)" aria-hidden="true" />
+
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) leading-snug mb-(--space-2)">
         보험금 청구 서류 작성
       </h1>
@@ -118,7 +118,7 @@ const docChecklist = [
       <button class="mb-(--space-3) text-(color:--color-navy)" aria-label="뒤로가기" @click="step = 1">
         <IconArrowLeft :size="24" />
       </button>
-      <div class="w-5 h-5 rounded-(--radius-sm) bg-(--color-navy) mb-(--space-3)" aria-hidden="true" />
+
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) leading-snug mb-(--space-2)">
         보험금 청구 서류 확인
       </h1>
@@ -196,7 +196,7 @@ const docChecklist = [
       <button class="mb-(--space-3) text-(color:--color-navy)" aria-label="뒤로가기" @click="step = 2">
         <IconArrowLeft :size="24" />
       </button>
-      <div class="w-5 h-5 rounded-(--radius-sm) bg-(--color-navy) mb-(--space-3)" aria-hidden="true" />
+
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) leading-snug mb-(--space-2)">
         보험금 청구 서류 초안
       </h1>
