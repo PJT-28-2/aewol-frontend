@@ -31,6 +31,24 @@ const startEdit = (key) => {
 const finishEdit = () => {
   editingKey.value = null
 }
+
+// 청구서 초안 필드
+const draftFields = [
+  { label: '병원명',       value: '24시 제주동물의료센터', muted: false, badge: 'auto',     badgeLabel: '자동' },
+  { label: '진료일자',     value: '2026.07.10',            muted: false, badge: 'auto',     badgeLabel: '자동' },
+  { label: '청구금액',     value: '168,000원',             muted: false, badge: 'auto',     badgeLabel: '자동' },
+  { label: '사업자번호',   value: '영수증에서 확인 안됨',  muted: true,  badge: 'required', badgeLabel: '확인필요' },
+  { label: '진단명',       value: '슬개골 탈구 치료',      muted: false, badge: 'auto',     badgeLabel: '자동' },
+  { label: '계약자·계좌정보', value: '프로필에서 자동 입력', muted: true, badge: 'linked',  badgeLabel: '연동' },
+]
+
+// 청구 서류 체크리스트
+const docChecklist = [
+  { name: '진료 영수증', sub: '이미 확보됨',            checked: true },
+  { name: '진단서',      sub: '병원에서 발급받아야 해요', checked: false },
+  { name: '신분증 사본', sub: '본인 확인용',             checked: false },
+  { name: '통장 사본',   sub: '보험금 입금용',           checked: false },
+]
 </script>
 
 <template>
@@ -158,20 +176,95 @@ const finishEdit = () => {
     <AppButton block @click="step = 3">서류 초안 생성하기</AppButton>
   </div>
 
-  <!-- Step 3: 보험금 청구 서류 초안 (추후 구현) -->
+  <!-- Step 3: 보험금 청구 서류 초안 -->
   <div
     v-else
     class="min-h-screen bg-(--color-bg) px-(--space-5) pt-(--space-6) pb-[calc(var(--bottom-nav-height)+var(--space-6))]"
   >
-    <header class="mb-(--space-6)">
+    <!-- 페이지 헤더 -->
+    <header class="mb-(--space-5)">
       <div class="w-5 h-5 rounded-(--radius-sm) bg-(--color-navy) mb-(--space-3)" aria-hidden="true" />
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) leading-snug mb-(--space-2)">
         보험금 청구 서류 초안
       </h1>
-      <p class="text-(length:--font-md) text-(color:--color-gray-600)">
+      <p class="text-(length:--font-md) text-(color:--color-gray-600) leading-relaxed">
         영수증 정보로 자동 작성했어요 · 부족한 항목만 채워주세요
       </p>
     </header>
-    <!-- TODO: Step 3 구현 -->
+
+    <!-- 요약 통계 -->
+    <div class="grid grid-cols-2 gap-(--space-3) mb-(--space-5)">
+      <div class="bg-(--color-olive-surface) rounded-(--radius-lg) p-(--space-4) flex flex-col gap-(--space-1)">
+        <span class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">4건</span>
+        <span class="text-(length:--font-sm) text-(color:--color-gray-600)">자동 완성</span>
+      </div>
+      <div class="bg-(--color-gold-surface) rounded-(--radius-lg) p-(--space-4) flex flex-col gap-(--space-1)">
+        <span class="text-(length:--font-2xl) font-bold text-(color:--color-gold-dark)">2건</span>
+        <span class="text-(length:--font-sm) text-(color:--color-gray-600)">직접 확인 필요</span>
+      </div>
+    </div>
+
+    <!-- 청구서 초안 카드 -->
+    <section class="bg-(--color-white) rounded-(--radius-xl) p-(--space-5) shadow-(--shadow-md) mb-(--space-5)">
+      <div class="flex justify-between items-center mb-(--space-4)">
+        <span class="text-(length:--font-base) font-semibold text-(color:--color-gray-900)">보험금 청구서 초안</span>
+        <button class="text-(length:--font-sm) text-(color:--color-gray-600)">PDF 초안</button>
+      </div>
+
+      <ul class="divide-y divide-(--color-gray-100)">
+        <li
+          v-for="field in draftFields"
+          :key="field.label"
+          class="flex items-center py-(--space-3) gap-(--space-2)"
+        >
+          <span class="text-(length:--font-md) text-(color:--color-gray-600) shrink-0 w-[90px]">{{ field.label }}</span>
+          <span
+            class="flex-1 text-(length:--font-md) text-right"
+            :class="field.muted ? 'text-(color:--color-gray-500)' : 'font-semibold text-(color:--color-gray-900)'"
+          >
+            {{ field.value }}
+          </span>
+          <!-- 배지 -->
+          <span
+            class="shrink-0 text-(length:--font-xs) font-semibold px-(--space-2) py-[3px] rounded-(--radius-full)"
+            :class="{
+              'bg-(--color-olive-surface) text-(color:--color-olive-dark)': field.badge === 'auto',
+              'bg-(--color-gold-surface) text-(color:--color-gold-dark)':   field.badge === 'required',
+              'bg-(--color-info-surface) text-(color:--color-navy)':        field.badge === 'linked',
+            }"
+          >
+            {{ field.badgeLabel }}
+          </span>
+        </li>
+      </ul>
+    </section>
+
+    <!-- 청구 서류 체크리스트 -->
+    <section class="bg-(--color-white) rounded-(--radius-xl) p-(--space-5) shadow-(--shadow-md)">
+      <h2 class="text-(length:--font-base) font-semibold text-(color:--color-gray-900) mb-(--space-4)">
+        청구 서류 체크리스트
+      </h2>
+      <ul class="flex flex-col gap-(--space-4)">
+        <li
+          v-for="doc in docChecklist"
+          :key="doc.name"
+          class="flex items-center gap-(--space-3)"
+        >
+          <!-- 체크 아이콘 -->
+          <span
+            class="w-6 h-6 rounded-(--radius-full) shrink-0 flex items-center justify-center text-(length:--font-xs) font-bold"
+            :class="doc.checked
+              ? 'bg-(--color-success) text-(color:--color-white)'
+              : 'border-2 border-(--color-gray-300)'"
+          >
+            <span v-if="doc.checked">✓</span>
+          </span>
+          <div class="flex flex-col gap-[2px]">
+            <span class="text-(length:--font-md) font-medium text-(color:--color-gray-900)">{{ doc.name }}</span>
+            <span class="text-(length:--font-sm) text-(color:--color-gray-500)">{{ doc.sub }}</span>
+          </div>
+        </li>
+      </ul>
+    </section>
   </div>
 </template>
