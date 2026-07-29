@@ -584,44 +584,56 @@ function handlePinComplete() {
         </p>
       </div>
 
-      <input
-        v-model="addressForm.address"
-        type="text"
-        placeholder="주소"
-        readonly
-        class="w-full h-[46px] px-(--space-4) bg-(--color-surface) border rounded-(--radius-md) text-(length:--font-sm) text-(color:--color-navy)"
-        :class="
-          addressFormErrors.address
-            ? 'border-(--color-danger)'
-            : 'border-(--color-border)'
-        "
-      />
-      <p
-        v-if="addressFormErrors.address"
-        class="text-(length:--font-xs) text-(color:--color-danger) mt-(--space-1) mb-(--space-3)"
-      >
-        {{ addressFormErrors.address }}
-      </p>
-      <div v-else class="mb-(--space-3)" />
+      <div class="mb-(--space-3)">
+        <label
+          class="block text-(length:--font-sm) font-semibold text-(color:--color-slate-dark) mb-(--space-2)"
+        >
+          주소
+        </label>
+        <input
+          v-model="addressForm.address"
+          type="text"
+          placeholder="주소"
+          readonly
+          class="w-full h-[46px] px-(--space-4) bg-(--color-surface) border rounded-(--radius-md) text-(length:--font-sm) text-(color:--color-navy)"
+          :class="
+            addressFormErrors.address
+              ? 'border-(--color-danger)'
+              : 'border-(--color-border)'
+          "
+        />
+        <p
+          v-if="addressFormErrors.address"
+          class="text-(length:--font-xs) text-(color:--color-danger) mt-(--space-1)"
+        >
+          {{ addressFormErrors.address }}
+        </p>
+      </div>
 
-      <input
-        v-model="addressForm.addressDetail"
-        type="text"
-        placeholder="동, 호수 등 상세주소 입력"
-        class="w-full h-[46px] px-(--space-4) bg-(--color-surface) border rounded-(--radius-md) text-(length:--font-sm) text-(color:--color-navy) placeholder:text-(color:--color-gray-500)"
-        :class="
-          addressFormErrors.addressDetail
-            ? 'border-(--color-danger)'
-            : 'border-(--color-border)'
-        "
-      />
-      <p
-        v-if="addressFormErrors.addressDetail"
-        class="text-(length:--font-xs) text-(color:--color-danger) mt-(--space-1) mb-(--space-5)"
-      >
-        {{ addressFormErrors.addressDetail }}
-      </p>
-      <div v-else class="mb-(--space-5)" />
+      <div class="mb-(--space-5)">
+        <label
+          class="block text-(length:--font-sm) font-semibold text-(color:--color-slate-dark) mb-(--space-2)"
+        >
+          상세주소
+        </label>
+        <input
+          v-model="addressForm.addressDetail"
+          type="text"
+          placeholder="동, 호수 등 상세주소 입력"
+          class="w-full h-[46px] px-(--space-4) bg-(--color-surface) border rounded-(--radius-md) text-(length:--font-sm) text-(color:--color-navy) placeholder:text-(color:--color-gray-500)"
+          :class="
+            addressFormErrors.addressDetail
+              ? 'border-(--color-danger)'
+              : 'border-(--color-border)'
+          "
+        />
+        <p
+          v-if="addressFormErrors.addressDetail"
+          class="text-(length:--font-xs) text-(color:--color-danger) mt-(--space-1)"
+        >
+          {{ addressFormErrors.addressDetail }}
+        </p>
+      </div>
 
       <div class="flex gap-(--space-3)">
         <AppButton variant="secondary" size="lg" class="flex-1" @click="closeAddressSheet">
