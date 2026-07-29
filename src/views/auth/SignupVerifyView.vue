@@ -1,5 +1,7 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
+import AppButton from '@/components/common/AppButton.vue'
+import { formatCountdown } from '@/utils/date'
 
 const verificationCode = ref('')
 const isLoading = ref(false)
@@ -7,11 +9,7 @@ const errorMessage = ref('')
 const remainingSeconds = ref(180)
 let timerInterval = null
 
-const formattedTime = () => {
-  const min = Math.floor(remainingSeconds.value / 60)
-  const sec = remainingSeconds.value % 60
-  return `${min}:${String(sec).padStart(2, '0')}`
-}
+const formattedTime = computed(() => formatCountdown(remainingSeconds.value))
 
 const startTimer = () => {
   timerInterval = setInterval(() => {
@@ -44,10 +42,15 @@ onUnmounted(() => {
   <div class="verify-page">
     <header class="page-header">
       <h1>이메일 인증</h1>
-      <p class="description">이메일로 전송된 인증 코드를 입력하세요.</p>
+      <p class="description">
+        이메일로 전송된 인증 코드를 입력하세요.
+      </p>
     </header>
 
-    <form class="verify-form" @submit.prevent="handleVerify">
+    <form
+      class="verify-form"
+      @submit.prevent="handleVerify"
+    >
       <div class="form-group">
         <label for="code">인증 코드</label>
         <div class="code-input-wrapper">
@@ -58,18 +61,33 @@ onUnmounted(() => {
             placeholder="6자리 코드 입력"
             maxlength="6"
             required
-          />
-          <span class="timer" :class="{ expired: remainingSeconds <= 0 }">
-            {{ formattedTime() }}
+          >
+          <span
+            class="timer"
+            :class="{ expired: remainingSeconds <= 0 }"
+          >
+            {{ formattedTime }}
           </span>
         </div>
       </div>
 
-      <p v-if="errorMessage" class="error-text">{{ errorMessage }}</p>
+      <p
+        v-if="errorMessage"
+        class="error-text"
+      >
+        {{ errorMessage }}
+      </p>
 
-      <button type="submit" class="btn-primary" :disabled="isLoading || remainingSeconds <= 0">
-        {{ isLoading ? '확인 중...' : '인증 확인' }}
-      </button>
+      <AppButton
+        type="submit"
+        variant="navy"
+        size="lg"
+        block
+        :loading="isLoading"
+        :disabled="remainingSeconds <= 0"
+      >
+        인증 확인
+      </AppButton>
 
       <button
         type="button"
@@ -161,23 +179,6 @@ onUnmounted(() => {
   color: var(--color-danger);
   font-size: var(--font-sm);
   margin-bottom: var(--space-3);
-}
-
-.btn-primary {
-  width: 100%;
-  padding: var(--space-3) var(--space-4);
-  background-color: var(--color-navy);
-  color: var(--color-white);
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: var(--font-base);
-  font-weight: var(--font-semibold);
-  cursor: pointer;
-}
-
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
 }
 
 .btn-secondary {

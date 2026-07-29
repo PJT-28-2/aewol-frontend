@@ -27,6 +27,13 @@
   --color-pastel-peach: #fdecd8;
   --color-pastel-mint: #e3f1f1;
   --color-pastel-coral: #fce3e1;
+  --color-pastel-beige: #efeae3;
+  --color-pastel-sage: #e1f2e7;
+  --color-pastel-sky: #e5eaf6;
+  --color-pastel-cream: #fbeed9;
+  --color-pastel-violet: #ebe4f5;
+  --color-chart-blue: #4a6fa5;
+  --color-chart-purple: #b25cc9;
   --color-kakao: #fee500;
   --color-kakao-label: #181600;
 
@@ -52,6 +59,9 @@
   --color-danger-bg: #f7e5e5;
   --color-danger-border: #c24d4d;
   --color-danger-text: #8a5252;
+  --color-status-info-bg: #e3f2fd;
+  --color-status-success-bg: #e8f5e9;
+  --color-status-danger-bg: #fce4ec;
 
   /* Colors - Bank Brand (계좌연동 화면 전용) */
     --color-brand-kb: #f2b853;
@@ -128,6 +138,9 @@
   --auth-success-password-image-offset: 41px;
   --auth-success-find-id-image-offset: -11px;
   --auth-success-title-gap: 9px;
+  --auth-font-xs: 11px;
+  --auth-font-sm: 13px;
+  --auth-font-lg: 22px;
 
   /* Support Program */
   --support-card-min-height: 128px;

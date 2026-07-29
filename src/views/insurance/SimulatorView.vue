@@ -4,6 +4,8 @@ import { useRouter } from 'vue-router'
 import IconDog from '@/components/common/icons/IconDog.vue'
 import IconCat from '@/components/common/icons/IconCat.vue'
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
+import IconPaw from '@/components/common/icons/IconPaw.vue'
+import EmptyState from '@/components/common/EmptyState.vue'
 import MedicalHistoryPicker from '@/components/insurance/MedicalHistoryPicker.vue'
 
 const router = useRouter()
@@ -143,18 +145,13 @@ function mockSimulate() {
       </p>
     </header>
 
-    <div
+    <EmptyState
       v-if="pets.length === 0"
-      class="text-center text-(color:--color-gray-600) bg-(--color-white) rounded-(--radius-lg) p-(--space-5) shadow-(--shadow-sm)"
-    >
-      <p>등록된 반려동물이 없어요.</p>
-      <router-link
-        to="/pets/register"
-        class="inline-block mt-(--space-3) text-(color:--color-navy) font-semibold"
-      >
-        반려동물 등록하러 가기
-      </router-link>
-    </div>
+      :icon="IconPaw"
+      message="등록된 반려동물이 없어요."
+      action-text="반려동물 등록하러 가기"
+      action-route="/pets/register"
+    />
 
     <template v-else>
       <form

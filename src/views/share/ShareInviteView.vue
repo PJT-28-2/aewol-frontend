@@ -73,7 +73,7 @@ async function copyLink() {
       aria-label="뒤로 가기"
       @click="router.back()"
     >
-      <IconArrowLeft :size="16" />
+      <IconArrowLeft size="24" />
     </button>
 
     <h1 class="m-0 text-[length:var(--font-lg)] font-bold">

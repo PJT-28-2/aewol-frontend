@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onBeforeUnmount, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { formatCountdown } from '@/utils/date'
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 import successImage from '@/assets/images/pet-success.png'
 
@@ -26,11 +27,7 @@ let toastTimerId
  *
  * @returns {string} `mm:ss` 형식의 남은 시간
  */
-const formattedTime = computed(() => {
-  const minutes = Math.floor(remainingSeconds.value / 60)
-  const seconds = remainingSeconds.value % 60
-  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
-})
+const formattedTime = computed(() => formatCountdown(remainingSeconds.value))
 
 /**
  * 입력 검증 및 인증 결과를 일정 시간 동안 안내한다.
@@ -204,10 +201,10 @@ onBeforeUnmount(clearTimers)
         class="mx-auto mt-(--auth-success-find-id-image-offset) size-(--auth-success-image-size) object-cover"
         :src="successImage"
         alt=""
-      />
+      >
       <h1
         id="find-id-result-title"
-        class="mt-(--auth-success-title-gap) text-[18px] leading-[1.3] font-(--font-bold) text-(color:--color-navy)"
+        class="mt-(--auth-success-title-gap) text-(length:--font-lg) leading-[1.3] font-(--font-bold) text-(color:--color-navy)"
       >
         본인 확인이 완료됐어요
       </h1>
@@ -240,19 +237,22 @@ onBeforeUnmount(clearTimers)
         aria-label="이전 화면으로 돌아가기"
         @click="router.back()"
       >
-        <IconArrowLeft :size="26" />
+        <IconArrowLeft size="24" />
       </button>
 
       <header>
-        <h1 class="text-[22px] leading-[1.3] font-(--font-bold) text-(color:--color-navy)">
+        <h1 class="text-(length:--auth-font-lg) leading-[1.3] font-(--font-bold) text-(color:--color-navy)">
           아이디 찾기
         </h1>
         <p class="mt-0.5 text-[12.5px] leading-[1.45] text-(color:--color-slate-muted)">
-          이름과 전화번호로 본인 확인 후<br />가입하신 이메일을 알려드려요
+          이름과 전화번호로 본인 확인 후<br>가입하신 이메일을 알려드려요
         </p>
       </header>
 
-      <form class="mt-[22px] flex flex-col" @submit.prevent="handleFindId">
+      <form
+        class="mt-[22px] flex flex-col"
+        @submit.prevent="handleFindId"
+      >
         <label
           class="mb-1 text-[12.5px] leading-[1.3] font-(--font-bold) text-(color:--color-slate-dark)"
           for="find-id-name"
@@ -262,11 +262,11 @@ onBeforeUnmount(clearTimers)
         <input
           id="find-id-name"
           v-model.trim="name"
-          class="mb-[11px] h-[46px] w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
+          class="mb-[11px] h-[46px] w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-(length:--auth-font-sm) text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
           type="text"
           autocomplete="name"
           placeholder="홍길동"
-        />
+        >
 
         <label
           class="mb-1 text-[12.5px] leading-[1.3] font-(--font-bold) text-(color:--color-slate-dark)"
@@ -278,11 +278,11 @@ onBeforeUnmount(clearTimers)
           <input
             id="find-id-phone"
             v-model.trim="phone"
-            class="h-[46px] w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
+            class="h-[46px] w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-(length:--auth-font-sm) text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
             type="tel"
             autocomplete="tel"
             placeholder="010-1234-5678"
-          />
+          >
           <button
             class="h-[46px] rounded-(--radius-lg) bg-(--color-navy) text-[11.5px] font-(--font-bold) text-(color:--color-white) disabled:cursor-not-allowed disabled:opacity-55"
             type="button"
@@ -311,14 +311,14 @@ onBeforeUnmount(clearTimers)
           <input
             id="find-id-code"
             v-model="verificationCode"
-            class="h-[46px] w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy) disabled:opacity-65"
+            class="h-[46px] w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-(length:--auth-font-sm) text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy) disabled:opacity-65"
             type="text"
             inputmode="numeric"
             autocomplete="one-time-code"
             maxlength="6"
             placeholder="6자리 숫자 입력"
             :disabled="isVerified"
-          />
+          >
           <button
             class="h-[46px] rounded-(--radius-lg) bg-(--color-navy) text-[12.5px] font-(--font-bold) text-(color:--color-white) disabled:opacity-55"
             type="button"
@@ -363,7 +363,7 @@ onBeforeUnmount(clearTimers)
             aria-live="assertive"
           >
             <span
-              class="inline-flex size-5 shrink-0 items-center justify-center rounded-full text-[11px]"
+              class="inline-flex size-5 shrink-0 items-center justify-center rounded-full text-(length:--auth-font-xs)"
               :class="
                 toast.type === 'success'
                   ? 'bg-(--color-pastel-green)'

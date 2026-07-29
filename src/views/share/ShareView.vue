@@ -3,9 +3,11 @@ import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import ContributionDonutChart from '@/components/share/ContributionDonutChart.vue'
 import BottomNavBar from '@/components/common/BottomNavBar.vue'
+import EmptyState from '@/components/common/EmptyState.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import IconCat from '@/components/common/icons/IconCat.vue'
 import IconDog from '@/components/common/icons/IconDog.vue'
+import IconPaw from '@/components/common/icons/IconPaw.vue'
 import IconPlus from '@/components/common/icons/IconPlus.vue'
 import { useShareStore } from '@/stores/share'
 
@@ -58,21 +60,13 @@ function retryFetchSharedCare() {
       </button>
     </section>
 
-    <section
+    <EmptyState
       v-else-if="!hasPets"
-      class="flex min-h-[calc(100dvh-var(--header-height)-var(--bottom-nav-height))] flex-col items-center justify-center text-center"
-    >
-      <p class="m-0 text-[length:var(--font-md)] text-(--color-slate-dark)">
-        등록된 반려동물이 없어요.
-      </p>
-      <button
-        class="mt-[var(--space-4)] h-[var(--control-height-sm)] cursor-pointer rounded-[var(--radius-lg)] border-0 bg-(--color-navy) px-[var(--space-4)] text-[length:var(--font-sm)] font-bold text-(--color-white) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-gold)"
-        type="button"
-        @click="router.push('/pets/register')"
-      >
-        반려동물 등록
-      </button>
-    </section>
+      :icon="IconPaw"
+      message="함께 돌볼 반려동물이 아직 없어요."
+      action-text="반려동물 등록하기"
+      action-route="/pets/register"
+    />
 
     <template v-else>
       <header>

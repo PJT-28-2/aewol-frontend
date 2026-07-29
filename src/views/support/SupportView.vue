@@ -151,9 +151,10 @@ const selected = computed(() =>
       <button
         class="-ml-[var(--space-2)] -mt-[var(--space-3)] mb-[var(--space-6)] block cursor-pointer border-0 bg-transparent text-[length:var(--font-3xl)] text-(--color-navy)"
         type="button"
+        aria-label="뒤로 가기"
         @click="router.push('/support')"
       >
-        <IconArrowLeft :size="28" />
+        <IconArrowLeft size="24" />
       </button>
       <span
         class="mb-[var(--space-3)] inline-grid h-[var(--space-5)] place-items-center rounded-[var(--radius-lg)] bg-(--color-olive-surface) px-[var(--space-2)] text-[length:var(--font-xs)] font-bold text-(--color-olive-dark)"

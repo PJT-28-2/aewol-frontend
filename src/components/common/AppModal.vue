@@ -30,19 +30,44 @@ function onOverlayClick(event) {
 <template>
   <Teleport to="body">
     <Transition name="modal">
-      <div v-if="modelValue" class="modal-overlay" @click="onOverlayClick">
+      <div
+        v-if="modelValue"
+        class="modal-overlay bg-black/50"
+        @click="onOverlayClick"
+      >
         <div class="modal-content">
           <div class="modal-header">
-            <h2 class="modal-header__title">{{ title }}</h2>
+            <h2 class="modal-header__title">
+              {{ title }}
+            </h2>
             <button
               v-if="showClose"
               class="modal-header__close"
               aria-label="닫기"
               @click="close"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <line
+                  x1="18"
+                  y1="6"
+                  x2="6"
+                  y2="18"
+                />
+                <line
+                  x1="6"
+                  y1="6"
+                  x2="18"
+                  y2="18"
+                />
               </svg>
             </button>
           </div>
@@ -51,7 +76,10 @@ function onOverlayClick(event) {
             <slot />
           </div>
 
-          <div v-if="$slots.footer" class="modal-footer">
+          <div
+            v-if="$slots.footer"
+            class="modal-footer"
+          >
             <slot name="footer" />
           </div>
         </div>
@@ -69,7 +97,6 @@ function onOverlayClick(event) {
   align-items: center;
   justify-content: center;
   padding: var(--space-4);
-  background-color: rgba(0, 0, 0, 0.5);
 }
 
 .modal-content {

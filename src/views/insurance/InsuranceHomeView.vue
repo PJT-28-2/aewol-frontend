@@ -120,12 +120,12 @@ const menus = [
 }
 
 .menu-icon--gold {
-  background-color: rgba(217, 154, 43, 0.15);
+  background-color: color-mix(in srgb, var(--color-gold-dark) 15%, transparent);
   color: var(--color-gold);
 }
 
 .menu-icon--navy {
-  background-color: rgba(27, 42, 73, 0.08);
+  background-color: color-mix(in srgb, var(--color-navy) 8%, transparent);
   color: var(--color-navy);
 }
 
