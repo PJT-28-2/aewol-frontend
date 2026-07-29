@@ -19,8 +19,8 @@ const product = ref({
   productName: '프리미엄 사료 15kg',
   optionText: '옵션 없음',
   purchaseQuantity: 1,
-  totalPrice: 40000,
-  totalDiscountedPrice: 28000,
+  unitPrice: 40000,
+  groupPrice: 28000,
 });
 
 // TODO: 등록된 결제 수단(계좌) 연동 예정, 현재는 mock 데이터
@@ -32,11 +32,11 @@ const paymentMethod = ref({
 
 // 참여 화면에서 전달받은 수량 · 정가 · 할인가 기준으로 결제 금액 계산
 const productAmount = computed(
-  () => product.value.totalPrice * product.value.purchaseQuantity,
+  () => product.value.unitPrice * product.value.purchaseQuantity,
 );
 const discountAmount = computed(
   () =>
-    (product.value.totalPrice - product.value.totalDiscountedPrice) *
+    (product.value.unitPrice - product.value.groupPrice) *
     product.value.purchaseQuantity,
 );
 const totalAmount = computed(() => productAmount.value - discountAmount.value);
