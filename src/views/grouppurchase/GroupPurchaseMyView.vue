@@ -87,6 +87,16 @@ const filteredGroupPurchases = computed(() => {
   );
 });
 
+// 필터 때문에 안 보이는 것(선택한 상태만 없음)과 애초에 이력이 없는 것을 구분해서 안내
+const emptyStateMessage = computed(() =>
+  myGroupPurchases.value.length === 0
+    ? '작성하거나 참여한 공동구매가 없어요'
+    : '선택한 상태의 게시물이 없어요',
+);
+const emptyStateActionText = computed(() =>
+  myGroupPurchases.value.length === 0 ? '공동구매 둘러보기' : '',
+);
+
 async function loadMyGroupPurchases() {
   isLoading.value = true;
   isError.value = false;
@@ -199,8 +209,8 @@ watch(selectedStatus, loadMyGroupPurchases);
     <EmptyState
       v-else-if="filteredGroupPurchases.length === 0"
       :icon="IconGroupPurchase"
-      message="작성하거나 참여한 공동구매가 없어요"
-      action-text="공동구매 둘러보기"
+      :message="emptyStateMessage"
+      :action-text="emptyStateActionText"
       action-route="/group-purchase"
     />
 
