@@ -88,7 +88,13 @@ const deadlineLabel = computed(() => {
   const diffDays = Math.ceil(
     (toLocalDate(groupPurchase.value.deadline) - startOfToday()) / (1000 * 60 * 60 * 24),
   )
-  return `D-${Math.max(diffDays, 0)}`
+
+  // 남은 일수가 0일 이하인 경우 "마감" 반환
+  if (diffDays <= 0) {
+    return '마감'
+  }
+
+  return `D-${diffDays}`
 })
 
 // delivery_fee가 0원이면 무료로 표시
