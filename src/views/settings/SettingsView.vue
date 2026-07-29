@@ -4,13 +4,13 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import AppButton from '@/components/common/AppButton.vue'
 import AppModal from '@/components/common/AppModal.vue'
+import IconAccountCard from '@/components/common/icons/IconAccountCard.vue'
 import IconChevronLeft from '@/components/common/icons/IconChevronLeft.vue'
-import IconPaw from '@/components/common/icons/IconPaw.vue'
+import IconDiscussion from '@/components/common/icons/IconDiscussion.vue'
+import IconNotificationBell from '@/components/common/icons/IconNotificationBell.vue'
+import IconPetProfile from '@/components/common/icons/IconPetProfile.vue'
+import IconProfileEdit from '@/components/common/icons/IconProfileEdit.vue'
 import IconRecurring from '@/components/common/icons/IconRecurring.vue'
-import IconSettings from '@/components/common/icons/IconSettings.vue'
-import IconSupportProgram from '@/components/common/icons/IconSupportProgram.vue'
-import IconUser from '@/components/common/icons/IconUser.vue'
-import IconWallet from '@/components/common/icons/IconWallet.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -26,25 +26,25 @@ const menuItems = [
     title: '반려동물 관리',
     description: '반려동물 프로필 등록 및 수정',
     path: '/pets',
-    icon: IconPaw,
+    icon: IconPetProfile,
   },
   {
     title: '프로필 수정',
     description: '이름 · 전화번호 · 비밀번호 변경 · 회원탈퇴',
     action: 'verifyProfile',
-    icon: IconUser,
+    icon: IconProfileEdit,
   },
   {
     title: '알림 설정',
     description: '푸시 알림 켜기 / 끄기',
     path: '/settings/notifications',
-    icon: IconSettings,
+    icon: IconNotificationBell,
   },
   {
     title: '계좌 관리',
     description: '연동된 계좌 확인 및 등록',
     path: '/accounts',
-    icon: IconWallet,
+    icon: IconAccountCard,
   },
   {
     title: '정기 결제 관리',
@@ -55,7 +55,7 @@ const menuItems = [
   {
     title: '고객센터',
     description: '자주 묻는 질문 및 문의',
-    icon: IconSupportProgram,
+    icon: IconDiscussion,
   },
 ]
 
