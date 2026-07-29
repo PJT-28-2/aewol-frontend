@@ -28,8 +28,7 @@ const publicRoutes = [
   {
     path: '/password/reset',
     name: 'PasswordReset',
-    component: () =>
-      import('@/views/auth/PasswordResetView.vue'),
+    component: () => import('@/views/auth/PasswordResetView.vue'),
   },
   {
     path: '/id/find',
@@ -39,8 +38,7 @@ const publicRoutes = [
   {
     path: '/callback/kakao',
     name: 'KakaoCallback',
-    component: () =>
-      import('@/views/auth/KakaoCallbackView.vue'),
+    component: () => import('@/views/auth/KakaoCallbackView.vue'),
   },
 ];
 
@@ -81,8 +79,7 @@ const authRoutes = [
   {
     path: '/wallet/buckets',
     name: 'BucketManage',
-    component: () =>
-      import('@/views/wallet/BucketManageView.vue'),
+    component: () => import('@/views/wallet/BucketManageView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
@@ -100,29 +97,25 @@ const authRoutes = [
   {
     path: '/wallet/history',
     name: 'TransactionHistory',
-    component: () =>
-      import('@/views/wallet/TransactionHistoryView.vue'),
+    component: () => import('@/views/wallet/TransactionHistoryView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
     path: '/wallet/history/:txId',
     name: 'TransactionDetail',
-    component: () =>
-      import('@/views/wallet/TransactionDetailView.vue'),
+    component: () => import('@/views/wallet/TransactionDetailView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
     path: '/accounts',
     name: 'AccountList',
-    component: () =>
-      import('@/views/account/AccountListView.vue'),
+    component: () => import('@/views/account/AccountListView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
     path: '/accounts/connect',
     name: 'AccountConnect',
-    component: () =>
-      import('@/views/account/AccountConnectView.vue'),
+    component: () => import('@/views/account/AccountConnectView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
@@ -140,29 +133,25 @@ const authRoutes = [
   {
     path: '/dashboard',
     name: 'Dashboard',
-    component: () =>
-      import('@/views/dashboard/DashboardView.vue'),
+    component: () => import('@/views/dashboard/DashboardView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
     path: '/dashboard/pet/:petId',
     name: 'PetDashboard',
-    component: () =>
-      import('@/views/dashboard/PetDashboardView.vue'),
+    component: () => import('@/views/dashboard/PetDashboardView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
     path: '/insurance',
     name: 'InsuranceHome',
-    component: () =>
-      import('@/views/insurance/InsuranceHomeView.vue'),
+    component: () => import('@/views/insurance/InsuranceHomeView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
     path: '/insurance/simulator',
     name: 'Simulator',
-    component: () =>
-      import('@/views/insurance/SimulatorView.vue'),
+    component: () => import('@/views/insurance/SimulatorView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
@@ -174,8 +163,7 @@ const authRoutes = [
   {
     path: '/insurance/claims',
     name: 'ClaimList',
-    component: () =>
-      import('@/views/insurance/ClaimListView.vue'),
+    component: () => import('@/views/insurance/ClaimListView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
@@ -205,8 +193,7 @@ const authRoutes = [
   {
     path: '/group-purchase',
     name: 'GroupPurchaseList',
-    component: () =>
-      import('@/views/grouppurchase/GroupPurchaseListView.vue'),
+    component: () => import('@/views/grouppurchase/GroupPurchaseListView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
@@ -247,6 +234,13 @@ const authRoutes = [
     name: 'GroupPurchaseDetail',
     component: () =>
       import('@/views/grouppurchase/GroupPurchaseDetailView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
+    path: '/group-purchase/:gpId/paymentPreview',
+    name: 'GroupPurchasePayment',
+    component: () =>
+      import('@/views/grouppurchase/GroupPurchasePaymentPreview.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
@@ -330,8 +324,7 @@ const authRoutes = [
   {
     path: '/emergency',
     name: 'Emergency',
-    component: () =>
-      import('@/views/emergency/EmergencyView.vue'),
+    component: () => import('@/views/emergency/EmergencyView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
