@@ -29,15 +29,26 @@ const handleFileSelect = (event) => {
   step.value = 2
 }
 
+// OCR 키 → 초안 필드 인덱스 매핑
+const ocrKeyToDraftIndex = { hospital: 0, date: 1, fee: 2, treatment: 4 }
+
 // 청구서 초안 필드
 const draftFields = ref([
-  { label: '병원명',          value: '24시 제주동물의료센터', editable: false, badge: 'auto',     badgeLabel: '자동',     placeholder: '' },
-  { label: '진료일자',        value: '2026.07.10',            editable: false, badge: 'auto',     badgeLabel: '자동',     placeholder: '' },
-  { label: '청구금액',        value: '168,000원',             editable: false, badge: 'auto',     badgeLabel: '자동',     placeholder: '' },
-  { label: '사업자번호',      value: '',                      editable: true,  badge: 'required', badgeLabel: '확인필요', placeholder: '사업자번호 입력' },
-  { label: '진단명',          value: '슬개골 탈구 치료',      editable: false, badge: 'auto',     badgeLabel: '자동',     placeholder: '' },
-  { label: '계약자·계좌정보', value: '',                      editable: true,  badge: 'linked',   badgeLabel: '연동',     placeholder: '계좌정보 입력' },
+  { label: '병원명',          value: '', editable: false, badge: 'auto',     badgeLabel: '자동',     placeholder: '' },
+  { label: '진료일자',        value: '', editable: false, badge: 'auto',     badgeLabel: '자동',     placeholder: '' },
+  { label: '청구금액',        value: '', editable: false, badge: 'auto',     badgeLabel: '자동',     placeholder: '' },
+  { label: '사업자번호',      value: '', editable: true,  badge: 'required', badgeLabel: '확인필요', placeholder: '사업자번호 입력' },
+  { label: '진단명',          value: '', editable: false, badge: 'auto',     badgeLabel: '자동',     placeholder: '' },
+  { label: '계약자·계좌정보', value: '', editable: true,  badge: 'linked',   badgeLabel: '연동',     placeholder: '계좌정보 입력' },
 ])
+
+const goToDraft = () => {
+  ocrItems.value.forEach((item) => {
+    const idx = ocrKeyToDraftIndex[item.key]
+    if (idx !== undefined) draftFields.value[idx].value = item.value
+  })
+  step.value = 3
+}
 
 // 청구 서류 체크리스트
 const docChecklist = [
@@ -122,7 +133,7 @@ const docChecklist = [
 
     <OcrResultCard :file-name="receiptFileName" :items="ocrItems" />
 
-    <AppButton block @click="step = 3">서류 초안 생성하기</AppButton>
+    <AppButton block @click="goToDraft">서류 초안 생성하기</AppButton>
   </div>
 
   <!-- Step 3: 보험금 청구 서류 초안 -->
