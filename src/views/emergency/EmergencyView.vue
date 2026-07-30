@@ -9,11 +9,13 @@ import IconChevronLeft from '@/components/common/icons/IconChevronLeft.vue'
 import IconHospital from '@/components/common/icons/IconHospital.vue'
 import IconChevronRight from '@/components/common/icons/IconChevronRight.vue'
 import IconPhone from '@/components/common/icons/IconPhone.vue'
+import IconWarning from '@/components/common/icons/IconWarning.vue'
 
 const router = useRouter()
 const hospitals = ref([])
 const isLoading = ref(true)
 const mapContainer = ref(null)
+const mapError = ref(null)
 
 // TODO: 백엔드 API 연동 후 제거
 const mockHospitals = [
@@ -65,7 +67,12 @@ function handleNavigation(hospital) {
 
 async function initKakaoMap(lat, lng) {
   const key = import.meta.env.VITE_KAKAO_MAP_KEY
-  if (!key || !mapContainer.value) return
+  if (!mapContainer.value) return
+
+  if (!key) {
+    mapError.value = '지도 설정을 확인해 주세요.'
+    return
+  }
 
   if (!window.kakao?.maps) {
     try {
@@ -77,6 +84,7 @@ async function initKakaoMap(lat, lng) {
         document.head.appendChild(script)
       })
     } catch {
+      mapError.value = '지도를 불러오지 못했습니다.'
       return
     }
   }
@@ -161,7 +169,16 @@ onMounted(async () => {
             class="w-full h-(--size-map-preview-height) bg-(--color-gray-200)"
           />
           <div
-            v-if="hospitals.length"
+            v-if="mapError"
+            class="absolute inset-0 flex flex-col items-center justify-center gap-(--space-2) bg-(--color-gray-100)"
+          >
+            <IconWarning :size="24" color="var(--color-slate-muted)" />
+            <p class="text-(length:--font-sm) text-(color:--color-slate-muted)">
+              {{ mapError }}
+            </p>
+          </div>
+          <div
+            v-else-if="hospitals.length"
             class="absolute bottom-3 left-3 flex items-center gap-(--space-1) bg-(--color-white) rounded-full px-(--space-3) py-1 shadow-(--shadow-sm)"
           >
             <span class="w-2 h-2 rounded-full bg-(--color-success) shrink-0" />
@@ -170,7 +187,7 @@ onMounted(async () => {
             </span>
           </div>
           <div
-            v-if="hospitals.length"
+            v-if="!mapError && hospitals.length"
             class="absolute bottom-3 right-3 flex items-center gap-1 bg-(--color-white) rounded-full px-(--space-3) py-1 shadow-(--shadow-sm)"
           >
             <span class="text-(length:--font-sm) font-semibold text-(color:--color-navy)">
