@@ -44,6 +44,8 @@ async function loadFaq(faqId) {
   isLoading.value = true;
   loadError.value = '';
   feedback.value = null;
+  window.clearTimeout(feedbackToastTimer);
+  feedbackToastVisible.value = false;
   faq.value = null;
   relatedFaqs.value = [];
 
