@@ -5,6 +5,7 @@ import {
   mockDonationPot,
   savingUnits,
 } from '@/mocks/donation'
+import { formatWon } from '@/utils/bankMeta'
 
 const DEFAULT_CATEGORY = donationCategories[0]
 const DEFAULT_SAVING_UNIT = savingUnits[savingUnits.length - 1]
@@ -27,6 +28,8 @@ export const useDonationStore = defineStore('donation', {
       piggyBankEnabled: true,
       savingUnit: DEFAULT_SAVING_UNIT,
     },
+    withdrawAmount: 0,
+    withdrawError: '',
     isLoading: true,
     error: '',
   }),
@@ -61,6 +64,12 @@ export const useDonationStore = defineStore('donation', {
     canDonate: (state) => state.amount > 0 && state.amount <= state.balance,
 
     balanceAfterDonation: (state) => Math.max(state.balance - state.amount, 0),
+
+    canWithdraw: (state) =>
+      state.withdrawAmount > 0 && state.withdrawAmount <= state.balance,
+
+    balanceAfterWithdraw: (state) =>
+      Math.max(state.balance - state.withdrawAmount, 0),
 
     isFiltering: (state) =>
       Boolean(state.searchKeyword.trim()) ||
@@ -131,6 +140,42 @@ export const useDonationStore = defineStore('donation', {
       if (!this.canDonate) return false
 
       this.balance -= this.amount
+      return true
+    },
+
+    /** 1원 단위 출금을 허용하므로 정수 여부만 보정하고 상한 검증은 블러 시점에 한다. */
+    setWithdrawAmount(amount) {
+      const nextAmount = Number.isFinite(amount) ? Math.floor(amount) : 0
+
+      this.withdrawAmount = Math.max(nextAmount, 0)
+      this.withdrawError = ''
+    },
+
+    validateWithdrawAmount() {
+      if (this.withdrawAmount <= 0) {
+        this.withdrawError = '출금할 금액을 입력해주세요.'
+        return false
+      }
+
+      if (this.withdrawAmount > this.balance) {
+        this.withdrawError = `저금통 잔액 ${formatWon(this.balance)}을 초과했어요.`
+        return false
+      }
+
+      this.withdrawError = ''
+      return true
+    },
+
+    resetWithdraw() {
+      this.withdrawAmount = 0
+      this.withdrawError = ''
+    },
+
+    withdraw() {
+      if (!this.validateWithdrawAmount()) return false
+
+      // TODO: 백엔드 /api/donation/pot/withdraw 구현 후 donationApi.withdrawPot 호출로 교체한다.
+      this.balance -= this.withdrawAmount
       return true
     },
 
