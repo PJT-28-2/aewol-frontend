@@ -103,7 +103,7 @@ function goToWallet() {
         :src="petSuccess"
         alt=""
         class="w-32 h-auto mb-(--space-4)"
-      />
+      >
       <h1
         class="text-(length:--font-xl) font-bold text-(color:--color-navy) mb-(--space-2)"
       >
@@ -122,33 +122,27 @@ function goToWallet() {
         <div class="flex items-center justify-between">
           <span
             class="text-(length:--font-sm) text-(color:--color-slate-muted)"
-            >충전 금액</span
-          >
+          >충전 금액</span>
           <span
             class="text-(length:--font-sm) font-bold text-(color:--color-navy)"
-            >{{ amount.toLocaleString() }}원</span
-          >
+          >{{ amount.toLocaleString() }}원</span>
         </div>
         <div class="flex items-center justify-between">
           <span
             class="text-(length:--font-sm) text-(color:--color-slate-muted)"
-            >결제 수단</span
-          >
+          >결제 수단</span>
           <span
             class="text-(length:--font-sm) font-bold text-(color:--color-navy)"
-            >{{ chargedBankMeta.name }}
-            {{ chargedAccount.accountNumberMasked }}</span
-          >
+          >{{ chargedBankMeta.name }}
+            {{ chargedAccount.accountNumberMasked }}</span>
         </div>
         <div class="flex items-center justify-between">
           <span
             class="text-(length:--font-sm) text-(color:--color-slate-muted)"
-            >충전 시간</span
-          >
+          >충전 시간</span>
           <span
             class="text-(length:--font-sm) font-bold text-(color:--color-navy)"
-            >{{ completedAtLabel }}</span
-          >
+          >{{ completedAtLabel }}</span>
         </div>
       </div>
 
