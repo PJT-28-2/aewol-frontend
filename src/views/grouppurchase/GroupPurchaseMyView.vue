@@ -192,7 +192,7 @@ watch(selectedStatus, loadMyGroupPurchases);
     <!-- 에러 상태 -->
     <div
       v-else-if="isError"
-      class="flex flex-col items-center justify-center gap-(--space-4) min-h-[40vh] px-(--space-4) text-center"
+      class="flex flex-col items-center justify-center gap-(--space-4) min-h-(--size-state-message-height) px-(--space-4) text-center"
     >
       <p class="text-(length:--font-sm) text-(color:--color-slate-muted)">
         공동구매 내역을 불러오지 못했어요
