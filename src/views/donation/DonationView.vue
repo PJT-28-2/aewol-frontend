@@ -1,60 +1,65 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRoute, useRouter } from 'vue-router'
+import AppButton from '@/components/common/AppButton.vue'
+import AppInput from '@/components/common/AppInput.vue'
 import BottomNavBar from '@/components/common/BottomNavBar.vue'
+import EmptyState from '@/components/common/EmptyState.vue'
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
+import SelectableChip from '@/components/common/SelectableChip.vue'
+import ToggleSwitch from '@/components/common/ToggleSwitch.vue'
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 import IconDog from '@/components/common/icons/IconDog.vue'
 import IconHeart from '@/components/common/icons/IconHeart.vue'
 import IconPaw from '@/components/common/icons/IconPaw.vue'
 import IconPlus from '@/components/common/icons/IconPlus.vue'
+import IconSearch from '@/components/common/icons/IconSearch.vue'
 import IconSettings from '@/components/common/icons/IconSettings.vue'
 import IconStar from '@/components/common/icons/IconStar.vue'
+import { donationAmountPresets, donationCategories, savingUnits } from '@/mocks/donation'
 import { useDonationStore } from '@/stores/donation'
 
 const route = useRoute()
 const router = useRouter()
 const donationStore = useDonationStore()
 const {
+  activeCategory,
   amount,
   autoDonate,
   balance,
-  canDonate,
+  impactMessage,
+  isLoading,
+  monthlySaved,
   piggyBankEnabled,
-  selectedCampaign,
+  savingUnit,
+  searchKeyword,
 } = storeToRefs(donationStore)
+
 const screen = computed(() => route.meta.step)
-const campaigns = [
-  {
-    name: '행복한 유기동물보호소',
-    title: '겨울나기, 유기견 난방비를 도와주세요',
-    progress: 68,
-  },
-  {
-    name: '동물권행동 카라',
-    title: '구조된 아이들의 병원비를 모아주세요',
-    progress: 42,
-  },
-  {
-    name: '제주 유기견 쉼터',
-    title: '임시보호 물품 지원',
-    progress: 55,
-  },
-  {
-    name: '한국동물구조관리협회',
-    title: '유기묘 중성화 수술',
-    progress: 77,
-  },
-]
-const isMain = computed(() => route.name === 'Donation')
-const currentCampaign = computed(
-  () =>
-    campaigns.find((item) => item.name === selectedCampaign.value) ??
-    campaigns[0],
+const isMain = computed(() => screen.value === 'main')
+const currentCampaign = computed(() => donationStore.currentCampaign)
+const otherCampaigns = computed(() =>
+  donationStore.campaigns
+    .filter((campaign) => campaign.id !== currentCampaign.value?.id)
+    .slice(0, 2),
 )
+
+function formatWon(value) {
+  return `${value.toLocaleString()}원`
+}
 
 function go(path) {
   router.push(path)
+}
+
+function loadDonationData() {
+  donationStore.fetchDonationData()
+}
+
+function chooseCampaign(campaignId) {
+  donationStore.selectCampaign(campaignId)
+  go('/donation/give')
 }
 
 function donate() {
@@ -65,18 +70,47 @@ function saveSettings() {
   donationStore.saveSettings()
   go('/donation')
 }
+
+onMounted(loadDonationData)
 </script>
 
 <template>
   <main
-    class="mx-auto min-h-screen w-full max-w-[var(--mobile-content-width)] box-border bg-(--color-white) px-[var(--space-5)] pb-[calc(var(--bottom-nav-height)+var(--space-8))] pt-[calc(var(--header-height)+var(--space-5))] text-(--color-navy)"
+    class="mx-auto min-h-dvh w-full max-w-[var(--mobile-content-width)] box-border bg-(--color-white) px-[var(--space-5)] pb-[calc(var(--bottom-nav-height)+var(--space-8)+env(safe-area-inset-bottom))] pt-[calc(var(--header-height)+var(--space-5))] text-(--color-navy)"
   >
-    <template v-if="isMain">
+    <section
+      v-if="isLoading"
+      class="grid min-h-[calc(100dvh-var(--header-height)-var(--bottom-nav-height))] place-items-center"
+      aria-live="polite"
+    >
+      <LoadingSpinner />
+    </section>
+
+    <section
+      v-else-if="donationStore.error"
+      class="flex min-h-[calc(100dvh-var(--header-height)-var(--bottom-nav-height))] flex-col items-center justify-center text-center"
+      role="alert"
+    >
+      <p class="m-0 text-[length:var(--font-md)] text-(--color-slate-dark)">
+        {{ donationStore.error }}
+      </p>
+      <AppButton
+        class="mt-[var(--space-4)]"
+        variant="navy"
+        size="sm"
+        @click="loadDonationData"
+      >
+        다시 시도
+      </AppButton>
+    </section>
+
+    <!-- RF-SI-01 · 짜투리저금통 -->
+    <template v-else-if="isMain">
       <section
         class="relative min-h-24 box-border rounded-[var(--radius-xl)] bg-(--color-navy) p-[var(--space-6)] text-(--color-white)"
       >
         <button
-          class="absolute right-[var(--space-4)] top-[var(--space-6)] cursor-pointer border-0 bg-transparent text-[length:var(--font-lg)] text-(--color-white)"
+          class="absolute right-[var(--space-4)] top-[var(--space-6)] cursor-pointer rounded-(--radius-full) border-0 bg-transparent text-(--color-white) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-gold)"
           type="button"
           aria-label="저금통 설정"
           @click="go('/donation/settings')"
@@ -97,34 +131,36 @@ function saveSettings() {
         >누적 저금액</b>
         <strong
           class="mt-[var(--space-1)] block text-[length:var(--font-3xl)] text-(--color-olive)"
-        >{{ balance.toLocaleString() }}원</strong>
+        >{{ formatWon(balance) }}</strong>
         <span
           class="block text-[length:var(--font-xs)] text-(--color-olive-muted)"
-        >이번 달 3,200원 모았어요</span>
+        >이번 달 {{ formatWon(monthlySaved) }} 모았어요</span>
         <div class="mt-[var(--space-3)] flex gap-[var(--space-3)]">
-          <button
-            class="h-[var(--control-height-sm)] flex-1 cursor-pointer rounded-full border-0 bg-(--color-olive) font-bold text-(--color-white)"
-            type="button"
+          <AppButton
+            block
+            pill
+            size="sm"
+            variant="olive"
             @click="go('/donation/give')"
           >
             기부하기
-          </button>
-          <button
-            class="h-[var(--control-height-sm)] flex-1 cursor-pointer rounded-full border border-(--color-olive) bg-(--color-white) font-bold text-(--color-olive)"
-            type="button"
+          </AppButton>
+          <AppButton
+            block
+            pill
+            size="sm"
+            variant="olive-outline"
             @click="go('/wallet')"
           >
             지갑으로 출금
-          </button>
+          </AppButton>
         </div>
       </section>
 
       <section
         class="mt-[var(--space-5)] flex flex-col gap-[var(--space-2)] rounded-[var(--radius-lg)] bg-(--color-surface) p-[var(--space-4)]"
       >
-        <b
-          class="text-[length:var(--font-sm)] text-(--color-slate-dark)"
-        >
+        <b class="text-[length:var(--font-sm)] text-(--color-slate-dark)">
           <IconHeart
             class="mr-[var(--space-1)] inline-block text-(--color-olive)"
             :size="16"
@@ -133,18 +169,19 @@ function saveSettings() {
         </b>
         <span
           class="text-[length:var(--font-xs)] text-(--color-slate-muted)"
-        >유기동물 3마리를 도울 수 있어요</span>
+        >{{ impactMessage }}</span>
       </section>
     </template>
 
+    <!-- RF-SI-02 · 기부하기 -->
     <template v-else-if="screen === 'give'">
       <button
-        class="cursor-pointer border-0 bg-transparent text-[length:var(--font-3xl)] text-(--color-navy)"
+        class="-ml-[var(--space-1)] grid size-[var(--control-height-sm)] cursor-pointer place-items-center rounded-(--radius-full) border-0 bg-transparent text-(--color-navy) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-gold)"
         type="button"
-        aria-label="뒤로 가기"
+        aria-label="저금통으로 돌아가기"
         @click="go('/donation')"
       >
-        <IconArrowLeft size="24" />
+        <IconArrowLeft :size="24" />
       </button>
       <h1
         class="mb-[var(--space-7)] mt-[var(--space-5)] text-[length:var(--font-xl)]"
@@ -178,31 +215,22 @@ function saveSettings() {
         </span>
       </h2>
       <div class="flex flex-wrap gap-[var(--space-2)]">
-        <button
-          v-for="campaign in campaigns.slice(0, 2)"
-          :key="campaign.name"
-          class="h-[var(--control-height-sm)] cursor-pointer rounded-full border border-(--color-border) bg-(--color-surface) px-[var(--space-3)] font-bold text-(--color-slate-dark)"
-          :class="{
-            'border-(--color-navy) bg-(--color-navy) text-(--color-white)':
-              selectedCampaign === campaign.name,
-          }"
-          type="button"
-          @click="selectedCampaign = campaign.name"
+        <SelectableChip
+          v-for="campaign in donationStore.preferredCampaigns"
+          :key="campaign.id"
+          :selected="currentCampaign?.id === campaign.id"
+          @click="donationStore.selectCampaign(campaign.id)"
         >
-          <span class="inline-flex items-center gap-[var(--space-1)]">
-            <IconStar :size="14" />
-            {{ campaign.name }}
-          </span>
-        </button>
+          <IconStar :size="14" />
+          {{ campaign.organization }}
+        </SelectableChip>
         <button
-          class="size-[var(--control-height-sm)] cursor-pointer rounded-full border border-(--color-border) bg-(--color-surface) font-bold text-(--color-slate-dark)"
+          class="grid size-[var(--control-height-sm)] cursor-pointer place-items-center rounded-(--radius-full) border border-(--color-border) bg-(--color-surface) text-(--color-slate-dark) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-gold)"
           type="button"
           aria-label="선호 기부처 추가"
+          @click="go('/donation/explore')"
         >
-          <IconPlus
-            class="mx-auto"
-            :size="18"
-          />
+          <IconPlus :size="18" />
         </button>
       </div>
 
@@ -212,11 +240,10 @@ function saveSettings() {
         이번주 추천 캠페인
       </h2>
       <article
+        v-if="currentCampaign"
         class="mt-[var(--space-3)] overflow-hidden rounded-[var(--radius-xl)] bg-(--color-surface) pb-[var(--space-3)]"
       >
-        <div
-          class="grid h-28 place-items-center bg-(--color-border) text-[length:var(--font-3xl)]"
-        >
+        <div class="grid h-28 place-items-center bg-(--color-border)">
           <IconDog
             class="text-(--color-slate)"
             :size="34"
@@ -225,25 +252,30 @@ function saveSettings() {
         </div>
         <b
           class="mx-[var(--space-4)] mt-[var(--space-3)] block text-[length:var(--font-xs)] text-(--color-gold-dark)"
-        >{{ currentCampaign.name }}</b>
+        >{{ currentCampaign.organization }}</b>
         <strong
           class="mx-[var(--space-4)] mt-[var(--space-2)] block text-[length:var(--font-md)]"
         >{{ currentCampaign.title }}</strong>
         <div
-          class="mx-[var(--space-4)] mt-[var(--space-3)] h-1.5 overflow-hidden rounded-full bg-(--color-border)"
+          class="mx-[var(--space-4)] mt-[var(--space-3)] h-1.5 overflow-hidden rounded-(--radius-full) bg-(--color-border)"
+          role="progressbar"
+          :aria-valuenow="currentCampaign.progress"
+          aria-valuemin="0"
+          aria-valuemax="100"
         >
           <i
-            class="block h-full rounded-full bg-(--color-gold)"
+            class="block h-full rounded-(--radius-full) bg-(--color-gold)"
             :style="{ width: `${currentCampaign.progress}%` }"
           />
         </div>
         <small
           class="mx-[var(--space-4)] mt-[var(--space-3)] block text-[length:var(--font-xs)] text-(--color-slate-muted)"
         >
-          2,046,000원 모금 · 참여 312명
+          {{ formatWon(currentCampaign.raised) }} 모금 · 참여
+          {{ currentCampaign.participants.toLocaleString() }}명
           <em
             class="float-right not-italic text-(--color-gold-dark)"
-          >{{ currentCampaign.progress }}%</em>
+          >{{ currentCampaign.progress }}% · D-{{ currentCampaign.daysLeft }}</em>
         </small>
       </article>
 
@@ -253,59 +285,103 @@ function saveSettings() {
         기부 금액 선택
       </h3>
       <div class="flex gap-[var(--space-2)]">
-        <button
-          v-for="value in [1000, 3000, 5000]"
-          :key="value"
-          class="h-[var(--control-height-sm)] flex-1 cursor-pointer rounded-[var(--radius-lg)] border border-(--color-border) bg-(--color-surface) px-[var(--space-2)] font-bold text-(--color-slate-dark) disabled:cursor-not-allowed disabled:opacity-45"
-          :class="{
-            'border-(--color-navy) bg-(--color-navy) text-(--color-white)':
-              amount === value,
-          }"
-          type="button"
-          :disabled="value > balance"
-          @click="amount = value"
+        <SelectableChip
+          v-for="preset in donationAmountPresets"
+          :key="preset"
+          block
+          shape="rounded"
+          :selected="amount === preset"
+          :disabled="preset > balance"
+          @click="donationStore.setAmount(preset)"
         >
-          {{ value.toLocaleString() }}원
-        </button>
-        <button
-          class="h-[var(--control-height-sm)] flex-1 cursor-pointer rounded-[var(--radius-lg)] border border-(--color-border) bg-(--color-surface) px-[var(--space-2)] font-bold text-(--color-slate-dark) disabled:cursor-not-allowed disabled:opacity-45"
-          type="button"
+          {{ formatWon(preset) }}
+        </SelectableChip>
+        <SelectableChip
+          block
+          shape="rounded"
+          :selected="amount === balance && balance > 0"
           :disabled="balance <= 0"
-          @click="amount = balance"
+          @click="donationStore.setAmount(balance)"
         >
           전액
-        </button>
+        </SelectableChip>
       </div>
       <p
-        v-if="!canDonate"
+        v-if="!donationStore.canDonate"
         class="mt-[var(--space-2)] text-[length:var(--font-sm)] text-(--color-danger)"
+        role="alert"
       >
         잔액 안에서 기부 금액을 선택해주세요.
       </p>
-      <button
-        class="mt-[var(--space-4)] w-full cursor-pointer border-0 bg-transparent text-right text-[length:var(--font-sm)] font-bold text-(--color-gold-dark)"
-        type="button"
-        @click="go('/donation/explore')"
+
+      <div
+        class="mb-[var(--space-3)] mt-[var(--space-6)] flex items-center justify-between"
       >
-        다른 기부처 둘러보기 ›
-      </button>
-      <button
-        class="mt-[var(--space-5)] h-[var(--control-height-lg)] w-full cursor-pointer rounded-[var(--radius-xl)] border-0 bg-(--color-navy) font-bold text-(--color-white) disabled:cursor-not-allowed disabled:opacity-45"
-        type="button"
-        :disabled="!canDonate"
+        <h3 class="m-0 text-[length:var(--font-sm)] text-(--color-slate-dark)">
+          다른 기부처 둘러보기
+        </h3>
+        <AppButton
+          variant="ghost"
+          size="sm"
+          @click="go('/donation/explore')"
+        >
+          더보기 ›
+        </AppButton>
+      </div>
+      <ul class="m-0 list-none space-y-[var(--space-2)] p-0">
+        <li
+          v-for="campaign in otherCampaigns"
+          :key="campaign.id"
+        >
+          <button
+            class="flex w-full cursor-pointer items-center gap-[var(--space-3)] rounded-[var(--radius-lg)] border-0 bg-(--color-surface) p-[var(--space-3)] text-left text-(--color-navy) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-gold)"
+            type="button"
+            @click="donationStore.selectCampaign(campaign.id)"
+          >
+            <span
+              class="grid size-10 shrink-0 place-items-center rounded-(--radius-md) bg-(--color-border)"
+            >
+              <IconDog
+                class="text-(--color-slate)"
+                :size="20"
+                color="currentColor"
+              />
+            </span>
+            <span class="min-w-0 flex-1">
+              <strong
+                class="block truncate text-[length:var(--font-sm)]"
+              >{{ campaign.title }}</strong>
+              <span
+                class="block text-[length:var(--font-xs)] text-(--color-slate-muted)"
+              >{{ campaign.organization }}</span>
+            </span>
+            <em
+              class="shrink-0 not-italic text-[length:var(--font-xs)] text-(--color-gold-dark)"
+            >{{ campaign.progress }}%</em>
+          </button>
+        </li>
+      </ul>
+
+      <AppButton
+        class="mt-[var(--space-5)]"
+        block
+        size="lg"
+        variant="navy"
+        :disabled="!donationStore.canDonate"
         @click="go('/donation/confirm')"
       >
-        저금통에서 {{ amount.toLocaleString() }}원 기부하기
-      </button>
+        저금통에서 {{ formatWon(amount) }} 기부하기
+      </AppButton>
     </template>
 
+    <!-- RF-SI-03 · 기부확인 -->
     <template v-else-if="screen === 'confirm'">
       <section class="pt-[var(--space-2)] text-center">
         <div
-          class="mx-auto mb-[var(--space-6)] h-[var(--space-1)] w-[var(--space-8)] rounded-full bg-(--color-border)"
+          class="mx-auto mb-[var(--space-6)] h-[var(--space-1)] w-[var(--space-8)] rounded-(--radius-full) bg-(--color-border)"
         />
         <h1 class="m-0 text-[length:var(--font-xl)]">
-          {{ amount.toLocaleString() }}원을 기부할까요?
+          {{ formatWon(amount) }}을 기부할까요?
         </h1>
         <p
           class="mt-[var(--space-2)] text-[length:var(--font-sm)] text-(--color-slate-muted)"
@@ -314,9 +390,10 @@ function saveSettings() {
         </p>
 
         <div
+          v-if="currentCampaign"
           class="mt-[var(--space-7)] rounded-[var(--radius-xl)] bg-(--color-surface) p-[var(--space-4)] text-left"
         >
-          <b class="block">{{ currentCampaign.name }}</b>
+          <b class="block">{{ currentCampaign.organization }}</b>
           <span
             class="mt-[var(--space-2)] block text-[length:var(--font-xs)] text-(--color-slate-muted)"
           >{{ currentCampaign.title }}</span>
@@ -325,7 +402,7 @@ function saveSettings() {
             class="flex justify-between text-[length:var(--font-sm)] text-(--color-slate-dark)"
           >
             <span>기부 금액</span>
-            <strong>{{ amount.toLocaleString() }}원</strong>
+            <strong>{{ formatWon(amount) }}</strong>
           </div>
         </div>
 
@@ -333,38 +410,42 @@ function saveSettings() {
           class="mx-[var(--space-3)] my-[var(--space-7)] flex justify-between text-[length:var(--font-sm)] text-(--color-slate-dark)"
         >
           <span>기부 후 저금통 잔액</span>
-          <strong>{{ Math.max(balance - amount, 0).toLocaleString() }}원</strong>
+          <strong>{{ formatWon(donationStore.balanceAfterDonation) }}</strong>
         </div>
         <p
-          v-if="!canDonate"
+          v-if="!donationStore.canDonate"
           class="mt-[var(--space-2)] text-[length:var(--font-sm)] text-(--color-danger)"
+          role="alert"
         >
           잔액이 부족해 기부할 수 없어요.
         </p>
         <div class="flex gap-[var(--space-3)]">
-          <button
-            class="h-[var(--control-height-lg)] flex-1 cursor-pointer rounded-[var(--radius-xl)] border border-(--color-border) bg-(--color-white) font-bold text-(--color-slate-dark)"
-            type="button"
+          <AppButton
+            block
+            size="lg"
+            variant="secondary"
             @click="go('/donation/give')"
           >
             취소
-          </button>
-          <button
-            class="h-[var(--control-height-lg)] flex-1 cursor-pointer rounded-[var(--radius-xl)] border-0 bg-(--color-navy) font-bold text-(--color-white) disabled:cursor-not-allowed disabled:opacity-45"
-            type="button"
-            :disabled="!canDonate"
+          </AppButton>
+          <AppButton
+            block
+            size="lg"
+            variant="navy"
+            :disabled="!donationStore.canDonate"
             @click="donate"
           >
             기부하기
-          </button>
+          </AppButton>
         </div>
       </section>
     </template>
 
+    <!-- RF-SI-04 · 기부완료 -->
     <template v-else-if="screen === 'complete'">
       <section class="pt-32 text-center">
         <div
-          class="mx-auto mb-[var(--space-6)] grid size-24 place-items-center rounded-full bg-(--color-olive-surface) text-[length:var(--font-3xl)]"
+          class="mx-auto mb-[var(--space-6)] grid size-24 place-items-center rounded-(--radius-full) bg-(--color-olive-surface)"
         >
           <IconPaw
             class="text-(--color-olive)"
@@ -377,71 +458,73 @@ function saveSettings() {
         <p
           class="mt-[var(--space-2)] text-[length:var(--font-sm)] text-(--color-slate-muted)"
         >
-          {{ currentCampaign.name }}에 {{ amount.toLocaleString() }}원을
+          {{ currentCampaign?.organization }}에 {{ formatWon(amount) }}을
           전달했어요
         </p>
-        <button
-          class="mt-[var(--space-5)] h-[var(--control-height-lg)] w-full cursor-pointer rounded-[var(--radius-xl)] border-0 bg-(--color-navy) font-bold text-(--color-white)"
-          type="button"
+        <AppButton
+          class="mt-[var(--space-5)]"
+          block
+          size="lg"
+          variant="primary"
           @click="go('/donation')"
         >
           저금통으로 돌아가기
-        </button>
+        </AppButton>
       </section>
     </template>
 
+    <!-- RF-SI-05 · 기부처둘러보기 -->
     <template v-else-if="screen === 'explore'">
       <button
-        class="cursor-pointer border-0 bg-transparent text-[length:var(--font-3xl)] text-(--color-navy)"
+        class="-ml-[var(--space-1)] grid size-[var(--control-height-sm)] cursor-pointer place-items-center rounded-(--radius-full) border-0 bg-transparent text-(--color-navy) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-gold)"
         type="button"
-        aria-label="뒤로 가기"
+        aria-label="기부하기로 돌아가기"
         @click="go('/donation/give')"
       >
-        <IconArrowLeft size="24" />
+        <IconArrowLeft :size="24" />
       </button>
       <h1
         class="mb-[var(--space-2)] mt-[var(--space-5)] text-[length:var(--font-xl)]"
       >
         기부처 둘러보기
       </h1>
-      <p
-        class="m-0 text-[length:var(--font-sm)] text-(--color-slate-muted)"
-      >
+      <p class="m-0 text-[length:var(--font-sm)] text-(--color-slate-muted)">
         우리 아이들을 위한 캠페인을 만나보세요
       </p>
-      <input
-        class="my-[var(--space-5)] h-[var(--control-height)] w-full box-border rounded-[var(--radius-lg)] border border-(--color-border) bg-(--color-surface) px-[var(--space-4)]"
-        placeholder="기부처 · 캠페인 검색"
-      >
-      <div class="flex flex-wrap gap-[var(--space-2)]">
-        <button
-          class="h-[var(--control-height-sm)] cursor-pointer rounded-full border border-(--color-navy) bg-(--color-navy) px-[var(--space-3)] font-bold text-(--color-white)"
-          type="button"
-        >
-          전체
-        </button>
-        <button
-          v-for="filter in ['유기동물', '환경', '기타']"
-          :key="filter"
-          class="h-[var(--control-height-sm)] cursor-pointer rounded-full border border-(--color-border) bg-(--color-surface) px-[var(--space-3)] font-bold text-(--color-slate-dark)"
-          type="button"
-        >
-          {{ filter }}
-        </button>
+
+      <div class="my-[var(--space-5)]">
+        <AppInput
+          :model-value="searchKeyword"
+          label="기부처 검색"
+          placeholder="기부처 · 캠페인 검색"
+          type="search"
+          @update:model-value="donationStore.setSearchKeyword($event)"
+        />
       </div>
+
+      <div class="flex flex-wrap gap-[var(--space-2)]">
+        <SelectableChip
+          v-for="category in donationCategories"
+          :key="category"
+          :selected="activeCategory === category"
+          @click="donationStore.setCategory(category)"
+        >
+          {{ category }}
+        </SelectableChip>
+      </div>
+
       <div
+        v-if="donationStore.filteredCampaigns.length"
         class="mt-[var(--space-5)] grid grid-cols-2 gap-[var(--space-3)]"
       >
         <button
-          v-for="item in campaigns"
-          :key="item.name"
-          class="overflow-hidden rounded-[var(--radius-xl)] border-0 bg-(--color-surface) p-0 text-left text-(--color-navy)"
+          v-for="item in donationStore.filteredCampaigns"
+          :key="item.id"
+          class="cursor-pointer overflow-hidden rounded-[var(--radius-xl)] border-0 bg-(--color-surface) p-0 text-left text-(--color-navy) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-gold)"
           type="button"
-          @click="selectedCampaign = item.name; go('/donation/give')"
+          @click="chooseCampaign(item.id)"
         >
-          <span
-            class="grid h-24 place-items-center bg-(--color-border) text-[length:var(--font-2xl)]"
-          >
+          <span class="grid h-24 place-items-center bg-(--color-border)">
             <IconDog
               class="text-(--color-slate)"
               :size="30"
@@ -450,15 +533,19 @@ function saveSettings() {
           </span>
           <b
             class="mx-[var(--space-3)] mt-[var(--space-2)] block text-[length:var(--font-xs)] text-(--color-gold-dark)"
-          >{{ item.name }}</b>
+          >{{ item.organization }}</b>
           <strong
             class="mx-[var(--space-3)] mt-[var(--space-2)] block text-[length:var(--font-sm)]"
           >{{ item.title }}</strong>
           <span
-            class="mx-[var(--space-3)] mt-[var(--space-3)] block h-1.5 overflow-hidden rounded-full bg-(--color-border)"
+            class="mx-[var(--space-3)] mt-[var(--space-3)] block h-1.5 overflow-hidden rounded-(--radius-full) bg-(--color-border)"
+            role="progressbar"
+            :aria-valuenow="item.progress"
+            aria-valuemin="0"
+            aria-valuemax="100"
           >
             <i
-              class="block h-full rounded-full bg-(--color-gold)"
+              class="block h-full rounded-(--radius-full) bg-(--color-gold)"
               :style="{ width: `${item.progress}%` }"
             />
           </span>
@@ -467,49 +554,50 @@ function saveSettings() {
           >{{ item.progress }}% 달성</small>
         </button>
       </div>
+      <EmptyState
+        v-else
+        :icon="IconSearch"
+        :message="
+          donationStore.isFiltering
+            ? '조건에 맞는 기부처가 없어요. 검색어나 분류를 바꿔보세요.'
+            : '등록된 기부처가 아직 없어요.'
+        "
+      />
     </template>
 
+    <!-- RF-SI-06 · 저금통설정 -->
     <template v-else>
       <button
-        class="cursor-pointer border-0 bg-transparent text-[length:var(--font-3xl)] text-(--color-navy)"
+        class="-ml-[var(--space-1)] grid size-[var(--control-height-sm)] cursor-pointer place-items-center rounded-(--radius-full) border-0 bg-transparent text-(--color-navy) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-gold)"
         type="button"
-        aria-label="뒤로 가기"
+        aria-label="저금통으로 돌아가기"
         @click="go('/donation')"
       >
-        <IconArrowLeft size="24" />
+        <IconArrowLeft :size="24" />
       </button>
       <h1
         class="mb-[var(--space-2)] mt-[var(--space-5)] text-[length:var(--font-xl)]"
       >
         저금통 설정
       </h1>
-      <p
-        class="m-0 text-[length:var(--font-sm)] text-(--color-slate-muted)"
-      >
+      <p class="m-0 text-[length:var(--font-sm)] text-(--color-slate-muted)">
         짜투리 저금 방식을 설정해요
       </p>
 
       <section
-        class="relative mt-[var(--space-5)] rounded-[var(--radius-xl)] bg-(--color-surface) py-[var(--space-4)] pl-[var(--space-4)] pr-[calc(var(--header-height)+var(--space-4))]"
+        class="mt-[var(--space-5)] flex items-start gap-[var(--space-4)] rounded-[var(--radius-xl)] bg-(--color-surface) p-[var(--space-4)]"
       >
-        <b class="block">짜투리 저금통 사용</b>
-        <span
-          class="mt-[var(--space-2)] block text-[length:var(--font-xs)] text-(--color-slate-muted)"
-        >결제할 때마다 잔돈을 자동으로 모아요</span>
-        <button
-          class="absolute right-[var(--space-4)] top-[var(--space-5)] flex h-6 w-11 cursor-pointer items-center rounded-full border-0 bg-(--color-border) px-1"
-          :class="{
-            'bg-(--color-olive)': piggyBankEnabled,
-          }"
-          type="button"
-          :aria-pressed="piggyBankEnabled"
-          @click="piggyBankEnabled = !piggyBankEnabled"
-        >
+        <div class="min-w-0 flex-1">
+          <b class="block">짜투리 저금통 사용</b>
           <span
-            class="block size-4 rounded-full bg-(--color-white) transition-transform"
-            :class="{ 'translate-x-5': piggyBankEnabled }"
-          />
-        </button>
+            class="mt-[var(--space-2)] block text-[length:var(--font-xs)] text-(--color-slate-muted)"
+          >결제할 때마다 잔돈을 자동으로 모아요</span>
+        </div>
+        <ToggleSwitch
+          :model-value="piggyBankEnabled"
+          label="짜투리 저금통 사용"
+          @update:model-value="donationStore.setPiggyBankEnabled($event)"
+        />
       </section>
 
       <h3
@@ -518,20 +606,16 @@ function saveSettings() {
         저금 단위
       </h3>
       <div class="flex gap-[var(--space-2)]">
-        <button
-          v-for="unit in ['10원', '100원']"
+        <SelectableChip
+          v-for="unit in savingUnits"
           :key="unit"
-          class="h-[var(--control-height-sm)] flex-1 cursor-pointer rounded-[var(--radius-lg)] border border-(--color-border) bg-(--color-surface) font-bold text-(--color-slate-dark)"
-          type="button"
+          block
+          shape="rounded"
+          :selected="savingUnit === unit"
+          @click="donationStore.setSavingUnit(unit)"
         >
-          {{ unit }}
-        </button>
-        <button
-          class="h-[var(--control-height-sm)] flex-1 cursor-pointer rounded-[var(--radius-lg)] border border-(--color-navy) bg-(--color-navy) font-bold text-(--color-white)"
-          type="button"
-        >
-          1,000원
-        </button>
+          {{ formatWon(unit) }}
+        </SelectableChip>
       </div>
 
       <section
@@ -541,8 +625,8 @@ function saveSettings() {
         <strong
           class="mt-[var(--space-2)] block text-[length:var(--font-sm)] leading-snug"
         >
-          31,275원 결제 시, 1,000원 미만 끝자리 275원이 자동으로 저금통에
-          적립돼요
+          31,275원 결제 시, {{ formatWon(savingUnit) }} 미만 끝자리
+          {{ formatWon(31275 % savingUnit) }}이 자동으로 저금통에 적립돼요
         </strong>
         <span
           class="mt-[var(--space-1)] block text-[length:var(--font-xs)] text-(--color-olive-muted)"
@@ -555,32 +639,30 @@ function saveSettings() {
         자동 기부
       </div>
       <section
-        class="relative rounded-[var(--radius-xl)] bg-(--color-surface) py-[var(--space-4)] pl-[var(--space-4)] pr-[calc(var(--header-height)+var(--space-4))]"
+        class="flex items-start gap-[var(--space-4)] rounded-[var(--radius-xl)] bg-(--color-surface) p-[var(--space-4)]"
       >
-        <b class="block">매달 자동으로 기부하기</b>
-        <span
-          class="mt-[var(--space-2)] block text-[length:var(--font-xs)] text-(--color-slate-muted)"
-        >매월 말일, 모인 잔돈을 선택한 기부처로 자동 전달해요</span>
-        <button
-          class="absolute right-[var(--space-4)] top-[var(--space-5)] flex h-6 w-11 cursor-pointer items-center rounded-full border-0 bg-(--color-border) px-1"
-          :class="{ 'bg-(--color-olive)': autoDonate }"
-          type="button"
-          :aria-pressed="autoDonate"
-          @click="autoDonate = !autoDonate"
-        >
+        <div class="min-w-0 flex-1">
+          <b class="block">매달 자동으로 기부하기</b>
           <span
-            class="block size-4 rounded-full bg-(--color-white) transition-transform"
-            :class="{ 'translate-x-5': autoDonate }"
-          />
-        </button>
+            class="mt-[var(--space-2)] block text-[length:var(--font-xs)] text-(--color-slate-muted)"
+          >매월 말일, 모인 잔돈을 선택한 기부처로 자동 전달해요</span>
+        </div>
+        <ToggleSwitch
+          :model-value="autoDonate"
+          label="매달 자동으로 기부하기"
+          @update:model-value="donationStore.setAutoDonate($event)"
+        />
       </section>
-      <button
-        class="mt-[var(--space-5)] h-[var(--control-height-lg)] w-full cursor-pointer rounded-[var(--radius-xl)] border-0 bg-(--color-navy) font-bold text-(--color-white)"
-        type="button"
+
+      <AppButton
+        class="mt-[var(--space-5)]"
+        block
+        size="lg"
+        variant="primary"
         @click="saveSettings"
       >
         설정 저장하기
-      </button>
+      </AppButton>
     </template>
   </main>
   <BottomNavBar v-if="isMain" />
