@@ -8,6 +8,7 @@ import IconGroupPurchase from '@/components/common/icons/IconGroupPurchase.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import BottomSheet from '@/components/common/BottomSheet.vue';
+import AppButton from '@/components/common/AppButton.vue';
 
 const isLoading = ref(true);
 const isError = ref(false);
@@ -196,13 +197,12 @@ watch(selectedStatus, loadMyGroupPurchases);
       <p class="text-(length:--font-sm) text-(color:--color-slate-muted)">
         공동구매 내역을 불러오지 못했어요
       </p>
-      <button
-        type="button"
-        class="px-(--space-5) py-(--space-3) rounded-(--radius-lg) bg-(--color-navy) text-(color:--color-white) text-(length:--font-sm) font-bold"
+      <AppButton
+        variant="navy"
         @click="loadMyGroupPurchases"
       >
         다시 시도
-      </button>
+      </AppButton>
     </div>
 
     <!-- 빈 상태 -->
