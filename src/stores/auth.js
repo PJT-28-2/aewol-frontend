@@ -13,6 +13,13 @@ export const useAuthStore = defineStore('auth', {
   },
 
   actions: {
+    clearSession() {
+      this.accessToken = null
+      this.user = null
+      localStorage.removeItem('accessToken')
+      localStorage.removeItem('refreshToken')
+    },
+
     async login(email, password) {
       const { data } = await authApi.login(email, password)
       this.accessToken = data.accessToken
@@ -60,20 +67,13 @@ export const useAuthStore = defineStore('auth', {
 
     logout() {
       authApi.logout().catch(() => {})
-      this.accessToken = null
-      this.user = null
-      localStorage.removeItem('accessToken')
-      localStorage.removeItem('refreshToken')
+      this.clearSession()
       router.push('/login')
     },
 
     async withdraw() {
       await authApi.withdraw()
-      this.accessToken = null
-      this.user = null
-      localStorage.removeItem('accessToken')
-      localStorage.removeItem('refreshToken')
-      router.push('/login')
+      this.clearSession()
     },
   },
 })

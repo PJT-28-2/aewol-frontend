@@ -149,7 +149,7 @@ function handleSubmit() {
         </p>
         <span
           v-if="discountRate > 0"
-          class="px-(--space-2) py-(--space-1) rounded-full bg-(--color-discount-bg) text-(color:--color-discount-text) text-(length:--font-xs) font-bold"
+          class="px-(--space-2) py-(--space-1) rounded-full bg-(--color-gold-surface) text-(color:--color-gold-dark) text-(length:--font-xs) font-bold"
         >
           {{ discountRate }}% 할인
         </span>
