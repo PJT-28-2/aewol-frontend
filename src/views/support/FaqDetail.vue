@@ -192,6 +192,8 @@ function goToRelated(relatedFaqId) {
       >
         <div
           v-if="feedbackToastVisible"
+          role="status"
+          aria-live="polite"
           class="fixed top-7 left-1/2 z-[1100] -translate-x-1/2 rounded-[14px] border border-(--color-border) bg-(--color-white) px-4 py-3 text-[12.5px] font-(--font-bold) text-(color:--color-navy) shadow-(--shadow-lg)"
         >
           소중한 의견 감사합니다
