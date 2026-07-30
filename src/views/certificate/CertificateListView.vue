@@ -46,6 +46,7 @@ const isRequesting = ref(false)
 const candidates = ref([])
 const selectedCandidatePetIds = ref([])
 const isConfirming = ref(false)
+const matchError = ref('')
 
 function openLinkFlow() {
   authForm.value = { userName: '', birthDate: '', phoneNo: '' }
@@ -67,6 +68,7 @@ async function submitAuth() {
     return
   }
 
+  authError.value = ''
   showAuthModal.value = false
   showWaitingModal.value = true
   isRequesting.value = true
@@ -75,6 +77,10 @@ async function submitAuth() {
     selectedCandidatePetIds.value = candidates.value.map((c) => c.petId)
     showWaitingModal.value = false
     showMatchModal.value = true
+  } catch {
+    showWaitingModal.value = false
+    authError.value = '인증에 실패했어요. 다시 시도해주세요.'
+    showAuthModal.value = true
   } finally {
     isRequesting.value = false
   }
@@ -93,10 +99,13 @@ async function confirmMatches() {
   const selected = candidates.value.filter((c) => selectedCandidatePetIds.value.includes(c.petId))
   if (selected.length === 0) return
 
+  matchError.value = ''
   isConfirming.value = true
   try {
     await certificateStore.confirmApmsLink(selected)
     showMatchModal.value = false
+  } catch {
+    matchError.value = '연동에 실패했어요. 다시 시도해주세요.'
   } finally {
     isConfirming.value = false
   }
@@ -111,7 +120,19 @@ async function handleVaccinationSelect(event) {
   const file = event.target.files[0]
   event.target.value = ''
   if (!file || !certificateStore.selectedPetId) return
-  await certificateStore.uploadVaccination(certificateStore.selectedPetId, file)
+  if (!file.type.startsWith('image/')) {
+    alert('이미지 파일만 업로드할 수 있어요.')
+    return
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    alert('파일 크기는 10MB 이하여야 해요.')
+    return
+  }
+  try {
+    await certificateStore.uploadVaccination(certificateStore.selectedPetId, file)
+  } catch {
+    alert('업로드에 실패했어요. 다시 시도해주세요.')
+  }
 }
 
 // 진료확인서 업로드
@@ -123,7 +144,19 @@ async function handleMedicalSelect(event) {
   const file = event.target.files[0]
   event.target.value = ''
   if (!file || !certificateStore.selectedPetId) return
-  await certificateStore.uploadMedicalConfirmation(certificateStore.selectedPetId, file)
+  if (!file.type.startsWith('image/')) {
+    alert('이미지 파일만 업로드할 수 있어요.')
+    return
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    alert('파일 크기는 10MB 이하여야 해요.')
+    return
+  }
+  try {
+    await certificateStore.uploadMedicalConfirmation(certificateStore.selectedPetId, file)
+  } catch {
+    alert('업로드에 실패했어요. 다시 시도해주세요.')
+  }
 }
 </script>
 
@@ -447,6 +480,12 @@ async function handleMedicalSelect(event) {
         class="text-(length:--font-sm) text-(color:--color-gray-600)"
       >
         신청인 명의로 새로 조회된 동물이 없어요. 이미 모두 연동되어 있을 수 있어요.
+      </p>
+      <p
+        v-if="matchError"
+        class="text-(length:--font-xs) text-(color:--color-danger) mt-(--space-2)"
+      >
+        {{ matchError }}
       </p>
       <template #footer>
         <AppButton

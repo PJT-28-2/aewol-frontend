@@ -119,12 +119,16 @@ function handleShareFallbackConfirm() {
 
 // 재동기화 — connectedId 재사용 전제라 신원확인 폼 없이 바로 재조회
 const isResyncing = ref(false)
+const resyncError = ref('')
 
 async function handleResync() {
   if (!certificateStore.detail) return
+  resyncError.value = ''
   isResyncing.value = true
   try {
     await certificateStore.resyncRegistration(certificateStore.detail.docId)
+  } catch {
+    resyncError.value = '동기화에 실패했어요. 다시 시도해주세요.'
   } finally {
     isResyncing.value = false
   }
@@ -133,6 +137,12 @@ async function handleResync() {
 // 연동 해제(삭제)
 const showDeleteModal = ref(false)
 const isDeleting = ref(false)
+const deleteError = ref('')
+
+function openDeleteModal() {
+  deleteError.value = ''
+  showDeleteModal.value = true
+}
 
 async function handleDelete() {
   if (!certificateStore.detail) return
@@ -140,6 +150,8 @@ async function handleDelete() {
   try {
     await certificateStore.deleteRegistration(certificateStore.detail.docId)
     router.replace('/certificates')
+  } catch {
+    deleteError.value = '연동 해제에 실패했어요. 다시 시도해주세요.'
   } finally {
     isDeleting.value = false
   }
@@ -213,6 +225,12 @@ async function handleDelete() {
           <p class="text-(length:--font-xs) text-(color:--color-gray-600) mt-(--space-1)">
             APMS 정보 변경 시 자동으로 갱신돼요
           </p>
+          <p
+            v-if="resyncError"
+            class="text-(length:--font-xs) text-(color:--color-danger) mt-(--space-1)"
+          >
+            {{ resyncError }}
+          </p>
         </div>
         <button
           type="button"
@@ -249,7 +267,7 @@ async function handleDelete() {
       <button
         type="button"
         class="w-full text-center text-(length:--font-sm) text-(color:--color-gray-500) underline underline-offset-2"
-        @click="showDeleteModal = true"
+        @click="openDeleteModal"
       >
         동물등록증 연동 해제
       </button>
@@ -295,6 +313,12 @@ async function handleDelete() {
     >
       <p class="text-(length:--font-md) text-(color:--color-gray-600)">
         연동을 해제하면 저장된 등록정보가 삭제돼요. 해제 후에도 언제든 다시 연동할 수 있어요.
+      </p>
+      <p
+        v-if="deleteError"
+        class="text-(length:--font-sm) text-(color:--color-danger) mt-(--space-2)"
+      >
+        {{ deleteError }}
       </p>
       <template #footer>
         <AppButton
