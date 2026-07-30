@@ -130,14 +130,16 @@ function selectCategory(key) {
 }
 
 function selectPet(id) {
-  selectedPetId.value = id;
+  selectedPetId.value = selectedPetId.value === id ? null : id;
 }
 
 function goBack() {
   router.back();
 }
 
-async function handleSave() {
+function handleSave() {
+  if (!selectedCategory.value) return;
+
   isSaving.value = true;
   transactionStore.updateTransactionTag(txId.value, {
     category: selectedCategory.value,
@@ -296,6 +298,7 @@ async function handleSave() {
           variant="navy"
           size="lg"
           block
+          :disabled="!selectedCategory"
           :loading="isSaving"
           @click="handleSave"
         >
