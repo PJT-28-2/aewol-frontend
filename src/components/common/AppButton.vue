@@ -38,6 +38,11 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  type: {
+    type: String,
+    default: 'button',
+    validator: (value) => ['button', 'submit', 'reset'].includes(value),
+  },
 })
 
 const variantClasses = {
@@ -87,6 +92,7 @@ const spinnerColor = ['secondary', 'ghost', 'primary'].includes(props.variant)
       block ? 'flex w-full' : '',
       loading ? 'pointer-events-none' : '',
     ]"
+    :type="type"
     :disabled="disabled || loading"
     :aria-busy="loading"
   >

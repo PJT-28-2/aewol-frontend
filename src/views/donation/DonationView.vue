@@ -17,6 +17,7 @@ import IconPlus from '@/components/common/icons/IconPlus.vue'
 import IconSearch from '@/components/common/icons/IconSearch.vue'
 import IconSettings from '@/components/common/icons/IconSettings.vue'
 import IconStar from '@/components/common/icons/IconStar.vue'
+import IconWarning from '@/components/common/icons/IconWarning.vue'
 import { donationAmountPresets, donationCategories, savingUnits } from '@/mocks/donation'
 import { useDonationStore } from '@/stores/donation'
 
@@ -566,7 +567,7 @@ onMounted(loadDonationData)
     </template>
 
     <!-- RF-SI-06 · 저금통설정 -->
-    <template v-else>
+    <template v-else-if="screen === 'settings'">
       <button
         class="-ml-[var(--space-1)] grid size-[var(--control-height-sm)] cursor-pointer place-items-center rounded-(--radius-full) border-0 bg-transparent text-(--color-navy) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-gold)"
         type="button"
@@ -664,6 +665,18 @@ onMounted(loadDonationData)
         설정 저장하기
       </AppButton>
     </template>
+
+    <section
+      v-else
+      class="grid min-h-[calc(100dvh-var(--header-height)-var(--bottom-nav-height))] place-items-center"
+    >
+      <EmptyState
+        :icon="IconWarning"
+        message="요청한 화면을 찾을 수 없어요."
+        action-text="저금통으로 돌아가기"
+        action-route="/donation"
+      />
+    </section>
   </main>
   <BottomNavBar v-if="isMain" />
 </template>

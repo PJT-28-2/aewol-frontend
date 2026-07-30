@@ -55,8 +55,15 @@ export const mockCampaigns = [
     daysLeft: 5,
     preferred: false,
   },
+  {
+    id: 'green-paw-eco-bowl',
+    organization: '초록발자국 환경연대',
+    title: '보호소 친환경 사료 용기 교체',
+    category: '환경',
+    progress: 31,
+    raised: 468000,
+    participants: 86,
+    daysLeft: 26,
+    preferred: false,
+  },
 ]
-
-export function getMockCampaign(campaignId) {
-  return mockCampaigns.find((campaign) => campaign.id === campaignId)
-}

@@ -68,20 +68,25 @@ export const useDonationStore = defineStore('donation', {
   },
 
   actions: {
-    fetchDonationData() {
+    async fetchDonationData() {
       this.isLoading = true
       this.error = ''
 
       try {
-        this.balance = mockDonationPot.balance
-        this.monthlySaved = mockDonationPot.monthlySaved
-        this.impactMessage = mockDonationPot.impactMessage
-        this.campaigns = mockCampaigns.map((campaign) => ({ ...campaign }))
+        // TODO: 백엔드 /api/donation 구현 후 donationApi 호출로 교체한다.
+        const { balance, impactMessage, monthlySaved } = mockDonationPot
+        const campaigns = mockCampaigns.map((campaign) => ({ ...campaign }))
 
-        if (!this.currentCampaign) return
+        if (!campaigns.length) throw new Error('EMPTY_CAMPAIGNS')
 
-        this.selectedCampaignId = this.currentCampaign.id
+        this.balance = balance
+        this.monthlySaved = monthlySaved
+        this.impactMessage = impactMessage
+        this.campaigns = campaigns
+        this.selectedCampaignId = this.currentCampaign?.id ?? ''
       } catch {
+        this.campaigns = []
+        this.selectedCampaignId = ''
         this.error = '저금통 정보를 불러오지 못했어요. 다시 시도해 주세요.'
       } finally {
         this.isLoading = false
