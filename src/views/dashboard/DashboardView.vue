@@ -16,7 +16,7 @@ const route = useRoute();
 const petStore = usePetStore();
 const transactionStore = useTransactionStore();
 
-const pets = ref(petStore.pets);
+const pets = computed(() => petStore.pets);
 
 const CATEGORY_COLOR_TOKENS = {
   MEDICAL: '--color-navy',

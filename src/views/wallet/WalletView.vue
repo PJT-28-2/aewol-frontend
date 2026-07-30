@@ -18,7 +18,7 @@ const transactionStore = useTransactionStore();
 
 // TODO: 백엔드 API 연동 후 mock 데이터 제거하고 실제 fetch로 교체
 const walletBalance = ref(mockWalletBalance);
-const transactions = ref(transactionStore.transactions);
+const transactions = computed(() => transactionStore.transactions);
 
 const isLoading = ref(true);
 

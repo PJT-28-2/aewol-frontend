@@ -18,7 +18,10 @@ const transactionStore = useTransactionStore();
 
 // 이번 달 지출 화면 등 다른 화면에서 카테고리를 지정해 들어올 수 있다
 const categoryFilter = ref(
-  typeof route.query.category === 'string' ? route.query.category : null,
+  typeof route.query.category === 'string' &&
+    route.query.category in CATEGORY_LABELS
+    ? route.query.category
+    : null,
 );
 const categoryFilterLabel = computed(
   () => CATEGORY_LABELS[categoryFilter.value] ?? '',
@@ -26,10 +29,13 @@ const categoryFilterLabel = computed(
 
 function clearCategoryFilter() {
   categoryFilter.value = null;
+  const rest = { ...route.query };
+  delete rest.category;
+  router.replace({ query: rest });
 }
 
 // TODO: 백엔드 API 연동 후 mock 데이터 제거하고 실제 fetch로 교체
-const transactions = ref(transactionStore.transactions);
+const transactions = computed(() => transactionStore.transactions);
 const isLoading = ref(true);
 const isError = ref(false);
 
