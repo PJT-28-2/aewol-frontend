@@ -68,7 +68,7 @@ const completedAtLabel = computed(() => {
 });
 
 function confirmComplete() {
-  router.replace('/home');
+  router.replace(route.query.from === 'home' ? '/home' : '/wallet');
 }
 
 function goToWallet() {

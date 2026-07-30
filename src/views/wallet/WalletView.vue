@@ -100,7 +100,7 @@ const filteredTransactions = computed(() => {
 const router = useRouter();
 
 function handleCharge() {
-  router.push('/wallet/charge');
+  router.push({ path: '/wallet/charge', query: { from: 'wallet' } });
 }
 function handleTransfer() {
   router.push('/wallet/transfer');
