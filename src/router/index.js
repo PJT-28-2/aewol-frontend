@@ -109,6 +109,18 @@ const authRoutes = [
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
+    path: '/certificates',
+    name: 'CertificateList',
+    component: () => import('@/views/certificate/CertificateListView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
+    path: '/certificates/:docId',
+    name: 'CertificateDetail',
+    component: () => import('@/views/certificate/CertificateDetailView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
     path: '/wallet',
     name: 'Wallet',
     component: () => import('@/views/wallet/WalletView.vue'),

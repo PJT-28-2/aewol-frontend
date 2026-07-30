@@ -20,3 +20,13 @@ export function formatCountdown(totalSeconds) {
 export function formatYearMonth(year, month) {
   return `${year}년 ${month}월`
 }
+
+/**
+ * "YYYY-MM-DD" 형식의 날짜 문자열을 "YYYY.MM.DD" 형식으로 변환한다.
+ *
+ * @param {string} isoDate `YYYY-MM-DD` 형식의 날짜 문자열
+ * @returns {string} `YYYY.MM.DD` 형식의 문자열
+ */
+export function formatDateDot(isoDate) {
+  return isoDate.replaceAll('-', '.')
+}
