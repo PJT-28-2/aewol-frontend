@@ -1,9 +1,10 @@
-import { defineStore } from 'pinia'
+import { acceptHMRUpdate, defineStore } from 'pinia'
 import { petApi } from '@/api/pet'
+import { mockPets } from '@/mocks/pet'
 
 export const usePetStore = defineStore('pet', {
   state: () => ({
-    pets: [],
+    pets: mockPets.map((pet) => ({ ...pet })),
     currentPet: null,
   }),
 
@@ -41,3 +42,7 @@ export const usePetStore = defineStore('pet', {
     },
   },
 })
+
+if (import.meta.hot) {
+  import.meta.hot.accept(acceptHMRUpdate(usePetStore, import.meta.hot))
+}
