@@ -1,248 +1,265 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import AppButton from '@/components/common/AppButton.vue'
+import BottomNavBar from '@/components/common/BottomNavBar.vue'
+import EmptyState from '@/components/common/EmptyState.vue'
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
+import IconChevronLeft from '@/components/common/icons/IconChevronLeft.vue'
+import IconHospital from '@/components/common/icons/IconHospital.vue'
+import IconChevronRight from '@/components/common/icons/IconChevronRight.vue'
+import IconPhone from '@/components/common/icons/IconPhone.vue'
+import IconWarning from '@/components/common/icons/IconWarning.vue'
 
+const router = useRouter()
 const hospitals = ref([])
 const isLoading = ref(true)
-const is24hOnly = ref(false)
+const mapContainer = ref(null)
+const mapError = ref(null)
 
-onMounted(async () => {
-  // TODO: get user's current location via Geolocation API
-  // TODO: fetch nearby emergency hospitals
-  isLoading.value = false
-})
+// TODO: 백엔드 API 연동 후 제거
+const mockHospitals = [
+  {
+    id: 1,
+    name: '24시 제주동물의료센터',
+    distance: 620,
+    travelTime: 8,
+    travelMode: '도보',
+    phone: '064-123-4567',
+    lat: 33.4996,
+    lng: 126.5312,
+  },
+  {
+    id: 2,
+    name: '애월 24시 동물병원',
+    distance: 1100,
+    travelTime: 15,
+    travelMode: '도보',
+    phone: '064-234-5678',
+    lat: 33.5024,
+    lng: 126.5278,
+  },
+  {
+    id: 3,
+    name: '한라 응급동물병원',
+    distance: 2400,
+    travelTime: 6,
+    travelMode: '차량',
+    phone: '064-345-6789',
+    lat: 33.4953,
+    lng: 126.5358,
+  },
+]
 
-const handleFilter24h = () => {
-  // TODO: filter hospitals by 24h availability
+function formatDistance(meters) {
+  if (meters < 1000) return `${meters}m`
+  return `${(meters / 1000).toFixed(1)}km`
 }
 
-const handleCall = (phone) => {
+function handleCall(phone) {
   window.location.href = `tel:${phone}`
 }
+
+function handleNavigation(hospital) {
+  const url = `https://map.kakao.com/link/to/${encodeURIComponent(hospital.name)},${hospital.lat},${hospital.lng}`
+  window.open(url, '_blank', 'noopener,noreferrer')
+}
+
+async function initKakaoMap(lat, lng) {
+  const key = import.meta.env.VITE_KAKAO_MAP_KEY
+  if (!mapContainer.value) return
+
+  if (!key) {
+    mapError.value = '지도 설정을 확인해 주세요.'
+    return
+  }
+
+  if (!window.kakao?.maps) {
+    try {
+      await new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${key}&autoload=false`
+        script.onload = resolve
+        script.onerror = () => reject(new Error('카카오맵 SDK 로드 실패'))
+        document.head.appendChild(script)
+      })
+    } catch {
+      mapError.value = '지도를 불러오지 못했습니다.'
+      return
+    }
+  }
+
+  window.kakao.maps.load(() => {
+    const center = new window.kakao.maps.LatLng(lat, lng)
+    const map = new window.kakao.maps.Map(mapContainer.value, {
+      center,
+      level: 5,
+      draggable: false,
+      scrollwheel: false,
+    })
+    new window.kakao.maps.Marker({ map, position: center })
+    hospitals.value.forEach((h) => {
+      new window.kakao.maps.Marker({
+        map,
+        position: new window.kakao.maps.LatLng(h.lat, h.lng),
+      })
+    })
+  })
+}
+
+// 서울 시청 기본 좌표 (위치 권한 거부 시 fallback)
+const DEFAULT_LAT = 37.5665
+const DEFAULT_LNG = 126.9780
+
+onMounted(async () => {
+  // TODO: 백엔드 API 연동 시 mock 제거 후 아래로 교체
+  // const res = await emergencyApi.searchHospitals({ lat, lng })
+  // hospitals.value = res.data
+  hospitals.value = mockHospitals
+
+  let lat = DEFAULT_LAT
+  let lng = DEFAULT_LNG
+
+  try {
+    const pos = await new Promise((resolve, reject) => {
+      if (!navigator.geolocation) return reject(new Error('not supported'))
+      navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 })
+    })
+    lat = pos.coords.latitude
+    lng = pos.coords.longitude
+  } catch {
+    // 위치 권한 거부 또는 미지원 시 기본 좌표로 지도 표시
+  } finally {
+    isLoading.value = false
+  }
+
+  await initKakaoMap(lat, lng)
+})
 </script>
 
 <template>
-  <div class="emergency-page">
-    <header class="page-header">
-      <h1>응급 동물병원</h1>
+  <div class="min-h-screen bg-(--color-bg) flex flex-col">
+    <!-- 헤더 -->
+    <header class="bg-(--color-navy) px-(--space-4) pt-(--space-5) pb-(--space-6)">
+      <button
+        class="flex items-center justify-center w-10 h-10 -ml-2 mb-(--space-1)"
+        aria-label="뒤로 가기"
+        @click="router.back()"
+      >
+        <IconChevronLeft :size="24" color="var(--color-white)" />
+      </button>
+      <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-white)">
+        응급 SOS
+      </h1>
+      <p class="text-(length:--font-sm) text-(color:--color-slate) mt-(--space-1)">
+        위급할 때 근처 응급병원을 찾아보세요
+      </p>
     </header>
 
-    <!-- 24h Filter -->
-    <div class="filter-bar">
-      <label class="toggle-label">
-        <input
-          v-model="is24hOnly"
-          type="checkbox"
-          @change="handleFilter24h"
-        >
-        <span class="toggle-text">24시간 진료만 보기</span>
-      </label>
-    </div>
-
-    <!-- Map Placeholder -->
-    <section class="map-section card">
-      <div class="map-placeholder">
-        <!-- TODO: implement map (Kakao Maps / Naver Maps API) -->
-        <p class="placeholder-text">
-          지도 영역
-        </p>
-        <p class="placeholder-sub">
-          주변 응급 동물병원이 표시됩니다.
-        </p>
-      </div>
-    </section>
-
-    <!-- Hospital List -->
-    <section class="hospital-section">
-      <h2>주변 병원 목록</h2>
-
-      <div
-        v-if="isLoading"
-        class="loading-state"
-      >
-        <p>위치 정보를 가져오는 중...</p>
-      </div>
-
-      <div
-        v-else-if="hospitals.length === 0"
-        class="empty-state"
-      >
-        <p>주변에 응급 동물병원이 없습니다.</p>
-      </div>
-
-      <ul
-        v-else
-        class="hospital-list"
-      >
-        <li
-          v-for="hospital in hospitals"
-          :key="hospital.id"
-          class="hospital-item card"
-        >
-          <div class="hospital-info">
-            <div class="hospital-header">
-              <h3>{{ hospital.name }}</h3>
-              <span
-                v-if="hospital.is24h"
-                class="badge-24h"
-              >24시</span>
-            </div>
-            <p class="hospital-address">
-              {{ hospital.address }}
-            </p>
-            <p class="hospital-distance">
-              {{ hospital.distance }}km
+    <!-- 본문 -->
+    <main class="flex-1 px-(--space-4) pt-(--space-5) pb-[calc(var(--bottom-nav-height)+var(--space-5))]">
+      <!-- 지도 미리보기 -->
+      <section class="mb-(--space-6)">
+        <h2 class="text-(length:--font-base) font-semibold text-(color:--color-navy) mb-(--space-3)">
+          지도 미리보기
+        </h2>
+        <div class="relative rounded-(--radius-lg) overflow-hidden shadow-(--shadow-sm)">
+          <div
+            ref="mapContainer"
+            class="w-full h-(--size-map-preview-height) bg-(--color-gray-200)"
+          />
+          <div
+            v-if="mapError"
+            class="absolute inset-0 flex flex-col items-center justify-center gap-(--space-2) bg-(--color-gray-100)"
+          >
+            <IconWarning :size="24" color="var(--color-slate-muted)" />
+            <p class="text-(length:--font-sm) text-(color:--color-slate-muted)">
+              {{ mapError }}
             </p>
           </div>
-          <button
-            class="btn-call"
-            @click="handleCall(hospital.phone)"
+          <div
+            v-else-if="hospitals.length"
+            class="absolute bottom-3 left-3 flex items-center gap-(--space-1) bg-(--color-white) rounded-full px-(--space-3) py-1 shadow-(--shadow-sm)"
           >
-            전화
-          </button>
-        </li>
-      </ul>
-    </section>
+            <span class="w-2 h-2 rounded-full bg-(--color-success) shrink-0" />
+            <span class="text-(length:--font-sm) font-semibold text-(color:--color-navy)">
+              {{ formatDistance(hospitals[0].distance) }}
+            </span>
+          </div>
+          <div
+            v-if="!mapError && hospitals.length"
+            class="absolute bottom-3 right-3 flex items-center gap-1 bg-(--color-white) rounded-full px-(--space-3) py-1 shadow-(--shadow-sm)"
+          >
+            <span class="text-(length:--font-sm) font-semibold text-(color:--color-navy)">
+              {{ hospitals.length }}
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 병원 목록 -->
+      <section>
+        <h2 class="text-(length:--font-base) font-semibold text-(color:--color-navy) mb-(--space-3)">
+          가까운 24시 응급병원
+        </h2>
+
+        <div
+          v-if="isLoading"
+          class="flex justify-center py-(--space-8)"
+        >
+          <LoadingSpinner />
+        </div>
+
+        <EmptyState
+          v-else-if="!hospitals.length"
+          :icon="IconHospital"
+          message="주변에 응급 동물병원이 없습니다."
+        />
+
+        <ul
+          v-else
+          class="flex flex-col gap-(--space-3)"
+        >
+          <li
+            v-for="hospital in hospitals"
+            :key="hospital.id"
+            class="flex items-center gap-(--space-3) bg-(--color-white) rounded-(--radius-lg) p-(--space-4) shadow-(--shadow-sm)"
+          >
+            <div class="flex items-center justify-center w-(--space-9) h-(--space-9) rounded-(--radius-md) bg-(--color-gray-100) shrink-0">
+              <IconHospital :size="26" color="var(--color-slate-dark)" />
+            </div>
+
+            <div class="flex-1 min-w-0">
+              <p class="text-(length:--font-md) font-semibold text-(color:--color-navy) truncate">
+                {{ hospital.name }}
+              </p>
+              <p class="text-(length:--font-sm) text-(color:--color-slate-muted) mt-(--space-1)">
+                {{ formatDistance(hospital.distance) }} · {{ hospital.travelMode }} {{ hospital.travelTime }}분
+              </p>
+              <div class="flex gap-(--space-2) mt-(--space-2)">
+                <AppButton
+                  variant="secondary"
+                  size="sm"
+                  @click="handleCall(hospital.phone)"
+                >
+                  <IconPhone :size="13" color="var(--color-navy)" class="shrink-0 translate-y-px" />
+                  <span class="leading-none">전화</span>
+                </AppButton>
+                <AppButton
+                  variant="navy"
+                  size="sm"
+                  @click="handleNavigation(hospital)"
+                >
+                  길찾기
+                  <IconChevronRight :size="14" color="var(--color-white)" class="translate-y-px" />
+                </AppButton>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </section>
+    </main>
+
+    <BottomNavBar />
   </div>
 </template>
-
-<style scoped>
-.emergency-page {
-  padding: var(--space-4);
-  padding-bottom: calc(var(--bottom-nav-height) + var(--space-4));
-  background-color: var(--color-bg);
-  min-height: 100vh;
-}
-
-.page-header {
-  margin-bottom: var(--space-4);
-}
-
-.page-header h1 {
-  font-size: var(--font-2xl);
-  font-weight: var(--font-bold);
-  color: var(--color-danger);
-}
-
-.filter-bar {
-  margin-bottom: var(--space-4);
-}
-
-.toggle-label {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  cursor: pointer;
-}
-
-.toggle-text {
-  font-size: var(--font-md);
-  color: var(--color-gray-700);
-}
-
-.card {
-  background-color: var(--color-white);
-  border-radius: var(--radius-lg);
-  padding: var(--space-4);
-  box-shadow: var(--shadow-sm);
-}
-
-.map-section {
-  margin-bottom: var(--space-5);
-}
-
-.map-placeholder {
-  height: 200px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--color-gray-100);
-  border-radius: var(--radius-md);
-}
-
-.placeholder-text {
-  font-size: var(--font-base);
-  font-weight: var(--font-semibold);
-  color: var(--color-gray-400);
-}
-
-.placeholder-sub {
-  font-size: var(--font-sm);
-  color: var(--color-gray-400);
-  margin-top: var(--space-2);
-}
-
-.hospital-section h2 {
-  font-size: var(--font-lg);
-  font-weight: var(--font-semibold);
-  color: var(--color-navy);
-  margin-bottom: var(--space-4);
-}
-
-.loading-state,
-.empty-state {
-  text-align: center;
-  padding: var(--space-6) 0;
-  color: var(--color-gray-500);
-}
-
-.hospital-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.hospital-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.hospital-header {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin-bottom: var(--space-1);
-}
-
-.hospital-header h3 {
-  font-size: var(--font-md);
-  font-weight: var(--font-semibold);
-  color: var(--color-gray-900);
-}
-
-.badge-24h {
-  font-size: var(--font-xs);
-  font-weight: var(--font-bold);
-  color: var(--color-danger);
-  background-color: var(--color-status-danger-bg);
-  padding: 1px var(--space-2);
-  border-radius: var(--radius-sm);
-}
-
-.hospital-address {
-  font-size: var(--font-sm);
-  color: var(--color-gray-600);
-}
-
-.hospital-distance {
-  font-size: var(--font-xs);
-  color: var(--color-gray-400);
-  margin-top: var(--space-1);
-}
-
-.btn-call {
-  padding: var(--space-2) var(--space-4);
-  background-color: var(--color-success);
-  color: var(--color-white);
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: var(--font-sm);
-  font-weight: var(--font-semibold);
-  cursor: pointer;
-  white-space: nowrap;
-}
-</style>

@@ -125,7 +125,7 @@ const quickActions = [
     bg: 'var(--color-pastel-beige)',
   },
   {
-    label: 'SOS 포켓',
+    label: '응급 SOS',
     to: '/emergency',
     icon: IconSos,
     bg: 'var(--color-pastel-coral)',

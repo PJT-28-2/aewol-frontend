@@ -155,6 +155,7 @@
   --layout-max-width: 480px;
 
   /* Component Sizes */
+  --size-map-preview-height: 180px;
   --size-thumb-lg: 110px;
   --size-progress-bar: 8px;
   --size-stepper-box: 46px;

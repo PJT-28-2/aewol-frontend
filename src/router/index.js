@@ -377,7 +377,7 @@ const authRoutes = [
     path: '/emergency',
     name: 'Emergency',
     component: () => import('@/views/emergency/EmergencyView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true },
   },
   {
     path: '/settings',
