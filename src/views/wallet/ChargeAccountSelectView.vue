@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import AppButton from '@/components/common/AppButton.vue';
 import BankBadge from '@/components/common/BankBadge.vue';
@@ -25,8 +25,18 @@ onMounted(async () => {
   }
 });
 
-const pendingAccountId = ref(
-  Number(route.query.accountId) || accountStore.primaryAccount?.accountId,
+const pendingAccountId = ref(Number(route.query.accountId) || undefined);
+
+// route.query.accountId가 없을 때, 계좌 목록이 비동기로 로드된 뒤에도
+// 주계좌를 기본 선택값으로 반영하기 위한 watch (accounts는 onMounted에서 채워짐)
+watch(
+  () => accountStore.accounts.length,
+  () => {
+    if (pendingAccountId.value != null) return;
+    pendingAccountId.value =
+      accountStore.primaryAccount?.accountId ?? accountStore.accounts[0]?.accountId;
+  },
+  { immediate: true },
 );
 
 function isSelected(account) {

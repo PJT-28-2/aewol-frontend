@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import AppButton from '@/components/common/AppButton.vue';
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import petSuccess from '@/assets/images/pet-success.png';
 import { useAccountStore } from '@/stores/account';
 import { getBankMeta } from '@/utils/bankMeta';
@@ -31,6 +32,7 @@ const chargedBankMeta = computed(() =>
     : null,
 );
 
+const isLoading = ref(true);
 const showInvalidState = ref(false);
 
 onMounted(async () => {
@@ -47,6 +49,7 @@ onMounted(async () => {
   if (amount.value <= 0 || !chargedAccount.value) {
     showInvalidState.value = true;
   }
+  isLoading.value = false;
 });
 
 const completedAt = new Date();
@@ -77,7 +80,9 @@ function goToWallet() {
   <div
     class="min-h-screen max-w-[420px] mx-auto bg-(--color-bg) px-(--space-6) pt-24 flex flex-col items-center text-center"
   >
-    <template v-if="showInvalidState">
+    <LoadingSpinner v-if="isLoading" />
+
+    <template v-else-if="showInvalidState">
       <h1
         class="text-(length:--font-xl) font-bold text-(color:--color-navy) mb-(--space-2)"
       >
