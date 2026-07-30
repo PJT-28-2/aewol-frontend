@@ -7,8 +7,6 @@ import {
   MOCK_REGISTRATION_DETAIL,
 } from '@/utils/mockData'
 
-const REG_NUMBER_PATTERN = /^(\d{12}|\d{15})$/
-
 export const useCertificateStore = defineStore('certificate', {
   state: () => ({
     // 상단 펫 탭 — 지금은 이 스토어에서 목데이터로 자체 관리 (추후 usePetStore 연동 예정)
@@ -100,64 +98,105 @@ export const useCertificateStore = defineStore('certificate', {
       })
     },
 
-    // 동물등록증 연동 — pet.regNumber가 이미 있으면 그 값을 그대로 재사용하고(확인만 받음),
-    // 없으면 화면에서 새로 입력받은 값을 사용. 조회 키(regNumber)만 요청값이고
-    // 나머지 필드(품종·생년월일·소유자 등)는 연동 응답으로 채워져 DB에 저장된다는 전제.
-    async linkRegistration(petId, regNumber) {
-      if (!REG_NUMBER_PATTERN.test(regNumber)) {
-        throw new Error('동물등록번호는 12자리(인식표) 또는 15자리(무선전자인식장치) 숫자여야 해요.')
+    // 동물등록증 연동 1단계 — 간편인증(카카오톡) 요청
+    // 실제로는 CODEF에 organization/loginType=5/loginTypeLevel/userName/birthDate/phoneNo를
+    // 보내면 continue2Way 응답(jobIndex/threadIndex/jti/twoWayTimestamp)이 오고,
+    // 사용자가 카카오톡 앱에서 승인해야 2차(추가인증) 요청으로 최종 완료된다.
+    // 여기서는 실제 CODEF 연동 없이 그 대기 시간만 흉내내고, 승인이 끝났다고 가정한다.
+    // 등록번호는 요청값이 아니라 응답값이라, 인증만 하면 신청인 명의의 동물이 (여러 마리면 배열로) 돌아온다.
+    async requestApmsSimpleAuth({ userName, birthDate, phoneNo }) {
+      if (!userName?.trim() || !birthDate?.trim() || !phoneNo?.trim()) {
+        throw new Error('이름, 생년월일, 전화번호를 모두 입력해주세요.')
       }
 
       if (USE_MOCK_DATA) {
-        const pet = this.pets.find((p) => p.petId === petId)
-        const docId = `doc-reg-${petId}`
-        const today = new Date().toISOString().slice(0, 10)
+        // 카카오톡 승인 대기(2-way) 흉내 — 실제 폴링/웹훅 없이 지연만 재현
+        await new Promise((resolve) => setTimeout(resolve, 1500))
 
-        // CODEF 샌드박스는 입력값과 무관하게 상품별로 정해진 고정 응답을 준다는 전제라,
-        // 데모 화면이 자연스럽도록 pet에 이미 있는 정보를 그대로 재사용해 응답을 흉내냄.
-        // 실제 연동 시엔 이 값들이 CODEF 응답 그대로로 대체됨.
+        const today = new Date().toISOString().slice(0, 10)
+        // 이미 연동된 동물등록증이 없는 펫들을 "신청인 명의로 조회된 동물"로 흉내냄
+        const linkedPetIds = new Set(
+          this.documents.filter((doc) => doc.docType === 'REGISTRATION').map((doc) => doc.petId),
+        )
+        const candidates = this.pets
+          .filter((pet) => !linkedPetIds.has(pet.petId))
+          .map((pet) => ({
+            petId: pet.petId,
+            resRegNumber: `41000001${String(Date.now()).slice(-8)}${pet.petId.slice(-1)}`,
+            commName: pet.name,
+            resKind: pet.breed,
+            resGender: pet.gender,
+            resNeuterYN: pet.neutered === 'Y' ? 'O' : 'X',
+            commBirthDate: pet.birthDate,
+            resType1: pet.species === 'CAT' ? '고양이' : '개',
+            resColor: '크림색',
+            resOwner: userName,
+            resPhoneNo: phoneNo,
+            resIssueDate: today,
+            resRegisterDate: today,
+            resIssueOgzNm: '국가동물보호정보시스템',
+            resState: '승인',
+            resType: '소유',
+          }))
+
+        return candidates
+      }
+
+      // TODO: 백엔드에 "간편인증 1차/추가인증 2차" 엔드포인트가 아직 확정되지 않아 주석 처리해둠.
+      // 확정되면 1차 요청 → continue2Way 확인 → 카카오톡 승인 대기 → 2차(추가인증) 요청 순으로 연결 예정.
+      // return this._withRequestState(async () => {
+      //   const { data } = await certificatesApi.syncRegistration({ userName, birthDate, phoneNo })
+      //   return data.result
+      // })
+    },
+
+    // 동물등록증 연동 2단계 — 사용자가 매칭 결과 화면에서 선택한 후보들을 저장
+    async confirmApmsLink(candidates) {
+      const today = new Date().toISOString().slice(0, 10)
+
+      for (const candidate of candidates) {
+        const pet = this.pets.find((p) => p.petId === candidate.petId)
+        const docId = `doc-reg-${candidate.petId}`
+
         const detail = {
           docId,
-          petId,
-          regNumber,
-          name: pet?.name ?? '',
-          breed: pet?.breed ?? '',
-          gender: pet?.gender ?? 'MALE',
-          neutered: pet?.neutered ?? 'Y',
-          birthDate: pet?.birthDate ?? today,
-          furColor: '크림색',
+          petId: candidate.petId,
+          regNumber: candidate.resRegNumber,
+          name: candidate.commName,
+          breed: candidate.resKind,
+          gender: candidate.resGender,
+          neutered: candidate.resNeuterYN === 'O' ? 'Y' : 'N',
+          birthDate: candidate.commBirthDate,
+          furColor: candidate.resColor,
           weight: pet?.weight ?? 0,
-          ownerName: '김애월',
-          registeredDate: today,
-          issueOrg: '국가동물보호정보시스템',
+          ownerName: candidate.resOwner,
+          ownerPhone: candidate.resPhoneNo,
+          issueDate: candidate.resIssueDate,
+          registerDate: candidate.resRegisterDate,
+          issueOrg: candidate.resIssueOgzNm,
+          regState: candidate.resState,
+          regType: candidate.resType,
           lastSyncedAt: today,
         }
         this.registrationDetails = { ...this.registrationDetails, [docId]: detail }
 
-        if (pet) pet.regNumber = regNumber
+        if (pet) pet.regNumber = candidate.resRegNumber
 
         const newDoc = {
           docId,
-          petId,
-          docName: `${pet?.name ?? ''} · 동물등록증`,
+          petId: candidate.petId,
+          docName: `${candidate.commName} · 동물등록증`,
           docType: 'REGISTRATION',
           fileUrl: '',
-          issuedDate: today,
+          issuedDate: candidate.resIssueDate,
           createdAt: new Date().toISOString(),
         }
         this.documents = [newDoc, ...this.documents.filter((doc) => doc.docId !== docId)]
-        this.registrationDoc = newDoc
-
-        return newDoc
       }
 
-      // TODO: 백엔드에 "연동" 엔드포인트가 아직 확정되지 않아 주석 처리해둠.
-      // 확정되면 아래처럼 연결 예정 (경로/바디는 추정치 — certificatesApi.syncRegistration 참고)
-      // return this._withRequestState(async () => {
-      //   const { data } = await certificatesApi.syncRegistration(petId, regNumber)
-      //   await this.fetchCertificates(petId)
-      //   return data.result
-      // })
+      if (this.selectedPetId) {
+        await this.fetchCertificates(this.selectedPetId)
+      }
     },
 
     // POST /api/certificates/vaccination

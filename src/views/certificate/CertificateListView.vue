@@ -30,51 +30,75 @@ function goToRegistrationDetail() {
   router.push(`/certificates/${certificateStore.registrationDoc.docId}`)
 }
 
-// 동물등록증 연동 — pet에 이미 등록번호가 있으면 확인만 받고, 없으면 입력부터 받음
-const REG_NUMBER_PATTERN = /^(\d{12}|\d{15})$/
-const showConfirmSyncModal = ref(false)
-const showRegNumberModal = ref(false)
-const regNumberInput = ref('')
-const regNumberError = ref('')
-const isSyncing = ref(false)
+// 동물등록증 연동 — 간편인증(카카오톡) 1회로 신청인 명의의 동물이 (여러 마리면 배열로) 조회됨.
+// 흐름: 신원확인 입력 → 카카오톡 승인 대기 → 조회된 동물 중 연동할 항목 선택 → 저장
+const BIRTH_DATE_PATTERN = /^\d{4}\.\d{2}\.\d{2}$/
+const PHONE_PATTERN = /^01[0-9]-?\d{3,4}-?\d{4}$/
+
+const showAuthModal = ref(false)
+const showWaitingModal = ref(false)
+const showMatchModal = ref(false)
+
+const authForm = ref({ userName: '', birthDate: '', phoneNo: '' })
+const authError = ref('')
+const isRequesting = ref(false)
+
+const candidates = ref([])
+const selectedCandidatePetIds = ref([])
+const isConfirming = ref(false)
 
 function openLinkFlow() {
-  if (certificateStore.selectedPet?.regNumber) {
-    showConfirmSyncModal.value = true
-  } else {
-    regNumberInput.value = ''
-    regNumberError.value = ''
-    showRegNumberModal.value = true
-  }
+  authForm.value = { userName: '', birthDate: '', phoneNo: '' }
+  authError.value = ''
+  showAuthModal.value = true
 }
 
-async function confirmSync() {
-  if (!certificateStore.selectedPetId || !certificateStore.selectedPet?.regNumber) return
-  isSyncing.value = true
-  try {
-    await certificateStore.linkRegistration(
-      certificateStore.selectedPetId,
-      certificateStore.selectedPet.regNumber,
-    )
-    showConfirmSyncModal.value = false
-  } finally {
-    isSyncing.value = false
-  }
-}
-
-async function submitRegNumber() {
-  if (!REG_NUMBER_PATTERN.test(regNumberInput.value)) {
-    regNumberError.value = '동물등록번호는 12자리(인식표) 또는 15자리(무선전자인식장치) 숫자로 입력해주세요.'
+async function submitAuth() {
+  if (!authForm.value.userName.trim()) {
+    authError.value = '이름을 입력해주세요.'
     return
   }
-  if (!certificateStore.selectedPetId) return
+  if (!BIRTH_DATE_PATTERN.test(authForm.value.birthDate)) {
+    authError.value = '생년월일을 1990.01.01 형식으로 입력해주세요.'
+    return
+  }
+  if (!PHONE_PATTERN.test(authForm.value.phoneNo)) {
+    authError.value = '전화번호를 010-1234-5678 형식으로 입력해주세요.'
+    return
+  }
 
-  isSyncing.value = true
+  showAuthModal.value = false
+  showWaitingModal.value = true
+  isRequesting.value = true
   try {
-    await certificateStore.linkRegistration(certificateStore.selectedPetId, regNumberInput.value)
-    showRegNumberModal.value = false
+    candidates.value = await certificateStore.requestApmsSimpleAuth(authForm.value)
+    selectedCandidatePetIds.value = candidates.value.map((c) => c.petId)
+    showWaitingModal.value = false
+    showMatchModal.value = true
   } finally {
-    isSyncing.value = false
+    isRequesting.value = false
+  }
+}
+
+function toggleCandidate(petId) {
+  const idx = selectedCandidatePetIds.value.indexOf(petId)
+  if (idx === -1) {
+    selectedCandidatePetIds.value.push(petId)
+  } else {
+    selectedCandidatePetIds.value.splice(idx, 1)
+  }
+}
+
+async function confirmMatches() {
+  const selected = candidates.value.filter((c) => selectedCandidatePetIds.value.includes(c.petId))
+  if (selected.length === 0) return
+
+  isConfirming.value = true
+  try {
+    await certificateStore.confirmApmsLink(selected)
+    showMatchModal.value = false
+  } finally {
+    isConfirming.value = false
   }
 }
 
@@ -326,58 +350,118 @@ async function handleMedicalSelect(event) {
       </section>
     </template>
 
-    <!-- 등록번호가 이미 있는 경우: 확인만 받고 바로 연동 -->
+    <!-- 1단계: 간편인증 신원확인 입력 -->
     <AppModal
-      v-model="showConfirmSyncModal"
-      title="동물등록증 연동"
-      :show-close="false"
+      v-model="showAuthModal"
+      title="카카오톡 간편인증"
     >
-      <p class="text-(length:--font-md) text-(color:--color-gray-600)">
-        등록번호 {{ certificateStore.selectedPet?.regNumber }}로 연동할까요?
+      <p class="text-(length:--font-sm) text-(color:--color-gray-600) mb-(--space-4)">
+        국가동물보호정보시스템 조회를 위해 신청인 정보를 입력해주세요
+      </p>
+      <div class="flex flex-col gap-(--space-3)">
+        <AppInput
+          v-model="authForm.userName"
+          label="이름"
+          placeholder="홍길동"
+        />
+        <AppInput
+          v-model="authForm.birthDate"
+          label="생년월일"
+          placeholder="1990.01.01"
+        />
+        <AppInput
+          v-model="authForm.phoneNo"
+          label="전화번호"
+          placeholder="010-1234-5678"
+        />
+      </div>
+      <p
+        v-if="authError"
+        class="text-(length:--font-xs) text-(color:--color-danger) mt-(--space-2)"
+      >
+        {{ authError }}
       </p>
       <template #footer>
         <AppButton
           variant="secondary"
-          @click="showConfirmSyncModal = false"
+          @click="showAuthModal = false"
         >
           취소
         </AppButton>
-        <AppButton
-          :loading="isSyncing"
-          @click="confirmSync"
-        >
-          연동하기
+        <AppButton @click="submitAuth">
+          카카오톡으로 인증하기
         </AppButton>
       </template>
     </AppModal>
 
-    <!-- 등록번호가 없는 경우: 직접 입력받은 뒤 연동 -->
+    <!-- 2단계: 카카오톡 승인 대기 -->
     <AppModal
-      v-model="showRegNumberModal"
-      title="동물등록번호 입력"
+      v-model="showWaitingModal"
+      title="인증 진행 중"
+      :show-close="false"
     >
-      <p class="text-(length:--font-sm) text-(color:--color-gray-600) mb-(--space-3)">
-        등록증에 적힌 12자리 또는 15자리 번호를 입력해주세요
+      <div class="flex flex-col items-center gap-(--space-4) py-(--space-4)">
+        <LoadingSpinner />
+        <p class="text-(length:--font-sm) text-(color:--color-gray-600) text-center">
+          카카오톡 앱에서 인증을 확인해주세요
+        </p>
+      </div>
+    </AppModal>
+
+    <!-- 3단계: 조회된 동물 중 연동할 항목 선택 -->
+    <AppModal
+      v-model="showMatchModal"
+      title="조회된 동물등록정보"
+      :show-close="false"
+    >
+      <template v-if="candidates.length > 0">
+        <p class="text-(length:--font-sm) text-(color:--color-gray-600) mb-(--space-3)">
+          신청인 명의로 조회된 동물이에요. 연동할 항목을 선택해주세요
+        </p>
+        <ul class="flex flex-col gap-(--space-2)">
+          <li
+            v-for="candidate in candidates"
+            :key="candidate.petId"
+          >
+            <label class="flex items-center gap-(--space-3) bg-(--color-surface) rounded-(--radius-lg) p-(--space-3) cursor-pointer">
+              <input
+                type="checkbox"
+                :checked="selectedCandidatePetIds.includes(candidate.petId)"
+                class="shrink-0 w-5 h-5 accent-(--color-navy)"
+                @change="toggleCandidate(candidate.petId)"
+              >
+              <div class="flex-1 min-w-0">
+                <p class="text-(length:--font-md) font-semibold text-(color:--color-navy)">
+                  {{ candidate.commName }} · {{ candidate.resKind }}
+                </p>
+                <p class="text-(length:--font-xs) text-(color:--color-gray-500) mt-(--space-1)">
+                  등록번호: {{ candidate.resRegNumber }}
+                </p>
+              </div>
+            </label>
+          </li>
+        </ul>
+      </template>
+      <p
+        v-else
+        class="text-(length:--font-sm) text-(color:--color-gray-600)"
+      >
+        신청인 명의로 새로 조회된 동물이 없어요. 이미 모두 연동되어 있을 수 있어요.
       </p>
-      <AppInput
-        v-model="regNumberInput"
-        label="동물등록번호"
-        placeholder="12자리 또는 15자리 숫자 입력"
-        inputmode="numeric"
-        :error="regNumberError"
-      />
       <template #footer>
         <AppButton
           variant="secondary"
-          @click="showRegNumberModal = false"
+          @click="showMatchModal = false"
         >
-          취소
+          닫기
         </AppButton>
         <AppButton
-          :loading="isSyncing"
-          @click="submitRegNumber"
+          v-if="candidates.length > 0"
+          :loading="isConfirming"
+          :disabled="selectedCandidatePetIds.length === 0"
+          @click="confirmMatches"
         >
-          연동하기
+          선택한 동물 연동하기
         </AppButton>
       </template>
     </AppModal>

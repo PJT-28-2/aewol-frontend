@@ -138,10 +138,12 @@ export const MOCK_PET_DOCUMENTS = [
 ];
 
 // GET /api/certificates/{doc_id} 상세 응답 목데이터 (동물등록증 상세 전용, key: docId)
-// furColor/ownerName/issueOrg/lastSyncedAt은 APMS 연동 시점에 DB에 저장되는 필드예요.
-// 현재 pet/pet_document ERD엔 해당 컬럼이 없어서 백엔드에서 컬럼 추가가 필요해요.
-// 이 상세 API는 APMS를 매번 라이브로 호출하는 게 아니라, 연동 시 이미 저장해둔 DB 값을
-// 그대로 반환한다는 전제로 만들어졌어요(이 목데이터는 그 "저장된 값"을 흉내낸 거예요).
+// CODEF 국가동물보호정보시스템 동물등록번호 조회 API의 실제 응답 필드를 참고해 구성했어요
+// (resColor→furColor, resOwner→ownerName, resPhoneNo→ownerPhone, resIssueDate→issueDate,
+//  resRegisterDate→registerDate, resIssueOgzNm→issueOrg, resState→regState, resType→regType).
+// 현재 pet/pet_document ERD엔 이 필드들을 담을 컬럼이 없어서, 백엔드에 pet_registration류
+// 신규 테이블 추가가 필요해요. 이 상세 API는 APMS를 매번 라이브로 호출하는 게 아니라, 연동 시
+// 이미 저장해둔 DB 값을 그대로 반환한다는 전제로 만들어졌어요(이 목데이터는 그 값을 흉내낸 거예요).
 export const MOCK_REGISTRATION_DETAIL = {
   'doc-reg-pet-1': {
     docId: 'doc-reg-pet-1',
@@ -155,8 +157,12 @@ export const MOCK_REGISTRATION_DETAIL = {
     furColor: '크림색',
     weight: 3.2,
     ownerName: '김애월',
-    registeredDate: '2023-06-02',
+    ownerPhone: '010-1234-5678',
+    issueDate: '2023-06-02',
+    registerDate: '2023-06-02',
     issueOrg: '국가동물보호정보시스템',
+    regState: '승인',
+    regType: '소유',
     lastSyncedAt: '2026-07-15',
   },
 };

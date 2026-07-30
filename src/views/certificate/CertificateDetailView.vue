@@ -39,7 +39,8 @@ const infoRows = computed(() => {
     { label: '털색', value: detail.furColor },
     { label: '체중', value: `${detail.weight}kg` },
     { label: '소유자', value: detail.ownerName },
-    { label: '등록일자', value: formatDateDot(detail.registeredDate) },
+    { label: '등록일', value: formatDateDot(detail.registerDate) },
+    { label: '발급일자', value: formatDateDot(detail.issueDate) },
     { label: '발급기관', value: detail.issueOrg },
   ]
 })
