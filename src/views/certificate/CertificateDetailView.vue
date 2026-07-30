@@ -300,6 +300,12 @@ async function handleDelete() {
         대신 PDF로 저장해드릴게요.
       </p>
       <template #footer>
+        <AppButton
+          variant="secondary"
+          @click="showShareFallbackModal = false"
+        >
+          닫기
+        </AppButton>
         <AppButton @click="handleShareFallbackConfirm">
           PDF로 저장하기
         </AppButton>
