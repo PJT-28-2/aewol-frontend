@@ -89,6 +89,9 @@
   --font-2xl: 24px;
   --font-3xl: 32px;
 
+  /* Typography - Line Heights */
+  --line-height-tight: 1.3;
+
   /* Typography - Font Weights */
   --font-regular: 400;
   --font-medium: 500;
