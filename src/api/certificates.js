@@ -40,4 +40,9 @@ export const certificatesApi = {
   deleteRegistration(docId) {
     return api.delete(`/api/certificates/${docId}`)
   },
+
+  // 접종증명서/진료확인서 삭제(경로 추정치, 동일한 pet_document 삭제 엔드포인트로 추정)
+  deleteDocument(docId) {
+    return api.delete(`/api/certificates/${docId}`)
+  },
 }

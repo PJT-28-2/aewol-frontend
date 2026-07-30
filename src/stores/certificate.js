@@ -261,7 +261,9 @@ export const useCertificateStore = defineStore('certificate', {
           petId,
           docName: file.name,
           docType: 'VACCINATION',
-          fileUrl: '',
+          // 실제 백엔드가 없어서 서버 파일 URL 대신, 방금 고른 파일을 그 자리에서
+          // 미리보기할 수 있도록 브라우저 로컬 objectURL을 사용함(새로고침하면 사라짐)
+          fileUrl: URL.createObjectURL(file),
           issuedDate: new Date().toISOString().slice(0, 10),
           createdAt: new Date().toISOString(),
         }
@@ -286,7 +288,7 @@ export const useCertificateStore = defineStore('certificate', {
           petId,
           docName: file.name,
           docType: 'MEDICAL_CONFIRMATION',
-          fileUrl: '',
+          fileUrl: URL.createObjectURL(file),
           issuedDate: new Date().toISOString().slice(0, 10),
           createdAt: new Date().toISOString(),
         }
@@ -301,6 +303,23 @@ export const useCertificateStore = defineStore('certificate', {
         await this.fetchCertificates(petId)
         return data.result
       })
+    },
+
+    // 접종증명서/진료확인서 삭제 — 두 타입 다 문서 배열에서 제거하는 것만 하면 되는 단순한 구조라
+    // 동물등록증 해제(deleteRegistration)와 달리 하나의 액션으로 공용 처리
+    async deleteDocument(docId) {
+      if (USE_MOCK_DATA) {
+        this.documents = this.documents.filter((doc) => doc.docId !== docId)
+        this.vaccinationDocs = this.vaccinationDocs.filter((doc) => doc.docId !== docId)
+        this.medicalDocs = this.medicalDocs.filter((doc) => doc.docId !== docId)
+        return
+      }
+
+      // TODO: 백엔드에 삭제 엔드포인트가 아직 확정되지 않아 주석 처리해둠.
+      // return this._withRequestState(async () => {
+      //   await certificatesApi.deleteDocument(docId)
+      //   if (this.selectedPetId) await this.fetchCertificates(this.selectedPetId)
+      // })
     },
   },
 })

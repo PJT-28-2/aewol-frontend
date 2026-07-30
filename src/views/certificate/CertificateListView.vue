@@ -13,7 +13,7 @@ import IconDog from '@/components/common/icons/IconDog.vue'
 import IconCat from '@/components/common/icons/IconCat.vue'
 import IconCertificate from '@/components/common/icons/IconCertificate.vue'
 import IconDocument from '@/components/common/icons/IconDocument.vue'
-import IconChevronRight from '@/components/common/icons/IconChevronRight.vue'
+import IconDelete from '@/components/common/icons/IconDelete.vue'
 
 const router = useRouter()
 const certificateStore = useCertificateStore()
@@ -158,6 +158,42 @@ async function handleMedicalSelect(event) {
     alert('업로드에 실패했어요. 다시 시도해주세요.')
   }
 }
+
+// 접종증명서/진료확인서 미리보기
+const showPreviewModal = ref(false)
+const previewDoc = ref(null)
+const previewImageError = ref(false)
+
+function openPreview(doc) {
+  previewDoc.value = doc
+  previewImageError.value = false
+  showPreviewModal.value = true
+}
+
+// 접종증명서/진료확인서 삭제
+const showDocDeleteModal = ref(false)
+const pendingDeleteDoc = ref(null)
+const isDeletingDoc = ref(false)
+const docDeleteError = ref('')
+
+function openDocDelete(doc) {
+  pendingDeleteDoc.value = doc
+  docDeleteError.value = ''
+  showDocDeleteModal.value = true
+}
+
+async function confirmDocDelete() {
+  if (!pendingDeleteDoc.value) return
+  isDeletingDoc.value = true
+  try {
+    await certificateStore.deleteDocument(pendingDeleteDoc.value.docId)
+    showDocDeleteModal.value = false
+  } catch {
+    docDeleteError.value = '삭제에 실패했어요. 다시 시도해주세요.'
+  } finally {
+    isDeletingDoc.value = false
+  }
+}
 </script>
 
 <template>
@@ -279,27 +315,39 @@ async function handleMedicalSelect(event) {
           <li
             v-for="doc in certificateStore.vaccinationDocs"
             :key="doc.docId"
-            class="flex items-center gap-(--space-3) bg-(--color-surface) rounded-(--radius-lg) p-(--space-4) mb-(--space-2)"
+            class="flex items-center gap-(--space-2) bg-(--color-surface) rounded-(--radius-lg) p-(--space-4) mb-(--space-2)"
           >
-            <span class="shrink-0 flex items-center justify-center w-10 h-10 rounded-(--radius-md) bg-(--color-white)">
-              <IconDocument
+            <button
+              type="button"
+              class="flex flex-1 min-w-0 items-center gap-(--space-3) text-left"
+              @click="openPreview(doc)"
+            >
+              <span class="shrink-0 flex items-center justify-center w-10 h-10 rounded-(--radius-md) bg-(--color-white)">
+                <IconDocument
+                  :size="18"
+                  color="var(--color-slate-dark)"
+                />
+              </span>
+              <div class="flex-1 min-w-0">
+                <p class="text-(length:--font-md) font-semibold text-(color:--color-navy) truncate">
+                  {{ doc.docName }}
+                </p>
+                <p class="text-(length:--font-xs) text-(color:--color-gray-500) mt-(--space-1)">
+                  {{ formatDateDot(doc.issuedDate) }} 업로드
+                </p>
+              </div>
+            </button>
+            <button
+              type="button"
+              class="shrink-0 p-(--space-2) text-(color:--color-gray-400) hover:text-(color:--color-danger)"
+              aria-label="삭제"
+              @click="openDocDelete(doc)"
+            >
+              <IconDelete
                 :size="18"
-                color="var(--color-slate-dark)"
+                color="currentColor"
               />
-            </span>
-            <div class="flex-1 min-w-0">
-              <p class="text-(length:--font-md) font-semibold text-(color:--color-navy) truncate">
-                {{ doc.docName }}
-              </p>
-              <p class="text-(length:--font-xs) text-(color:--color-gray-500) mt-(--space-1)">
-                {{ formatDateDot(doc.issuedDate) }} 업로드
-              </p>
-            </div>
-            <IconChevronRight
-              :size="18"
-              color="var(--color-gray-400)"
-              class="shrink-0"
-            />
+            </button>
           </li>
         </ul>
         <EmptyState
@@ -337,27 +385,39 @@ async function handleMedicalSelect(event) {
           <li
             v-for="doc in certificateStore.medicalDocs"
             :key="doc.docId"
-            class="flex items-center gap-(--space-3) bg-(--color-surface) rounded-(--radius-lg) p-(--space-4) mb-(--space-2)"
+            class="flex items-center gap-(--space-2) bg-(--color-surface) rounded-(--radius-lg) p-(--space-4) mb-(--space-2)"
           >
-            <span class="shrink-0 flex items-center justify-center w-10 h-10 rounded-(--radius-md) bg-(--color-white)">
-              <IconDocument
+            <button
+              type="button"
+              class="flex flex-1 min-w-0 items-center gap-(--space-3) text-left"
+              @click="openPreview(doc)"
+            >
+              <span class="shrink-0 flex items-center justify-center w-10 h-10 rounded-(--radius-md) bg-(--color-white)">
+                <IconDocument
+                  :size="18"
+                  color="var(--color-slate-dark)"
+                />
+              </span>
+              <div class="flex-1 min-w-0">
+                <p class="text-(length:--font-md) font-semibold text-(color:--color-navy) truncate">
+                  {{ doc.docName }}
+                </p>
+                <p class="text-(length:--font-xs) text-(color:--color-gray-500) mt-(--space-1)">
+                  {{ formatDateDot(doc.issuedDate) }} 업로드
+                </p>
+              </div>
+            </button>
+            <button
+              type="button"
+              class="shrink-0 p-(--space-2) text-(color:--color-gray-400) hover:text-(color:--color-danger)"
+              aria-label="삭제"
+              @click="openDocDelete(doc)"
+            >
+              <IconDelete
                 :size="18"
-                color="var(--color-slate-dark)"
+                color="currentColor"
               />
-            </span>
-            <div class="flex-1 min-w-0">
-              <p class="text-(length:--font-md) font-semibold text-(color:--color-navy) truncate">
-                {{ doc.docName }}
-              </p>
-              <p class="text-(length:--font-xs) text-(color:--color-gray-500) mt-(--space-1)">
-                {{ formatDateDot(doc.issuedDate) }} 업로드
-              </p>
-            </div>
-            <IconChevronRight
-              :size="18"
-              color="var(--color-gray-400)"
-              class="shrink-0"
-            />
+            </button>
           </li>
         </ul>
         <EmptyState
@@ -501,6 +561,63 @@ async function handleMedicalSelect(event) {
           @click="confirmMatches"
         >
           선택한 동물 연동하기
+        </AppButton>
+      </template>
+    </AppModal>
+
+    <!-- 접종증명서/진료확인서 미리보기 -->
+    <AppModal
+      v-model="showPreviewModal"
+      :title="previewDoc?.docName ?? ''"
+    >
+      <img
+        v-if="previewDoc?.fileUrl && !previewImageError"
+        :src="previewDoc.fileUrl"
+        :alt="previewDoc.docName"
+        class="w-full rounded-(--radius-md)"
+        @error="previewImageError = true"
+      >
+      <p
+        v-else
+        class="text-(length:--font-sm) text-(color:--color-gray-600) text-center py-(--space-6)"
+      >
+        미리보기를 표시할 수 없어요
+      </p>
+      <template #footer>
+        <AppButton @click="showPreviewModal = false">
+          확인
+        </AppButton>
+      </template>
+    </AppModal>
+
+    <!-- 접종증명서/진료확인서 삭제 확인 -->
+    <AppModal
+      v-model="showDocDeleteModal"
+      title="문서를 삭제할까요?"
+    >
+      <p class="text-(length:--font-md) text-(color:--color-gray-600)">
+        {{ pendingDeleteDoc?.docName }}을(를) 삭제하면 다시 업로드해야 해요.
+      </p>
+      <p
+        v-if="docDeleteError"
+        class="text-(length:--font-sm) text-(color:--color-danger) mt-(--space-2)"
+      >
+        {{ docDeleteError }}
+      </p>
+      <template #footer>
+        <AppButton
+          variant="secondary"
+          :disabled="isDeletingDoc"
+          @click="showDocDeleteModal = false"
+        >
+          취소
+        </AppButton>
+        <AppButton
+          variant="danger"
+          :loading="isDeletingDoc"
+          @click="confirmDocDelete"
+        >
+          삭제하기
         </AppButton>
       </template>
     </AppModal>
