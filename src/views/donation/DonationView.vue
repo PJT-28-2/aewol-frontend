@@ -51,7 +51,13 @@ function go(path) {
   router.push(path)
 }
 
+/**
+ * 화면 간 이동마다 재조회하면 기부·출금으로 차감한 잔액이 되돌아가므로
+ * 아직 불러오지 않았을 때만 조회한다. 에러 후 재시도는 스토어를 직접 호출한다.
+ */
 function loadDonationData() {
+  if (donationStore.hasCampaigns) return
+
   donationStore.fetchDonationData()
 }
 
@@ -96,7 +102,7 @@ onMounted(loadDonationData)
         class="mt-[var(--space-4)]"
         variant="navy"
         size="sm"
-        @click="loadDonationData"
+        @click="donationStore.fetchDonationData()"
       >
         다시 시도
       </AppButton>
@@ -148,7 +154,7 @@ onMounted(loadDonationData)
             pill
             size="sm"
             variant="olive-outline"
-            @click="go('/wallet')"
+            @click="go('/donation/withdraw')"
           >
             지갑으로 출금
           </AppButton>

@@ -308,6 +308,12 @@ const authRoutes = [
     meta: { requiresAuth: true, step: 'give' },
   },
   {
+    path: '/donation/withdraw',
+    name: 'DonationWithdraw',
+    component: () => import('@/views/donation/DonationWithdrawView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/donation/confirm',
     name: 'DonationConfirm',
     component: () => import('@/views/donation/DonationView.vue'),
