@@ -1,7 +1,11 @@
 <script setup>
 import { computed, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import AddressSearchLayer from '@/components/common/AddressSearchLayer.vue'
 import AppButton from '@/components/common/AppButton.vue'
+import IconChevronLeft from '@/components/common/icons/IconChevronLeft.vue'
 
+const router = useRouter()
 const form = reactive({
   name: '김애월',
   phone: '010-1234-5678',
@@ -13,9 +17,14 @@ const form = reactive({
   newPasswordConfirm: '',
 })
 const isCurrentPasswordVerified = ref(false)
+const isAddressSearchOpen = ref(false)
 const passwordError = ref('')
 const isVerifyingPassword = ref(false)
 const MOCK_CURRENT_PASSWORD = 'test1234'
+
+const handleBack = () => {
+  router.back()
+}
 
 const newPasswordCategoryCount = computed(() => {
   const categories = [
@@ -39,6 +48,11 @@ const handleCurrentPasswordInput = () => {
   form.newPassword = ''
   form.newPasswordConfirm = ''
   passwordError.value = ''
+}
+
+const handleAddressSelect = ({ zipCode, address }) => {
+  form.postalCode = zipCode
+  form.address = address
 }
 
 const verifyCurrentPassword = async () => {
@@ -77,7 +91,17 @@ const verifyCurrentPassword = async () => {
     class="mx-auto min-h-svh w-full max-w-[390px] bg-(--color-white) px-[22px] pt-[61px] pb-7"
   >
     <header>
-      <h1 class="text-[20px] leading-[1.3] font-(--font-bold) text-(color:--color-navy)">
+      <button
+        class="-ml-(--space-2) flex size-(--icon-size-md) items-center justify-center rounded-(--radius-full) text-(color:--color-navy) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-navy)"
+        type="button"
+        aria-label="뒤로 가기"
+        @click="handleBack"
+      >
+        <IconChevronLeft />
+      </button>
+      <h1
+        class="mt-(--space-2) text-(length:--font-xl) leading-(--line-height-tight) font-(--font-bold) text-(color:--color-navy)"
+      >
         프로필 수정
       </h1>
       <p class="mt-[5px] text-[12.5px] leading-[1.3] text-(color:--color-slate-muted)">
@@ -122,52 +146,57 @@ const verifyCurrentPassword = async () => {
         class="mt-[11px] mb-1 text-[12.5px] font-(--font-bold) text-(color:--color-slate-dark)"
         for="profile-postal-code"
       >
-        주소
+        우편번호
       </label>
       <div class="flex gap-(--space-4)">
         <input
           id="profile-postal-code"
           v-model="form.postalCode"
-          class="h-(--control-height-md) min-w-0 flex-1 rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none focus:border-(--color-navy)"
+          class="h-(--control-height-md) min-w-0 flex-1 cursor-default rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none"
           type="text"
           inputmode="numeric"
+          placeholder="12345"
+          readonly
           required
         >
         <button
-          class="h-(--control-height-md) w-(--size-form-action-width) shrink-0 cursor-not-allowed rounded-(--radius-lg) bg-(--color-slate-light) text-(length:--font-xs) font-(--font-bold) text-(color:--color-slate-muted)"
+          class="h-(--control-height-md) w-(--size-form-action-width) shrink-0 rounded-(--radius-lg) bg-(--color-navy) text-(length:--font-xs) font-(--font-bold) text-(color:--color-white) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-navy)"
           type="button"
-          aria-describedby="address-api-status"
-          disabled
+          @click="isAddressSearchOpen = true"
         >
-          연동 예정
+          주소 찾기
         </button>
       </div>
-      <p
-        id="address-api-status"
-        class="mt-(--space-1) text-(length:--font-xs) text-(color:--color-slate-muted)"
-      >
-        주소 검색 API 연동 예정
-      </p>
+
       <label
-        class="sr-only"
+        class="mt-[11px] mb-1 text-[12.5px] font-(--font-bold) text-(color:--color-slate-dark)"
         for="profile-address"
-      >주소</label>
+      >
+        주소
+      </label>
       <input
         id="profile-address"
         v-model="form.address"
-        class="mt-[13px] h-(--control-height-md) rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none focus:border-(--color-navy)"
+        class="h-(--control-height-md) cursor-default rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none"
         type="text"
+        autocomplete="address-line1"
+        placeholder="주소"
+        readonly
         required
       >
       <label
-        class="sr-only"
+        class="mt-[11px] mb-1 text-[12.5px] font-(--font-bold) text-(color:--color-slate-dark)"
         for="profile-address-detail"
-      >상세주소</label>
+      >
+        상세주소
+      </label>
       <input
         id="profile-address-detail"
         v-model="form.addressDetail"
-        class="mt-[13px] h-(--control-height-md) rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none focus:border-(--color-navy)"
+        class="h-(--control-height-md) rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
         type="text"
+        autocomplete="address-line2"
+        placeholder="동, 호수 등 상세주소 입력"
         required
       >
 
@@ -292,5 +321,10 @@ const verifyCurrentPassword = async () => {
     >
       회원 탈퇴
     </router-link>
+
+    <AddressSearchLayer
+      v-model="isAddressSearchOpen"
+      @select="handleAddressSelect"
+    />
   </main>
 </template>

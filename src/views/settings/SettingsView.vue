@@ -44,7 +44,7 @@ const menuItems = [
   {
     title: '계좌 관리',
     description: '연동된 계좌 확인 및 등록',
-    path: '/accounts',
+    path: '/account',
     icon: IconAccountCard,
   },
   {
@@ -56,6 +56,7 @@ const menuItems = [
   {
     title: '고객센터',
     description: '자주 묻는 질문 및 문의',
+    path: '/support',
     icon: IconDiscussion,
   },
 ]

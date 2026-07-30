@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useSupportStore } from '@/stores/support';
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue';
@@ -19,6 +19,19 @@ const loadError = ref('');
 // 도움됨/아쉬워요 피드백 — 백엔드 API 명세에 없어서 지금은 화면에서만 토글돼요.
 // TODO: 피드백 저장이 필요하면 백엔드에 엔드포인트 추가 요청 필요
 const feedback = ref(null); // 'HELPFUL' | 'NOT_HELPFUL' | null
+const feedbackToastVisible = ref(false);
+let feedbackToastTimer = null;
+
+function submitFeedback(value) {
+  feedback.value = value;
+  feedbackToastVisible.value = true;
+  window.clearTimeout(feedbackToastTimer);
+  feedbackToastTimer = window.setTimeout(() => {
+    feedbackToastVisible.value = false;
+  }, 2000);
+}
+
+onBeforeUnmount(() => window.clearTimeout(feedbackToastTimer));
 
 // 관련 질문을 빠르게 연달아 이동하면 이전 요청과 새 요청이 동시에 떠 있을 수 있어요.
 // 매 호출마다 토큰을 증가시키고, 응답이 왔을 때 그게 "가장 최신 호출"일 때만
@@ -31,6 +44,8 @@ async function loadFaq(faqId) {
   isLoading.value = true;
   loadError.value = '';
   feedback.value = null;
+  window.clearTimeout(feedbackToastTimer);
+  feedbackToastVisible.value = false;
   faq.value = null;
   relatedFaqs.value = [];
 
@@ -124,7 +139,7 @@ function goToRelated(relatedFaqId) {
                 ? 'bg-(--color-navy) text-(color:--color-white)'
                 : 'bg-(--color-white) text-(color:--color-gray-600)'
             "
-            @click="feedback = 'HELPFUL'"
+            @click="submitFeedback('HELPFUL')"
           >
             <IconThumbsUp :size="16" :color="feedback === 'HELPFUL' ? 'var(--color-white)' : 'var(--color-gray-600)'" />
             도움됨
@@ -136,7 +151,7 @@ function goToRelated(relatedFaqId) {
                 ? 'bg-(--color-navy) text-(color:--color-white)'
                 : 'bg-(--color-white) text-(color:--color-gray-600)'
             "
-            @click="feedback = 'NOT_HELPFUL'"
+            @click="submitFeedback('NOT_HELPFUL')"
           >
             <IconThumbsDown :size="16" :color="feedback === 'NOT_HELPFUL' ? 'var(--color-white)' : 'var(--color-gray-600)'" />
             아쉬워요
@@ -166,5 +181,24 @@ function goToRelated(relatedFaqId) {
         1:1 문의하기
       </button>
     </template>
+
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition duration-200 ease-out"
+        enter-from-class="-translate-y-2 opacity-0"
+        enter-to-class="translate-y-0 opacity-100"
+        leave-active-class="transition duration-150 ease-in"
+        leave-to-class="-translate-y-2 opacity-0"
+      >
+        <div
+          v-if="feedbackToastVisible"
+          role="status"
+          aria-live="polite"
+          class="fixed top-7 left-1/2 z-[1100] -translate-x-1/2 rounded-[14px] border border-(--color-border) bg-(--color-white) px-4 py-3 text-[12.5px] font-(--font-bold) text-(color:--color-navy) shadow-(--shadow-lg)"
+        >
+          소중한 의견 감사합니다
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>

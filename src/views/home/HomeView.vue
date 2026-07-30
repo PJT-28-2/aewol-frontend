@@ -9,25 +9,48 @@ import IconGroupPurchase from '@/components/common/icons/IconGroupPurchase.vue';
 import IconSavings from '@/components/common/icons/IconSavings.vue';
 import IconSos from '@/components/common/icons/IconSos.vue';
 import IconSupportProgram from '@/components/common/icons/IconSupportProgram.vue';
+import { mockWalletBalance } from '@/mocks/transaction';
+import { usePetStore } from '@/stores/pet';
+import { useTransactionStore } from '@/stores/transaction';
 
 const memberName = ref('애월');
 
+const petStore = usePetStore();
+const transactionStore = useTransactionStore();
+
 // TODO: 백엔드 API 연동 후 mock 데이터 제거하고 실제 fetch로 교체
-const walletBalance = ref(482600);
-const monthlyExpense = ref({ total: 243000, changeRate: -12 });
-const pets = ref([
-  { id: 1, name: '소로', species: 'DOG', expenseAmount: 168000 },
-  { id: 2, name: '나비', species: 'CAT', expenseAmount: 75000 },
-]);
+const walletBalance = ref(mockWalletBalance);
+
+const today = new Date();
+const monthlyExpense = computed(() => ({
+  total: transactionStore.monthlyExpenseTotal(
+    today.getFullYear(),
+    today.getMonth() + 1,
+  ),
+  changeRate: -12, // TODO: 전월 대비 실제 계산 로직 연동
+}));
+
+const pets = computed(() =>
+  petStore.pets.map((pet) => ({
+    ...pet,
+    expenseAmount: transactionStore.petExpenseTotal(
+      pet.id,
+      today.getFullYear(),
+      today.getMonth() + 1,
+    ),
+  })),
+);
 
 const isLoading = ref(true);
 
-// 펫별 지출 도넛 차트 색상 팔레트
+// 펫별 지출 도넛 차트 색상 팔레트 (DashboardView.vue와 동일한 팔레트)
 const petColors = [
   'var(--color-navy)',
   'var(--color-olive)',
   'var(--color-chart-blue)',
   'var(--color-chart-purple)',
+  'var(--color-gold-dark)',
+  'var(--color-danger-dark)',
 ];
 
 // 펫별 지출 비율 계산
@@ -81,6 +104,18 @@ const donutBreakdownText = computed(() =>
     .join(' · '),
 );
 
+// 반려동물이 1마리 이하이거나 태깅된 지출이 없으면 이번 달 지출 화면에 "반려동물별" 탭이
+// 안 뜨므로, 그럴 땐 "카테고리별"로 진입시킨다
+const dashboardDetailTarget = computed(() => {
+  const hasPetTab =
+    pets.value.length >= 2 &&
+    pets.value.some((pet) => pet.expenseAmount > 0);
+  return {
+    path: '/dashboard',
+    query: { tab: hasPetTab ? 'pet' : 'category' },
+  };
+});
+
 // 바로가기 메뉴 6종
 const quickActions = [
   {
@@ -90,7 +125,7 @@ const quickActions = [
     bg: 'var(--color-pastel-beige)',
   },
   {
-    label: 'SOS 포켓',
+    label: '응급 SOS',
     to: '/emergency',
     icon: IconSos,
     bg: 'var(--color-pastel-coral)',
@@ -190,8 +225,9 @@ onMounted(async () => {
             {{ walletBalance.toLocaleString() }}원
           </p>
         </div>
-        <div
-          class="bg-(--color-surface) rounded-(--radius-lg) p-(--space-5) shadow-(--shadow-sm)"
+        <router-link
+          to="/dashboard?tab=category"
+          class="block bg-(--color-surface) rounded-(--radius-lg) p-(--space-5) shadow-(--shadow-sm) no-underline text-inherit"
         >
           <p
             class="text-(length:--font-sm) text-(color:--color-slate-dark)"
@@ -210,7 +246,7 @@ onMounted(async () => {
             {{ monthlyExpense.changeRate > 0 ? '+' : ''
             }}{{ monthlyExpense.changeRate }}%
           </p>
-        </div>
+        </router-link>
         <div
           v-for="pet in petBreakdown"
           :key="pet.id"
@@ -261,7 +297,7 @@ onMounted(async () => {
               {{ donutBreakdownText || '지출 내역이 없습니다' }}
             </p>
             <router-link
-              to="/dashboard"
+              :to="dashboardDetailTarget"
               class="inline-block mt-(--space-2) text-(length:--font-sm) font-semibold text-(color:--color-gold) no-underline"
             >
               자세히 보기 &rsaquo;
@@ -295,6 +331,7 @@ onMounted(async () => {
               <component
                 :is="item.icon"
                 :size="20"
+                color="var(--color-navy)"
               />
             </span>
             <span>{{ item.label }}</span>
