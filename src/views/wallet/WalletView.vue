@@ -154,7 +154,7 @@ onMounted(async () => {
         class="flex-1 h-[44px] rounded-md bg-(--color-gray-100) text-(color:--color-slate-dark) text-(length:--font-base) font-semibold"
         @click="handleTransfer"
       >
-        이체
+        송금
       </button>
     </div>
 
