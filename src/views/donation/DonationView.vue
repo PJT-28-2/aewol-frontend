@@ -20,6 +20,7 @@ import IconStar from '@/components/common/icons/IconStar.vue'
 import IconWarning from '@/components/common/icons/IconWarning.vue'
 import { donationAmountPresets, donationCategories, savingUnits } from '@/mocks/donation'
 import { useDonationStore } from '@/stores/donation'
+import { formatWon } from '@/utils/bankMeta'
 
 const route = useRoute()
 const router = useRouter()
@@ -45,10 +46,6 @@ const otherCampaigns = computed(() =>
     .filter((campaign) => campaign.id !== currentCampaign.value?.id)
     .slice(0, 2),
 )
-
-function formatWon(value) {
-  return `${value.toLocaleString()}원`
-}
 
 function go(path) {
   router.push(path)
