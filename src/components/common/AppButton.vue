@@ -37,7 +37,7 @@ const variantClasses = {
 }
 
 const sizeClasses = {
-  xs: 'h-(--support-action-height) min-w-(--support-action-width) !rounded-(--radius-md) px-(--space-2) text-(length:--font-xs)',
+  xs: 'h-(--support-action-height) min-w-(--support-action-width) rounded-(--radius-md)! px-(--space-2) text-(length:--font-xs)',
   sm: 'h-(--space-7) px-(--space-3) text-(length:--font-sm)',
   md: 'h-(--space-8) px-(--space-5) text-(length:--font-md)',
   lg: 'h-(--control-height-lg) px-(--space-6) text-(length:--font-base)',

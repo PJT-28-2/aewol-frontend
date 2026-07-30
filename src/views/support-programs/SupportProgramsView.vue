@@ -115,7 +115,7 @@ watch(
         <li
           v-for="program in supportProgramsStore.programs"
           :key="program.id"
-          class="min-h-[var(--support-card-min-height)] rounded-[18px] border border-(--color-border) p-[var(--space-4)]"
+          class="min-h-(--support-card-min-height) rounded-[18px] border border-(--color-border) p-[var(--space-4)]"
           :class="program.eligible ? 'bg-(--color-white)' : 'bg-(--color-surface)'"
         >
           <span
@@ -196,7 +196,7 @@ watch(
             class="flex items-start gap-[var(--space-3)]"
           >
             <span
-              class="grid size-[var(--support-status-icon-size)] shrink-0 place-items-center rounded-full"
+              class="grid size-(--support-status-icon-size) shrink-0 place-items-center rounded-full"
               :class="
                 condition.met
                   ? 'bg-(--color-olive-surface) text-(--color-olive-dark)'
