@@ -33,6 +33,13 @@ export const MOCK_ACCOUNTS = [
     balance: 482600,
     isPrimary: true,
   },
+  {
+    accountId: 2,
+    bankCode: 'TOSS',
+    accountNumberMasked: '********5678',
+    balance: 320000,
+    isPrimary: false,
+  },
 ];
 
 // 카테고리 목록 — 1:1 문의하기 카테고리와 동일 + 검색화면 전용 '전체' 필터

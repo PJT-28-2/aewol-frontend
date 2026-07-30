@@ -121,6 +121,18 @@ const authRoutes = [
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
+    path: '/wallet/charge/complete',
+    name: 'ChargeComplete',
+    component: () => import('@/views/wallet/ChargeCompleteView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
+    path: '/wallet/charge/account-select',
+    name: 'ChargeAccountSelect',
+    component: () => import('@/views/wallet/ChargeAccountSelectView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
     path: '/wallet/transfer',
     name: 'Transfer',
     component: () => import('@/views/wallet/TransferView.vue'),
