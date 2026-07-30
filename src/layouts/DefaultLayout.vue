@@ -7,27 +7,20 @@ const route = useRoute()
 </script>
 
 <template>
-  <div class="default-layout">
-    <PageHeader :title="route.meta.title || ''" :show-back="!!route.meta.showBack" />
+  <div class="flex min-h-svh flex-col">
+    <PageHeader
+      v-if="!route.meta.hideHeader"
+      :title="route.meta.title || ''"
+      :show-back="!!route.meta.showBack"
+    />
 
-    <main class="default-layout__content">
+    <main
+      class="flex-1 pb-(--bottom-nav-height)"
+      :class="route.meta.hideHeader ? '' : 'pt-(--header-height)'"
+    >
       <router-view />
     </main>
 
     <BottomNavBar />
   </div>
 </template>
-
-<style scoped>
-.default-layout {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-}
-
-.default-layout__content {
-  flex: 1;
-  padding-top: var(--header-height);
-  padding-bottom: var(--bottom-nav-height);
-}
-</style>

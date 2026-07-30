@@ -164,9 +164,11 @@
   --size-cta-bar-height: 96px;
   --mobile-content-width: 390px;
   --control-height: 46px;
+  --size-form-action-width: 80px;
   --share-icon-size: 60px;
   --icon-badge-size: 56px;
   --share-chart-size: 200px;
   --share-chart-hole-size: 132px;
   --dashboard-chart-size: 220px;
+  --size-state-message-height: 40vh;
 }
