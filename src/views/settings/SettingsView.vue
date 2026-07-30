@@ -44,7 +44,7 @@ const menuItems = [
   {
     title: '계좌 관리',
     description: '연동된 계좌 확인 및 등록',
-    path: '/accounts',
+    path: '/account',
     icon: IconAccountCard,
   },
   {

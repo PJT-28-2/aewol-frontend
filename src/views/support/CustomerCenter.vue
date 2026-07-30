@@ -85,7 +85,7 @@ function goToFaqDetail(faqId) {
       <IconArrowLeft :size="20" color="var(--color-gray-700)" />
     </button>
 
-    <header v-if="!isSearchMode" class="mb-5">
+    <header class="mb-5">
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">고객센터</h1>
       <p class="text-(length:--font-md) text-(color:--color-gray-600) mt-1">무엇을 도와드릴까요?</p>
     </header>
