@@ -14,6 +14,7 @@ const emit = defineEmits(['update:modelValue', 'select'])
 const DAUM_POSTCODE_SCRIPT_SRC =
   '//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js'
 
+const layerRef = ref(null)
 const postcodeContainerRef = ref(null)
 const loadError = ref('')
 const isLoading = ref(false)
@@ -85,6 +86,7 @@ watch(
     if (isOpen) {
       previouslyFocusedElement = document.activeElement
       await nextTick()
+      layerRef.value?.focus()
       await openPostcode()
       return
     }
@@ -101,10 +103,12 @@ watch(
   <Teleport to="body">
     <div
       v-if="modelValue"
+      ref="layerRef"
       class="fixed inset-0 z-1000 flex min-w-0 flex-col overflow-hidden bg-(--color-white)"
       role="dialog"
       aria-modal="true"
       aria-labelledby="address-search-title"
+      tabindex="-1"
       @keydown="handleKeydown"
     >
       <header
