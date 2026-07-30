@@ -4,6 +4,8 @@ import { useRouter } from 'vue-router'
 import { useCertificateStore } from '@/stores/certificate'
 import { formatDateDot } from '@/utils/date'
 import AppButton from '@/components/common/AppButton.vue'
+import AppModal from '@/components/common/AppModal.vue'
+import AppInput from '@/components/common/AppInput.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
@@ -26,6 +28,54 @@ onMounted(async () => {
 function goToRegistrationDetail() {
   if (!certificateStore.registrationDoc) return
   router.push(`/certificates/${certificateStore.registrationDoc.docId}`)
+}
+
+// 동물등록증 연동 — pet에 이미 등록번호가 있으면 확인만 받고, 없으면 입력부터 받음
+const REG_NUMBER_PATTERN = /^(\d{12}|\d{15})$/
+const showConfirmSyncModal = ref(false)
+const showRegNumberModal = ref(false)
+const regNumberInput = ref('')
+const regNumberError = ref('')
+const isSyncing = ref(false)
+
+function openLinkFlow() {
+  if (certificateStore.selectedPet?.regNumber) {
+    showConfirmSyncModal.value = true
+  } else {
+    regNumberInput.value = ''
+    regNumberError.value = ''
+    showRegNumberModal.value = true
+  }
+}
+
+async function confirmSync() {
+  if (!certificateStore.selectedPetId || !certificateStore.selectedPet?.regNumber) return
+  isSyncing.value = true
+  try {
+    await certificateStore.linkRegistration(
+      certificateStore.selectedPetId,
+      certificateStore.selectedPet.regNumber,
+    )
+    showConfirmSyncModal.value = false
+  } finally {
+    isSyncing.value = false
+  }
+}
+
+async function submitRegNumber() {
+  if (!REG_NUMBER_PATTERN.test(regNumberInput.value)) {
+    regNumberError.value = '동물등록번호는 12자리(인식표) 또는 15자리(무선전자인식장치) 숫자로 입력해주세요.'
+    return
+  }
+  if (!certificateStore.selectedPetId) return
+
+  isSyncing.value = true
+  try {
+    await certificateStore.linkRegistration(certificateStore.selectedPetId, regNumberInput.value)
+    showRegNumberModal.value = false
+  } finally {
+    isSyncing.value = false
+  }
 }
 
 // 접종증명서 업로드
@@ -144,11 +194,19 @@ async function handleMedicalSelect(event) {
           </AppButton>
         </div>
 
-        <EmptyState
-          v-else
-          :icon="IconCertificate"
-          message="아직 연동된 동물등록증이 없어요"
-        />
+        <template v-else>
+          <EmptyState
+            :icon="IconCertificate"
+            message="아직 연동된 동물등록증이 없어요"
+          />
+          <AppButton
+            variant="secondary"
+            block
+            @click="openLinkFlow"
+          >
+            + 동물등록증 연동하기
+          </AppButton>
+        </template>
       </section>
 
       <!-- 접종증명서 -->
@@ -267,5 +325,61 @@ async function handleMedicalSelect(event) {
         </AppButton>
       </section>
     </template>
+
+    <!-- 등록번호가 이미 있는 경우: 확인만 받고 바로 연동 -->
+    <AppModal
+      v-model="showConfirmSyncModal"
+      title="동물등록증 연동"
+      :show-close="false"
+    >
+      <p class="text-(length:--font-md) text-(color:--color-gray-600)">
+        등록번호 {{ certificateStore.selectedPet?.regNumber }}로 연동할까요?
+      </p>
+      <template #footer>
+        <AppButton
+          variant="secondary"
+          @click="showConfirmSyncModal = false"
+        >
+          취소
+        </AppButton>
+        <AppButton
+          :loading="isSyncing"
+          @click="confirmSync"
+        >
+          연동하기
+        </AppButton>
+      </template>
+    </AppModal>
+
+    <!-- 등록번호가 없는 경우: 직접 입력받은 뒤 연동 -->
+    <AppModal
+      v-model="showRegNumberModal"
+      title="동물등록번호 입력"
+    >
+      <p class="text-(length:--font-sm) text-(color:--color-gray-600) mb-(--space-3)">
+        등록증에 적힌 12자리 또는 15자리 번호를 입력해주세요
+      </p>
+      <AppInput
+        v-model="regNumberInput"
+        label="동물등록번호"
+        placeholder="12자리 또는 15자리 숫자 입력"
+        inputmode="numeric"
+        :error="regNumberError"
+      />
+      <template #footer>
+        <AppButton
+          variant="secondary"
+          @click="showRegNumberModal = false"
+        >
+          취소
+        </AppButton>
+        <AppButton
+          :loading="isSyncing"
+          @click="submitRegNumber"
+        >
+          연동하기
+        </AppButton>
+      </template>
+    </AppModal>
   </div>
 </template>

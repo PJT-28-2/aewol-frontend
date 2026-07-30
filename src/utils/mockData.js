@@ -109,7 +109,7 @@ export const MOCK_PETS = [
 
 export const MOCK_PET_DOCUMENTS = [
   {
-    docId: 'doc-reg-1',
+    docId: 'doc-reg-pet-1',
     petId: 'pet-1',
     docName: '소로 · 동물등록증',
     docType: 'REGISTRATION',
@@ -143,8 +143,8 @@ export const MOCK_PET_DOCUMENTS = [
 // 이 상세 API는 APMS를 매번 라이브로 호출하는 게 아니라, 연동 시 이미 저장해둔 DB 값을
 // 그대로 반환한다는 전제로 만들어졌어요(이 목데이터는 그 "저장된 값"을 흉내낸 거예요).
 export const MOCK_REGISTRATION_DETAIL = {
-  'doc-reg-1': {
-    docId: 'doc-reg-1',
+  'doc-reg-pet-1': {
+    docId: 'doc-reg-pet-1',
     petId: 'pet-1',
     regNumber: '410000012345678',
     name: '소로',
