@@ -115,7 +115,7 @@ watch(
         <li
           v-for="program in supportProgramsStore.programs"
           :key="program.id"
-          class="min-h-[118px] rounded-[18px] border border-(--color-border) p-[var(--space-4)]"
+          class="min-h-[var(--support-card-min-height)] rounded-[18px] border border-(--color-border) p-[var(--space-4)]"
           :class="program.eligible ? 'bg-(--color-white)' : 'bg-(--color-surface)'"
         >
           <span
@@ -138,9 +138,9 @@ watch(
             {{ program.summary }}
           </p>
           <AppButton
-            class="float-right -mt-[2px] !h-[26px] !min-w-[82px] !rounded-[var(--radius-md)] !px-[var(--space-2)] text-[11px]"
+            class="float-right -mt-[2px]"
             :variant="program.eligible ? 'navy' : 'secondary'"
-            size="sm"
+            size="xs"
             @click="goToDetail(program.id)"
           >
             {{ program.eligible ? '신청하기' : '조건 보기' }}
@@ -196,7 +196,7 @@ watch(
             class="flex items-start gap-[var(--space-3)]"
           >
             <span
-              class="grid size-[26px] shrink-0 place-items-center rounded-full"
+              class="grid size-[var(--support-status-icon-size)] shrink-0 place-items-center rounded-full"
               :class="
                 condition.met
                   ? 'bg-(--color-olive-surface) text-(--color-olive-dark)'
