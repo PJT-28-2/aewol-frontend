@@ -56,6 +56,7 @@ const menuItems = [
   {
     title: '고객센터',
     description: '자주 묻는 질문 및 문의',
+    path: '/support',
     icon: IconDiscussion,
   },
 ]
