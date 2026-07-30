@@ -151,7 +151,7 @@ onMounted(async () => {
         <div class="relative rounded-(--radius-lg) overflow-hidden shadow-(--shadow-sm)">
           <div
             ref="mapContainer"
-            class="w-full h-[180px] bg-(--color-gray-200)"
+            class="w-full h-(--size-map-preview-height) bg-(--color-gray-200)"
           />
           <div
             v-if="hospitals.length"
@@ -201,7 +201,7 @@ onMounted(async () => {
             :key="hospital.id"
             class="flex items-center gap-(--space-3) bg-(--color-white) rounded-(--radius-lg) p-(--space-4) shadow-(--shadow-sm)"
           >
-            <div class="flex items-center justify-center w-[48px] h-[48px] rounded-(--radius-md) bg-(--color-gray-100) shrink-0">
+            <div class="flex items-center justify-center w-(--space-9) h-(--space-9) rounded-(--radius-md) bg-(--color-gray-100) shrink-0">
               <IconHospital :size="26" color="var(--color-slate-dark)" />
             </div>
 
