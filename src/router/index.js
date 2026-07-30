@@ -332,10 +332,16 @@ const authRoutes = [
     meta: { requiresAuth: true, step: 'settings' },
   },
   {
-    path: '/support',
-    name: 'Support',
-    component: () => import('@/views/support/SupportView.vue'),
+    path: '/support-programs',
+    name: 'SupportPrograms',
+    component: () => import('@/views/support-programs/SupportProgramsView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
+    path: '/support-programs/:programId',
+    name: 'SupportProgramDetail',
+    component: () => import('@/views/support-programs/SupportProgramsView.vue'),
+    meta: { requiresAuth: true },
   },
   {
     path: '/support',
@@ -366,12 +372,6 @@ const authRoutes = [
     name: 'InquirySubmitted',
     component: () => import('@/views/support/InquirySubmitted.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
-  },
-  {
-    path: '/support/:programId',
-    name: 'SupportDetail',
-    component: () => import('@/views/support/SupportView.vue'),
-    meta: { requiresAuth: true },
   },
   {
     path: '/emergency',
