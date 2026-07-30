@@ -7,247 +7,71 @@ import IconBarberShop from '@/components/common/icons/IconBarberShop.vue';
 import IconCat from '@/components/common/icons/IconCat.vue';
 import IconDog from '@/components/common/icons/IconDog.vue';
 import IconDogBowl from '@/components/common/icons/IconDogBowl.vue';
+import IconEtc from '@/components/common/icons/IconEtc.vue';
 import IconHospital from '@/components/common/icons/IconHospital.vue';
 import IconShowerGel from '@/components/common/icons/IconShowerGel.vue';
 import IconSos from '@/components/common/icons/IconSos.vue';
 import IconWallet from '@/components/common/icons/IconWallet.vue';
+import { CATEGORY_LABELS } from '@/mocks/transaction';
+import { usePetStore } from '@/stores/pet';
+import { useTransactionStore } from '@/stores/transaction';
 
 const route = useRoute();
 const router = useRouter();
-const txId = computed(() => route.params.txId);
+const petStore = usePetStore();
+const transactionStore = useTransactionStore();
+const txId = computed(() => Number(route.params.txId));
 
-// TODO: 백엔드 API 연동 후 mock 데이터 제거하고 실제 fetch로 교체
-const mockTransactionsById = {
-  1: {
-    id: 1,
-    title: '24시 우리동물병원',
-    subtitle: '병원비 · 소로 진료',
-    amount: -42000,
-    date: '2026-07-18',
-    time: '15:24',
-    type: 'withdraw',
-    category: 'MEDICAL',
-    petId: 1,
-    paymentMethod: '애월 통합 지갑',
-    autoTagged: true,
-  },
-  2: {
-    id: 2,
-    title: '펫사료마트',
-    subtitle: '사료·간식 · LLM 분류',
-    amount: -31200,
-    date: '2026-07-17',
-    time: '11:32',
-    type: 'withdraw',
-    category: 'FOOD',
-    petId: null,
-    paymentMethod: '애월 통합 지갑',
-    autoTagged: true,
-  },
-  3: {
-    id: 3,
-    title: '엄마 · 충전',
-    subtitle: '펫지갑에 100,000원 충전',
-    amount: 100000,
-    date: '2026-07-17',
-    time: '09:05',
-    type: 'charge',
-    chargeMethod: '계좌이체',
-  },
-  4: {
-    id: 4,
-    title: '미미미용실',
-    subtitle: '미용비 · 나비 미용',
-    amount: -38000,
-    date: '2026-07-15',
-    time: '14:10',
-    type: 'withdraw',
-    category: 'GROOMING',
-    petId: 2,
-    paymentMethod: '애월 통합 지갑',
-    autoTagged: true,
-  },
-  5: {
-    id: 5,
-    title: '24시 제주동물병원',
-    subtitle: 'SOS포켓 · 응급진료',
-    amount: -150000,
-    date: '2026-07-12',
-    time: '22:47',
-    type: 'withdraw',
-    category: 'SOS',
-    petId: null,
-    paymentMethod: '애월 통합 지갑',
-    autoTagged: false,
-  },
-  6: {
-    id: 6,
-    title: '펫프렌즈',
-    subtitle: '위생용품 · 자동분류',
-    amount: -18900,
-    date: '2026-07-10',
-    time: '16:20',
-    type: 'withdraw',
-    category: 'SUPPLIES',
-    petId: null,
-    paymentMethod: '애월 통합 지갑',
-    autoTagged: true,
-  },
-  7: {
-    id: 7,
-    title: '24시 우리동물병원',
-    subtitle: '병원비 · 나비 진료',
-    amount: -25000,
-    date: '2026-06-20',
-    time: '18:03',
-    type: 'withdraw',
-    category: 'MEDICAL',
-    petId: 2,
-    paymentMethod: '애월 통합 지갑',
-    autoTagged: true,
-  },
-  8: {
-    id: 8,
-    title: '아빠 · 충전',
-    subtitle: '펫지갑에 50,000원 충전',
-    amount: 50000,
-    date: '2026-06-05',
-    time: '20:15',
-    type: 'charge',
-    chargeMethod: '카드결제',
-  },
-  9: {
-    id: 9,
-    title: '24시 우리동물병원',
-    subtitle: '병원비 · 소로 진료',
-    amount: -42000,
-    date: '2026-07-18',
-    time: '10:12',
-    type: 'withdraw',
-    category: 'MEDICAL',
-    petId: 1,
-    paymentMethod: '애월 통합 지갑',
-    autoTagged: true,
-  },
-  10: {
-    id: 10,
-    title: '펫사료마트',
-    subtitle: '사료·간식 · LLM 분류',
-    amount: -31200,
-    date: '2026-07-17',
-    time: '13:40',
-    type: 'withdraw',
-    category: 'FOOD',
-    petId: null,
-    paymentMethod: '애월 통합 지갑',
-    autoTagged: true,
-  },
-  11: {
-    id: 11,
-    title: '엄마 · 충전',
-    subtitle: '펫지갑에 100,000원 충전',
-    amount: 100000,
-    date: '2026-07-17',
-    time: '08:20',
-    type: 'charge',
-    chargeMethod: '계좌이체',
-  },
-  12: {
-    id: 12,
-    title: '미미미용실',
-    subtitle: '미용비 · 나비 미용',
-    amount: -38000,
-    date: '2026-07-15',
-    time: '11:05',
-    type: 'withdraw',
-    category: 'GROOMING',
-    petId: 2,
-    paymentMethod: '애월 통합 지갑',
-    autoTagged: true,
-  },
-  13: {
-    id: 13,
-    title: '24시 우리동물병원',
-    subtitle: '병원비 · 나비 진료',
-    amount: -25000,
-    date: '2026-06-20',
-    time: '17:30',
-    type: 'withdraw',
-    category: 'MEDICAL',
-    petId: 2,
-    paymentMethod: '애월 통합 지갑',
-    autoTagged: true,
-  },
-  14: {
-    id: 14,
-    title: '아빠 · 충전',
-    subtitle: '펫지갑에 50,000원 충전',
-    amount: 50000,
-    date: '2026-06-05',
-    time: '19:50',
-    type: 'charge',
-    chargeMethod: '카드결제',
-  },
-  15: {
-    id: 15,
-    title: '펫사료마트',
-    subtitle: '사료·간식 · LLM 분류',
-    amount: -28000,
-    date: '2026-05-12',
-    time: '12:15',
-    type: 'withdraw',
-    category: 'FOOD',
-    petId: null,
-    paymentMethod: '애월 통합 지갑',
-    autoTagged: true,
-  },
-};
-
-const transaction = computed(() => {
-  const id = txId.value;
-  return Object.prototype.hasOwnProperty.call(mockTransactionsById, id)
-    ? mockTransactionsById[id]
-    : undefined;
-});
+const transaction = computed(() =>
+  transactionStore.transactions.find((tx) => tx.id === txId.value),
+);
 const notFound = computed(() => !transaction.value);
 const isWithdraw = computed(() => transaction.value?.type === 'withdraw');
 
-const pets = [
-  { id: 1, name: '소로', icon: IconDog },
-  { id: 2, name: '나비', icon: IconCat },
-];
+const pets = computed(() =>
+  petStore.pets.map((pet) => ({
+    ...pet,
+    icon: pet.species === 'CAT' ? IconCat : IconDog,
+  })),
+);
 
 // 바로가기 메뉴(HomeView.vue quickActions)와 동일한 파스텔 배경 팔레트 스타일 적용
 const categories = [
   {
     key: 'MEDICAL',
-    label: '병원비',
+    label: CATEGORY_LABELS.MEDICAL,
     icon: IconHospital,
     bg: 'var(--color-pastel-blue)',
   },
   {
     key: 'GROOMING',
-    label: '미용비',
+    label: CATEGORY_LABELS.GROOMING,
     icon: IconBarberShop,
     bg: 'var(--color-pastel-lilac)',
   },
   {
     key: 'FOOD',
-    label: '사료·간식',
+    label: CATEGORY_LABELS.FOOD,
     icon: IconDogBowl,
     bg: 'var(--color-pastel-peach)',
   },
   {
     key: 'SUPPLIES',
-    label: '위생용품',
+    label: CATEGORY_LABELS.SUPPLIES,
     icon: IconShowerGel,
     bg: 'var(--color-pastel-mint)',
   },
   {
     key: 'SOS',
-    label: 'SOS포켓',
+    label: CATEGORY_LABELS.SOS,
     icon: IconSos,
     bg: 'var(--color-pastel-coral)',
+  },
+  {
+    key: 'ETC',
+    label: CATEGORY_LABELS.ETC,
+    icon: IconEtc,
+    bg: 'var(--color-pastel-beige)',
   },
 ];
 
@@ -315,7 +139,10 @@ function goBack() {
 
 async function handleSave() {
   isSaving.value = true;
-  // TODO: implement transaction category/pet 태깅 수정 API 연동
+  transactionStore.updateTransactionTag(txId.value, {
+    category: selectedCategory.value,
+    petId: selectedPetId.value,
+  });
   isSaving.value = false;
   router.push('/wallet/history');
 }
