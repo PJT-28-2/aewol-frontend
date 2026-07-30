@@ -15,8 +15,14 @@ const route = useRoute()
 const router = useRouter()
 const certificateStore = useCertificateStore()
 
-onMounted(() => {
-  certificateStore.fetchCertificateDetail(route.params.docId)
+onMounted(async () => {
+  // registrationDetails는 fetchPets()가 목데이터를 스토어 상태로 옮겨야 채워지는데,
+  // 목록 화면을 거치지 않고 이 화면으로 바로 진입(새로고침·직접 접속 등)하면 비어있을 수 있어
+  // 먼저 보장해준다.
+  if (certificateStore.pets.length === 0) {
+    await certificateStore.fetchPets()
+  }
+  await certificateStore.fetchCertificateDetail(route.params.docId)
 })
 
 const genderText = computed(() => {
@@ -110,6 +116,34 @@ function handleShareFallbackConfirm() {
   showShareFallbackModal.value = false
   handleDownloadPdf()
 }
+
+// 재동기화 — connectedId 재사용 전제라 신원확인 폼 없이 바로 재조회
+const isResyncing = ref(false)
+
+async function handleResync() {
+  if (!certificateStore.detail) return
+  isResyncing.value = true
+  try {
+    await certificateStore.resyncRegistration(certificateStore.detail.docId)
+  } finally {
+    isResyncing.value = false
+  }
+}
+
+// 연동 해제(삭제)
+const showDeleteModal = ref(false)
+const isDeleting = ref(false)
+
+async function handleDelete() {
+  if (!certificateStore.detail) return
+  isDeleting.value = true
+  try {
+    await certificateStore.deleteRegistration(certificateStore.detail.docId)
+    router.replace('/certificates')
+  } finally {
+    isDeleting.value = false
+  }
+}
 </script>
 
 <template>
@@ -172,7 +206,7 @@ function handleShareFallbackConfirm() {
           color="var(--color-navy)"
           class="shrink-0 mt-[2px]"
         />
-        <div>
+        <div class="flex-1">
           <p class="text-(length:--font-sm) font-semibold text-(color:--color-navy)">
             마지막 동기화: {{ formatDateDot(certificateStore.detail.lastSyncedAt) }}
           </p>
@@ -180,10 +214,18 @@ function handleShareFallbackConfirm() {
             APMS 정보 변경 시 자동으로 갱신돼요
           </p>
         </div>
+        <button
+          type="button"
+          class="shrink-0 text-(length:--font-xs) font-semibold text-(color:--color-navy) underline underline-offset-2 disabled:opacity-50"
+          :disabled="isResyncing"
+          @click="handleResync"
+        >
+          {{ isResyncing ? '동기화 중…' : '지금 동기화' }}
+        </button>
       </div>
 
       <!-- PDF 저장 / 공유하기 -->
-      <div class="flex gap-(--space-3)">
+      <div class="flex gap-(--space-3) mb-(--space-4)">
         <AppButton
           variant="secondary"
           size="lg"
@@ -203,6 +245,14 @@ function handleShareFallbackConfirm() {
           공유하기
         </AppButton>
       </div>
+
+      <button
+        type="button"
+        class="w-full text-center text-(length:--font-sm) text-(color:--color-gray-500) underline underline-offset-2"
+        @click="showDeleteModal = true"
+      >
+        동물등록증 연동 해제
+      </button>
     </template>
 
     <!-- PDF 저장 완료 모달 -->
@@ -234,6 +284,32 @@ function handleShareFallbackConfirm() {
       <template #footer>
         <AppButton @click="handleShareFallbackConfirm">
           PDF로 저장하기
+        </AppButton>
+      </template>
+    </AppModal>
+
+    <!-- 연동 해제 확인 모달 -->
+    <AppModal
+      v-model="showDeleteModal"
+      title="동물등록증 연동을 해제할까요?"
+    >
+      <p class="text-(length:--font-md) text-(color:--color-gray-600)">
+        연동을 해제하면 저장된 등록정보가 삭제돼요. 해제 후에도 언제든 다시 연동할 수 있어요.
+      </p>
+      <template #footer>
+        <AppButton
+          variant="secondary"
+          :disabled="isDeleting"
+          @click="showDeleteModal = false"
+        >
+          취소
+        </AppButton>
+        <AppButton
+          variant="danger"
+          :loading="isDeleting"
+          @click="handleDelete"
+        >
+          해제하기
         </AppButton>
       </template>
     </AppModal>

@@ -48,11 +48,15 @@ export const useCertificateStore = defineStore('certificate', {
     },
 
     // 사용자가 키우는 반려동물 전체를 상단 탭에 노출
+    // 화면 재진입마다 다시 호출되므로, 목데이터 시딩은 최초 1회만 — 그렇지 않으면
+    // 세션 중 업로드/연동/삭제로 바뀐 documents/registrationDetails가 매번 초기화됨
     async fetchPets() {
       if (USE_MOCK_DATA) {
-        this.pets = structuredClone(MOCK_PETS)
-        this.documents = structuredClone(MOCK_PET_DOCUMENTS)
-        this.registrationDetails = structuredClone(MOCK_REGISTRATION_DETAIL)
+        if (this.pets.length === 0) {
+          this.pets = structuredClone(MOCK_PETS)
+          this.documents = structuredClone(MOCK_PET_DOCUMENTS)
+          this.registrationDetails = structuredClone(MOCK_REGISTRATION_DETAIL)
+        }
         if (!this.selectedPetId) {
           this.selectedPetId = this.pets[0]?.petId ?? null
         }
@@ -197,6 +201,56 @@ export const useCertificateStore = defineStore('certificate', {
       if (this.selectedPetId) {
         await this.fetchCertificates(this.selectedPetId)
       }
+    },
+
+    // 동물등록증 재동기화 — connectedId를 이미 확보한 상태(최초 연동 완료)라는 전제로,
+    // 신원확인 폼 없이 바로 재조회한다는 흐름만 흉내냄. 값 자체는 크게 바뀌지 않고
+    // lastSyncedAt만 갱신 — "정보가 바뀌면 자동 갱신"을 사용자가 수동으로 트리거하는 액션.
+    async resyncRegistration(docId) {
+      if (USE_MOCK_DATA) {
+        const existing = this.registrationDetails[docId]
+        if (!existing) return null
+
+        // 카카오톡 재인증 없이 connectedId로 바로 재조회한다는 전제라 대기 시간이 짧음
+        await new Promise((resolve) => setTimeout(resolve, 800))
+
+        const updated = { ...existing, lastSyncedAt: new Date().toISOString().slice(0, 10) }
+        this.registrationDetails = { ...this.registrationDetails, [docId]: updated }
+        if (this.detail?.docId === docId) this.detail = updated
+        return updated
+      }
+
+      // TODO: 백엔드에 재동기화 엔드포인트가 아직 확정되지 않아 주석 처리해둠.
+      // return this._withRequestState(async () => {
+      //   const { data } = await certificatesApi.resyncRegistration(docId)
+      //   this.detail = data.result ?? null
+      //   return this.detail
+      // })
+    },
+
+    // 동물등록증 연동 해제(삭제)
+    async deleteRegistration(docId) {
+      if (USE_MOCK_DATA) {
+        const doc = this.documents.find((d) => d.docId === docId)
+        this.documents = this.documents.filter((d) => d.docId !== docId)
+
+        const nextDetails = { ...this.registrationDetails }
+        delete nextDetails[docId]
+        this.registrationDetails = nextDetails
+
+        const pet = doc ? this.pets.find((p) => p.petId === doc.petId) : null
+        if (pet) pet.regNumber = ''
+
+        if (this.registrationDoc?.docId === docId) this.registrationDoc = null
+        if (this.detail?.docId === docId) this.detail = null
+        return
+      }
+
+      // TODO: 백엔드에 삭제 엔드포인트가 아직 확정되지 않아 주석 처리해둠.
+      // return this._withRequestState(async () => {
+      //   await certificatesApi.deleteRegistration(docId)
+      //   if (this.selectedPetId) await this.fetchCertificates(this.selectedPetId)
+      // })
     },
 
     // POST /api/certificates/vaccination
