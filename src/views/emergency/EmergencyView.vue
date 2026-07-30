@@ -67,12 +67,19 @@ async function initKakaoMap(lat, lng) {
   const key = import.meta.env.VITE_KAKAO_MAP_KEY
   if (!key || !mapContainer.value) return
 
-  await new Promise((resolve) => {
-    const script = document.createElement('script')
-    script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${key}&autoload=false`
-    script.onload = resolve
-    document.head.appendChild(script)
-  })
+  if (!window.kakao?.maps) {
+    try {
+      await new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${key}&autoload=false`
+        script.onload = resolve
+        script.onerror = () => reject(new Error('카카오맵 SDK 로드 실패'))
+        document.head.appendChild(script)
+      })
+    } catch {
+      return
+    }
+  }
 
   window.kakao.maps.load(() => {
     const center = new window.kakao.maps.LatLng(lat, lng)
