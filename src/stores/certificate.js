@@ -309,9 +309,15 @@ export const useCertificateStore = defineStore('certificate', {
     // 동물등록증 해제(deleteRegistration)와 달리 하나의 액션으로 공용 처리
     async deleteDocument(docId) {
       if (USE_MOCK_DATA) {
-        this.documents = this.documents.filter((doc) => doc.docId !== docId)
-        this.vaccinationDocs = this.vaccinationDocs.filter((doc) => doc.docId !== docId)
-        this.medicalDocs = this.medicalDocs.filter((doc) => doc.docId !== docId)
+        const doc = this.documents.find((d) => d.docId === docId)
+        // 업로드 시 만든 blob: objectURL은 브라우저가 알아서 회수하지 않으므로 직접 해제
+        if (doc?.fileUrl?.startsWith('blob:')) {
+          URL.revokeObjectURL(doc.fileUrl)
+        }
+
+        this.documents = this.documents.filter((d) => d.docId !== docId)
+        this.vaccinationDocs = this.vaccinationDocs.filter((d) => d.docId !== docId)
+        this.medicalDocs = this.medicalDocs.filter((d) => d.docId !== docId)
         return
       }
 
