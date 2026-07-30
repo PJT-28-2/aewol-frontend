@@ -60,7 +60,7 @@ function handleCall(phone) {
 
 function handleNavigation(hospital) {
   const url = `https://map.kakao.com/link/to/${encodeURIComponent(hospital.name)},${hospital.lat},${hospital.lng}`
-  window.open(url, '_blank')
+  window.open(url, '_blank', 'noopener,noreferrer')
 }
 
 async function initKakaoMap(lat, lng) {
