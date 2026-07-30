@@ -368,6 +368,12 @@ const authRoutes = [
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
+    path: '/support/inquiries/:inquiryId',
+    name: 'InquiryDetail',
+    component: () => import('@/views/support/InquiryDetail.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
     path: '/support/inquiry/complete',
     name: 'InquirySubmitted',
     component: () => import('@/views/support/InquirySubmitted.vue'),
