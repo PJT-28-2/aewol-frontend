@@ -1,6 +1,7 @@
 <script setup>
-import { ref, computed, nextTick } from 'vue';
+import { ref, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import AddressSearchLayer from '@/components/common/AddressSearchLayer.vue';
 import IconWallet from '@/components/common/icons/IconWallet.vue';
 import IconWarning from '@/components/common/icons/IconWarning.vue';
 import BottomSheet from '@/components/common/BottomSheet.vue';
@@ -76,74 +77,16 @@ function handleChangeAddress() {
     addressDetail: shippingAddress.value?.addressDetail ?? '',
   };
   addressFormErrors.value = { ...EMPTY_ADDRESS_FORM_ERRORS };
-  postcodeLoadError.value = '';
   isAddressSheetOpen.value = true;
 }
 
-// 카카오(다음) 우편번호 서비스 연동
-const DAUM_POSTCODE_SCRIPT_SRC =
-  '//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
 const isPostcodeOpen = ref(false);
-const postcodeContainerRef = ref(null);
-const postcodeLoadError = ref('');
 
-// 로딩 중인 스크립트 Promise를 캐싱 — DOM의 load/error 이벤트는 한 번만 발생하므로
-// 이미 붙어있는 <script> 태그를 재검사하는 방식은 두 번째 호출부터 영원히 대기하게 됨
-let daumPostcodeLoadPromise = null;
-
-function loadDaumPostcodeScript() {
-  if (window.daum?.Postcode) return Promise.resolve();
-
-  if (!daumPostcodeLoadPromise) {
-    daumPostcodeLoadPromise = new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.src = DAUM_POSTCODE_SCRIPT_SRC;
-      script.onload = () => resolve();
-      script.onerror = () => {
-        script.remove();
-        reject(new Error('우편번호 서비스를 불러오지 못했습니다'));
-      };
-      document.head.appendChild(script);
-    }).catch((error) => {
-      // 실패 시 캐시를 비워 다음 시도에서 스크립트를 다시 붙일 수 있게 함
-      daumPostcodeLoadPromise = null;
-      throw error;
-    });
-  }
-
-  return daumPostcodeLoadPromise;
-}
-
-// 우편번호 찾기 레이어를 열고 카카오 우편번호 서비스를 그 안에 임베드
-async function handleSearchAddress() {
-  postcodeLoadError.value = '';
-
-  try {
-    await loadDaumPostcodeScript();
-  } catch {
-    postcodeLoadError.value = '우편번호 서비스를 불러오지 못했어요. 잠시 후 다시 시도해주세요.';
-    return;
-  }
-
-  isPostcodeOpen.value = true;
-  await nextTick();
-
-  // embed()는 컨테이너에 append만 하므로, 재오픈 시 이전 위젯이 중첩되지 않도록 먼저 비움
-  postcodeContainerRef.value.replaceChildren();
-
-  new window.daum.Postcode({
-    oncomplete(data) {
-      addressForm.value.zipCode = data.zonecode;
-      addressForm.value.address = data.roadAddress || data.jibunAddress;
-      addressFormErrors.value.zipCode = '';
-      addressFormErrors.value.address = '';
-      isPostcodeOpen.value = false;
-    },
-  }).embed(postcodeContainerRef.value);
-}
-
-function closePostcode() {
-  isPostcodeOpen.value = false;
+function handleAddressSelect({ zipCode, address }) {
+  addressForm.value.zipCode = zipCode;
+  addressForm.value.address = address;
+  addressFormErrors.value.zipCode = '';
+  addressFormErrors.value.address = '';
 }
 
 function closeAddressSheet() {
@@ -534,7 +477,7 @@ const isPinSheetOpen = ref(false);
           <button
             type="button"
             class="shrink-0 w-20 h-[46px] bg-(--color-navy) text-(color:--color-white) rounded-(--radius-md) text-(length:--font-xs) font-bold"
-            @click="handleSearchAddress"
+            @click="isPostcodeOpen = true"
           >
             주소 찾기
           </button>
@@ -544,12 +487,6 @@ const isPinSheetOpen = ref(false);
           class="text-(length:--font-xs) text-(color:--color-danger) mt-(--space-1)"
         >
           {{ addressFormErrors.zipCode }}
-        </p>
-        <p
-          v-if="postcodeLoadError"
-          class="text-(length:--font-xs) text-(color:--color-danger) mt-(--space-1)"
-        >
-          {{ postcodeLoadError }}
         </p>
       </div>
 
@@ -621,20 +558,9 @@ const isPinSheetOpen = ref(false);
       @complete="handlePayment"
     />
 
-    <!-- 카카오 우편번호 검색 레이어 -->
-    <Teleport to="body">
-      <div
-        v-if="isPostcodeOpen"
-        class="fixed inset-0 z-1000 bg-(--color-white) flex flex-col"
-      >
-        <div class="flex items-center justify-between p-(--space-4) border-b border-(--color-border)">
-          <span class="text-(length:--font-md) font-semibold text-(color:--color-navy)">
-            주소 검색
-          </span>
-          <AppButton variant="ghost" size="sm" @click="closePostcode">닫기</AppButton>
-        </div>
-        <div ref="postcodeContainerRef" class="flex-1" />
-      </div>
-    </Teleport>
+    <AddressSearchLayer
+      v-model="isPostcodeOpen"
+      @select="handleAddressSelect"
+    />
   </div>
 </template>

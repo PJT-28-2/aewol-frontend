@@ -1,6 +1,7 @@
 <script setup>
 import { computed, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import AddressSearchLayer from '@/components/common/AddressSearchLayer.vue'
 import AppButton from '@/components/common/AppButton.vue'
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 
@@ -8,6 +9,7 @@ const router = useRouter()
 
 const isKakaoSignup = ref(false)
 const isLoading = ref(false)
+const isAddressSearchOpen = ref(false)
 const errorMessage = ref('')
 const form = reactive({
   name: '',
@@ -16,6 +18,7 @@ const form = reactive({
   verificationCode: '',
   password: '',
   passwordConfirm: '',
+  zipCode: '',
   address: '',
   addressDetail: '',
 })
@@ -45,6 +48,11 @@ const toggleAllAgreements = () => {
   agreements.terms = nextValue
   agreements.privacy = nextValue
   agreements.marketing = nextValue
+}
+
+const handleAddressSelect = ({ zipCode, address }) => {
+  form.zipCode = zipCode
+  form.address = address
 }
 
 const handleSignup = async () => {
@@ -224,47 +232,61 @@ const handleSignup = async () => {
 
       <label
         class="mt-[11px] mb-1 text-[12.5px] font-(--font-bold) text-(color:--color-slate-dark)"
-        for="signup-address"
+        for="signup-zip-code"
       >
-        주소
+        우편번호
       </label>
       <div class="flex gap-(--space-4)">
         <input
-          id="signup-address"
-          v-model="form.address"
-          class="h-(--control-height-md) min-w-0 flex-1 rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
+          id="signup-zip-code"
+          v-model="form.zipCode"
+          class="h-(--control-height-md) min-w-0 flex-1 cursor-default rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted)"
           type="text"
-          placeholder="우편번호 및 주소"
+          inputmode="numeric"
+          placeholder="12345"
+          readonly
           required
         >
 
         <button
-          class="h-(--control-height-md) w-20 shrink-0 cursor-not-allowed rounded-(--radius-lg) bg-(--color-slate-light) text-[11px] font-(--font-bold) text-(color:--color-slate-muted)"
+          class="h-(--control-height-md) w-20 shrink-0 rounded-(--radius-lg) bg-(--color-navy) text-[11px] font-(--font-bold) text-(color:--color-white) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-navy)"
           type="button"
-          aria-describedby="signup-address-api-status"
-          disabled
+          @click="isAddressSearchOpen = true"
         >
-          연동 예정
+          주소 찾기
         </button>
       </div>
-      <p
-        id="signup-address-api-status"
-        class="mt-1 text-[10.5px] text-(color:--color-slate-muted)"
-      >
-        주소 검색 API 연동 예정
-      </p>
 
       <label
-        class="sr-only"
+        class="mt-[11px] mb-1 text-[12.5px] font-(--font-bold) text-(color:--color-slate-dark)"
+        for="signup-address"
+      >
+        주소
+      </label>
+      <input
+        id="signup-address"
+        v-model="form.address"
+        class="h-(--control-height-md) cursor-default rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted)"
+        type="text"
+        autocomplete="address-line1"
+        placeholder="주소"
+        readonly
+        required
+      >
+
+      <label
+        class="mt-[11px] mb-1 text-[12.5px] font-(--font-bold) text-(color:--color-slate-dark)"
         for="signup-address-detail"
-      >상세주소</label>
+      >
+        상세주소
+      </label>
       <input
         id="signup-address-detail"
         v-model="form.addressDetail"
-        class="mt-(--space-2) h-(--control-height-md) rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
+        class="h-(--control-height-md) rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
         type="text"
         autocomplete="address-line2"
-        placeholder="상세주소"
+        placeholder="동, 호수 등 상세주소 입력"
         required
       >
 
@@ -338,5 +360,10 @@ const handleSignup = async () => {
         로그인
       </router-link>
     </p>
+
+    <AddressSearchLayer
+      v-model="isAddressSearchOpen"
+      @select="handleAddressSelect"
+    />
   </main>
 </template>
