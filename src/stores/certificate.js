@@ -235,11 +235,10 @@ export const useCertificateStore = defineStore('certificate', {
         return
       }
 
-      // TODO: 백엔드에 삭제 엔드포인트가 아직 확정되지 않아 주석 처리해둠.
-      // return this._withRequestState(async () => {
-      //   await certificatesApi.deleteDocument(petId, docId)
-      //   if (this.selectedPetId) await this.fetchCertificates(this.selectedPetId)
-      // })
+      return this._withRequestState(async () => {
+        await certificatesApi.deleteDocument(petId, docId)
+        if (this.selectedPetId) await this.fetchCertificates(this.selectedPetId)
+      })
     },
 
     // POST /api/pets/{petId}/documents (docType=VACCINATION)
@@ -312,11 +311,10 @@ export const useCertificateStore = defineStore('certificate', {
         return
       }
 
-      // TODO: 백엔드에 삭제 엔드포인트가 아직 확정되지 않아 주석 처리해둠.
-      // return this._withRequestState(async () => {
-      //   await certificatesApi.deleteDocument(petId, docId)
-      //   if (this.selectedPetId) await this.fetchCertificates(this.selectedPetId)
-      // })
+      return this._withRequestState(async () => {
+        await certificatesApi.deleteDocument(petId, docId)
+        if (this.selectedPetId) await this.fetchCertificates(this.selectedPetId)
+      })
     },
   },
 })
