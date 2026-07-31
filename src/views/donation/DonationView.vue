@@ -4,7 +4,6 @@ import { storeToRefs } from 'pinia'
 import { useRoute, useRouter } from 'vue-router'
 import AppButton from '@/components/common/AppButton.vue'
 import AppInput from '@/components/common/AppInput.vue'
-import BottomNavBar from '@/components/common/BottomNavBar.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import SelectableChip from '@/components/common/SelectableChip.vue'
@@ -79,8 +78,13 @@ onMounted(loadDonationData)
 </script>
 
 <template>
-  <main
-    class="mx-auto min-h-dvh w-full max-w-[var(--mobile-content-width)] box-border bg-(--color-white) px-[var(--space-5)] pb-[calc(var(--bottom-nav-height)+var(--space-8)+env(safe-area-inset-bottom))] pt-[calc(var(--header-height)+var(--space-5))] text-(--color-navy)"
+  <div
+    class="mx-auto w-full max-w-[var(--mobile-content-width)] box-border bg-(--color-white) px-[var(--space-5)] text-(--color-navy)"
+    :class="
+      isMain
+        ? 'min-h-[calc(100dvh-var(--header-height)-var(--bottom-nav-height))] pb-[calc(var(--space-8)+env(safe-area-inset-bottom))] pt-[var(--space-5)]'
+        : 'min-h-dvh pb-[calc(var(--space-8)+env(safe-area-inset-bottom))] pt-[calc(var(--header-height)+var(--space-5))]'
+    "
   >
     <section
       v-if="isLoading"
@@ -122,7 +126,11 @@ onMounted(loadDonationData)
         <strong class="block text-[length:var(--font-2xl)] font-bold text-(--color-navy)">짜투리 저금통</strong>
         <span
           class="mt-[var(--space-1)] block text-[length:var(--font-sm)] text-(--color-slate-muted)"
-        >결제할 때마다 잔돈이 자동으로 모여요</span>
+        >{{
+          piggyBankEnabled
+            ? '결제할 때마다 잔돈이 자동으로 모여요'
+            : '짜투리저금통 사용이 중지되어 있어요'
+        }}</span>
       </header>
 
       <section
@@ -172,6 +180,36 @@ onMounted(loadDonationData)
         <span
           class="text-[length:var(--font-xs)] text-(--color-slate-muted)"
         >{{ impactMessage }}</span>
+      </section>
+
+      <section
+        class="mt-[var(--space-3)] flex items-center gap-[var(--space-3)] rounded-[var(--radius-lg)] border border-(--color-border) p-[var(--space-4)]"
+        aria-label="저금통 설정 상태"
+      >
+        <div class="min-w-0 flex-1">
+          <b class="block text-[length:var(--font-sm)] text-(--color-slate-dark)">
+            {{ piggyBankEnabled ? '짜투리 저금 사용 중' : '짜투리 저금 사용 중지' }}
+          </b>
+          <span
+            class="mt-[var(--space-1)] block text-[length:var(--font-xs)] text-(--color-slate-muted)"
+          >
+            {{
+              piggyBankEnabled
+                ? `${formatWon(savingUnit)} 단위로 저금하고 있어요`
+                : '설정에서 언제든 다시 시작할 수 있어요'
+            }}
+          </span>
+        </div>
+        <span
+          class="shrink-0 rounded-(--radius-full) px-[var(--space-3)] py-[var(--space-1)] text-[length:var(--font-xs)] font-bold"
+          :class="
+            autoDonate
+              ? 'bg-(--color-olive-surface) text-(--color-olive-dark)'
+              : 'bg-(--color-surface) text-(--color-slate-dark)'
+          "
+        >
+          자동 기부 {{ autoDonate ? 'ON' : 'OFF' }}
+        </span>
       </section>
     </template>
 
@@ -678,6 +716,5 @@ onMounted(loadDonationData)
         action-route="/donation"
       />
     </section>
-  </main>
-  <BottomNavBar v-if="isMain" />
+  </div>
 </template>

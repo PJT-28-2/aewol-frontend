@@ -2,7 +2,6 @@
 import { computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppButton from '@/components/common/AppButton.vue'
-import BottomNavBar from '@/components/common/BottomNavBar.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
@@ -58,8 +57,13 @@ watch(
 </script>
 
 <template>
-  <main
-    class="mx-auto min-h-dvh w-full max-w-[var(--mobile-content-width)] box-border bg-(--color-white) px-[22px] pb-[calc(var(--bottom-nav-height)+var(--space-6)+env(safe-area-inset-bottom))] pt-[calc(var(--header-height)+var(--space-1))] text-(--color-navy)"
+  <div
+    class="mx-auto w-full max-w-[var(--mobile-content-width)] box-border bg-(--color-white) px-[22px] text-(--color-navy)"
+    :class="
+      isDetail
+        ? 'min-h-dvh pb-[calc(var(--space-6)+env(safe-area-inset-bottom))] pt-[calc(var(--header-height)+var(--space-1))]'
+        : 'min-h-[calc(100dvh-var(--header-height)-var(--bottom-nav-height))] pb-[calc(var(--space-6)+env(safe-area-inset-bottom))] pt-[var(--space-1)]'
+    "
   >
     <section
       v-if="supportProgramsStore.isLoading"
@@ -287,6 +291,5 @@ watch(
         action-route="/support-programs"
       />
     </section>
-  </main>
-  <BottomNavBar v-if="!isDetail" />
+  </div>
 </template>
