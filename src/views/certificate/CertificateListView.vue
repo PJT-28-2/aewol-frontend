@@ -11,8 +11,9 @@ import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 import IconDog from '@/components/common/icons/IconDog.vue'
 import IconCat from '@/components/common/icons/IconCat.vue'
-import IconCertificate from '@/components/common/icons/IconCertificate.vue'
-import IconDocument from '@/components/common/icons/IconDocument.vue'
+import IconRegistrationPaper from '@/components/common/icons/IconRegistrationPaper.vue'
+import IconSyringe from '@/components/common/icons/IconSyringe.vue'
+import IconStethoscope from '@/components/common/icons/IconStethoscope.vue'
 import IconDelete from '@/components/common/icons/IconDelete.vue'
 
 const router = useRouter()
@@ -262,7 +263,7 @@ async function confirmDocDelete() {
           class="flex items-center gap-(--space-3) bg-(--color-surface) rounded-(--radius-lg) p-(--space-4)"
         >
           <span class="shrink-0 flex items-center justify-center w-10 h-10 rounded-(--radius-md) bg-(--color-white)">
-            <IconCertificate :size="20" />
+            <IconRegistrationPaper :size="20" />
           </span>
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-(--space-2) mb-(--space-1)">
@@ -289,7 +290,7 @@ async function confirmDocDelete() {
 
         <template v-else>
           <EmptyState
-            :icon="IconCertificate"
+            :icon="IconRegistrationPaper"
             message="아직 연동된 동물등록증이 없어요"
           />
           <AppButton
@@ -323,7 +324,7 @@ async function confirmDocDelete() {
               @click="openPreview(doc)"
             >
               <span class="shrink-0 flex items-center justify-center w-10 h-10 rounded-(--radius-md) bg-(--color-white)">
-                <IconDocument
+                <IconSyringe
                   :size="18"
                   color="var(--color-slate-dark)"
                 />
@@ -352,7 +353,7 @@ async function confirmDocDelete() {
         </ul>
         <EmptyState
           v-else
-          :icon="IconDocument"
+          :icon="IconSyringe"
           message="아직 등록된 접종증명서가 없어요"
         />
 
@@ -393,7 +394,7 @@ async function confirmDocDelete() {
               @click="openPreview(doc)"
             >
               <span class="shrink-0 flex items-center justify-center w-10 h-10 rounded-(--radius-md) bg-(--color-white)">
-                <IconDocument
+                <IconStethoscope
                   :size="18"
                   color="var(--color-slate-dark)"
                 />
@@ -422,7 +423,7 @@ async function confirmDocDelete() {
         </ul>
         <EmptyState
           v-else
-          :icon="IconDocument"
+          :icon="IconStethoscope"
           message="아직 등록된 진료확인서가 없어요"
         />
 
