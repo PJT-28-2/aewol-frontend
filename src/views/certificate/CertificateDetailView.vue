@@ -9,7 +9,7 @@ import AppButton from '@/components/common/AppButton.vue'
 import AppModal from '@/components/common/AppModal.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
-import IconInfo from '@/components/common/icons/IconInfo.vue'
+import IconRefresh from '@/components/common/icons/IconRefresh.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -278,23 +278,25 @@ async function handlePhotoDelete() {
       <!-- 캡처 대상: PDF 저장/공유하기에서 그대로 이미지화 -->
       <div
         ref="detailCardRef"
-        class="bg-(--color-navy) rounded-(--radius-xl) p-(--space-5) mb-(--space-4)"
+        class="bg-(--color-navy) border border-(--color-border) rounded-(--radius-xl) p-(--space-1) mb-(--space-4)"
       >
-        <p class="text-center text-(length:--font-base) font-bold text-(color:--color-white) tracking-widest mb-(--space-4)">
-          동 물 등 록 증
-        </p>
+        <div class="flex items-center justify-center py-(--space-4)">
+          <p class="text-center text-(length:--font-base) font-bold text-(color:--color-white) tracking-widest">
+            동 물 등 록 증
+          </p>
+        </div>
 
-        <div class="bg-(--color-white) rounded-(--radius-lg) p-(--space-4)">
+        <div class="bg-(--color-white) border-x border-b border-(--color-border) rounded-(--radius-lg) p-(--space-4)">
           <ul>
             <li
               v-for="row in infoRows"
               :key="row.label"
-              class="flex items-center py-(--space-3) border-b border-(--color-border) last:border-0"
+              class="flex items-center gap-(--space-3) py-(--space-3)"
             >
               <span class="w-[38%] text-(length:--font-sm) text-(color:--color-gray-600) font-medium">
                 {{ row.label }}
               </span>
-              <span class="flex-1 min-w-0 text-right text-(length:--font-sm) font-semibold text-(color:--color-gray-900) [overflow-wrap:anywhere]">
+              <span class="flex-1 min-w-0 text-left text-(length:--font-sm) font-semibold text-(color:--color-gray-900) [overflow-wrap:anywhere]">
                 {{ row.value }}
               </span>
             </li>
@@ -303,12 +305,20 @@ async function handlePhotoDelete() {
       </div>
 
       <!-- 동기화 안내 -->
-      <div class="flex items-start gap-(--space-2) bg-(--color-info-surface) rounded-(--radius-md) p-(--space-4) mb-(--space-5)">
-        <IconInfo
-          :size="16"
-          color="var(--color-navy)"
-          class="shrink-0 mt-[2px]"
-        />
+      <div class="flex items-start gap-(--space-2) bg-(--color-surface) rounded-(--radius-md) p-(--space-4) mb-(--space-5)">
+        <button
+          type="button"
+          class="shrink-0 flex items-center justify-center w-5 h-5 rounded-full bg-(--color-pastel-blue) disabled:opacity-50"
+          :disabled="isResyncing"
+          aria-label="지금 동기화"
+          @click="handleResync"
+        >
+          <IconRefresh
+            :size="12"
+            color="var(--color-navy)"
+            :class="isResyncing ? 'animate-spin' : ''"
+          />
+        </button>
         <div class="flex-1">
           <p class="text-(length:--font-sm) font-semibold text-(color:--color-navy)">
             마지막 동기화: {{ formatDateDot(certificateStore.detail.lastSyncedAt) }}
@@ -323,14 +333,6 @@ async function handlePhotoDelete() {
             {{ resyncError }}
           </p>
         </div>
-        <button
-          type="button"
-          class="shrink-0 text-(length:--font-xs) font-semibold text-(color:--color-navy) underline underline-offset-2 disabled:opacity-50"
-          :disabled="isResyncing"
-          @click="handleResync"
-        >
-          {{ isResyncing ? '동기화 중…' : '지금 동기화' }}
-        </button>
       </div>
 
       <!-- PDF 저장 / 공유하기 -->
