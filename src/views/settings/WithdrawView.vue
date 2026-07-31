@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import PasswordInput from '@/components/common/PasswordInput.vue'
 import withdrawalConfirmImage from '@/assets/images/withdrawal-confirm.png'
 
 const router = useRouter()
@@ -113,15 +114,14 @@ const handleWithdraw = async () => {
       >
         본인 확인을 위해 비밀번호를 입력해주세요
       </label>
-      <input
+      <PasswordInput
         id="withdraw-password"
         v-model="password"
-        class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
-        type="password"
+        input-class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
         autocomplete="current-password"
         placeholder="비밀번호 입력"
         required
-      >
+      />
       <p
         v-if="errorMessage"
         class="mt-2 text-[12px] text-(color:--color-danger)"

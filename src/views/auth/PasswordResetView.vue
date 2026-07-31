@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { authApi } from '@/api/auth'
 import { formatCountdown } from '@/utils/date'
+import PasswordInput from '@/components/common/PasswordInput.vue'
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 import successImage from '@/assets/images/pet-success.png'
 
@@ -94,6 +95,14 @@ const isValidPassword = (value) => {
     (categoryCount >= 2 && value.length >= 10)
   )
 }
+
+const isNewPasswordValid = computed(() =>
+  isValidPassword(newPassword.value),
+)
+
+const isNewPasswordConfirmed = computed(
+  () => newPasswordConfirm.value === newPassword.value,
+)
 
 /**
  * 입력한 이메일로 비밀번호 재설정 인증번호를 요청한다.
@@ -409,15 +418,27 @@ onBeforeUnmount(clearTimers)
           >
             새 비밀번호
           </label>
-          <input
+          <PasswordInput
             id="new-password"
             v-model="newPassword"
-            class="h-[46px] w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-(length:--auth-font-sm) text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
-            type="password"
+            input-class="h-[46px] w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-(length:--auth-font-sm) text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
             autocomplete="new-password"
             placeholder="2가지 조합 10자리 / 3가지 조합 8자리 이상"
             required
+          />
+          <p
+            v-if="newPassword && !isNewPasswordValid"
+            class="mt-1 text-[11px] text-(color:--color-danger)"
+            role="alert"
           >
+            영문·숫자·특수문자 중 2가지 조합은 10자리, 3가지 조합은 8자리 이상 입력해 주세요.
+          </p>
+          <p
+            v-else-if="newPassword && isNewPasswordValid"
+            class="mt-1 text-[11px] text-(color:--color-success)"
+          >
+            사용 가능한 비밀번호입니다.
+          </p>
 
           <label
             class="mt-[11px] mb-1 block text-[12.5px] leading-[1.3] font-(--font-bold) text-(color:--color-slate-dark)"
@@ -425,15 +446,27 @@ onBeforeUnmount(clearTimers)
           >
             새 비밀번호 확인
           </label>
-          <input
+          <PasswordInput
             id="new-password-confirm"
             v-model="newPasswordConfirm"
-            class="h-[46px] w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-(length:--auth-font-sm) text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
-            type="password"
+            input-class="h-[46px] w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-(length:--auth-font-sm) text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
             autocomplete="new-password"
             placeholder="비밀번호를 한번 더 입력해주세요"
             required
+          />
+          <p
+            v-if="newPasswordConfirm && !isNewPasswordConfirmed"
+            class="mt-1 text-[11px] text-(color:--color-danger)"
+            role="alert"
           >
+            비밀번호가 일치하지 않습니다.
+          </p>
+          <p
+            v-else-if="newPasswordConfirm && isNewPasswordConfirmed"
+            class="mt-1 text-[11px] text-(color:--color-success)"
+          >
+            비밀번호가 일치합니다.
+          </p>
 
           <button
             class="mt-6 h-[52px] rounded-(--radius-xl) bg-(--color-gold) text-[14.5px] font-(--font-bold) text-(color:--color-navy) disabled:cursor-not-allowed disabled:opacity-55"

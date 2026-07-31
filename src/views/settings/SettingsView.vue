@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import AppButton from '@/components/common/AppButton.vue'
 import AppModal from '@/components/common/AppModal.vue'
+import PasswordInput from '@/components/common/PasswordInput.vue'
 import IconAccountCard from '@/components/common/icons/IconAccountCard.vue'
 import IconChevronLeft from '@/components/common/icons/IconChevronLeft.vue'
 import IconDiscussion from '@/components/common/icons/IconDiscussion.vue'
@@ -211,14 +212,13 @@ const confirmLogout = () => {
         >
           현재 비밀번호
         </label>
-        <input
+        <PasswordInput
           id="profile-password"
           v-model="profilePassword"
-          class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none focus:border-(--color-navy)"
-          type="password"
+          input-class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none focus:border-(--color-navy)"
           autocomplete="current-password"
           required
-        >
+        />
         <p
           v-if="passwordError"
           class="mt-2 text-[12px] text-(color:--color-danger)"

@@ -3,6 +3,7 @@ import { computed, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import AddressSearchLayer from '@/components/common/AddressSearchLayer.vue'
 import AppButton from '@/components/common/AppButton.vue'
+import PasswordInput from '@/components/common/PasswordInput.vue'
 import IconChevronLeft from '@/components/common/icons/IconChevronLeft.vue'
 
 const router = useRouter()
@@ -221,15 +222,15 @@ const verifyCurrentPassword = async () => {
         현재 비밀번호
       </label>
       <div class="flex gap-(--space-4)">
-        <input
+        <PasswordInput
           id="current-password"
           v-model="form.currentPassword"
-          class="h-(--control-height-md) min-w-0 flex-1 rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
-          type="password"
+          wrapper-class="flex-1"
+          input-class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
           autocomplete="current-password"
           placeholder="현재 비밀번호를 입력해주세요"
           @input="handleCurrentPasswordInput"
-        >
+        />
         <button
           class="h-(--control-height-md) w-20 shrink-0 rounded-(--radius-lg) bg-(--color-navy) text-[12.5px] font-(--font-bold) text-(color:--color-white) disabled:cursor-not-allowed disabled:opacity-50"
           type="button"
@@ -265,15 +266,14 @@ const verifyCurrentPassword = async () => {
       >
         새 비밀번호
       </label>
-      <input
+      <PasswordInput
         id="new-password"
         v-model="form.newPassword"
-        class="h-(--control-height-md) rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy) disabled:cursor-not-allowed disabled:opacity-50"
-        type="password"
+        input-class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy) disabled:cursor-not-allowed disabled:opacity-50"
         autocomplete="new-password"
         placeholder="2가지 조합 10자리 / 3가지 조합 8자리 이상"
         :disabled="!isCurrentPasswordVerified"
-      >
+      />
       <p
         v-if="form.newPassword && !isNewPasswordValid"
         class="mt-1 text-[11px] text-(color:--color-danger)"
@@ -294,15 +294,14 @@ const verifyCurrentPassword = async () => {
       >
         새 비밀번호 확인
       </label>
-      <input
+      <PasswordInput
         id="new-password-confirm"
         v-model="form.newPasswordConfirm"
-        class="h-(--control-height-md) rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy) disabled:cursor-not-allowed disabled:opacity-50"
-        type="password"
+        input-class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy) disabled:cursor-not-allowed disabled:opacity-50"
         autocomplete="new-password"
         placeholder="비밀번호를 한번 더 입력해주세요"
         :disabled="!isCurrentPasswordVerified"
-      >
+      />
 
       <AppButton
         class="mt-7"
