@@ -6,7 +6,9 @@ import IconCheck from '@/components/common/icons/IconCheck.vue';
 import BottomSheet from '@/components/common/BottomSheet.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import PinAuthSheet from '@/components/common/PinAuthSheet.vue';
-import statusWaitingImage from '@/assets/images/status-waiting.png';
+import statusWaitingImage from '@/assets/images/group-purchase-waiting.png';
+import statusConfirmedImage from '@/assets/images/group-purchase-confirmed.png';
+import statusCancelledImage from '@/assets/images/group-purchase-cancelled.png';
 
 const route = useRoute();
 const router = useRouter();
@@ -46,7 +48,6 @@ async function loadStatus() {
 
 onMounted(loadStatus);
 
-// confirmed/cancelled는 아직 디자인이 없어 노출 문구만 정의, 화면 요소(이미지 등)는 waiting 기준으로 통일
 const STATUS_TITLE = {
   waiting: '구매가 보류 중이에요',
   confirmed: '구매가 확정됐어요',
@@ -54,6 +55,15 @@ const STATUS_TITLE = {
 };
 const statusTitle = computed(
   () => STATUS_TITLE[status.value.status] ?? '구매가 보류 중이에요',
+);
+
+const STATUS_IMAGE = {
+  waiting: statusWaitingImage,
+  confirmed: statusConfirmedImage,
+  cancelled: statusCancelledImage,
+};
+const statusImage = computed(
+  () => STATUS_IMAGE[status.value.status] ?? statusWaitingImage,
 );
 
 const progressPercent = computed(() =>
@@ -138,7 +148,7 @@ function confirmCancelSuccess() {
       <div class="flex justify-center mt-(--space-6) mb-(--space-5)">
         <div class="w-[139px] h-[139px] overflow-hidden">
           <img
-            :src="statusWaitingImage"
+            :src="statusImage"
             alt=""
             class="w-full h-full object-cover"
           />
