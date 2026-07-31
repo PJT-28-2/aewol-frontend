@@ -81,6 +81,10 @@ const showSavedModal = ref(false)
 const showShareFallbackModal = ref(false)
 
 async function captureCard() {
+  // isLoading 중이거나 문서를 찾지 못하면 카드 자체가 렌더링되지 않아 ref가 null
+  if (!detailCardRef.value) {
+    throw new Error('캡처할 문서를 찾을 수 없어요.')
+  }
   return html2canvas(detailCardRef.value, {
     scale: 2,
     useCORS: true,
@@ -100,6 +104,8 @@ async function handleDownloadPdf() {
     pdf.addImage(canvas.toDataURL('image/png'), 'PNG', margin, margin, contentWidth, imgHeight)
     pdf.save(`동물등록증_${certName.value}.pdf`)
     showSavedModal.value = true
+  } catch {
+    alert('문서를 저장할 수 없어요. 다시 시도해주세요.')
   } finally {
     isGeneratingPdf.value = false
   }
