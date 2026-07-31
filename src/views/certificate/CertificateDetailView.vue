@@ -15,15 +15,37 @@ const route = useRoute()
 const router = useRouter()
 const certificateStore = useCertificateStore()
 
+// 동물등록증뿐 아니라 접종증명서/진료확인서도 같은 상세 페이지를 공유한다.
+// documents에서 docType을 먼저 확인해서, 등록증이면 registrationDetails를 조회하고
+// 그 외(업로드한 사진)는 문서 레코드 자체(docName/fileUrl/issuedDate)를 그대로 사용한다.
+const currentDoc = ref(null)
+const isPhotoDoc = computed(() => currentDoc.value?.docType && currentDoc.value.docType !== 'REGISTRATION')
+
 onMounted(async () => {
-  // registrationDetails는 fetchPets()가 목데이터를 스토어 상태로 옮겨야 채워지는데,
-  // 목록 화면을 거치지 않고 이 화면으로 바로 진입(새로고침·직접 접속 등)하면 비어있을 수 있어
-  // 먼저 보장해준다.
+  // 목록 화면을 거치지 않고 이 화면으로 바로 진입(새로고침·직접 접속 등)하면
+  // documents/registrationDetails가 비어있을 수 있어 먼저 보장해준다.
   if (certificateStore.pets.length === 0) {
     await certificateStore.fetchPets()
   }
-  await certificateStore.fetchCertificateDetail(route.params.docId)
+
+  currentDoc.value = certificateStore.documents.find((doc) => doc.docId === route.params.docId) ?? null
+
+  if (!isPhotoDoc.value) {
+    await certificateStore.fetchCertificateDetail(route.params.docId)
+  }
 })
+
+const certName = computed(() => {
+  if (isPhotoDoc.value) return currentDoc.value?.docName ?? '증명서'
+  return certificateStore.detail?.name ?? '동물등록증'
+})
+
+const pageTitle = computed(() => (isPhotoDoc.value ? currentDoc.value?.docName ?? '증명서' : '동물등록증'))
+const pageSubtitle = computed(() =>
+  isPhotoDoc.value
+    ? `${formatDateDot(currentDoc.value?.issuedDate ?? '')} 업로드`
+    : '국가동물보호정보시스템(APMS) 연동 정보',
+)
 
 const genderText = computed(() => {
   const detail = certificateStore.detail
@@ -76,7 +98,7 @@ async function handleDownloadPdf() {
     const contentWidth = pageWidth - margin * 2
     const imgHeight = (canvas.height * contentWidth) / canvas.width
     pdf.addImage(canvas.toDataURL('image/png'), 'PNG', margin, margin, contentWidth, imgHeight)
-    pdf.save(`동물등록증_${certificateStore.detail?.name ?? ''}.pdf`)
+    pdf.save(`동물등록증_${certName.value}.pdf`)
     showSavedModal.value = true
   } finally {
     isGeneratingPdf.value = false
@@ -90,15 +112,15 @@ async function handleShare() {
     const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'))
     const file = new File(
       [blob],
-      `동물등록증_${certificateStore.detail?.name ?? ''}.png`,
+      `${certName.value}.png`,
       { type: 'image/png' },
     )
 
     if (navigator.canShare?.({ files: [file] })) {
       await navigator.share({
         files: [file],
-        title: '동물등록증',
-        text: `${certificateStore.detail?.name ?? ''}의 동물등록증이에요`,
+        title: pageTitle.value,
+        text: isPhotoDoc.value ? `${certName.value} 문서예요` : `${certName.value}의 동물등록증이에요`,
       })
       return
     }
@@ -156,6 +178,32 @@ async function handleDelete() {
     isDeleting.value = false
   }
 }
+
+// 접종증명서/진료확인서 사진 미리보기 실패 시 안내로 대체
+const photoLoadError = ref(false)
+
+// 접종증명서/진료확인서 사진 삭제
+const showPhotoDeleteModal = ref(false)
+const isDeletingPhoto = ref(false)
+const photoDeleteError = ref('')
+
+function openPhotoDeleteModal() {
+  photoDeleteError.value = ''
+  showPhotoDeleteModal.value = true
+}
+
+async function handlePhotoDelete() {
+  if (!currentDoc.value) return
+  isDeletingPhoto.value = true
+  try {
+    await certificateStore.deleteDocument(currentDoc.value.docId)
+    router.replace('/certificates')
+  } catch {
+    photoDeleteError.value = '삭제에 실패했어요. 다시 시도해주세요.'
+  } finally {
+    isDeletingPhoto.value = false
+  }
+}
 </script>
 
 <template>
@@ -171,10 +219,10 @@ async function handleDelete() {
 
     <header class="mb-(--space-5)">
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-2)">
-        동물등록증
+        {{ pageTitle }}
       </h1>
       <p class="text-(length:--font-md) text-(color:--color-gray-600)">
-        국가동물보호정보시스템(APMS) 연동 정보
+        {{ pageSubtitle }}
       </p>
     </header>
 
@@ -183,6 +231,49 @@ async function handleDelete() {
       class="my-(--space-8)"
     />
 
+    <!-- 접종증명서/진료확인서: 업로드한 사진 -->
+    <template v-else-if="isPhotoDoc">
+      <div
+        ref="detailCardRef"
+        class="bg-(--color-white) rounded-(--radius-xl) p-(--space-4) mb-(--space-5) border border-(--color-border)"
+      >
+        <img
+          v-if="currentDoc?.fileUrl && !photoLoadError"
+          :src="currentDoc.fileUrl"
+          :alt="currentDoc.docName"
+          class="w-full rounded-(--radius-md)"
+          @error="photoLoadError = true"
+        >
+        <p
+          v-else
+          class="text-(length:--font-sm) text-(color:--color-gray-600) text-center py-(--space-10)"
+        >
+          미리보기를 표시할 수 없어요
+        </p>
+      </div>
+
+      <div class="flex gap-(--space-3)">
+        <AppButton
+          variant="danger"
+          size="lg"
+          class="flex-1"
+          @click="openPhotoDeleteModal"
+        >
+          사진 삭제
+        </AppButton>
+        <AppButton
+          variant="navy"
+          size="lg"
+          class="flex-1"
+          :loading="isSharing"
+          @click="handleShare"
+        >
+          공유하기
+        </AppButton>
+      </div>
+    </template>
+
+    <!-- 동물등록증 -->
     <template v-else-if="certificateStore.detail">
       <!-- 캡처 대상: PDF 저장/공유하기에서 그대로 이미지화 -->
       <div
@@ -340,6 +431,38 @@ async function handleDelete() {
           @click="handleDelete"
         >
           해제하기
+        </AppButton>
+      </template>
+    </AppModal>
+
+    <!-- 사진 삭제 확인 모달 -->
+    <AppModal
+      v-model="showPhotoDeleteModal"
+      title="사진을 삭제할까요?"
+    >
+      <p class="text-(length:--font-md) text-(color:--color-gray-600)">
+        삭제하면 다시 업로드해야 해요.
+      </p>
+      <p
+        v-if="photoDeleteError"
+        class="text-(length:--font-sm) text-(color:--color-danger) mt-(--space-2)"
+      >
+        {{ photoDeleteError }}
+      </p>
+      <template #footer>
+        <AppButton
+          variant="secondary"
+          :disabled="isDeletingPhoto"
+          @click="showPhotoDeleteModal = false"
+        >
+          취소
+        </AppButton>
+        <AppButton
+          variant="danger"
+          :loading="isDeletingPhoto"
+          @click="handlePhotoDelete"
+        >
+          삭제하기
         </AppButton>
       </template>
     </AppModal>
