@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import AppButton from '@/components/common/AppButton.vue'
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 import IconInfo from '@/components/common/icons/IconInfo.vue'
 import { buildMockInviteLink, MOCK_INVITE_CODE } from '@/mocks/share'
@@ -48,14 +49,17 @@ async function joinShare() {
   <main
     class="relative mx-auto flex min-h-dvh w-full max-w-[var(--mobile-content-width)] box-border flex-col bg-(--color-white) px-[var(--space-5)] pb-[calc(var(--space-6)+env(safe-area-inset-bottom))] pt-[calc(var(--header-height)+var(--space-8))] text-(--color-navy)"
   >
-    <button
-      class="absolute left-[var(--space-5)] top-[var(--header-height)] cursor-pointer border-0 bg-transparent p-0 text-(--color-navy) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-gold)"
-      type="button"
+    <AppButton
+      class="absolute left-[var(--space-5)] top-[var(--header-height)]"
+      variant="ghost"
+      size="sm"
+      pill
+      icon-only
       aria-label="뒤로 가기"
       @click="router.back()"
     >
       <IconArrowLeft size="24" />
-    </button>
+    </AppButton>
 
     <h1 class="m-0 text-[length:var(--font-xl)] font-bold">
       초대 링크 입력
@@ -98,13 +102,16 @@ async function joinShare() {
       {{ errorMessage }}
     </p>
 
-    <button
-      class="mt-auto h-[var(--control-height-lg)] w-full cursor-pointer rounded-[var(--radius-xl)] border-0 bg-(--color-navy) font-bold text-(--color-white) transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-45 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-gold)"
-      type="button"
+    <AppButton
+      class="mt-auto"
+      block
+      size="lg"
+      variant="navy"
       :disabled="!link.trim() || isJoining"
+      :loading="isJoining"
       @click="joinShare"
     >
-      {{ isJoining ? '참여 중...' : '참여하기' }}
-    </button>
+      참여하기
+    </AppButton>
   </main>
 </template>

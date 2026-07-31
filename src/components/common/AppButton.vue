@@ -38,6 +38,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  iconOnly: {
+    type: Boolean,
+    default: false,
+  },
   type: {
     type: String,
     default: 'button',
@@ -90,6 +94,7 @@ const spinnerColor = ['secondary', 'ghost', 'primary'].includes(props.variant)
       sizeClasses[size],
       radiusClass,
       block ? 'flex w-full' : '',
+      iconOnly ? '!min-w-0 !px-0 aspect-square' : '',
       loading ? 'pointer-events-none' : '',
     ]"
     :type="type"

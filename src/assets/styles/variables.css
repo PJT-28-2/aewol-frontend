@@ -116,6 +116,7 @@
   --icon-size-md: 24px;
   --icon-size-lg: 28px;
   --icon-stroke-width: 2;
+  --icon-inline-offset: 2px;
 
   /* Border Radius */
   --radius-sm: 4px;
@@ -179,7 +180,11 @@
   --mobile-content-width: 390px;
   --control-height: 46px;
   --size-form-action-width: 80px;
-  --share-icon-size: 60px;
+  --share-pet-chip-min-width: 60px;
+  --share-choice-icon-size: 60px;
+  --share-member-width: 64px;
+  --share-avatar-size: 56px;
+  --share-contribution-dot-size: 14px;
   --icon-badge-size: 56px;
   --share-chart-size: 200px;
   --share-chart-hole-size: 132px;

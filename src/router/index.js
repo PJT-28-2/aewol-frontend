@@ -285,8 +285,8 @@ const authRoutes = [
   {
     path: '/share/invite',
     name: 'ShareInvite',
-    component: () => import('@/views/share/ShareInviteView.vue'),
-    meta: { requiresAuth: true },
+    component: () => import('@/views/share/ShareView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
     path: '/group-purchase',
