@@ -175,7 +175,7 @@ onMounted(async () => {
     <!-- 상단 잔액  -->
     <div class="flex justify-end mb-(--space-4)">
       <router-link
-        to="/wallet/charge"
+        :to="{ path: '/wallet/charge', query: { from: 'home' } }"
         class="inline-flex items-center h-[26px] gap-(--space-2) pl-(--space-4) pr-(--space-2) bg-(--color-surface) border border-(--color-border) rounded-full shadow-(--shadow-sm) text-(color:--color-navy) text-(length:--font-sm) font-semibold no-underline"
       >
         <span>{{ walletBalance.toLocaleString() }}원</span>

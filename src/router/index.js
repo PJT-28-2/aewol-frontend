@@ -139,6 +139,24 @@ const authRoutes = [
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
+    path: '/wallet/transfer/account-select',
+    name: 'TransferAccountSelect',
+    component: () => import('@/views/wallet/TransferAccountSelectView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
+    path: '/wallet/transfer/confirm',
+    name: 'TransferConfirm',
+    component: () => import('@/views/wallet/TransferConfirmView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
+    path: '/wallet/transfer/complete',
+    name: 'TransferComplete',
+    component: () => import('@/views/wallet/TransferCompleteView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
     path: '/wallet/history',
     name: 'TransactionHistory',
     component: () => import('@/views/wallet/TransactionHistoryView.vue'),

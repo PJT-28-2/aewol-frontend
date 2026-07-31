@@ -100,7 +100,7 @@ const filteredTransactions = computed(() => {
 const router = useRouter();
 
 function handleCharge() {
-  router.push('/wallet/charge');
+  router.push({ path: '/wallet/charge', query: { from: 'wallet' } });
 }
 function handleTransfer() {
   router.push('/wallet/transfer');
@@ -154,7 +154,7 @@ onMounted(async () => {
         class="flex-1 h-[44px] rounded-md bg-(--color-gray-100) text-(color:--color-slate-dark) text-(length:--font-base) font-semibold"
         @click="handleTransfer"
       >
-        이체
+        송금
       </button>
     </div>
 

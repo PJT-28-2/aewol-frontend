@@ -1,77 +1,36 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import AppButton from '@/components/common/AppButton.vue';
-import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import petSuccess from '@/assets/images/pet-success.png';
-import { useAccountStore } from '@/stores/account';
 import { getBankMeta } from '@/utils/bankMeta';
-import { MOCK_ACCOUNTS } from '@/utils/mockData';
 
 const route = useRoute();
 const router = useRouter();
-const accountStore = useAccountStore();
 
+const bankCode = computed(() => route.query.bankCode || '');
+const accountNumber = computed(() => route.query.accountNumber || '');
 const amount = computed(() => Number(route.query.amount) || 0);
 
-const chargedAccount = computed(() => {
-  const queryId = Number(route.query.accountId);
-  return (
-    accountStore.accounts.find(
-      (account) => account.accountId === queryId,
-    ) ??
-    accountStore.primaryAccount ??
-    accountStore.accounts[0] ??
-    null
-  );
-});
+const bankMeta = computed(() => (bankCode.value ? getBankMeta(bankCode.value) : null));
 
-const chargedBankMeta = computed(() =>
-  chargedAccount.value
-    ? getBankMeta(chargedAccount.value.bankCode)
-    : null,
+const isInvalid = computed(
+  () => !bankCode.value || !accountNumber.value || amount.value <= 0,
 );
 
-const isLoading = ref(true);
-const showInvalidState = ref(false);
-
-onMounted(async () => {
-  if (!accountStore.accounts.length) {
-    try {
-      await accountStore.fetchAccounts();
-    } catch {
-      // 계좌 연동 API 연동 전이라 조회가 실패할 수 있어요. 결제 수단은 최소 하나 보이도록 폴백
-    }
-    if (!accountStore.accounts.length) {
-      accountStore.accounts = structuredClone(MOCK_ACCOUNTS);
-    }
-  }
-  if (amount.value <= 0 || !chargedAccount.value) {
-    showInvalidState.value = true;
-  }
-  isLoading.value = false;
-});
-
-const completedAt = new Date();
-const completedAtLabel = computed(() => {
-  const year = completedAt.getFullYear();
-  const month = String(completedAt.getMonth() + 1).padStart(
-    2,
-    '0',
-  );
-  const day = String(completedAt.getDate()).padStart(2, '0');
-  const hour = completedAt.getHours();
-  const minute = completedAt.getMinutes();
+const sentAt = new Date();
+const sentAtLabel = computed(() => {
+  const year = sentAt.getFullYear();
+  const month = String(sentAt.getMonth() + 1).padStart(2, '0');
+  const day = String(sentAt.getDate()).padStart(2, '0');
+  const hour = sentAt.getHours();
+  const minute = sentAt.getMinutes();
   const period = hour < 12 ? '오전' : '오후';
   const hour12 = hour % 12 === 0 ? 12 : hour % 12;
   return `${year}.${month}.${day} ${period} ${hour12}:${String(minute).padStart(2, '0')}`;
 });
 
 function confirmComplete() {
-  router.replace(route.query.from === 'home' ? '/home' : '/wallet');
-}
-
-function goToWallet() {
   router.replace('/wallet');
 }
 </script>
@@ -80,30 +39,28 @@ function goToWallet() {
   <div
     class="min-h-screen max-w-[420px] mx-auto bg-(--color-bg) px-(--space-6) pt-24 flex flex-col items-center text-center"
   >
-    <LoadingSpinner v-if="isLoading" />
-
-    <template v-else-if="showInvalidState">
+    <template v-if="isInvalid">
       <h1
         class="text-(length:--font-xl) font-bold text-(color:--color-navy) mb-(--space-2)"
       >
-        충전 정보를 찾을 수 없어요
+        송금 정보를 찾을 수 없어요
       </h1>
       <p
         class="text-(length:--font-md) text-(color:--color-gray-600) mb-(--space-8)"
       >
-        펫지갑에서 충전을 다시 시도해주세요
+        펫지갑에서 송금을 다시 시도해주세요
       </p>
       <AppButton
         variant="navy"
         size="lg"
         block
-        @click="goToWallet"
+        @click="confirmComplete"
       >
         펫지갑으로 이동
       </AppButton>
     </template>
 
-    <template v-else-if="chargedAccount">
+    <template v-else>
       <img
         :src="petSuccess"
         alt=""
@@ -112,13 +69,12 @@ function goToWallet() {
       <h1
         class="text-(length:--font-xl) font-bold text-(color:--color-navy) mb-(--space-2)"
       >
-        충전을 완료했어요!
+        송금을 완료했어요!
       </h1>
       <p
         class="text-(length:--font-md) text-(color:--color-gray-600) mb-(--space-8)"
       >
-        {{ chargedBankMeta.name }} 계좌에서
-        {{ amount.toLocaleString() }}원을 충전했어요
+        {{ bankMeta.name }} 계좌로 {{ amount.toLocaleString() }}원을 보냈어요
       </p>
 
       <div
@@ -127,7 +83,7 @@ function goToWallet() {
         <div class="flex items-center justify-between">
           <span
             class="text-(length:--font-sm) text-(color:--color-slate-muted)"
-          >충전 금액</span>
+          >보낸 금액</span>
           <span
             class="text-(length:--font-sm) font-bold text-(color:--color-navy)"
           >{{ amount.toLocaleString() }}원</span>
@@ -135,19 +91,19 @@ function goToWallet() {
         <div class="flex items-center justify-between">
           <span
             class="text-(length:--font-sm) text-(color:--color-slate-muted)"
-          >결제 수단</span>
+          >받는 계좌</span>
           <span
             class="text-(length:--font-sm) font-bold text-(color:--color-navy)"
-          >{{ chargedBankMeta.name }}
-            {{ chargedAccount.accountNumberMasked }}</span>
+          >{{ bankMeta.name }}
+            {{ accountNumber }}</span>
         </div>
         <div class="flex items-center justify-between">
           <span
             class="text-(length:--font-sm) text-(color:--color-slate-muted)"
-          >충전 시간</span>
+          >보낸 시간</span>
           <span
             class="text-(length:--font-sm) font-bold text-(color:--color-navy)"
-          >{{ completedAtLabel }}</span>
+          >{{ sentAtLabel }}</span>
         </div>
       </div>
 

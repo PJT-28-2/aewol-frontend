@@ -49,7 +49,11 @@ function addAmount(value) {
 function goToAccountSelect() {
   router.push({
     path: '/wallet/charge/account-select',
-    query: { amount: amount.value, accountId: selectedAccount.value?.accountId },
+    query: {
+      from: route.query.from,
+      amount: amount.value,
+      accountId: selectedAccount.value?.accountId,
+    },
   });
 }
 
@@ -58,7 +62,11 @@ function handleCharge() {
   // TODO: 백엔드 충전 API 연동 후 실제 잔액 반영으로 교체
   router.push({
     path: '/wallet/charge/complete',
-    query: { amount: amount.value, accountId: selectedAccount.value.accountId },
+    query: {
+      from: route.query.from,
+      amount: amount.value,
+      accountId: selectedAccount.value.accountId,
+    },
   });
 }
 </script>
