@@ -68,13 +68,13 @@ function computeNextPaymentLabel(day) {
 async function handleSubmit() {
   if (!canSubmit.value) return;
   const pet = petStore.pets.find((p) => p.id === selectedPetId.value);
-  // TODO: 백엔드 정기결제 API 연동 후 실제 등록 처리로 교체
   await paymentStore.createRecurringPayment({
     merchantName: merchantName.value.trim(),
     amount: numericAmount.value,
     dayOfMonth: dayOfMonth.value,
     nextPaymentLabel: computeNextPaymentLabel(dayOfMonth.value),
     category: category.value,
+    petId: selectedPetId.value,
     petName: pet?.name ?? null,
   });
   router.push({

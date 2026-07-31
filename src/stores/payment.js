@@ -2,6 +2,35 @@ import { defineStore } from 'pinia'
 import { recurringApi } from '@/api/recurring'
 import { MOCK_RECURRING_PAYMENTS } from '@/utils/mockData'
 
+// API 명세(recurringId/itemName/cycleDay/price/nextPaymentDate)를
+// 화면이 쓰는 내부 필드명(id/merchantName/dayOfMonth/amount/nextPaymentLabel)으로 변환한다.
+function nextPaymentDateToLabel(isoDate) {
+  if (!isoDate) return ''
+  const [, month, day] = isoDate.split('-').map(Number)
+  return `다음 ${month}/${day}`
+}
+
+function fromApiShape(item) {
+  return {
+    id: item.recurringId,
+    merchantName: item.itemName,
+    amount: item.price,
+    dayOfMonth: item.cycleDay,
+    nextPaymentLabel: nextPaymentDateToLabel(item.nextPaymentDate),
+    category: item.category,
+  }
+}
+
+function toApiPayload({ merchantName, amount, dayOfMonth, category, petId }) {
+  return {
+    itemName: merchantName,
+    price: amount,
+    cycleDay: dayOfMonth,
+    category,
+    petId,
+  }
+}
+
 export const usePaymentStore = defineStore('payment', {
   state: () => ({
     recurringPayments: [],
@@ -20,7 +49,8 @@ export const usePaymentStore = defineStore('payment', {
       if (this.hasFetchedRecurringPayments) return
       try {
         const { data } = await recurringApi.getRecurrings()
-        this.recurringPayments = data.result ?? data ?? []
+        const result = data.result ?? data ?? []
+        this.recurringPayments = result.map(fromApiShape)
       } catch {
         // 정기결제 API 연동 전이라 조회가 실패할 수 있어요. 목록은 최소한 보이도록 폴백
       }
@@ -43,8 +73,8 @@ export const usePaymentStore = defineStore('payment', {
 
     async createRecurringPayment(payload) {
       try {
-        const { data } = await recurringApi.createRecurring(payload)
-        const created = data.result ?? data
+        const { data } = await recurringApi.createRecurring(toApiPayload(payload))
+        const created = fromApiShape(data.result ?? data)
         this.recurringPayments.push(created)
         return created
       } catch {

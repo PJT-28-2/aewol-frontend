@@ -1,19 +1,14 @@
 import api from './index'
 
 export const dashboardApi = {
-  getSummary(params) {
-    return api.get('/dashboard/summary', { params })
+  // 홈 대시보드 조회 — 잔액 요약 + 이번달지출 + 반려동물별 요약/차트를 화면 진입 1회 호출로 반환
+  getHome() {
+    return api.get('/wallet/home')
   },
 
-  getTrend(params) {
-    return api.get('/dashboard/trend', { params })
-  },
-
-  getComparison(params) {
-    return api.get('/dashboard/comparison', { params })
-  },
-
-  getByPet(petId, params) {
-    return api.get(`/dashboard/pet/${petId}`, { params })
+  // 이번달지출 집계 조회
+  // params: { groupBy: 'CATEGORY' | 'PET' (필수), yearMonth?: 'yyyy-MM' }
+  getMonthly(params) {
+    return api.get('/dashboard/monthly', { params })
   },
 }

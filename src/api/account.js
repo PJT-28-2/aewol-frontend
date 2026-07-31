@@ -1,4 +1,5 @@
 import api from '@/api';
+// baseURL(axios 인스턴스)이 이미 /api를 포함하므로 아래 경로에는 /api를 다시 붙이지 않는다
 
 /**
  * 은행 목록 조회
@@ -6,7 +7,7 @@ import api from '@/api';
  * result: [{ bankCode, bankName }]
  */
 export function getBanks() {
-  return api.get('/api/banks');
+  return api.get('/banks');
 }
 
 /**
@@ -15,7 +16,7 @@ export function getBanks() {
  * result: [{ accountId, bankCode, accountNumberMasked, balance, isPrimary }]
  */
 export function getAccounts() {
-  return api.get('/api/accounts');
+  return api.get('/accounts');
 }
 
 /**
@@ -25,7 +26,7 @@ export function getAccounts() {
  * result: { verificationId, maskedAccountNumber, expiresInSeconds }
  */
 export function requestDepositVerification(payload) {
-  return api.post('/api/accounts/verify-deposit', payload);
+  return api.post('/accounts/verify-deposit', payload);
 }
 
 /**
@@ -35,7 +36,7 @@ export function requestDepositVerification(payload) {
  * result: { verified: boolean }
  */
 export function confirmDepositVerification(payload) {
-  return api.post('/api/accounts/verify-deposit/confirm', payload);
+  return api.post('/accounts/verify-deposit/confirm', payload);
 }
 
 /**
@@ -47,7 +48,7 @@ export function confirmDepositVerification(payload) {
  * 등록 후 잔액이 필요하면 store에서 GET /api/accounts로 다시 조회해 채워요.
  */
 export function registerAccount(payload) {
-  return api.post('/api/accounts', payload);
+  return api.post('/accounts', payload);
 }
 
 /**
@@ -56,7 +57,7 @@ export function registerAccount(payload) {
  * body: { isPrimary: true }
  */
 export function setPrimaryAccount(accountId) {
-  return api.patch(`/api/accounts/${accountId}`, { isPrimary: true });
+  return api.patch(`/accounts/${accountId}`, { isPrimary: true });
 }
 
 /**
@@ -64,5 +65,5 @@ export function setPrimaryAccount(accountId) {
  * DELETE /api/accounts/{accountId}
  */
 export function unlinkAccount(accountId) {
-  return api.delete(`/api/accounts/${accountId}`);
+  return api.delete(`/accounts/${accountId}`);
 }

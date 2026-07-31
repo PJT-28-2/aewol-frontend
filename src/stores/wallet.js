@@ -38,9 +38,9 @@ export const useWalletStore = defineStore('wallet', {
       this.buckets = this.buckets.filter((b) => b.id !== id)
     },
 
-    async deposit(amount) {
-      const { data } = await walletApi.deposit(amount)
-      if (this.wallet) this.wallet = data
+    async charge(accountId, amount) {
+      const { data } = await walletApi.charge(accountId, amount)
+      if (this.wallet) this.wallet.walletBalance = data.walletBalance
       return data
     },
 

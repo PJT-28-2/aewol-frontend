@@ -5,12 +5,9 @@ export const walletApi = {
     return api.get('/wallet')
   },
 
-  deposit(amount) {
-    return api.post('/wallet/deposit', { amount })
-  },
-
-  withdraw(amount) {
-    return api.post('/wallet/withdraw', { amount })
+  // 충전 요청
+  charge(accountId, amount) {
+    return api.post('/wallet/charge', { accountId, amount })
   },
 
   getBuckets() {
