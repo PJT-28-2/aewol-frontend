@@ -1,22 +1,32 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import AppButton from '@/components/common/AppButton.vue'
+import BottomSheet from '@/components/common/BottomSheet.vue'
 import ContributionDonutChart from '@/components/share/ContributionDonutChart.vue'
-import BottomNavBar from '@/components/common/BottomNavBar.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
+import SelectableChip from '@/components/common/SelectableChip.vue'
 import IconCat from '@/components/common/icons/IconCat.vue'
 import IconDog from '@/components/common/icons/IconDog.vue'
 import IconPaw from '@/components/common/icons/IconPaw.vue'
 import IconPlus from '@/components/common/icons/IconPlus.vue'
 import { useShareStore } from '@/stores/share'
+import ShareInviteView from './ShareInviteView.vue'
 
+const route = useRoute()
 const router = useRouter()
 const shareStore = useShareStore()
 const selectedPetId = ref(shareStore.pets[0]?.id ?? '')
 const hasPets = computed(() => shareStore.pets.length > 0)
 const hasMembers = computed(() => shareStore.members.length > 0)
 const hasContributions = computed(() => shareStore.contributions.length > 0)
+const isInviteOpen = computed({
+  get: () => route.name === 'ShareInvite',
+  set: (isOpen) => {
+    if (!isOpen) router.replace({ name: 'Share' })
+  },
+})
 
 watch(
   selectedPetId,
@@ -32,8 +42,8 @@ function retryFetchSharedCare() {
 </script>
 
 <template>
-  <main
-    class="mx-auto min-h-dvh w-full max-w-[var(--mobile-content-width)] box-border bg-(--color-white) px-[var(--space-5)] pb-[calc(var(--bottom-nav-height)+var(--space-6)+env(safe-area-inset-bottom))] pt-[calc(var(--header-height)+var(--space-1))] text-(--color-navy)"
+  <div
+    class="mx-auto min-h-[calc(100dvh-var(--header-height)-var(--bottom-nav-height))] w-full max-w-[var(--mobile-content-width)] box-border bg-(--color-white) px-[var(--space-5)] pb-[calc(var(--space-6)+env(safe-area-inset-bottom))] pt-[var(--space-1)] text-(--color-navy)"
   >
     <section
       v-if="shareStore.isLoading"
@@ -51,13 +61,14 @@ function retryFetchSharedCare() {
       <p class="m-0 text-[length:var(--font-md)] text-(--color-slate-dark)">
         {{ shareStore.error }}
       </p>
-      <button
-        class="mt-[var(--space-4)] h-[var(--control-height-sm)] cursor-pointer rounded-[var(--radius-lg)] border-0 bg-(--color-navy) px-[var(--space-4)] text-[length:var(--font-sm)] font-bold text-(--color-white) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-gold)"
-        type="button"
+      <AppButton
+        class="mt-[var(--space-4)]"
+        variant="navy"
+        size="sm"
         @click="retryFetchSharedCare"
       >
         다시 시도
-      </button>
+      </AppButton>
     </section>
 
     <EmptyState
@@ -82,42 +93,33 @@ function retryFetchSharedCare() {
 
       <div
         class="mt-[var(--space-7)] flex items-center gap-[var(--space-2)]"
-        role="tablist"
+        role="group"
         aria-label="반려동물 선택"
       >
-        <button
+        <SelectableChip
           v-for="pet in shareStore.pets"
           :key="pet.id"
-          class="inline-flex h-[var(--control-height-sm)] min-w-[var(--share-icon-size)] cursor-pointer items-center justify-center gap-[var(--space-1)] rounded-full px-[var(--space-3)] text-[length:var(--font-sm)] font-bold transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-gold)"
-          :class="
-            selectedPetId === pet.id
-              ? 'border border-(--color-navy) bg-(--color-navy) text-(--color-white)'
-              : 'border border-(--color-border) bg-(--color-surface) text-(--color-slate-dark)'
-          "
-          type="button"
-          role="tab"
-          :aria-selected="selectedPetId === pet.id"
+          class="min-w-[var(--share-pet-chip-min-width)]"
+          :selected="selectedPetId === pet.id"
           @click="selectedPetId = pet.id"
         >
           <component
             :is="pet.type === 'cat' ? IconCat : IconDog"
             :size="16"
-            :color="
-              selectedPetId === pet.id
-                ? 'var(--color-white)'
-                : 'var(--color-slate-dark)'
-            "
           />
           {{ pet.name }}
-        </button>
-        <button
-          class="grid size-[var(--control-height-sm)] shrink-0 cursor-pointer place-items-center rounded-full border border-(--color-border) bg-(--color-white) text-(--color-slate-dark) transition-opacity hover:opacity-75 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-gold)"
-          type="button"
+        </SelectableChip>
+        <AppButton
+          class="!h-[var(--control-height-sm)] shrink-0"
+          variant="secondary"
+          size="sm"
+          pill
+          icon-only
           aria-label="반려동물 추가"
           @click="router.push('/pets/register')"
         >
           <IconPlus :size="20" />
-        </button>
+        </AppButton>
       </div>
 
       <section
@@ -133,15 +135,15 @@ function retryFetchSharedCare() {
 
         <div
           v-if="hasMembers"
-          class="mt-[var(--space-4)] flex items-start gap-[var(--space-4)]"
+          class="mt-[var(--space-4)] flex items-start gap-[var(--space-3)] overflow-x-auto pb-[var(--space-2)]"
         >
           <article
-            v-for="member in shareStore.members.slice(0, 3)"
+            v-for="member in shareStore.members"
             :key="member.id"
-            class="flex w-[var(--bottom-nav-height)] flex-col items-center"
+            class="flex w-[var(--share-member-width)] shrink-0 flex-col items-center"
           >
             <span
-              class="grid size-[var(--header-height)] place-items-center rounded-full text-[length:var(--font-lg)] font-bold text-(--color-white)"
+              class="grid size-[var(--share-avatar-size)] place-items-center rounded-full text-[length:var(--font-lg)] font-bold text-(--color-white)"
               :class="member.avatarClass"
             >
               {{ member.name.slice(0, 1) }}
@@ -153,20 +155,22 @@ function retryFetchSharedCare() {
             </strong>
           </article>
 
-          <button
-            class="flex w-[var(--bottom-nav-height)] cursor-pointer flex-col items-center border-0 bg-transparent p-0 text-(--color-slate-muted) transition-opacity hover:opacity-75 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-gold)"
-            type="button"
+          <AppButton
+            class="!h-auto !w-[var(--share-member-width)] shrink-0 !p-0"
+            variant="ghost"
             @click="router.push('/share/invite')"
           >
-            <span
-              class="grid size-[var(--header-height)] place-items-center rounded-full bg-(--color-surface)"
-            >
-              <IconPlus :size="24" />
+            <span class="flex flex-col items-center">
+              <span
+                class="grid size-[var(--share-avatar-size)] place-items-center rounded-full bg-(--color-surface)"
+              >
+                <IconPlus :size="24" />
+              </span>
+              <strong class="mt-[var(--space-2)] text-[length:var(--font-sm)]">
+                초대
+              </strong>
             </span>
-            <strong class="mt-[var(--space-2)] text-[length:var(--font-sm)]">
-              초대
-            </strong>
-          </button>
+          </AppButton>
         </div>
         <p
           v-else
@@ -223,7 +227,7 @@ function retryFetchSharedCare() {
             class="flex h-[var(--control-height-md)] items-center rounded-[var(--radius-lg)] bg-(--color-surface) px-[var(--space-4)]"
           >
             <span
-              class="mr-[var(--space-3)] size-[var(--font-md)] shrink-0 rounded-full"
+              class="mr-[var(--space-3)] size-[var(--share-contribution-dot-size)] shrink-0 rounded-full"
               :class="contribution.toneClass"
             />
             <strong class="text-[length:var(--font-sm)]">
@@ -244,6 +248,14 @@ function retryFetchSharedCare() {
         </p>
       </section>
     </template>
-  </main>
-  <BottomNavBar />
+  </div>
+
+  <BottomSheet
+    :model-value="isInviteOpen"
+    title="가족 초대하기"
+    size="tall"
+    @update:model-value="isInviteOpen = $event"
+  >
+    <ShareInviteView />
+  </BottomSheet>
 </template>

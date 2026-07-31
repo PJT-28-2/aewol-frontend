@@ -185,7 +185,7 @@ onMounted(() => {
           class="mt-[var(--space-4)] flex items-start gap-[var(--space-2)] rounded-[var(--radius-lg)] bg-(--color-surface) p-[var(--space-4)]"
         >
           <IconInfo
-            class="mt-[var(--support-info-icon-offset)] shrink-0 text-(--color-gold-dark)"
+            class="mt-[var(--icon-inline-offset)] shrink-0 text-(--color-gold-dark)"
             :size="16"
           />
           <div>

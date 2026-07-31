@@ -1,11 +1,9 @@
 <script setup>
 import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
-import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
+import AppButton from '@/components/common/AppButton.vue'
 import { buildMockInviteLink } from '@/mocks/share'
 import { useShareStore } from '@/stores/share'
 
-const router = useRouter()
 const shareStore = useShareStore()
 const recipient = ref('')
 const copied = ref(false)
@@ -36,7 +34,7 @@ function sendInvite() {
   }
 
   shareStore.createMockInvite(trimmedRecipient.value)
-  feedback.value = '초대를 준비했어요.'
+  feedback.value = '목업 초대 링크를 준비했어요.'
 }
 
 async function copyLink() {
@@ -61,26 +59,12 @@ async function copyLink() {
 </script>
 
 <template>
-  <main
-    class="relative mx-auto min-h-[460px] w-full max-w-[var(--mobile-content-width)] box-border rounded-t-[var(--radius-sheet)] bg-(--color-white) px-[var(--space-5)] pb-[calc(var(--space-8)+env(safe-area-inset-bottom))] pt-[var(--space-9)] text-(--color-navy)"
+  <form
+    class="text-(--color-navy)"
+    @submit.prevent="sendInvite"
   >
-    <div
-      class="absolute left-1/2 top-[var(--space-3)] h-[var(--space-1)] w-[var(--space-8)] -translate-x-1/2 rounded-[var(--radius-sm)] bg-(--color-border)"
-    />
-    <button
-      class="absolute left-[var(--space-4)] top-[var(--space-8)] cursor-pointer border-0 bg-transparent p-0 text-(--color-navy) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-gold)"
-      type="button"
-      aria-label="뒤로 가기"
-      @click="router.back()"
-    >
-      <IconArrowLeft size="24" />
-    </button>
-
-    <h1 class="m-0 text-[length:var(--font-lg)] font-bold">
-      가족 초대하기
-    </h1>
     <p
-      class="mb-[var(--space-7)] mt-[var(--space-2)] text-[length:var(--font-sm)] text-(--color-slate-muted)"
+      class="mb-[var(--space-7)] mt-0 text-[length:var(--font-sm)] text-(--color-slate-muted)"
     >
       함께 돌보기의 가족을 초대해 지갑을 공유해요
     </p>
@@ -98,14 +82,16 @@ async function copyLink() {
       placeholder="example@aewol.com"
       @input="resetFeedback"
     >
-    <button
-      class="mt-[var(--space-4)] h-[var(--control-height-lg)] w-full cursor-pointer rounded-[var(--radius-xl)] border-0 bg-(--color-navy) font-bold text-(--color-white) transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-45 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-gold)"
-      type="button"
+    <AppButton
+      class="mt-[var(--space-4)]"
+      block
+      size="lg"
+      variant="navy"
+      type="submit"
       :disabled="!trimmedRecipient"
-      @click="sendInvite"
     >
       초대 보내기
-    </button>
+    </AppButton>
 
     <div class="mt-[var(--space-7)] border-t border-(--color-border) pt-[var(--space-4)]">
       <p
@@ -119,13 +105,15 @@ async function copyLink() {
         >
           {{ inviteLink }}
         </span>
-        <button
-          class="h-[var(--control-height)] w-[var(--share-icon-size)] shrink-0 cursor-pointer rounded-[var(--radius-lg)] border-0 bg-(--color-gold) text-[length:var(--font-sm)] font-bold text-(--color-navy) transition-opacity hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-navy)"
+        <AppButton
+          class="shrink-0"
+          size="md"
+          variant="primary"
           type="button"
           @click="copyLink"
         >
           {{ copied ? '복사됨' : '복사' }}
-        </button>
+        </AppButton>
       </div>
     </div>
     <p
@@ -136,5 +124,5 @@ async function copyLink() {
     >
       {{ feedback }}
     </p>
-  </main>
+  </form>
 </template>
