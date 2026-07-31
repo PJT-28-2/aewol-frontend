@@ -3,6 +3,7 @@ import { computed, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import AppButton from '@/components/common/AppButton.vue';
 import BankBadge from '@/components/common/BankBadge.vue';
+import PinAuthSheet from '@/components/common/PinAuthSheet.vue';
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue';
 import { getBankMeta } from '@/utils/bankMeta';
 
@@ -28,9 +29,16 @@ function goToTransfer() {
   router.replace('/wallet/transfer');
 }
 
+// 송금 비밀번호 인증 바텀시트
+const isPinSheetOpen = ref(false);
+
 function handleSend() {
   if (isInvalid.value) return;
-  // TODO: 백엔드 송금 API 연동 후 실제 이체 처리로 교체
+  isPinSheetOpen.value = true;
+}
+
+// TODO: 백엔드 송금 API 연동 후 실제 이체 처리로 교체
+function handlePinComplete() {
   router.push({
     path: '/wallet/transfer/complete',
     query: {
@@ -135,5 +143,12 @@ function handleSend() {
         {{ amount.toLocaleString() }}원 보내기
       </AppButton>
     </template>
+
+    <!-- 송금 비밀번호 인증 바텀시트 -->
+    <PinAuthSheet
+      v-model="isPinSheetOpen"
+      :description="`${amount.toLocaleString()}원을 안전하게 보내기 위해 확인해요`"
+      @complete="handlePinComplete"
+    />
   </div>
 </template>

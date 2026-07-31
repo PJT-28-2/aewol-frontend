@@ -51,9 +51,10 @@ function handleBackspace() {
 <template>
   <BottomSheet
     :model-value="modelValue"
+    size="tall"
     @update:model-value="emit('update:modelValue', $event)"
   >
-    <div class="text-center">
+    <div class="text-center mt-(--space-8)">
       <h2 class="text-(length:--font-lg) font-bold text-(color:--color-navy)">
         {{ title }}
       </h2>
