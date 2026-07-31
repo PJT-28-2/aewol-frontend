@@ -3,6 +3,7 @@ import { computed, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import AddressSearchLayer from '@/components/common/AddressSearchLayer.vue'
 import AppButton from '@/components/common/AppButton.vue'
+import PasswordInput from '@/components/common/PasswordInput.vue'
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 
 const router = useRouter()
@@ -30,6 +31,27 @@ const agreements = reactive({
 
 const isAllAgreed = computed(
   () => agreements.terms && agreements.privacy && agreements.marketing,
+)
+
+const passwordCategoryCount = computed(() => {
+  const categories = [
+    /[A-Za-z]/.test(form.password),
+    /\d/.test(form.password),
+    /[^A-Za-z0-9]/.test(form.password),
+  ]
+
+  return categories.filter(Boolean).length
+})
+
+const isPasswordValid = computed(() => {
+  const length = form.password.length
+  const categoryCount = passwordCategoryCount.value
+
+  return (categoryCount >= 2 && length >= 10) || (categoryCount >= 3 && length >= 8)
+})
+
+const isPasswordConfirmed = computed(
+  () => form.passwordConfirm === form.password,
 )
 
 const handleKakaoSignup = () => {
@@ -203,15 +225,27 @@ const handleSignup = async () => {
         >
           비밀번호
         </label>
-        <input
+        <PasswordInput
           id="signup-password"
           v-model="form.password"
-          class="h-(--control-height-md) rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
-          type="password"
+          input-class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
           autocomplete="new-password"
           placeholder="2가지 조합 10자리 / 3가지 조합 8자리 이상"
           required
+        />
+        <p
+          v-if="form.password && !isPasswordValid"
+          class="mt-1 text-[11px] text-(color:--color-danger)"
+          role="alert"
         >
+          영문·숫자·특수문자 중 2가지 조합은 10자리, 3가지 조합은 8자리 이상 입력해 주세요.
+        </p>
+        <p
+          v-else-if="form.password && isPasswordValid"
+          class="mt-1 text-[11px] text-(color:--color-success)"
+        >
+          사용 가능한 비밀번호입니다.
+        </p>
 
         <label
           class="mt-[11px] mb-1 text-[12.5px] font-(--font-bold) text-(color:--color-slate-dark)"
@@ -219,15 +253,27 @@ const handleSignup = async () => {
         >
           비밀번호 확인
         </label>
-        <input
+        <PasswordInput
           id="signup-password-confirm"
           v-model="form.passwordConfirm"
-          class="h-(--control-height-md) rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
-          type="password"
+          input-class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
           autocomplete="new-password"
           placeholder="비밀번호를 한번 더 입력해주세요"
           required
+        />
+        <p
+          v-if="form.passwordConfirm && !isPasswordConfirmed"
+          class="mt-1 text-[11px] text-(color:--color-danger)"
+          role="alert"
         >
+          비밀번호가 일치하지 않습니다.
+        </p>
+        <p
+          v-else-if="form.passwordConfirm && isPasswordConfirmed"
+          class="mt-1 text-[11px] text-(color:--color-success)"
+        >
+          비밀번호가 일치합니다.
+        </p>
       </template>
 
       <label
