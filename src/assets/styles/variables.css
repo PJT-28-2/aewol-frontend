@@ -137,12 +137,22 @@
   --control-height-lg: 52px;
 
   /* Auth Success Screen */
+  --auth-screen-width: 390px;
+  --auth-screen-breakpoint: 391px;
+  --auth-screen-radius: 40px;
+  --auth-success-screen-height: 600px;
+  --auth-success-content-padding: 22px;
+  --auth-signup-success-image-top: 149px;
   --auth-success-image-size: 149px;
   --auth-success-password-image-offset: 41px;
   --auth-success-find-id-image-offset: -11px;
   --auth-success-title-gap: 9px;
+  --auth-signup-success-description-gap: 7px;
+  --auth-signup-success-action-gap: 44px;
   --auth-font-xs: 11px;
   --auth-font-sm: 13px;
+  --auth-font-caption: 12.5px;
+  --auth-font-button: 14.5px;
   --auth-font-lg: 22px;
 
   /* Support Program */
