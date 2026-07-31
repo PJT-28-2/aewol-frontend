@@ -3,7 +3,6 @@ export const CATEGORY_LABELS = {
   FOOD: '사료·간식',
   GROOMING: '미용비',
   SUPPLIES: '위생용품',
-  SOS: 'SOS포켓',
   ETC: '기타',
 }
 
@@ -64,10 +63,10 @@ export const mockTransactions = [
     date: '2026-07-12',
     time: '22:47',
     title: '24시 제주동물병원',
-    subtitle: 'SOS포켓 · 응급진료',
+    subtitle: '병원비 · 응급진료',
     amount: -150000,
     type: 'withdraw',
-    category: 'SOS',
+    category: 'MEDICAL',
     petId: null,
     paymentMethod: '애월 통합 지갑',
     autoTagged: false,

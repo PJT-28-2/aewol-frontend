@@ -22,9 +22,8 @@ const CATEGORY_COLOR_TOKENS = {
   MEDICAL: '--color-navy',
   FOOD: '--color-olive',
   GROOMING: '--color-gold',
-  SOS: '--color-danger-dark',
   SUPPLIES: '--color-gold-dark',
-  ETC: '--color-slate-dark',
+  ETC: '--color-danger-dark',
 };
 
 // 이번 달 출금 내역을 category별로 합산한 값 (useTransactionStore가 단일 소스)
@@ -85,6 +84,12 @@ function selectTab(tab) {
   if (tab === 'pet' && !showPetTab.value) return;
   activeTab.value = tab;
 }
+
+// activeTab이 'pet'이어도 showPetTab이 나중에 false가 되면 activeItems는 카테고리 목록을 보여주므로,
+// 표시 조건과 클릭 시 이동 대상(펫/카테고리)을 이 값 하나로 통일해서 어긋나지 않게 한다
+const isPetTabActive = computed(
+  () => activeTab.value === 'pet' && showPetTab.value,
+);
 
 function withPercentages(list) {
   const total = list.reduce((sum, item) => sum + item.amount, 0);
@@ -150,9 +155,7 @@ const petItems = computed(() => {
 });
 
 const activeItems = computed(() =>
-  activeTab.value === 'pet' && showPetTab.value
-    ? petItems.value
-    : categoryItems.value,
+  isPetTabActive.value ? petItems.value : categoryItems.value,
 );
 
 const totalExpense = computed(() =>
@@ -167,6 +170,13 @@ function goToCategoryHistory(categoryKey) {
   router.push({
     path: '/wallet/history',
     query: { category: categoryKey },
+  });
+}
+
+function goToPetHistory(petId) {
+  router.push({
+    path: '/wallet/history',
+    query: { petId },
   });
 }
 
@@ -275,14 +285,13 @@ onMounted(() => {
             v-for="item in activeItems"
             :key="item.key ?? item.id"
           >
-            <component
-              :is="activeTab === 'category' ? 'button' : 'div'"
-              :type="activeTab === 'category' ? 'button' : undefined"
+            <button
+              type="button"
               class="w-full flex items-center gap-(--space-3) bg-(--color-surface) rounded-(--radius-xl) p-(--space-4) text-left"
               @click="
-                activeTab === 'category'
-                  ? goToCategoryHistory(item.key)
-                  : null
+                isPetTabActive
+                  ? goToPetHistory(item.id)
+                  : goToCategoryHistory(item.key)
               "
             >
               <span
@@ -301,7 +310,7 @@ onMounted(() => {
                   >
                     <component
                       :is="petIcon(item.species)"
-                      v-if="activeTab === 'pet'"
+                      v-if="isPetTabActive"
                       size="16"
                       color="var(--color-navy)"
                     />
@@ -325,7 +334,7 @@ onMounted(() => {
                   {{ item.detail }}
                 </p>
               </div>
-            </component>
+            </button>
           </li>
         </ul>
       </template>

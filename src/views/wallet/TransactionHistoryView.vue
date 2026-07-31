@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import BottomSheet from '@/components/common/BottomSheet.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
@@ -10,11 +10,13 @@ import IconCheck from '@/components/common/icons/IconCheck.vue';
 import IconChevronDown from '@/components/common/icons/IconChevronDown.vue';
 import IconClose from '@/components/common/icons/IconClose.vue';
 import { CATEGORY_LABELS } from '@/mocks/transaction';
+import { usePetStore } from '@/stores/pet';
 import { useTransactionStore } from '@/stores/transaction';
 
 const route = useRoute();
 const router = useRouter();
 const transactionStore = useTransactionStore();
+const petStore = usePetStore();
 
 // 이번 달 지출 화면 등 다른 화면에서 카테고리를 지정해 들어올 수 있다
 const categoryFilter = ref(
@@ -31,6 +33,35 @@ function clearCategoryFilter() {
   categoryFilter.value = null;
   const rest = { ...route.query };
   delete rest.category;
+  router.replace({ query: rest });
+}
+
+// 이번 달 지출 화면 "반려동물별" 탭에서 반려동물을 지정해 들어올 수 있다
+function resolvePetFilterFromQuery() {
+  return typeof route.query.petId === 'string' &&
+    petStore.pets.some((pet) => String(pet.id) === route.query.petId)
+    ? Number(route.query.petId)
+    : null;
+}
+
+const petFilter = ref(resolvePetFilterFromQuery());
+const petFilterLabel = computed(
+  () => petStore.pets.find((pet) => pet.id === petFilter.value)?.name ?? '',
+);
+
+// /wallet/history는 쿼리만 바뀌어도 라우터가 컴포넌트를 재마운트하지 않으므로,
+// 다른 반려동물 카드를 눌러 petId만 바뀌어 들어와도 필터가 갱신되도록 감지한다
+watch(
+  () => route.query.petId,
+  () => {
+    petFilter.value = resolvePetFilterFromQuery();
+  },
+);
+
+function clearPetFilter() {
+  petFilter.value = null;
+  const rest = { ...route.query };
+  delete rest.petId;
   router.replace({ query: rest });
 }
 
@@ -105,7 +136,9 @@ const filteredTransactions = computed(() => {
         tx.type === activeFilter.value;
       const matchesCategory =
         !categoryFilter.value || tx.category === categoryFilter.value;
-      return matchesMonth && matchesType && matchesCategory;
+      const matchesPet =
+        !petFilter.value || tx.petId === petFilter.value;
+      return matchesMonth && matchesType && matchesCategory && matchesPet;
     })
     .sort((a, b) => `${b.date}${b.time}`.localeCompare(`${a.date}${a.time}`));
 });
@@ -192,6 +225,18 @@ onMounted(() => {
         @click="clearCategoryFilter"
       >
         {{ categoryFilterLabel }} 필터 적용됨
+        <IconClose
+          size="14"
+          color="var(--color-white)"
+        />
+      </button>
+      <button
+        v-else-if="petFilter"
+        type="button"
+        class="inline-flex items-center gap-(--space-1) h-(--space-7) px-(--space-3) rounded-full bg-(--color-navy) text-(color:--color-white) text-(length:--font-sm) font-semibold mb-(--space-4)"
+        @click="clearPetFilter"
+      >
+        {{ petFilterLabel }} 필터 적용됨
         <IconClose
           size="14"
           color="var(--color-white)"
