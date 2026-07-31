@@ -52,6 +52,7 @@ const handleInput = (event) => {
       :disabled="attrs.disabled"
       :aria-label="isPasswordVisible ? '비밀번호 숨기기' : '비밀번호 보기'"
       :aria-pressed="isPasswordVisible"
+      @mousedown.prevent
       @click="togglePasswordVisibility"
     >
       <IconEye
