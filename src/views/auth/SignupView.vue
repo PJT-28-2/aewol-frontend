@@ -8,6 +8,8 @@ import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 
 const router = useRouter()
 
+// 요청 body 명세 확정 전에는 개발 환경에서만 완료 화면 흐름을 검수한다.
+const isDevelopmentPreview = import.meta.env.DEV
 const isKakaoSignup = ref(false)
 const isLoading = ref(false)
 const isAddressSearchOpen = ref(false)
@@ -79,7 +81,13 @@ const handleAddressSelect = ({ zipCode, address }) => {
 
 const handleSignup = async () => {
   errorMessage.value = ''
-  await router.push('/login')
+
+  if (!isDevelopmentPreview) {
+    errorMessage.value = '회원가입 API 연동이 필요합니다.'
+    return
+  }
+
+  await router.push('/signup/complete')
 }
 </script>
 
