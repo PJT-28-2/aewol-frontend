@@ -79,7 +79,7 @@ const handleAddressSelect = ({ zipCode, address }) => {
 
 const handleSignup = async () => {
   errorMessage.value = ''
-  await router.push('/login')
+  await router.push('/signup/complete')
 }
 </script>
 

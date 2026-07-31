@@ -21,6 +21,11 @@ const publicRoutes = [
     component: () => import('@/views/auth/SignupView.vue'),
   },
   {
+    path: '/signup/complete',
+    name: 'SignupComplete',
+    component: () => import('@/views/auth/SignupCompleteView.vue'),
+  },
+  {
     path: '/signup/verify',
     name: 'SignupVerify',
     component: () => import('@/views/auth/SignupVerifyView.vue'),
