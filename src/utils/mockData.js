@@ -42,6 +42,25 @@ export const MOCK_ACCOUNTS = [
   },
 ];
 
+export const MOCK_RECURRING_PAYMENTS = [
+  {
+    id: 1,
+    merchantName: '강아지 사료 정기배송',
+    amount: 32000,
+    dayOfMonth: 15,
+    nextPaymentLabel: '다음 8/15',
+    category: 'FOOD',
+  },
+  {
+    id: 2,
+    merchantName: '펫보험료',
+    amount: 26000,
+    dayOfMonth: 1,
+    nextPaymentLabel: '다음 8/1',
+    category: 'MEDICAL',
+  },
+];
+
 // 카테고리 목록 — 1:1 문의하기 카테고리와 동일 + 검색화면 전용 '전체' 필터
 export const SUPPORT_CATEGORIES = ['지갑·버킷', '보험', '계좌연동', '공동양육', '회원정보', '기타'];
 
