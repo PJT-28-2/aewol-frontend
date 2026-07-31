@@ -121,7 +121,7 @@ const isFormValid = computed(
 
 const router = useRouter();
 function goToPrevStep() {
-  router.push('/group-purchase/create');
+  router.push('/group-purchase/create/step1');
 }
 function goToNextStep() {
   router.push('/group-purchase/create/step3');
