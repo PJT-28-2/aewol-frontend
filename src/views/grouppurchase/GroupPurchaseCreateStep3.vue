@@ -2,6 +2,7 @@
 import { computed, ref, watchEffect } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
+import AppButton from '@/components/common/AppButton.vue'
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 import IconImage from '@/components/common/icons/IconImage.vue'
 import IconInfo from '@/components/common/icons/IconInfo.vue'
@@ -237,20 +238,22 @@ function handleSubmit() {
 
     <!-- 이전 / 글 올리기: API 연동은 주석 처리, 지금은 /group-purchase/my로 이동만 -->
     <div class="flex gap-(--space-3)">
-      <button
-        type="button"
-        class="flex-1 h-[52px] rounded-2xl bg-(--color-white) border-[1.5px] border-(--color-border) text-(length:--font-sm) font-bold text-(color:--color-slate-dark)"
+      <AppButton
+        variant="secondary"
+        size="lg"
+        class="flex-1"
         @click="goToPrevStep"
       >
         이전
-      </button>
-      <button
-        type="button"
-        class="flex-1 h-[52px] rounded-2xl bg-(--color-gold) text-(color:--color-navy) text-(length:--font-md) font-bold"
+      </AppButton>
+      <AppButton
+        variant="primary"
+        size="lg"
+        class="flex-1"
         @click="handleSubmit"
       >
         글 올리기
-      </button>
+      </AppButton>
     </div>
   </div>
 </template>

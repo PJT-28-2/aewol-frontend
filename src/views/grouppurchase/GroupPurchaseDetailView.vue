@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import productImage from '@/assets/images/mock-product-dogfood.png'
+import AppButton from '@/components/common/AppButton.vue'
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 
 const route = useRoute()
@@ -271,13 +272,14 @@ function goToPaymentPreview() {
       v-if="!groupPurchase.isOwner"
       class="fixed bottom-(--bottom-nav-height) inset-x-0 p-(--space-4) bg-(--color-white)"
     >
-      <button
-        type="button"
-        class="w-full h-(--size-button-lg) rounded-2xl bg-(--color-navy) text-(color:--color-white) text-(length:--font-md) font-bold"
+      <AppButton
+        variant="navy"
+        size="lg"
+        block
         @click="goToPaymentPreview"
       >
         {{ totalPrice.toLocaleString() }}원 결제하기
-      </button>
+      </AppButton>
     </div>
   </div>
 </template>

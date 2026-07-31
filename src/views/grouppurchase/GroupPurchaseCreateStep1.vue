@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
+import AppButton from '@/components/common/AppButton.vue'
 import BottomSheet from '@/components/common/BottomSheet.vue'
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 import IconCheck from '@/components/common/icons/IconCheck.vue'
@@ -169,7 +170,7 @@ function goToNextStep() {
         id="category-label"
         class="block text-(length:--font-sm) font-bold text-(color:--color-slate-dark) mb-(--space-2)"
       >
-      카테고리 *
+        카테고리 *
       </label>
       <button
         type="button"
@@ -272,13 +273,14 @@ function goToNextStep() {
     </section>
 
     <!-- 다음: 사진/필수 입력값이 모두 채워져야 2단계(구매 조건)로 이동 가능 -->
-    <button
-      type="button"
-      class="w-full h-[52px] rounded-2xl bg-(--color-navy) text-(color:--color-white) text-(length:--font-md) font-bold disabled:opacity-40"
+    <AppButton
+      variant="navy"
+      size="lg"
+      block
       :disabled="!isFormValid"
       @click="goToNextStep"
     >
       다음
-    </button>
+    </AppButton>
   </div>
 </template>

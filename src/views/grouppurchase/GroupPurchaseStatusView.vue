@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import AppButton from '@/components/common/AppButton.vue';
 import IconCheck from '@/components/common/icons/IconCheck.vue';
 import BottomSheet from '@/components/common/BottomSheet.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
@@ -124,13 +125,12 @@ function confirmCancelSuccess() {
       <p class="text-(length:--font-sm) text-(color:--color-slate-muted)">
         공동구매 상태를 불러오지 못했어요
       </p>
-      <button
-        type="button"
-        class="px-(--space-5) py-(--space-3) rounded-(--radius-lg) bg-(--color-navy) text-(color:--color-white) text-(length:--font-sm) font-bold"
+      <AppButton
+        variant="navy"
         @click="loadStatus"
       >
         다시 시도
-      </button>
+      </AppButton>
     </div>
 
     <template v-else>
@@ -246,23 +246,26 @@ function confirmCancelSuccess() {
       </section>
 
       <!-- 리스트로 돌아가기 -->
-      <button
-        type="button"
-        class="w-full h-13 rounded-(--radius-xl) bg-(--color-navy) text-(color:--color-white) text-(length:--font-md) font-bold mb-(--space-3)"
+      <AppButton
+        variant="navy"
+        size="lg"
+        block
+        class="mb-(--space-3)"
         @click="goToList"
       >
         리스트로 돌아가기
-      </button>
+      </AppButton>
 
       <!-- 참여 취소하기: 보류 중일 때만 취소 가능 -->
-      <button
+      <AppButton
         v-if="status.status === 'waiting'"
-        type="button"
-        class="w-full h-[50px] rounded-(--radius-lg) bg-(--color-white) border-[1.2px] border-(--color-danger-soft) text-(color:--color-danger-strong) text-(length:--font-sm) font-bold"
+        variant="danger"
+        size="lg"
+        block
         @click="isPinSheetOpen = true"
       >
         참여 취소하기
-      </button>
+      </AppButton>
 
       <!-- 참여 취소 비밀번호 인증 바텀시트 -->
       <PinAuthSheet
@@ -289,13 +292,14 @@ function confirmCancelSuccess() {
           >
             결제 금액은 환불 처리되며, 공동구매 목록으로 이동해요
           </p>
-          <button
-            type="button"
-            class="w-full h-13 rounded-(--radius-xl) bg-(--color-navy) text-(color:--color-white) text-(length:--font-md) font-bold"
+          <AppButton
+            variant="navy"
+            size="lg"
+            block
             @click="confirmCancelSuccess"
           >
             확인
-          </button>
+          </AppButton>
         </div>
       </BottomSheet>
     </template>
