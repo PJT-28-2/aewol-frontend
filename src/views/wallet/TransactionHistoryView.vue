@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import BottomSheet from '@/components/common/BottomSheet.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
@@ -37,14 +37,25 @@ function clearCategoryFilter() {
 }
 
 // 이번 달 지출 화면 "반려동물별" 탭에서 반려동물을 지정해 들어올 수 있다
-const petFilter = ref(
-  typeof route.query.petId === 'string' &&
+function resolvePetFilterFromQuery() {
+  return typeof route.query.petId === 'string' &&
     petStore.pets.some((pet) => String(pet.id) === route.query.petId)
     ? Number(route.query.petId)
-    : null,
-);
+    : null;
+}
+
+const petFilter = ref(resolvePetFilterFromQuery());
 const petFilterLabel = computed(
   () => petStore.pets.find((pet) => pet.id === petFilter.value)?.name ?? '',
+);
+
+// /wallet/history는 쿼리만 바뀌어도 라우터가 컴포넌트를 재마운트하지 않으므로,
+// 다른 반려동물 카드를 눌러 petId만 바뀌어 들어와도 필터가 갱신되도록 감지한다
+watch(
+  () => route.query.petId,
+  () => {
+    petFilter.value = resolvePetFilterFromQuery();
+  },
 );
 
 function clearPetFilter() {

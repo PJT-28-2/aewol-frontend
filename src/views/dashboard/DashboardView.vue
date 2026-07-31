@@ -85,6 +85,12 @@ function selectTab(tab) {
   activeTab.value = tab;
 }
 
+// activeTab이 'pet'이어도 showPetTab이 나중에 false가 되면 activeItems는 카테고리 목록을 보여주므로,
+// 표시 조건과 클릭 시 이동 대상(펫/카테고리)을 이 값 하나로 통일해서 어긋나지 않게 한다
+const isPetTabActive = computed(
+  () => activeTab.value === 'pet' && showPetTab.value,
+);
+
 function withPercentages(list) {
   const total = list.reduce((sum, item) => sum + item.amount, 0);
   const items = list.map((item) => ({
@@ -149,9 +155,7 @@ const petItems = computed(() => {
 });
 
 const activeItems = computed(() =>
-  activeTab.value === 'pet' && showPetTab.value
-    ? petItems.value
-    : categoryItems.value,
+  isPetTabActive.value ? petItems.value : categoryItems.value,
 );
 
 const totalExpense = computed(() =>
@@ -285,9 +289,9 @@ onMounted(() => {
               type="button"
               class="w-full flex items-center gap-(--space-3) bg-(--color-surface) rounded-(--radius-xl) p-(--space-4) text-left"
               @click="
-                activeTab === 'category'
-                  ? goToCategoryHistory(item.key)
-                  : goToPetHistory(item.id)
+                isPetTabActive
+                  ? goToPetHistory(item.id)
+                  : goToCategoryHistory(item.key)
               "
             >
               <span
@@ -306,7 +310,7 @@ onMounted(() => {
                   >
                     <component
                       :is="petIcon(item.species)"
-                      v-if="activeTab === 'pet'"
+                      v-if="isPetTabActive"
                       size="16"
                       color="var(--color-navy)"
                     />
