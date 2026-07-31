@@ -7,6 +7,7 @@ import IconWarning from '@/components/common/icons/IconWarning.vue';
 import BottomSheet from '@/components/common/BottomSheet.vue';
 import AppButton from '@/components/common/AppButton.vue';
 import PinAuthSheet from '@/components/common/PinAuthSheet.vue';
+import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -178,6 +179,15 @@ const isPinSheetOpen = ref(false);
   <div
     class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+88px)] bg-(--color-bg) min-h-screen"
   >
+    <button
+      type="button"
+      class="mb-(--space-4) text-(color:--color-navy)"
+      aria-label="뒤로가기"
+      @click="router.back()"
+    >
+      <IconArrowLeft :size="24" />
+    </button>
+
     <!-- 헤더 -->
     <h1
       class="text-(length:--font-xl) font-bold text-(color:--color-navy) mb-(--space-5)"
