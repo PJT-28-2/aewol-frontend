@@ -23,16 +23,22 @@ export const certificatesApi = {
     return api.delete(`/api/pets/${petId}/documents/${docId}`)
   },
 
-  // 동물등록증 연동(APMS/CODEF 간편인증) — 백엔드에 아직 확정된 스펙이 없어 경로/바디는 추정치.
-  // 실제로는 CODEF 간편인증 1차 요청(organization/loginType=5/loginTypeLevel/userName/
-  // birthDate/phoneNo) → continue2Way 확인 → 2차(추가인증) 요청까지 여러 번 오갈 것으로 보임.
-  // 현재 스토어(certificate.js)에서도 이 함수는 호출하지 않고 주석으로만 참조함.
+  // 동물등록증 조회 — 신원 정보로 신청인 명의의 동물을 국가동물보호정보시스템(APMS)에서 조회.
+  // 외부 조회 API 연동은 백엔드가 대신 처리하고, 프론트는 결과 후보 목록만 받는다.
+  // 응답: { result: [{ petId, regNumber, name, breed, gender, neutered, birthDate, furColor,
+  //   ownerName, ownerPhone, issueDate, registerDate, issueOrg, regState, regType }] }
   syncRegistration({ userName, birthDate, phoneNo }) {
     return api.post('/api/certificates/registration/sync', { userName, birthDate, phoneNo })
   },
 
-  // 동물등록증 재동기화 — connectedId로 재인증 없이 재조회한다는 전제(경로/바디 추정치, 아직 미확정)
-  resyncRegistration(docId) {
-    return api.post(`/api/certificates/${docId}/resync`)
+  // 동물등록증 연동 확정 — 매칭 화면에서 사용자가 선택한 후보(candidate)들을 저장.
+  // candidates 배열의 각 항목은 syncRegistration이 돌려준 candidate 그대로(petId 포함)
+  saveRegistrationLinks(candidates) {
+    return api.post('/api/certificates/registration/confirm', { candidates })
+  },
+
+  // 동물등록증 재동기화 — 이미 연동된 등록증을 재인증 없이 다시 조회
+  resyncRegistration(petId, docId) {
+    return api.post(`/api/pets/${petId}/documents/${docId}/resync`)
   },
 }

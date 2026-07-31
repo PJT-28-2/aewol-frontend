@@ -148,7 +148,7 @@ async function handleResync() {
   resyncError.value = ''
   isResyncing.value = true
   try {
-    await certificateStore.resyncRegistration(certificateStore.detail.docId)
+    await certificateStore.resyncRegistration(route.params.petId, certificateStore.detail.docId)
   } catch {
     resyncError.value = '동기화에 실패했어요. 다시 시도해주세요.'
   } finally {

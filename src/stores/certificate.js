@@ -102,20 +102,18 @@ export const useCertificateStore = defineStore('certificate', {
       })
     },
 
-    // 동물등록증 연동 1단계 — 간편인증(카카오톡) 요청
-    // 실제로는 CODEF에 organization/loginType=5/loginTypeLevel/userName/birthDate/phoneNo를
-    // 보내면 continue2Way 응답(jobIndex/threadIndex/jti/twoWayTimestamp)이 오고,
-    // 사용자가 카카오톡 앱에서 승인해야 2차(추가인증) 요청으로 최종 완료된다.
-    // 여기서는 실제 CODEF 연동 없이 그 대기 시간만 흉내내고, 승인이 끝났다고 가정한다.
-    // 등록번호는 요청값이 아니라 응답값이라, 인증만 하면 신청인 명의의 동물이 (여러 마리면 배열로) 돌아온다.
+    // 동물등록증 조회 — 신원 정보로 국가동물보호정보시스템(APMS)에서 신청인 명의 동물을 조회.
+    // 외부 조회 API 연동(공공데이터포털 등)은 백엔드가 대신 처리하는 단건 요청/응답이라
+    // 프론트는 결과 후보 목록만 그대로 받는다. 등록번호는 요청값이 아니라 응답값이라,
+    // 조회만 하면 신청인 명의의 동물이 (여러 마리면 배열로) 돌아온다.
     async requestApmsSimpleAuth({ userName, birthDate, phoneNo }) {
       if (!userName?.trim() || !birthDate?.trim() || !phoneNo?.trim()) {
         throw new Error('이름, 생년월일, 전화번호를 모두 입력해주세요.')
       }
 
       if (USE_MOCK_DATA) {
-        // 카카오톡 승인 대기(2-way) 흉내 — 실제 폴링/웹훅 없이 지연만 재현
-        await new Promise((resolve) => setTimeout(resolve, 1500))
+        // 조회 API 응답 지연 흉내
+        await new Promise((resolve) => setTimeout(resolve, 800))
 
         const today = new Date().toISOString().slice(0, 10)
         // 이미 연동된 동물등록증이 없는 펫들을 "신청인 명의로 조회된 동물"로 흉내냄
@@ -126,36 +124,42 @@ export const useCertificateStore = defineStore('certificate', {
           .filter((pet) => !linkedPetIds.has(pet.petId))
           .map((pet) => ({
             petId: pet.petId,
-            resRegNumber: `41000001${String(Date.now()).slice(-8)}${pet.petId.slice(-1)}`,
-            commName: pet.name,
-            resKind: pet.breed,
-            resGender: pet.gender,
-            resNeuterYN: pet.neutered === 'Y' ? 'O' : 'X',
-            commBirthDate: pet.birthDate,
-            resType1: pet.species === 'CAT' ? '고양이' : '개',
-            resColor: '크림색',
-            resOwner: userName,
-            resPhoneNo: phoneNo,
-            resIssueDate: today,
-            resRegisterDate: today,
-            resIssueOgzNm: '국가동물보호정보시스템',
-            resState: '승인',
-            resType: '소유',
+            regNumber: `41000001${String(Date.now()).slice(-8)}${pet.petId.slice(-1)}`,
+            name: pet.name,
+            breed: pet.breed,
+            gender: pet.gender,
+            neutered: pet.neutered,
+            birthDate: pet.birthDate,
+            furColor: '크림색',
+            ownerName: userName,
+            ownerPhone: phoneNo,
+            issueDate: today,
+            registerDate: today,
+            issueOrg: '국가동물보호정보시스템',
+            regState: '승인',
+            regType: '소유',
           }))
 
         return candidates
       }
 
-      // TODO: 백엔드에 "간편인증 1차/추가인증 2차" 엔드포인트가 아직 확정되지 않아 주석 처리해둠.
-      // 확정되면 1차 요청 → continue2Way 확인 → 카카오톡 승인 대기 → 2차(추가인증) 요청 순으로 연결 예정.
-      // return this._withRequestState(async () => {
-      //   const { data } = await certificatesApi.syncRegistration({ userName, birthDate, phoneNo })
-      //   return data.result
-      // })
+      return this._withRequestState(async () => {
+        const { data } = await certificatesApi.syncRegistration({ userName, birthDate, phoneNo })
+        return data.result ?? []
+      })
     },
 
     // 동물등록증 연동 2단계 — 사용자가 매칭 결과 화면에서 선택한 후보들을 저장
     async confirmApmsLink(candidates) {
+      if (!USE_MOCK_DATA) {
+        return this._withRequestState(async () => {
+          await certificatesApi.saveRegistrationLinks(candidates)
+          if (this.selectedPetId) {
+            await this.fetchCertificates(this.selectedPetId)
+          }
+        })
+      }
+
       const today = new Date().toISOString().slice(0, 10)
 
       for (const candidate of candidates) {
@@ -164,35 +168,21 @@ export const useCertificateStore = defineStore('certificate', {
 
         const detail = {
           docId,
-          petId: candidate.petId,
-          regNumber: candidate.resRegNumber,
-          name: candidate.commName,
-          breed: candidate.resKind,
-          gender: candidate.resGender,
-          neutered: candidate.resNeuterYN === 'O' ? 'Y' : 'N',
-          birthDate: candidate.commBirthDate,
-          furColor: candidate.resColor,
+          ...candidate,
           weight: pet?.weight ?? 0,
-          ownerName: candidate.resOwner,
-          ownerPhone: candidate.resPhoneNo,
-          issueDate: candidate.resIssueDate,
-          registerDate: candidate.resRegisterDate,
-          issueOrg: candidate.resIssueOgzNm,
-          regState: candidate.resState,
-          regType: candidate.resType,
           lastSyncedAt: today,
         }
         this.registrationDetails = { ...this.registrationDetails, [docId]: detail }
 
-        if (pet) pet.regNumber = candidate.resRegNumber
+        if (pet) pet.regNumber = candidate.regNumber
 
         const newDoc = {
           docId,
           petId: candidate.petId,
-          docName: `${candidate.commName} · 동물등록증`,
+          docName: `${candidate.name} · 동물등록증`,
           docType: 'REGISTRATION',
           fileUrl: '',
-          issuedDate: candidate.resIssueDate,
+          issuedDate: candidate.issueDate,
           createdAt: new Date().toISOString(),
         }
         this.documents = [newDoc, ...this.documents.filter((doc) => doc.docId !== docId)]
@@ -206,12 +196,12 @@ export const useCertificateStore = defineStore('certificate', {
     // 동물등록증 재동기화 — connectedId를 이미 확보한 상태(최초 연동 완료)라는 전제로,
     // 신원확인 폼 없이 바로 재조회한다는 흐름만 흉내냄. 값 자체는 크게 바뀌지 않고
     // lastSyncedAt만 갱신 — "정보가 바뀌면 자동 갱신"을 사용자가 수동으로 트리거하는 액션.
-    async resyncRegistration(docId) {
+    async resyncRegistration(petId, docId) {
       if (USE_MOCK_DATA) {
         const existing = this.registrationDetails[docId]
         if (!existing) return null
 
-        // 카카오톡 재인증 없이 connectedId로 바로 재조회한다는 전제라 대기 시간이 짧음
+        // 재인증 없이 바로 재조회한다는 전제라 대기 시간이 짧음
         await new Promise((resolve) => setTimeout(resolve, 800))
 
         const updated = { ...existing, lastSyncedAt: new Date().toISOString().slice(0, 10) }
@@ -220,12 +210,11 @@ export const useCertificateStore = defineStore('certificate', {
         return updated
       }
 
-      // TODO: 백엔드에 재동기화 엔드포인트가 아직 확정되지 않아 주석 처리해둠.
-      // return this._withRequestState(async () => {
-      //   const { data } = await certificatesApi.resyncRegistration(docId)
-      //   this.detail = data.result ?? null
-      //   return this.detail
-      // })
+      return this._withRequestState(async () => {
+        const { data } = await certificatesApi.resyncRegistration(petId, docId)
+        this.detail = data.result ?? null
+        return this.detail
+      })
     },
 
     // 동물등록증 연동 해제(삭제)

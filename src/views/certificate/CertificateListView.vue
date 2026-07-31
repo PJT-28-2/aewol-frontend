@@ -36,17 +36,17 @@ function goToDocDetail(doc) {
   router.push(`/certificates/${doc.petId}/${doc.docId}`)
 }
 
-// 동물등록증 연동 — 간편인증(카카오톡) 1회로 신청인 명의의 동물이 (여러 마리면 배열로) 조회됨.
-// 흐름: 신원확인 입력 → 카카오톡 승인 대기 → 조회된 동물 중 연동할 항목 선택 → 저장
+// 동물등록증 연동 — 신원확인 1회로 신청인 명의의 동물이 (여러 마리면 배열로) 조회됨.
+// 흐름: 신원확인 입력 → 조회 → 조회된 동물 중 연동할 항목 선택 → 저장
 const BIRTH_DATE_PATTERN = /^\d{4}\.\d{2}\.\d{2}$/
 const PHONE_PATTERN = /^01[0-9]-?\d{3,4}-?\d{4}$/
 
 const showAuthModal = ref(false)
-const showWaitingModal = ref(false)
 const showMatchModal = ref(false)
 
 const authForm = ref({ userName: '', birthDate: '', phoneNo: '' })
 const authError = ref('')
+const isSubmittingAuth = ref(false)
 
 const candidates = ref([])
 const selectedCandidatePetIds = ref([])
@@ -74,17 +74,16 @@ async function submitAuth() {
   }
 
   authError.value = ''
-  showAuthModal.value = false
-  showWaitingModal.value = true
+  isSubmittingAuth.value = true
   try {
     candidates.value = await certificateStore.requestApmsSimpleAuth(authForm.value)
     selectedCandidatePetIds.value = candidates.value.map((c) => c.petId)
-    showWaitingModal.value = false
+    showAuthModal.value = false
     showMatchModal.value = true
   } catch {
-    showWaitingModal.value = false
-    authError.value = '인증에 실패했어요. 다시 시도해주세요.'
-    showAuthModal.value = true
+    authError.value = '조회에 실패했어요. 다시 시도해주세요.'
+  } finally {
+    isSubmittingAuth.value = false
   }
 }
 
@@ -403,10 +402,10 @@ async function handleMedicalSelect(event) {
       </section>
     </template>
 
-    <!-- 1단계: 간편인증 신원확인 입력 -->
+    <!-- 1단계: 조회를 위한 신원확인 입력 -->
     <AppModal
       v-model="showAuthModal"
-      title="카카오톡 간편인증"
+      title="동물등록증 조회"
     >
       <p class="text-(length:--font-sm) text-(color:--color-gray-600) mb-(--space-4)">
         국가동물보호정보시스템 조회를 위해 신청인 정보를 입력해주세요
@@ -443,27 +442,16 @@ async function handleMedicalSelect(event) {
         >
           취소
         </AppButton>
-        <AppButton @click="submitAuth">
-          카카오톡으로 인증하기
+        <AppButton
+          :loading="isSubmittingAuth"
+          @click="submitAuth"
+        >
+          조회하기
         </AppButton>
       </template>
     </AppModal>
 
-    <!-- 2단계: 카카오톡 승인 대기 -->
-    <AppModal
-      v-model="showWaitingModal"
-      title="인증 진행 중"
-      :show-close="false"
-    >
-      <div class="flex flex-col items-center gap-(--space-4) py-(--space-4)">
-        <LoadingSpinner />
-        <p class="text-(length:--font-sm) text-(color:--color-gray-600) text-center">
-          카카오톡 앱에서 인증을 확인해주세요
-        </p>
-      </div>
-    </AppModal>
-
-    <!-- 3단계: 조회된 동물 중 연동할 항목 선택 -->
+    <!-- 2단계: 조회된 동물 중 연동할 항목 선택 -->
     <AppModal
       v-model="showMatchModal"
       title="조회된 동물등록정보"
@@ -487,10 +475,10 @@ async function handleMedicalSelect(event) {
               >
               <div class="flex-1 min-w-0">
                 <p class="text-(length:--font-md) font-semibold text-(color:--color-navy)">
-                  {{ candidate.commName }} · {{ candidate.resKind }}
+                  {{ candidate.name }} · {{ candidate.breed }}
                 </p>
                 <p class="text-(length:--font-xs) text-(color:--color-gray-500) mt-(--space-1)">
-                  등록번호: {{ candidate.resRegNumber }}
+                  등록번호: {{ candidate.regNumber }}
                 </p>
               </div>
             </label>
