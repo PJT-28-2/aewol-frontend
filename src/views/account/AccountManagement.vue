@@ -8,7 +8,7 @@ import BottomSheet from '@/components/common/BottomSheet.vue';
 import IconLock from '@/components/common/icons/IconLock.vue';
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue';
 import petDeleteWarning from '@/assets/images/pet-delete-warning.png';
-import petSuccess from '@/assets/images/pet-success.png';
+import petCancelWarning from '@/assets/images/pet-cancel-warning.png';
 
 const router = useRouter();
 const store = useAccountStore();
@@ -86,7 +86,7 @@ function goToLink() {
       v-if="showUnlinkSuccess"
       class="fixed inset-0 z-40 bg-(--color-white) flex flex-col items-center justify-center px-(--space-6)"
     >
-      <img :src="petSuccess" alt="" class="w-40 h-auto mb-(--space-6)" />
+      <img :src="petCancelWarning" alt="" class="w-40 h-auto mb-(--space-6)" />
       <h2 class="text-(length:--font-xl) font-(--font-bold) text-(color:--color-navy) mb-(--space-2)">계좌 연동이 해제됐어요</h2>
       <p class="text-(length:--font-md) text-(color:--color-gray-600) mb-(--space-8)">
         {{ unlinkedAccountName }} 계좌가 목록에서 제거됐어요

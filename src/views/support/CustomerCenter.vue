@@ -162,7 +162,7 @@ function goToFaqDetail(faqId) {
             <div>
               <p
                 v-if="selectedCategory === '전체'"
-                class="text-(length:--font-xs) font-semibold text-(color:--color-gray-500) mb-1"
+                class="text-(length:--font-xs) font-semibold text-(color:--color-gray-500) mb-(--space-1)"
               >
                 {{ faq.category }}
               </p>
