@@ -193,6 +193,30 @@ const authRoutes = [
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
+    path: '/payment/recurring/register',
+    name: 'RecurringRegister',
+    component: () => import('@/views/payment/RecurringRegisterView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
+    path: '/payment/recurring/register/complete',
+    name: 'RecurringRegisterComplete',
+    component: () => import('@/views/payment/RecurringRegisterCompleteView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
+    path: '/payment/recurring/:id/cancel',
+    name: 'RecurringCancel',
+    component: () => import('@/views/payment/RecurringCancelView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
+    path: '/payment/recurring/cancel/complete',
+    name: 'RecurringCancelComplete',
+    component: () => import('@/views/payment/RecurringCancelCompleteView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
     path: '/dashboard',
     name: 'Dashboard',
     component: () => import('@/views/dashboard/DashboardView.vue'),
