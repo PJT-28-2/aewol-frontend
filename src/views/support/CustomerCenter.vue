@@ -160,7 +160,12 @@ function goToFaqDetail(faqId) {
             @click="goToFaqDetail(faq.faqId)"
           >
             <div>
-              <p class="text-(length:--font-xs) font-semibold text-(color:--color-gray-500) mb-1">{{ faq.category }}</p>
+              <p
+                v-if="selectedCategory === '전체'"
+                class="text-(length:--font-xs) font-semibold text-(color:--color-gray-500) mb-1"
+              >
+                {{ faq.category }}
+              </p>
               <p class="text-(length:--font-md) font-semibold text-(color:--color-navy)">{{ faq.question }}</p>
             </div>
             <IconChevronRight :size="18" color="var(--color-gray-400)" class="shrink-0" />
@@ -168,19 +173,23 @@ function goToFaqDetail(faqId) {
         </li>
       </ul>
 
-      <div class="rounded-2xl bg-(--color-surface) p-4 mb-4 text-center">
-        <p class="text-(length:--font-sm) font-semibold text-(color:--color-navy) mb-1">
-          원하는 답변을 못 찾으셨나요?
-        </p>
-        <p class="text-(length:--font-xs) text-(color:--color-gray-500)">1:1 문의로 직접 물어보세요</p>
-      </div>
+      <div class="sticky bottom-(--bottom-nav-height) bg-(--color-bg) pt-(--space-3) pb-(--space-3)">
+        <div class="rounded-(--radius-xl) bg-(--color-surface) p-(--space-4) flex items-center gap-(--space-3)">
+          <div class="flex-1 min-w-0">
+            <p class="text-(length:--font-sm) font-semibold text-(color:--color-navy) mb-(--space-1)">
+              원하는 답변을 못 찾으셨나요?
+            </p>
+            <p class="text-(length:--font-xs) text-(color:--color-gray-500)">1:1 문의로 직접 물어보세요</p>
+          </div>
 
-      <button
-        class="w-full py-4 rounded-xl bg-(--color-navy) text-(color:--color-white) font-bold"
-        @click="router.push({ name: 'InquiryForm' })"
-      >
-        1:1 문의하기
-      </button>
+          <button
+            class="shrink-0 px-(--space-4) py-(--space-2) rounded-(--radius-full) bg-(--color-navy) text-(color:--color-white) font-bold text-(length:--font-sm)"
+            @click="router.push({ name: 'InquiryForm' })"
+          >
+            1:1 문의하기
+          </button>
+        </div>
+      </div>
     </template>
 
     <!-- 기본 모드: 자주 묻는 질문 아코디언 -->
