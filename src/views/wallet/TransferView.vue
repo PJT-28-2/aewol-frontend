@@ -8,7 +8,7 @@ import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue';
 import IconCheck from '@/components/common/icons/IconCheck.vue';
 import IconChevronDown from '@/components/common/icons/IconChevronDown.vue';
 import { useAccountStore } from '@/stores/account';
-import { getBankMeta } from '@/utils/bankMeta';
+import { formatWon, getBankMeta } from '@/utils/bankMeta';
 import { ENABLED_BANK_CODES, MOCK_ACCOUNTS, MOCK_BANKS } from '@/utils/mockData';
 
 const route = useRoute();
@@ -69,12 +69,17 @@ const myAccountBankMeta = computed(() =>
   myAccount.value ? getBankMeta(myAccount.value.bankCode) : null,
 );
 
+const isInsufficientBalance = computed(
+  () => !!myAccount.value && amount.value > myAccount.value.balance,
+);
+
 const canProceed = computed(
   () =>
     !!receivingBankCode.value &&
     !!receivingAccountNumber.value.trim() &&
     amount.value > 0 &&
-    !!myAccount.value,
+    !!myAccount.value &&
+    !isInsufficientBalance.value,
 );
 
 function currentQuery() {
@@ -204,13 +209,19 @@ function handleNext() {
           <p
             class="text-(length:--font-sm) text-(color:--color-slate-muted) mt-(--space-1)"
           >
-            {{ myAccount.accountNumberMasked }}
+            {{ myAccount.accountNumberMasked }} · {{ formatWon(myAccount.balance) }}
           </p>
         </div>
         <span
           class="text-(length:--font-xl) text-(color:--color-gray-400)"
         >&rsaquo;</span>
       </button>
+      <p
+        v-if="isInsufficientBalance"
+        class="text-(length:--font-sm) text-(color:--color-danger) mt-(--space-2)"
+      >
+        잔액이 부족해요
+      </p>
     </section>
 
     <AppButton

@@ -37,6 +37,7 @@ function handleSend() {
       bankCode: bankCode.value,
       accountNumber: accountNumber.value,
       amount: amount.value,
+      myAccountId: route.query.myAccountId,
     },
   });
 }
