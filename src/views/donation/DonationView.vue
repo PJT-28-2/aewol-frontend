@@ -110,22 +110,20 @@ onMounted(loadDonationData)
 
     <!-- RF-SI-01 · 짜투리저금통 -->
     <template v-else-if="isMain">
-      <section
-        class="relative min-h-24 box-border rounded-[var(--radius-xl)] bg-(--color-navy) p-[var(--space-6)] text-(--color-white)"
-      >
+      <header class="relative">
         <button
-          class="absolute right-[var(--space-4)] top-[var(--space-6)] cursor-pointer rounded-(--radius-full) border-0 bg-transparent text-(--color-white) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-gold)"
+          class="absolute right-0 top-0 cursor-pointer rounded-(--radius-full) border-0 bg-transparent text-(--color-navy) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-gold)"
           type="button"
           aria-label="저금통 설정"
           @click="go('/donation/settings')"
         >
           <IconSettings :size="20" />
         </button>
-        <strong class="block text-[length:var(--font-lg)]">짜투리 저금통</strong>
+        <strong class="block text-[length:var(--font-2xl)] font-bold text-(--color-navy)">짜투리 저금통</strong>
         <span
-          class="mt-[var(--space-1)] block text-[length:var(--font-sm)] text-(--color-slate-light)"
+          class="mt-[var(--space-1)] block text-[length:var(--font-sm)] text-(--color-slate-muted)"
         >결제할 때마다 잔돈이 자동으로 모여요</span>
-      </section>
+      </header>
 
       <section
         class="mt-[var(--space-5)] rounded-[var(--radius-xl)] bg-(--color-olive-surface) p-[var(--space-5)]"
