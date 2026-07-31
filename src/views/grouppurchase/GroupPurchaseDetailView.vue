@@ -10,8 +10,6 @@ const router = useRouter()
 
 // TODO: 백엔드 API 연동 후 mock 데이터 제거하고 실제 fetch로 교체 (상세 데이터 연동은 별도 작업에서 진행)
 // 필드명은 group_purchase 테이블 컬럼(gp_id, delivery_method, delivery_fee, delivery_date, deadline 등) 기준
-// isOwner: 상세 API 응답의 작성자 member_id와 로그인 유저 member_id 비교 결과로 교체 예정.
-// true면 마이페이지의 "작성" 글로 들어온 경우이므로 수량 선택/결제 없이 읽기 전용으로 보여줌
 const groupPurchase = ref({
   productName: '프리미엄 사료 15kg',
   image: productImage,
@@ -23,8 +21,12 @@ const groupPurchase = ref({
   deliveryMethod: '공동구매 마감 후 3일 이내 발송',
   deliveryFee: 0,
   deliveryDate: '2026-08-04',
-  isOwner: false,
 })
+
+// isOwner: 상세 API 응답의 작성자 member_id와 로그인 유저 member_id 비교 결과로 교체 예정.
+// 지금은 마이페이지의 "작성" 글 카드가 붙여주는 ?owner=1 쿼리로 흉내냄 —
+// true면 마이페이지의 "작성" 글로 들어온 경우이므로 수량 선택/결제 없이 읽기 전용으로 보여줌
+const isOwner = computed(() => route.query.owner === '1')
 
 const WEEKDAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
 
@@ -63,7 +65,7 @@ const discountRate = computed(() =>
 
 // 내가 선택한 수량을 반영했을 때의 참여 현황(미리보기). 작성자가 자기 글을 보는 경우엔 구매 미리보기가 필요 없어 현재 수량 그대로 표시
 const displayedCurrentQuantity = computed(() =>
-  groupPurchase.value.isOwner
+  isOwner.value
     ? groupPurchase.value.currentQuantity
     : groupPurchase.value.currentQuantity + quantity.value,
 )
@@ -131,21 +133,22 @@ function goToPaymentPreview() {
   <div
     class="p-(--space-4) bg-(--color-bg) min-h-screen"
     :class="
-      groupPurchase.isOwner
+      isOwner
         ? 'pb-(--space-6)'
         : 'pb-[calc(var(--bottom-nav-height)+var(--size-cta-bar-height))]'
     "
   >
     <header class="mb-(--space-5)">
-      <router-link
-        to="/group-purchase"
+      <button
+        type="button"
         aria-label="뒤로 가기"
         class="inline-flex items-center mb-(--space-3) text-(color:--color-navy)"
+        @click="router.back()"
       >
         <IconArrowLeft size="24" />
-      </router-link>
+      </button>
       <h1 class="text-(length:--font-xl) font-bold text-(color:--color-navy)">
-        {{ groupPurchase.isOwner ? '내 공동구매' : '공동구매 참여' }}
+        {{ isOwner ? '내 공동구매' : '공동구매 참여' }}
       </h1>
     </header>
 
@@ -208,7 +211,7 @@ function goToPaymentPreview() {
 
     <!-- 수량 선택: 작성자가 자기 글을 보는 경우엔 구매 대상이 아니므로 숨김 -->
     <section
-      v-if="!groupPurchase.isOwner"
+      v-if="!isOwner"
       class="mb-(--space-6)"
     >
       <p class="text-(length:--font-sm) font-bold text-(color:--color-slate-dark) mb-(--space-3)">
@@ -269,7 +272,7 @@ function goToPaymentPreview() {
 
     <!-- 결제 버튼: 금액은 groupPrice * 선택 수량으로 실시간 계산. 작성자가 자기 글을 보는 경우엔 결제 대상이 아니므로 숨김 -->
     <div
-      v-if="!groupPurchase.isOwner"
+      v-if="!isOwner"
       class="fixed bottom-(--bottom-nav-height) inset-x-0 p-(--space-4) bg-(--color-white)"
     >
       <AppButton

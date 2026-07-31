@@ -163,9 +163,8 @@ function handlePayment() {
   router.push(`/group-purchase/${route.params.gpId}/status`);
 }
 
-// 충전 페이지 라우팅은 아직 미구현 — 버튼만 배치
 function handleCharge() {
-  // TODO: /wallet/charge 라우팅 연동 예정
+  router.push('/wallet/charge');
 }
 
 // 송금 비밀번호 인증 바텀시트
