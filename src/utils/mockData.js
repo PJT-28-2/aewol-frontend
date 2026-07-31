@@ -90,10 +90,36 @@ export const MOCK_FAQ_RELATED = {
 };
 
 export const MOCK_INQUIRIES = [
-  { inquiryId: 1, title: '정기결제 취소는 어디서 하나요?', status: 'ANSWERED', createdAt: '2026-07-15' },
-  { inquiryId: 2, title: 'SOS 포켓 결제가 안 돼요', status: 'ANSWERED', createdAt: '2026-07-12' },
-  { inquiryId: 3, title: '계좌 연동이 계속 실패해요', status: 'PENDING', createdAt: '2026-07-17' },
+  {
+    inquiryId: 1,
+    category: '지갑·버킷',
+    title: '정기결제 취소는 어디서 하나요?',
+    content: '매달 자동으로 나가는 사료 정기결제를 취소하고 싶은데 어디서 할 수 있나요?',
+    status: 'ANSWERED',
+    createdAt: '2026-07-15',
+  },
+  {
+    inquiryId: 2,
+    category: '지갑·버킷',
+    title: 'SOS 포켓 결제가 안 돼요',
+    content: 'SOS 포켓 잔액이 충분한데도 결제 시 실패했다는 메시지가 떠요.',
+    status: 'ANSWERED',
+    createdAt: '2026-07-12',
+  },
+  {
+    inquiryId: 3,
+    category: '계좌연동',
+    title: '계좌 연동이 계속 실패해요',
+    content: 'KB국민은행 계좌를 연동하려는데 1원 인증 단계에서 계속 실패로 떠요.',
+    status: 'PENDING',
+    createdAt: '2026-07-17',
+  },
 ];
+
+export const MOCK_INQUIRY_ANSWERS = {
+  1: '마이페이지 > 정기 결제 관리에서 해당 항목의 취소 버튼을 눌러주시면 다음 결제일부터 자동으로 중단돼요.',
+  2: 'SOS 포켓은 등록된 카드가 있어야 결제가 가능해요. 마이페이지 > 계좌 관리에서 결제 수단이 연결되어 있는지 확인해주세요. 계속 실패한다면 화면 캡처와 함께 다시 문의해주세요.',
+};
 
 // 증명서 관리(목록/상세) 화면 목데이터 — ERD의 pet, pet_document 테이블 필드명을 camelCase로 매핑했어요.
 // (pet_id → petId, doc_id → docId, doc_name → docName, doc_type → docType,
@@ -189,33 +215,4 @@ export const MOCK_REGISTRATION_DETAIL = {
     regType: '소유',
     lastSyncedAt: '2026-07-15',
   },
-  {
-    inquiryId: 1,
-    category: '지갑·버킷',
-    title: '정기결제 취소는 어디서 하나요?',
-    content: '매달 자동으로 나가는 사료 정기결제를 취소하고 싶은데 어디서 할 수 있나요?',
-    status: 'ANSWERED',
-    createdAt: '2026-07-15',
-  },
-  {
-    inquiryId: 2,
-    category: '지갑·버킷',
-    title: 'SOS 포켓 결제가 안 돼요',
-    content: 'SOS 포켓 잔액이 충분한데도 결제 시 실패했다는 메시지가 떠요.',
-    status: 'ANSWERED',
-    createdAt: '2026-07-12',
-  },
-  {
-    inquiryId: 3,
-    category: '계좌연동',
-    title: '계좌 연동이 계속 실패해요',
-    content: 'KB국민은행 계좌를 연동하려는데 1원 인증 단계에서 계속 실패로 떠요.',
-    status: 'PENDING',
-    createdAt: '2026-07-17',
-  },
-];
-
-export const MOCK_INQUIRY_ANSWERS = {
-  1: '마이페이지 > 정기 결제 관리에서 해당 항목의 취소 버튼을 눌러주시면 다음 결제일부터 자동으로 중단돼요.',
-  2: 'SOS 포켓은 등록된 카드가 있어야 결제가 가능해요. 마이페이지 > 계좌 관리에서 결제 수단이 연결되어 있는지 확인해주세요. 계속 실패한다면 화면 캡처와 함께 다시 문의해주세요.',
 };
