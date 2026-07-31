@@ -5,6 +5,9 @@ import { MOCK_RECURRING_PAYMENTS } from '@/utils/mockData'
 export const usePaymentStore = defineStore('payment', {
   state: () => ({
     recurringPayments: [],
+    // recurringPayments.length로 재조회 여부를 판단하면, 마지막 항목을 해지해서
+    // 배열이 비었을 때 다시 mock 데이터로 채워지는 문제가 있어 별도 플래그로 관리한다.
+    hasFetchedRecurringPayments: false,
   }),
 
   getters: {
@@ -14,7 +17,7 @@ export const usePaymentStore = defineStore('payment', {
 
   actions: {
     async fetchRecurringPayments() {
-      if (this.recurringPayments.length) return
+      if (this.hasFetchedRecurringPayments) return
       try {
         const { data } = await recurringApi.getRecurrings()
         this.recurringPayments = data.result ?? data ?? []
@@ -24,6 +27,7 @@ export const usePaymentStore = defineStore('payment', {
       if (!this.recurringPayments.length) {
         this.recurringPayments = structuredClone(MOCK_RECURRING_PAYMENTS)
       }
+      this.hasFetchedRecurringPayments = true
     },
 
     async cancelRecurringPayment(id) {

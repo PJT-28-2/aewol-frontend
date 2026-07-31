@@ -46,9 +46,24 @@ function selectDay(day) {
   isDaySheetOpen.value = false;
 }
 
+// 사용자가 placeholder처럼 콤마를 넣어 입력해도(예: "32,000") 정상 인식되도록
+// 숫자가 아닌 문자는 모두 제거하고 파싱한다.
+const numericAmount = computed(() => Number(String(amount.value).replace(/[^0-9]/g, '')) || 0);
+
 const canSubmit = computed(
-  () => !!merchantName.value.trim() && Number(amount.value) > 0 && !!category.value,
+  () => !!merchantName.value.trim() && numericAmount.value > 0 && !!category.value,
 );
+
+// mockData.js의 기존 항목과 같은 "다음 M/D" 형식으로 다음 결제일을 계산한다.
+function computeNextPaymentLabel(day) {
+  const today = new Date();
+  let month = today.getMonth() + 1;
+  if (day <= today.getDate()) {
+    month += 1;
+    if (month > 12) month = 1;
+  }
+  return `다음 ${month}/${day}`;
+}
 
 async function handleSubmit() {
   if (!canSubmit.value) return;
@@ -56,15 +71,15 @@ async function handleSubmit() {
   // TODO: 백엔드 정기결제 API 연동 후 실제 등록 처리로 교체
   await paymentStore.createRecurringPayment({
     merchantName: merchantName.value.trim(),
-    amount: Number(amount.value),
+    amount: numericAmount.value,
     dayOfMonth: dayOfMonth.value,
-    nextPaymentLabel: `다음 결제 매월 ${dayOfMonth.value}일`,
+    nextPaymentLabel: computeNextPaymentLabel(dayOfMonth.value),
     category: category.value,
     petName: pet?.name ?? null,
   });
   router.push({
     path: '/payment/recurring/register/complete',
-    query: { dayOfMonth: dayOfMonth.value, amount: amount.value },
+    query: { dayOfMonth: dayOfMonth.value, amount: numericAmount.value },
   });
 }
 </script>
@@ -104,7 +119,7 @@ async function handleSubmit() {
         v-model="merchantName"
         type="text"
         placeholder="예: 강아지 사료 정기배송"
-        class="w-full p-4 rounded-xl bg-(--color-surface) border border-(--color-border) text-(length:--font-md) text-(color:--color-navy) outline-none placeholder:text-(--color-slate-muted)"
+        class="w-full p-4 rounded-(--radius-xl) bg-(--color-surface) border border-(--color-border) text-(length:--font-md) text-(color:--color-navy) outline-none placeholder:text-(--color-slate-muted)"
       >
     </section>
 
@@ -119,7 +134,7 @@ async function handleSubmit() {
         type="text"
         inputmode="numeric"
         placeholder="32,000 원"
-        class="w-full p-4 rounded-xl bg-(--color-surface) border border-(--color-border) text-(length:--font-md) text-(color:--color-navy) outline-none placeholder:text-(--color-slate-muted)"
+        class="w-full p-4 rounded-(--radius-xl) bg-(--color-surface) border border-(--color-border) text-(length:--font-md) text-(color:--color-navy) outline-none placeholder:text-(--color-slate-muted)"
       >
     </section>
 
@@ -131,7 +146,7 @@ async function handleSubmit() {
       </h2>
       <button
         type="button"
-        class="w-full flex items-center justify-between p-4 rounded-xl bg-(--color-surface) border border-(--color-border) text-(length:--font-md) font-semibold text-(color:--color-navy)"
+        class="w-full flex items-center justify-between p-4 rounded-(--radius-xl) bg-(--color-surface) border border-(--color-border) text-(length:--font-md) font-semibold text-(color:--color-navy)"
         @click="isDaySheetOpen = true"
       >
         매월 {{ dayOfMonth }}일
@@ -211,7 +226,7 @@ async function handleSubmit() {
         결제 수단
       </h2>
       <div
-        class="w-full p-4 rounded-xl bg-(--color-surface) border border-(--color-border)"
+        class="w-full p-4 rounded-(--radius-xl) bg-(--color-surface) border border-(--color-border)"
       >
         <p
           class="text-(length:--font-md) font-semibold text-(color:--color-navy)"
