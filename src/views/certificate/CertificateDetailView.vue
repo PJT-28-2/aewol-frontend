@@ -102,7 +102,8 @@ async function handleDownloadPdf() {
     const contentWidth = pageWidth - margin * 2
     const imgHeight = (canvas.height * contentWidth) / canvas.width
     pdf.addImage(canvas.toDataURL('image/png'), 'PNG', margin, margin, contentWidth, imgHeight)
-    pdf.save(`동물등록증_${certName.value}.pdf`)
+    const fileName = isPhotoDoc.value ? certName.value : `동물등록증_${certName.value}`
+    pdf.save(`${fileName}.pdf`)
     showSavedModal.value = true
   } catch {
     alert('문서를 저장할 수 없어요. 다시 시도해주세요.')
@@ -387,7 +388,7 @@ async function handlePhotoDelete() {
       :show-close="false"
     >
       <p class="text-(length:--font-md) text-(color:--color-gray-600)">
-        동물등록증 PDF가 저장되었어요.
+        {{ isPhotoDoc ? `${certName} 파일이 저장되었어요.` : '동물등록증 PDF가 저장되었어요.' }}
       </p>
       <template #footer>
         <AppButton @click="showSavedModal = false">
