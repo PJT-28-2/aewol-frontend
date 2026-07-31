@@ -31,7 +31,7 @@ onMounted(async () => {
   currentDoc.value = certificateStore.documents.find((doc) => doc.docId === route.params.docId) ?? null
 
   if (!isPhotoDoc.value) {
-    await certificateStore.fetchCertificateDetail(route.params.docId)
+    await certificateStore.fetchCertificateDetail(route.params.petId, route.params.docId)
   }
 })
 
@@ -170,7 +170,7 @@ async function handleDelete() {
   if (!certificateStore.detail) return
   isDeleting.value = true
   try {
-    await certificateStore.deleteRegistration(certificateStore.detail.docId)
+    await certificateStore.deleteRegistration(route.params.petId, certificateStore.detail.docId)
     router.replace('/certificates')
   } catch {
     deleteError.value = '연동 해제에 실패했어요. 다시 시도해주세요.'
@@ -196,7 +196,7 @@ async function handlePhotoDelete() {
   if (!currentDoc.value) return
   isDeletingPhoto.value = true
   try {
-    await certificateStore.deleteDocument(currentDoc.value.docId)
+    await certificateStore.deleteDocument(route.params.petId, currentDoc.value.docId)
     router.replace('/certificates')
   } catch {
     photoDeleteError.value = '삭제에 실패했어요. 다시 시도해주세요.'

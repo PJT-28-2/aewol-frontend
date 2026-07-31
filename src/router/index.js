@@ -115,7 +115,7 @@ const authRoutes = [
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
-    path: '/certificates/:docId',
+    path: '/certificates/:petId/:docId',
     name: 'CertificateDetail',
     component: () => import('@/views/certificate/CertificateDetailView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },

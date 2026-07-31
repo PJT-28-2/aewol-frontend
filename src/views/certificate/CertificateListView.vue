@@ -28,12 +28,12 @@ onMounted(async () => {
 
 function goToRegistrationDetail() {
   if (!certificateStore.registrationDoc) return
-  router.push(`/certificates/${certificateStore.registrationDoc.docId}`)
+  router.push(`/certificates/${certificateStore.selectedPetId}/${certificateStore.registrationDoc.docId}`)
 }
 
 // 접종증명서/진료확인서도 동물등록증 "보기"와 같은 상세 페이지로 이동
 function goToDocDetail(doc) {
-  router.push(`/certificates/${doc.docId}`)
+  router.push(`/certificates/${doc.petId}/${doc.docId}`)
 }
 
 // 동물등록증 연동 — 간편인증(카카오톡) 1회로 신청인 명의의 동물이 (여러 마리면 배열로) 조회됨.

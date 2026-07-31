@@ -88,15 +88,15 @@ export const useCertificateStore = defineStore('certificate', {
       })
     },
 
-    // GET /api/certificates/{doc_id} — 동물등록증 상세
+    // GET /api/pets/{petId}/documents/{docId} — 동물등록증 상세
     // APMS를 매번 라이브 호출하는 게 아니라, 연동 시점에 이미 DB에 저장해둔 값을 조회하는 API라는 전제
-    async fetchCertificateDetail(docId) {
+    async fetchCertificateDetail(petId, docId) {
       if (USE_MOCK_DATA) {
         this.detail = this.registrationDetails[docId] ?? null
         return this.detail
       }
       return this._withRequestState(async () => {
-        const { data } = await certificatesApi.getDetail(docId)
+        const { data } = await certificatesApi.getDetail(petId, docId)
         this.detail = data.result ?? null
         return this.detail
       })
@@ -229,7 +229,7 @@ export const useCertificateStore = defineStore('certificate', {
     },
 
     // 동물등록증 연동 해제(삭제)
-    async deleteRegistration(docId) {
+    async deleteRegistration(petId, docId) {
       if (USE_MOCK_DATA) {
         const doc = this.documents.find((d) => d.docId === docId)
         this.documents = this.documents.filter((d) => d.docId !== docId)
@@ -248,12 +248,12 @@ export const useCertificateStore = defineStore('certificate', {
 
       // TODO: 백엔드에 삭제 엔드포인트가 아직 확정되지 않아 주석 처리해둠.
       // return this._withRequestState(async () => {
-      //   await certificatesApi.deleteRegistration(docId)
+      //   await certificatesApi.deleteDocument(petId, docId)
       //   if (this.selectedPetId) await this.fetchCertificates(this.selectedPetId)
       // })
     },
 
-    // POST /api/certificates/vaccination
+    // POST /api/pets/{petId}/documents (docType=VACCINATION)
     async uploadVaccination(petId, file) {
       if (USE_MOCK_DATA) {
         const newDoc = {
@@ -274,13 +274,14 @@ export const useCertificateStore = defineStore('certificate', {
       return this._withRequestState(async () => {
         const formData = new FormData()
         formData.append('file', file)
-        const { data } = await certificatesApi.uploadVaccination(petId, formData)
+        formData.append('docType', 'VACCINATION')
+        const { data } = await certificatesApi.uploadDocument(petId, formData)
         await this.fetchCertificates(petId)
         return data.result
       })
     },
 
-    // POST /api/certificates/medical-confirmation
+    // POST /api/pets/{petId}/documents (docType=MEDICAL_CONFIRMATION)
     async uploadMedicalConfirmation(petId, file) {
       if (USE_MOCK_DATA) {
         const newDoc = {
@@ -299,7 +300,8 @@ export const useCertificateStore = defineStore('certificate', {
       return this._withRequestState(async () => {
         const formData = new FormData()
         formData.append('file', file)
-        const { data } = await certificatesApi.uploadMedicalConfirmation(petId, formData)
+        formData.append('docType', 'MEDICAL_CONFIRMATION')
+        const { data } = await certificatesApi.uploadDocument(petId, formData)
         await this.fetchCertificates(petId)
         return data.result
       })
@@ -307,7 +309,7 @@ export const useCertificateStore = defineStore('certificate', {
 
     // 접종증명서/진료확인서 삭제 — 두 타입 다 문서 배열에서 제거하는 것만 하면 되는 단순한 구조라
     // 동물등록증 해제(deleteRegistration)와 달리 하나의 액션으로 공용 처리
-    async deleteDocument(docId) {
+    async deleteDocument(petId, docId) {
       if (USE_MOCK_DATA) {
         const doc = this.documents.find((d) => d.docId === docId)
         // 업로드 시 만든 blob: objectURL은 브라우저가 알아서 회수하지 않으므로 직접 해제
@@ -323,7 +325,7 @@ export const useCertificateStore = defineStore('certificate', {
 
       // TODO: 백엔드에 삭제 엔드포인트가 아직 확정되지 않아 주석 처리해둠.
       // return this._withRequestState(async () => {
-      //   await certificatesApi.deleteDocument(docId)
+      //   await certificatesApi.deleteDocument(petId, docId)
       //   if (this.selectedPetId) await this.fetchCertificates(this.selectedPetId)
       // })
     },
