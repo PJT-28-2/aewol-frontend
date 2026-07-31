@@ -212,8 +212,9 @@ onMounted(async () => {
       <section
         class="grid grid-cols-2 gap-(--space-3) mb-(--space-5)"
       >
-        <div
-          class="bg-(--color-surface) rounded-(--radius-lg) p-(--space-5) shadow-(--shadow-sm)"
+        <router-link
+          to="/wallet"
+          class="block bg-(--color-surface) rounded-(--radius-lg) p-(--space-5) shadow-(--shadow-sm) no-underline text-inherit"
         >
           <p
             class="text-(length:--font-sm) text-(color:--color-slate-dark)"
@@ -225,7 +226,7 @@ onMounted(async () => {
           >
             {{ walletBalance.toLocaleString() }}원
           </p>
-        </div>
+        </router-link>
         <router-link
           to="/dashboard?tab=category"
           class="block bg-(--color-surface) rounded-(--radius-lg) p-(--space-5) shadow-(--shadow-sm) no-underline text-inherit"
@@ -248,10 +249,11 @@ onMounted(async () => {
             }}{{ monthlyExpense.changeRate }}%
           </p>
         </router-link>
-        <div
+        <router-link
           v-for="pet in petBreakdown"
           :key="pet.id"
-          class="bg-(--color-surface) rounded-(--radius-lg) p-(--space-5) shadow-(--shadow-sm)"
+          :to="{ path: '/wallet/history', query: { petId: pet.id } }"
+          class="block bg-(--color-surface) rounded-(--radius-lg) p-(--space-5) shadow-(--shadow-sm) no-underline text-inherit"
         >
           <p
             class="flex items-center gap-(--space-1) text-(length:--font-sm) text-(color:--color-slate-dark)"
@@ -270,7 +272,7 @@ onMounted(async () => {
           >
             {{ pet.expenseAmount.toLocaleString() }}원
           </p>
-        </div>
+        </router-link>
       </section>
 
       <!-- 펫별 지출 도넛 차트 -->

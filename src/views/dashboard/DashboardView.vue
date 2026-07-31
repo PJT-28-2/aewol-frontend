@@ -22,9 +22,8 @@ const CATEGORY_COLOR_TOKENS = {
   MEDICAL: '--color-navy',
   FOOD: '--color-olive',
   GROOMING: '--color-gold',
-  SOS: '--color-danger-dark',
   SUPPLIES: '--color-gold-dark',
-  ETC: '--color-slate-dark',
+  ETC: '--color-danger-dark',
 };
 
 // 이번 달 출금 내역을 category별로 합산한 값 (useTransactionStore가 단일 소스)
@@ -170,6 +169,13 @@ function goToCategoryHistory(categoryKey) {
   });
 }
 
+function goToPetHistory(petId) {
+  router.push({
+    path: '/wallet/history',
+    query: { petId },
+  });
+}
+
 function goBack() {
   router.back();
 }
@@ -275,14 +281,13 @@ onMounted(() => {
             v-for="item in activeItems"
             :key="item.key ?? item.id"
           >
-            <component
-              :is="activeTab === 'category' ? 'button' : 'div'"
-              :type="activeTab === 'category' ? 'button' : undefined"
+            <button
+              type="button"
               class="w-full flex items-center gap-(--space-3) bg-(--color-surface) rounded-(--radius-xl) p-(--space-4) text-left"
               @click="
                 activeTab === 'category'
                   ? goToCategoryHistory(item.key)
-                  : null
+                  : goToPetHistory(item.id)
               "
             >
               <span
@@ -325,7 +330,7 @@ onMounted(() => {
                   {{ item.detail }}
                 </p>
               </div>
-            </component>
+            </button>
           </li>
         </ul>
       </template>

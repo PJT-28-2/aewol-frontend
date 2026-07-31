@@ -10,7 +10,6 @@ import IconDogBowl from '@/components/common/icons/IconDogBowl.vue';
 import IconEtc from '@/components/common/icons/IconEtc.vue';
 import IconHospital from '@/components/common/icons/IconHospital.vue';
 import IconShowerGel from '@/components/common/icons/IconShowerGel.vue';
-import IconSos from '@/components/common/icons/IconSos.vue';
 import IconWallet from '@/components/common/icons/IconWallet.vue';
 import { CATEGORY_LABELS } from '@/mocks/transaction';
 import { usePetStore } from '@/stores/pet';
@@ -60,12 +59,6 @@ const categories = [
     label: CATEGORY_LABELS.SUPPLIES,
     icon: IconShowerGel,
     bg: 'var(--color-pastel-mint)',
-  },
-  {
-    key: 'SOS',
-    label: CATEGORY_LABELS.SOS,
-    icon: IconSos,
-    bg: 'var(--color-pastel-coral)',
   },
   {
     key: 'ETC',
