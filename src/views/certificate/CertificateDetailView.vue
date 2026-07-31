@@ -366,6 +366,14 @@ async function handlePhotoDelete() {
       </button>
     </template>
 
+    <!-- 잘못되었거나 존재하지 않는 문서 -->
+    <div
+      v-else
+      class="text-center py-(--space-8) text-(color:--color-gray-500)"
+    >
+      <p>문서를 찾을 수 없어요.</p>
+    </div>
+
     <!-- PDF 저장 완료 모달 -->
     <AppModal
       v-model="showSavedModal"

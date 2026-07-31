@@ -47,7 +47,6 @@ const showMatchModal = ref(false)
 
 const authForm = ref({ userName: '', birthDate: '', phoneNo: '' })
 const authError = ref('')
-const isRequesting = ref(false)
 
 const candidates = ref([])
 const selectedCandidatePetIds = ref([])
@@ -77,7 +76,6 @@ async function submitAuth() {
   authError.value = ''
   showAuthModal.value = false
   showWaitingModal.value = true
-  isRequesting.value = true
   try {
     candidates.value = await certificateStore.requestApmsSimpleAuth(authForm.value)
     selectedCandidatePetIds.value = candidates.value.map((c) => c.petId)
@@ -87,8 +85,6 @@ async function submitAuth() {
     showWaitingModal.value = false
     authError.value = '인증에 실패했어요. 다시 시도해주세요.'
     showAuthModal.value = true
-  } finally {
-    isRequesting.value = false
   }
 }
 
@@ -425,11 +421,13 @@ async function handleMedicalSelect(event) {
           v-model="authForm.birthDate"
           label="생년월일"
           placeholder="1990.01.01"
+          inputmode="numeric"
         />
         <AppInput
           v-model="authForm.phoneNo"
           label="전화번호"
           placeholder="010-1234-5678"
+          inputmode="tel"
         />
       </div>
       <p
