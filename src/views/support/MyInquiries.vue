@@ -37,6 +37,10 @@ function formatDate(dateString) {
   if (!dateString) return '';
   return dateString.slice(0, 10).replaceAll('-', '.');
 }
+
+function goToInquiryDetail(inquiryId) {
+  router.push({ name: 'InquiryDetail', params: { inquiryId } });
+}
 </script>
 
 <template>
@@ -76,8 +80,10 @@ function formatDate(dateString) {
         :key="inquiry.inquiryId"
         class="rounded-2xl bg-(--color-surface) p-4"
       >
-        <!-- TODO: 문의 상세 화면(RF-CM 목업 없음) 라우트가 생기면 여기서 이동 처리 -->
-        <button class="w-full flex items-center justify-between gap-3">
+        <button
+          class="w-full flex items-center justify-between gap-3"
+          @click="goToInquiryDetail(inquiry.inquiryId)"
+        >
           <div class="flex-1 text-left">
             <span
               class="inline-block px-2.5 py-1 rounded-full text-(length:--font-xs) font-semibold mb-2"

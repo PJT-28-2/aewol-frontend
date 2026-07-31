@@ -33,6 +33,32 @@ export const MOCK_ACCOUNTS = [
     balance: 482600,
     isPrimary: true,
   },
+  {
+    accountId: 2,
+    bankCode: 'TOSS',
+    accountNumberMasked: '********5678',
+    balance: 320000,
+    isPrimary: false,
+  },
+];
+
+export const MOCK_RECURRING_PAYMENTS = [
+  {
+    id: 1,
+    merchantName: '강아지 사료 정기배송',
+    amount: 32000,
+    dayOfMonth: 15,
+    nextPaymentLabel: '다음 8/15',
+    category: 'FOOD',
+  },
+  {
+    id: 2,
+    merchantName: '펫보험료',
+    amount: 26000,
+    dayOfMonth: 1,
+    nextPaymentLabel: '다음 8/1',
+    category: 'MEDICAL',
+  },
 ];
 
 // 카테고리 목록 — 1:1 문의하기 카테고리와 동일 + 검색화면 전용 '전체' 필터
@@ -163,4 +189,33 @@ export const MOCK_REGISTRATION_DETAIL = {
     regType: '소유',
     lastSyncedAt: '2026-07-15',
   },
+  {
+    inquiryId: 1,
+    category: '지갑·버킷',
+    title: '정기결제 취소는 어디서 하나요?',
+    content: '매달 자동으로 나가는 사료 정기결제를 취소하고 싶은데 어디서 할 수 있나요?',
+    status: 'ANSWERED',
+    createdAt: '2026-07-15',
+  },
+  {
+    inquiryId: 2,
+    category: '지갑·버킷',
+    title: 'SOS 포켓 결제가 안 돼요',
+    content: 'SOS 포켓 잔액이 충분한데도 결제 시 실패했다는 메시지가 떠요.',
+    status: 'ANSWERED',
+    createdAt: '2026-07-12',
+  },
+  {
+    inquiryId: 3,
+    category: '계좌연동',
+    title: '계좌 연동이 계속 실패해요',
+    content: 'KB국민은행 계좌를 연동하려는데 1원 인증 단계에서 계속 실패로 떠요.',
+    status: 'PENDING',
+    createdAt: '2026-07-17',
+  },
+];
+
+export const MOCK_INQUIRY_ANSWERS = {
+  1: '마이페이지 > 정기 결제 관리에서 해당 항목의 취소 버튼을 눌러주시면 다음 결제일부터 자동으로 중단돼요.',
+  2: 'SOS 포켓은 등록된 카드가 있어야 결제가 가능해요. 마이페이지 > 계좌 관리에서 결제 수단이 연결되어 있는지 확인해주세요. 계속 실패한다면 화면 캡처와 함께 다시 문의해주세요.',
 };

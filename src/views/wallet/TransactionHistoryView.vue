@@ -1,6 +1,6 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { computed, onMounted, ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import BottomSheet from '@/components/common/BottomSheet.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import TransactionList from '@/components/common/TransactionList.vue';
@@ -8,11 +8,65 @@ import { formatYearMonth } from '@/utils/date';
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue';
 import IconCheck from '@/components/common/icons/IconCheck.vue';
 import IconChevronDown from '@/components/common/icons/IconChevronDown.vue';
+import IconClose from '@/components/common/icons/IconClose.vue';
+import { CATEGORY_LABELS } from '@/mocks/transaction';
+import { usePetStore } from '@/stores/pet';
+import { useTransactionStore } from '@/stores/transaction';
 
+const route = useRoute();
 const router = useRouter();
+const transactionStore = useTransactionStore();
+const petStore = usePetStore();
+
+// 이번 달 지출 화면 등 다른 화면에서 카테고리를 지정해 들어올 수 있다
+const categoryFilter = ref(
+  typeof route.query.category === 'string' &&
+    route.query.category in CATEGORY_LABELS
+    ? route.query.category
+    : null,
+);
+const categoryFilterLabel = computed(
+  () => CATEGORY_LABELS[categoryFilter.value] ?? '',
+);
+
+function clearCategoryFilter() {
+  categoryFilter.value = null;
+  const rest = { ...route.query };
+  delete rest.category;
+  router.replace({ query: rest });
+}
+
+// 이번 달 지출 화면 "반려동물별" 탭에서 반려동물을 지정해 들어올 수 있다
+function resolvePetFilterFromQuery() {
+  return typeof route.query.petId === 'string' &&
+    petStore.pets.some((pet) => String(pet.id) === route.query.petId)
+    ? Number(route.query.petId)
+    : null;
+}
+
+const petFilter = ref(resolvePetFilterFromQuery());
+const petFilterLabel = computed(
+  () => petStore.pets.find((pet) => pet.id === petFilter.value)?.name ?? '',
+);
+
+// /wallet/history는 쿼리만 바뀌어도 라우터가 컴포넌트를 재마운트하지 않으므로,
+// 다른 반려동물 카드를 눌러 petId만 바뀌어 들어와도 필터가 갱신되도록 감지한다
+watch(
+  () => route.query.petId,
+  () => {
+    petFilter.value = resolvePetFilterFromQuery();
+  },
+);
+
+function clearPetFilter() {
+  petFilter.value = null;
+  const rest = { ...route.query };
+  delete rest.petId;
+  router.replace({ query: rest });
+}
 
 // TODO: 백엔드 API 연동 후 mock 데이터 제거하고 실제 fetch로 교체
-const transactions = ref([]);
+const transactions = computed(() => transactionStore.transactions);
 const isLoading = ref(true);
 const isError = ref(false);
 
@@ -71,111 +125,30 @@ function selectMonth(option) {
 }
 
 const filteredTransactions = computed(() => {
-  return transactions.value.filter((tx) => {
-    const [txYear, txMonth] = tx.date.split('-').map(Number);
-    const matchesMonth =
-      txYear === activeMonth.value.year &&
-      txMonth === activeMonth.value.month;
-    const matchesType =
-      activeFilter.value === 'all' ||
-      tx.type === activeFilter.value;
-    return matchesMonth && matchesType;
-  });
+  return transactions.value
+    .filter((tx) => {
+      const [txYear, txMonth] = tx.date.split('-').map(Number);
+      const matchesMonth =
+        txYear === activeMonth.value.year &&
+        txMonth === activeMonth.value.month;
+      const matchesType =
+        activeFilter.value === 'all' ||
+        tx.type === activeFilter.value;
+      const matchesCategory =
+        !categoryFilter.value || tx.category === categoryFilter.value;
+      const matchesPet =
+        !petFilter.value || tx.petId === petFilter.value;
+      return matchesMonth && matchesType && matchesCategory && matchesPet;
+    })
+    .sort((a, b) => `${b.date}${b.time}`.localeCompare(`${a.date}${a.time}`));
 });
 
 function goBack() {
   router.back();
 }
 
-onMounted(async () => {
-  try {
-    transactions.value = [
-      {
-        id: 1,
-        date: '2026-07-18',
-        title: '24시 우리동물병원',
-        subtitle: '병원비 · 소로 진료',
-        amount: -42000,
-        type: 'withdraw',
-        petId: 1,
-        petName: '소로',
-      },
-      {
-        id: 2,
-        date: '2026-07-17',
-        title: '펫사료마트',
-        subtitle: '사료·간식 · LLM 분류',
-        amount: -31200,
-        type: 'withdraw',
-        petId: null,
-        petName: null,
-      },
-      {
-        id: 3,
-        date: '2026-07-17',
-        title: '엄마 · 충전',
-        subtitle: '펫지갑에 100,000원 충전',
-        amount: 100000,
-        type: 'charge',
-        petId: null,
-        petName: null,
-      },
-      {
-        id: 4,
-        date: '2026-07-15',
-        title: '미미미용실',
-        subtitle: '미용비 · 나비 미용',
-        amount: -38000,
-        type: 'withdraw',
-        petId: 2,
-        petName: '나비',
-      },
-      {
-        id: 5,
-        date: '2026-07-12',
-        title: '24시 제주동물병원',
-        subtitle: 'SOS포켓 · 응급진료',
-        amount: -150000,
-        type: 'withdraw',
-        petId: null,
-        petName: null,
-      },
-      {
-        id: 6,
-        date: '2026-07-10',
-        title: '펫프렌즈',
-        subtitle: '위생용품 · 자동분류',
-        amount: -18900,
-        type: 'withdraw',
-        petId: null,
-        petName: null,
-      },
-      {
-        id: 7,
-        date: '2026-06-20',
-        title: '24시 우리동물병원',
-        subtitle: '병원비 · 나비 진료',
-        amount: -25000,
-        type: 'withdraw',
-        petId: 2,
-        petName: '나비',
-      },
-      {
-        id: 8,
-        date: '2026-06-05',
-        title: '아빠 · 충전',
-        subtitle: '펫지갑에 50,000원 충전',
-        amount: 50000,
-        type: 'charge',
-        petId: null,
-        petName: null,
-      },
-    ];
-  } catch {
-    isError.value = true;
-  } finally {
-    isLoading.value = false;
-  }
+onMounted(() => {
+  isLoading.value = false;
 });
 </script>
 
@@ -244,6 +217,31 @@ onMounted(async () => {
           />
         </button>
       </div>
+
+      <button
+        v-if="categoryFilter"
+        type="button"
+        class="inline-flex items-center gap-(--space-1) h-(--space-7) px-(--space-3) rounded-full bg-(--color-navy) text-(color:--color-white) text-(length:--font-sm) font-semibold mb-(--space-4)"
+        @click="clearCategoryFilter"
+      >
+        {{ categoryFilterLabel }} 필터 적용됨
+        <IconClose
+          size="14"
+          color="var(--color-white)"
+        />
+      </button>
+      <button
+        v-else-if="petFilter"
+        type="button"
+        class="inline-flex items-center gap-(--space-1) h-(--space-7) px-(--space-3) rounded-full bg-(--color-navy) text-(color:--color-white) text-(length:--font-sm) font-semibold mb-(--space-4)"
+        @click="clearPetFilter"
+      >
+        {{ petFilterLabel }} 필터 적용됨
+        <IconClose
+          size="14"
+          color="var(--color-white)"
+        />
+      </button>
 
       <TransactionList :transactions="filteredTransactions" />
     </template>

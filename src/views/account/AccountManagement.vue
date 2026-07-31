@@ -6,6 +6,7 @@ import { getBankMeta } from '@/utils/bankMeta';
 import AccountSummaryCard from '@/components/common/AccountSummaryCard.vue';
 import BottomSheet from '@/components/common/BottomSheet.vue';
 import IconLock from '@/components/common/icons/IconLock.vue';
+import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue';
 import petDeleteWarning from '@/assets/images/pet-delete-warning.png';
 import petSuccess from '@/assets/images/pet-success.png';
 
@@ -98,7 +99,15 @@ function goToLink() {
       </button>
     </div>
 
-    <template v-else>
+       <template v-else>
+      <button
+        class="-ml-(--space-2) p-(--space-2) flex items-center justify-center mb-(--space-3)"
+        aria-label="뒤로 가기"
+        @click="router.back()"
+      >
+        <IconArrowLeft :size="20" color="var(--color-gray-700)" />
+      </button>
+
       <header class="mb-7">
         <h1 class="text-(length:--font-2xl) font-(--font-bold) text-(color:--color-navy)">계좌 관리</h1>
         <p class="text-(length:--font-md) text-(color:--color-gray-600) mt-(--space-1)">CODEF로 연동된 계좌를 확인해요</p>

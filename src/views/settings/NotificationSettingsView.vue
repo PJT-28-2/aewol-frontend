@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import BottomNavBar from '@/components/common/BottomNavBar.vue'
 import IconChevronLeft from '@/components/common/icons/IconChevronLeft.vue'
 
 const router = useRouter()
@@ -166,4 +167,6 @@ const handleBack = () => {
       </div>
     </section>
   </main>
+
+  <BottomNavBar />
 </template>

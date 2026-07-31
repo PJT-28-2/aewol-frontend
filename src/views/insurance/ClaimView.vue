@@ -8,6 +8,7 @@ import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 import OcrResultCard from '@/components/insurance/OcrResultCard.vue'
 import ClaimDraftCard from '@/components/insurance/ClaimDraftCard.vue'
 import ClaimChecklist from '@/components/insurance/ClaimChecklist.vue'
+import { mockOcrItems } from '@/mocks/insurance'
 
 const router = useRouter()
 const route = useRoute()
@@ -18,13 +19,8 @@ const step = ref(1) // 1: 서류 작성, 2: OCR 확인, 3: 초안
 const receiptFile = ref(null)
 const receiptFileName = ref('')
 
-// OCR 추출 결과 (실제 연동 전 임시 데이터)
-const ocrItems = ref([
-  { key: 'date',      label: '진료일',    value: '2026.07.10',         unit: '' },
-  { key: 'hospital',  label: '병원명',    value: '24시 제주동물의료센터', unit: '' },
-  { key: 'treatment', label: '진료 항목', value: '슬개골 탈구 치료',    unit: '' },
-  { key: 'fee',       label: '진료비',    value: '168,000원',           unit: '원' },
-])
+const ocrItems = ref(mockOcrItems.map((item) => ({ ...item })))
+
 const handleFileSelect = (event) => {
   const file = event.target.files[0]
   event.target.value = ''

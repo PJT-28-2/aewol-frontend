@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import PasswordInput from '@/components/common/PasswordInput.vue'
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 import loginIllustration from '@/assets/images/auth/login-illustration.png'
 import aewolLogo from '@/assets/images/auth/aewol-logo.png'
@@ -284,16 +285,15 @@ const handleKakaoLogin = () => {
         >
           비밀번호
         </label>
-        <input
+        <PasswordInput
           id="password"
           v-model="password"
-          class="h-[46px] w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-(length:--auth-font-sm) text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
-          type="password"
+          input-class="h-[46px] w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-(length:--auth-font-sm) text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
           autocomplete="current-password"
           placeholder="8자 이상 입력해주세요"
           minlength="8"
           required
-        >
+        />
         <button
           class="mt-6 flex h-[52px] w-full items-center justify-center rounded-(--radius-xl) bg-(--color-gold) text-[14.5px] leading-[1.3] font-(--font-bold) text-(color:--color-navy) disabled:cursor-wait disabled:opacity-65"
           type="submit"

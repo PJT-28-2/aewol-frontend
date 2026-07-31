@@ -21,6 +21,11 @@ const publicRoutes = [
     component: () => import('@/views/auth/SignupView.vue'),
   },
   {
+    path: '/signup/complete',
+    name: 'SignupComplete',
+    component: () => import('@/views/auth/SignupCompleteView.vue'),
+  },
+  {
     path: '/signup/verify',
     name: 'SignupVerify',
     component: () => import('@/views/auth/SignupVerifyView.vue'),
@@ -133,9 +138,39 @@ const authRoutes = [
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
+    path: '/wallet/charge/complete',
+    name: 'ChargeComplete',
+    component: () => import('@/views/wallet/ChargeCompleteView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
+    path: '/wallet/charge/account-select',
+    name: 'ChargeAccountSelect',
+    component: () => import('@/views/wallet/ChargeAccountSelectView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
     path: '/wallet/transfer',
     name: 'Transfer',
     component: () => import('@/views/wallet/TransferView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
+    path: '/wallet/transfer/account-select',
+    name: 'TransferAccountSelect',
+    component: () => import('@/views/wallet/TransferAccountSelectView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
+    path: '/wallet/transfer/confirm',
+    name: 'TransferConfirm',
+    component: () => import('@/views/wallet/TransferConfirmView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
+    path: '/wallet/transfer/complete',
+    name: 'TransferComplete',
+    component: () => import('@/views/wallet/TransferCompleteView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
@@ -172,6 +207,30 @@ const authRoutes = [
     path: '/payment/recurring',
     name: 'Recurring',
     component: () => import('@/views/payment/RecurringView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
+    path: '/payment/recurring/register',
+    name: 'RecurringRegister',
+    component: () => import('@/views/payment/RecurringRegisterView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
+    path: '/payment/recurring/register/complete',
+    name: 'RecurringRegisterComplete',
+    component: () => import('@/views/payment/RecurringRegisterCompleteView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
+    path: '/payment/recurring/:id/cancel',
+    name: 'RecurringCancel',
+    component: () => import('@/views/payment/RecurringCancelView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
+    path: '/payment/recurring/cancel/complete',
+    name: 'RecurringCancelComplete',
+    component: () => import('@/views/payment/RecurringCancelCompleteView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
@@ -320,6 +379,12 @@ const authRoutes = [
     meta: { requiresAuth: true, step: 'give' },
   },
   {
+    path: '/donation/withdraw',
+    name: 'DonationWithdraw',
+    component: () => import('@/views/donation/DonationWithdrawView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/donation/confirm',
     name: 'DonationConfirm',
     component: () => import('@/views/donation/DonationView.vue'),
@@ -344,10 +409,16 @@ const authRoutes = [
     meta: { requiresAuth: true, step: 'settings' },
   },
   {
-    path: '/support',
-    name: 'Support',
-    component: () => import('@/views/support/SupportView.vue'),
+    path: '/support-programs',
+    name: 'SupportPrograms',
+    component: () => import('@/views/support-programs/SupportProgramsView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
+    path: '/support-programs/:programId',
+    name: 'SupportProgramDetail',
+    component: () => import('@/views/support-programs/SupportProgramsView.vue'),
+    meta: { requiresAuth: true },
   },
   {
     path: '/support',
@@ -374,22 +445,22 @@ const authRoutes = [
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
+    path: '/support/inquiries/:inquiryId',
+    name: 'InquiryDetail',
+    component: () => import('@/views/support/InquiryDetail.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+  },
+  {
     path: '/support/inquiry/complete',
     name: 'InquirySubmitted',
     component: () => import('@/views/support/InquirySubmitted.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
-    path: '/support/:programId',
-    name: 'SupportDetail',
-    component: () => import('@/views/support/SupportView.vue'),
-    meta: { requiresAuth: true },
-  },
-  {
     path: '/emergency',
     name: 'Emergency',
     component: () => import('@/views/emergency/EmergencyView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true },
   },
   {
     path: '/settings',

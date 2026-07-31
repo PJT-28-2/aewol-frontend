@@ -11,81 +11,14 @@ import IconSavings from '@/components/common/icons/IconSavings.vue';
 import IconSearch from '@/components/common/icons/IconSearch.vue';
 import IconRecurring from '@/components/common/icons/IconRecurring.vue';
 import IconChevronDown from '@/components/common/icons/IconChevronDown.vue';
+import { mockWalletBalance } from '@/mocks/transaction';
+import { useTransactionStore } from '@/stores/transaction';
+
+const transactionStore = useTransactionStore();
 
 // TODO: 백엔드 API 연동 후 mock 데이터 제거하고 실제 fetch로 교체
-const walletBalance = ref(482600);
-const transactions = ref([
-  {
-    id: 9,
-    date: '2026-07-18',
-    title: '24시 우리동물병원',
-    subtitle: '병원비 · 소로 진료',
-    amount: -42000,
-    type: 'withdraw',
-    petId: 1,
-    petName: '소로',
-  },
-  {
-    id: 10,
-    date: '2026-07-17',
-    title: '펫사료마트',
-    subtitle: '사료·간식 · LLM 분류',
-    amount: -31200,
-    type: 'withdraw',
-    petId: null,
-    petName: null,
-  },
-  {
-    id: 11,
-    date: '2026-07-17',
-    title: '엄마 · 충전',
-    subtitle: '펫지갑에 100,000원 충전',
-    amount: 100000,
-    type: 'charge',
-    petId: null,
-    petName: null,
-  },
-  {
-    id: 12,
-    date: '2026-07-15',
-    title: '미미미용실',
-    subtitle: '미용비 · 나비 미용',
-    amount: -38000,
-    type: 'withdraw',
-    petId: 2,
-    petName: '나비',
-  },
-  {
-    id: 13,
-    date: '2026-06-20',
-    title: '24시 우리동물병원',
-    subtitle: '병원비 · 나비 진료',
-    amount: -25000,
-    type: 'withdraw',
-    petId: 2,
-    petName: '나비',
-  },
-  {
-    id: 14,
-    date: '2026-06-05',
-    title: '아빠 · 충전',
-    subtitle: '펫지갑에 50,000원 충전',
-    amount: 50000,
-    type: 'charge',
-    petId: null,
-    petName: null,
-  },
-  {
-    id: 15,
-    date: '2026-05-12',
-    title: '펫사료마트',
-    subtitle: '사료·간식 · LLM 분류',
-    amount: -28000,
-    type: 'withdraw',
-    petId: null,
-    petName: null,
-  },
-]);
+const walletBalance = ref(mockWalletBalance);
+const transactions = computed(() => transactionStore.transactions);
 
 const isLoading = ref(true);
 
@@ -151,21 +84,23 @@ const filters = [
 const activeFilter = ref('all');
 
 const filteredTransactions = computed(() => {
-  return transactions.value.filter((tx) => {
-    const [txYear, txMonth] = tx.date.split('-').map(Number);
-    const matchesMonth =
-      txYear === activeMonth.value.year &&
-      txMonth === activeMonth.value.month;
-    const matchesType =
-      activeFilter.value === 'all' || tx.type === activeFilter.value;
-    return matchesMonth && matchesType;
-  });
+  return transactions.value
+    .filter((tx) => {
+      const [txYear, txMonth] = tx.date.split('-').map(Number);
+      const matchesMonth =
+        txYear === activeMonth.value.year &&
+        txMonth === activeMonth.value.month;
+      const matchesType =
+        activeFilter.value === 'all' || tx.type === activeFilter.value;
+      return matchesMonth && matchesType;
+    })
+    .sort((a, b) => `${b.date}${b.time}`.localeCompare(`${a.date}${a.time}`));
 });
 
 const router = useRouter();
 
 function handleCharge() {
-  router.push('/wallet/charge');
+  router.push({ path: '/wallet/charge', query: { from: 'wallet' } });
 }
 function handleTransfer() {
   router.push('/wallet/transfer');
@@ -219,7 +154,7 @@ onMounted(async () => {
         class="flex-1 h-[44px] rounded-md bg-(--color-gray-100) text-(color:--color-slate-dark) text-(length:--font-base) font-semibold"
         @click="handleTransfer"
       >
-        이체
+        송금
       </button>
     </div>
 

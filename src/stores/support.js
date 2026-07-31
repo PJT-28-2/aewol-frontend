@@ -1,6 +1,13 @@
 import { defineStore } from 'pinia';
 import { getFaqs, getFaqDetail, submitInquiry, getMyInquiries, getInquiryDetail } from '@/api/support';
-import { MOCK_FAQS, MOCK_FAQ_ANSWERS, MOCK_FAQ_RELATED, MOCK_INQUIRIES, USE_MOCK_DATA } from '@/utils/mockData';
+import {
+  MOCK_FAQS,
+  MOCK_FAQ_ANSWERS,
+  MOCK_FAQ_RELATED,
+  MOCK_INQUIRIES,
+  MOCK_INQUIRY_ANSWERS,
+  USE_MOCK_DATA,
+} from '@/utils/mockData';
 
 export const useSupportStore = defineStore('support', {
   state: () => ({
@@ -98,7 +105,14 @@ export const useSupportStore = defineStore('support', {
         };
         this.lastSubmittedInquiry = mockResult;
         this.myInquiries = [
-          { inquiryId: mockResult.inquiryId, title, status: 'PENDING', createdAt: now.toISOString() },
+          {
+            inquiryId: mockResult.inquiryId,
+            category,
+            title,
+            content,
+            status: 'PENDING',
+            createdAt: now.toISOString(),
+          },
           ...this.myInquiries,
         ];
         return mockResult;
@@ -135,7 +149,23 @@ export const useSupportStore = defineStore('support', {
       }
     },
 
+    /**
+     * 문의 상세 화면 진입 시 호출.
+     * ⚠️ mock 모드에서는 목록에 없는 inquiryId(새로고침으로 seed가 초기화된 경우 등)면 null을 반환해요.
+     */
     async fetchInquiryDetail(inquiryId) {
+      const numericId = Number(inquiryId);
+
+      if (USE_MOCK_DATA) {
+        this._ensureMockInquiriesSeeded();
+        const inquiry = this.myInquiries.find((i) => i.inquiryId === numericId);
+        if (!inquiry) return null;
+        return {
+          ...inquiry,
+          answer: inquiry.status === 'ANSWERED' ? MOCK_INQUIRY_ANSWERS[numericId] ?? null : null,
+        };
+      }
+
       const { data } = await getInquiryDetail(inquiryId);
       return data.result;
     },

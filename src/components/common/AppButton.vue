@@ -1,4 +1,5 @@
 <script setup>
+import { computed } from 'vue'
 import LoadingSpinner from './LoadingSpinner.vue'
 
 const props = defineProps({
@@ -6,12 +7,20 @@ const props = defineProps({
     type: String,
     default: 'primary',
     validator: (value) =>
-      ['primary', 'secondary', 'danger', 'ghost', 'navy'].includes(value),
+      [
+        'primary',
+        'secondary',
+        'danger',
+        'ghost',
+        'navy',
+        'olive',
+        'olive-outline',
+      ].includes(value),
   },
   size: {
     type: String,
     default: 'md',
-    validator: (value) => ['sm', 'md', 'lg'].includes(value),
+    validator: (value) => ['xs', 'sm', 'md', 'lg'].includes(value),
   },
   loading: {
     type: Boolean,
@@ -25,6 +34,15 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  pill: {
+    type: Boolean,
+    default: false,
+  },
+  type: {
+    type: String,
+    default: 'button',
+    validator: (value) => ['button', 'submit', 'reset'].includes(value),
+  },
 })
 
 const variantClasses = {
@@ -34,28 +52,47 @@ const variantClasses = {
   danger: 'bg-(--color-danger-strong) text-(color:--color-white) hover:opacity-90',
   ghost: 'bg-transparent text-(color:--color-navy) hover:bg-(--color-gray-100)',
   navy: 'bg-(--color-navy) text-(color:--color-white) hover:opacity-90',
+  olive: 'bg-(--color-olive) text-(color:--color-white) hover:opacity-90',
+  'olive-outline':
+    'bg-(--color-white) text-(color:--color-olive) border border-(--color-olive) hover:opacity-90',
 }
 
 const sizeClasses = {
+  xs: 'h-(--support-action-height) min-w-(--support-action-width) px-(--space-2) text-(length:--font-xs)',
   sm: 'h-(--space-7) px-(--space-3) text-(length:--font-sm)',
   md: 'h-(--space-8) px-(--space-5) text-(length:--font-md)',
   lg: 'h-(--control-height-lg) px-(--space-6) text-(length:--font-base)',
 }
 
+const radiusClasses = {
+  xs: 'rounded-(--radius-md)',
+  sm: 'rounded-(--radius-xl)',
+  md: 'rounded-(--radius-xl)',
+  lg: 'rounded-(--radius-xl)',
+}
+
+const radiusClass = computed(() =>
+  props.pill ? 'rounded-(--radius-full)' : radiusClasses[props.size],
+)
+
 const spinnerColor = ['secondary', 'ghost', 'primary'].includes(props.variant)
   ? 'navy'
-  : 'white'
+  : props.variant === 'olive-outline'
+    ? 'olive'
+    : 'white'
 </script>
 
 <template>
   <button
-    class="inline-flex items-center justify-center gap-(--space-2) rounded-(--radius-xl) font-semibold cursor-pointer transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+    class="inline-flex items-center justify-center gap-(--space-2) font-semibold cursor-pointer transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
     :class="[
       variantClasses[variant],
       sizeClasses[size],
+      radiusClass,
       block ? 'flex w-full' : '',
       loading ? 'pointer-events-none' : '',
     ]"
+    :type="type"
     :disabled="disabled || loading"
     :aria-busy="loading"
   >
