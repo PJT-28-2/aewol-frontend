@@ -1,6 +1,10 @@
 <script setup>
 import { ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
+import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue';
 import IconUser from '@/components/common/icons/IconUser.vue';
+
+const router = useRouter();
 
 // TODO: 백엔드 API 연동 후 mock 데이터 제거하고 실제 fetch로 교체
 const groupPurchases = ref([
@@ -97,6 +101,15 @@ const filteredGroupPurchases = computed(() => {
   <div
     class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+88px)] bg-(--color-bg) min-h-screen"
   >
+    <button
+      type="button"
+      class="mb-(--space-4) text-(color:--color-navy)"
+      aria-label="뒤로가기"
+      @click="router.back()"
+    >
+      <IconArrowLeft :size="24" />
+    </button>
+
     <!-- 헤더 -->
     <header class="flex items-start justify-between mb-(--space-5)">
       <div>

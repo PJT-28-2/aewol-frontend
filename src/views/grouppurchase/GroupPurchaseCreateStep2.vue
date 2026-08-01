@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useRouter } from 'vue-router';
+import AppButton from '@/components/common/AppButton.vue';
 import BottomSheet from '@/components/common/BottomSheet.vue';
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue';
 import IconChevronDown from '@/components/common/icons/IconChevronDown.vue';
@@ -120,7 +121,7 @@ const isFormValid = computed(
 
 const router = useRouter();
 function goToPrevStep() {
-  router.push('/group-purchase/create');
+  router.push('/group-purchase/create/step1');
 }
 function goToNextStep() {
   router.push('/group-purchase/create/step3');
@@ -359,21 +360,23 @@ function goToNextStep() {
 
     <!-- 이전 / 다음 -->
     <div class="flex gap-(--space-3)">
-      <button
-        type="button"
-        class="flex-1 h-[52px] rounded-2xl bg-(--color-white) border-[1.5px] border-(--color-border) text-(length:--font-sm) font-bold text-(color:--color-slate-dark)"
+      <AppButton
+        variant="secondary"
+        size="lg"
+        class="flex-1"
         @click="goToPrevStep"
       >
         이전
-      </button>
-      <button
-        type="button"
-        class="flex-1 h-[52px] rounded-2xl bg-(--color-navy) text-(color:--color-white) text-(length:--font-md) font-bold disabled:opacity-40"
+      </AppButton>
+      <AppButton
+        variant="navy"
+        size="lg"
+        class="flex-1"
         :disabled="!isFormValid"
         @click="goToNextStep"
       >
         다음
-      </button>
+      </AppButton>
     </div>
   </div>
 </template>

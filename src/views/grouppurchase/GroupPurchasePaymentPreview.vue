@@ -7,6 +7,7 @@ import IconWarning from '@/components/common/icons/IconWarning.vue';
 import BottomSheet from '@/components/common/BottomSheet.vue';
 import AppButton from '@/components/common/AppButton.vue';
 import PinAuthSheet from '@/components/common/PinAuthSheet.vue';
+import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -162,9 +163,8 @@ function handlePayment() {
   router.push(`/group-purchase/${route.params.gpId}/status`);
 }
 
-// 충전 페이지 라우팅은 아직 미구현 — 버튼만 배치
 function handleCharge() {
-  // TODO: /wallet/charge 라우팅 연동 예정
+  router.push('/wallet/charge');
 }
 
 // 송금 비밀번호 인증 바텀시트
@@ -178,6 +178,15 @@ const isPinSheetOpen = ref(false);
   <div
     class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+88px)] bg-(--color-bg) min-h-screen"
   >
+    <button
+      type="button"
+      class="mb-(--space-4) text-(color:--color-navy)"
+      aria-label="뒤로가기"
+      @click="router.back()"
+    >
+      <IconArrowLeft :size="24" />
+    </button>
+
     <!-- 헤더 -->
     <h1
       class="text-(length:--font-xl) font-bold text-(color:--color-navy) mb-(--space-5)"
@@ -197,7 +206,11 @@ const isPinSheetOpen = ref(false);
           >
             배송지
           </span>
-          <AppButton variant="ghost" size="sm" @click="handleChangeAddress">
+          <AppButton
+            variant="ghost"
+            size="sm"
+            @click="handleChangeAddress"
+          >
             변경
           </AppButton>
         </div>
@@ -222,7 +235,11 @@ const isPinSheetOpen = ref(false);
         >
           등록된 배송지가 없어요
         </p>
-        <AppButton variant="secondary" block @click="handleChangeAddress">
+        <AppButton
+          variant="secondary"
+          block
+          @click="handleChangeAddress"
+        >
           + 배송지 추가하기
         </AppButton>
       </template>
@@ -270,7 +287,10 @@ const isPinSheetOpen = ref(false);
         <span
           class="inline-flex items-center justify-center w-10 h-6 rounded-(--radius-sm) bg-(--color-navy)"
         >
-          <IconWallet :size="16" color="var(--color-white)" />
+          <IconWallet
+            :size="16"
+            color="var(--color-white)"
+          />
         </span>
         <p
           class="flex-1 text-(length:--font-md) font-bold text-(color:--color-navy)"
@@ -297,7 +317,10 @@ const isPinSheetOpen = ref(false);
         <p
           class="flex items-center gap-(--space-1) text-(length:--font-sm) font-bold text-(color:--color-danger-border)"
         >
-          <IconWarning :size="14" color="var(--color-danger-border)" />
+          <IconWarning
+            :size="14"
+            color="var(--color-danger-border)"
+          />
           잔액이 부족해요
         </p>
         <p
@@ -309,7 +332,10 @@ const isPinSheetOpen = ref(false);
     </section>
 
     <!-- 결제 금액: 잔액부족 상태에서는 상세 내역 없이 총액만 표시 -->
-    <section v-if="isBalanceInsufficient" class="mb-(--space-4)">
+    <section
+      v-if="isBalanceInsufficient"
+      class="mb-(--space-4)"
+    >
       <div class="flex items-center justify-between">
         <span
           class="text-(length:--font-sm) font-semibold text-(color:--color-slate-dark)"
@@ -323,7 +349,10 @@ const isPinSheetOpen = ref(false);
         </span>
       </div>
     </section>
-    <section v-else class="mb-(--space-4)">
+    <section
+      v-else
+      class="mb-(--space-4)"
+    >
       <h2
         class="text-(length:--font-sm) font-semibold text-(color:--color-slate-dark) mb-(--space-3)"
       >
@@ -333,9 +362,7 @@ const isPinSheetOpen = ref(false);
         class="flex items-center justify-between text-(length:--font-sm) text-(color:--color-slate-dark) mb-(--space-2)"
       >
         <span>상품 금액</span>
-        <span class="text-(color:--color-navy)"
-          >{{ productAmount.toLocaleString() }}원</span
-        >
+        <span class="text-(color:--color-navy)">{{ productAmount.toLocaleString() }}원</span>
       </div>
       <div
         class="flex items-center justify-between text-(length:--font-sm) text-(color:--color-gold) mb-(--space-3)"
@@ -348,8 +375,7 @@ const isPinSheetOpen = ref(false);
       >
         <span
           class="text-(length:--font-base) font-bold text-(color:--color-navy)"
-          >총 결제금액</span
-        >
+        >총 결제금액</span>
         <span
           class="text-(length:--font-lg) font-bold text-(color:--color-navy)"
         >
@@ -379,16 +405,13 @@ const isPinSheetOpen = ref(false);
     </AppButton>
 
     <!-- 결제하기 버튼: 배송지 미등록 시 비활성화 -->
-    <button
+    <AppButton
       v-else
-      type="button"
+      variant="navy"
+      size="lg"
+      block
       :disabled="!shippingAddress"
-      class="fixed bottom-[calc(var(--bottom-nav-height)+var(--space-4))] left-(--space-4) right-(--space-4) flex items-center justify-center p-(--space-4) rounded-(--radius-md) text-(length:--font-base) font-bold shadow-(--shadow-md)"
-      :class="
-        shippingAddress
-          ? 'bg-(--color-navy) text-(color:--color-white)'
-          : 'bg-(--color-border) text-(color:--color-slate-muted) cursor-not-allowed'
-      "
+      class="fixed bottom-[calc(var(--bottom-nav-height)+var(--space-4))] left-(--space-4) right-(--space-4) shadow-(--shadow-md)"
       @click="isPinSheetOpen = true"
     >
       {{
@@ -396,10 +419,13 @@ const isPinSheetOpen = ref(false);
           ? `${totalAmount.toLocaleString()}원 결제하기`
           : '배송지를 먼저 등록해주세요'
       }}
-    </button>
+    </AppButton>
 
     <!-- 배송지 변경 바텀시트 -->
-    <BottomSheet v-model="isAddressSheetOpen" title="배송지 추가">
+    <BottomSheet
+      v-model="isAddressSheetOpen"
+      title="배송지 추가"
+    >
       <p
         class="text-(length:--font-sm) text-(color:--color-gray-500) mb-(--space-4)"
       >
@@ -422,7 +448,7 @@ const isPinSheetOpen = ref(false);
               ? 'border-(--color-danger)'
               : 'border-(--color-border)'
           "
-        />
+        >
         <p
           v-if="addressFormErrors.name"
           class="text-(length:--font-xs) text-(color:--color-danger) mt-(--space-1)"
@@ -447,7 +473,7 @@ const isPinSheetOpen = ref(false);
               ? 'border-(--color-danger)'
               : 'border-(--color-border)'
           "
-        />
+        >
         <p
           v-if="addressFormErrors.phone"
           class="text-(length:--font-xs) text-(color:--color-danger) mt-(--space-1)"
@@ -473,14 +499,15 @@ const isPinSheetOpen = ref(false);
                 ? 'border-(--color-danger)'
                 : 'border-(--color-border)'
             "
-          />
-          <button
-            type="button"
-            class="shrink-0 w-20 h-[46px] bg-(--color-navy) text-(color:--color-white) rounded-(--radius-md) text-(length:--font-xs) font-bold"
+          >
+          <AppButton
+            variant="navy"
+            size="sm"
+            class="shrink-0"
             @click="isPostcodeOpen = true"
           >
             주소 찾기
-          </button>
+          </AppButton>
         </div>
         <p
           v-if="addressFormErrors.zipCode"
@@ -507,7 +534,7 @@ const isPinSheetOpen = ref(false);
               ? 'border-(--color-danger)'
               : 'border-(--color-border)'
           "
-        />
+        >
         <p
           v-if="addressFormErrors.address"
           class="text-(length:--font-xs) text-(color:--color-danger) mt-(--space-1)"
@@ -532,7 +559,7 @@ const isPinSheetOpen = ref(false);
               ? 'border-(--color-danger)'
               : 'border-(--color-border)'
           "
-        />
+        >
         <p
           v-if="addressFormErrors.addressDetail"
           class="text-(length:--font-xs) text-(color:--color-danger) mt-(--space-1)"
@@ -542,10 +569,20 @@ const isPinSheetOpen = ref(false);
       </div>
 
       <div class="flex gap-(--space-3)">
-        <AppButton variant="secondary" size="lg" class="flex-1" @click="closeAddressSheet">
+        <AppButton
+          variant="secondary"
+          size="lg"
+          class="flex-1"
+          @click="closeAddressSheet"
+        >
           취소
         </AppButton>
-        <AppButton variant="primary" size="lg" class="flex-1" @click="confirmAddress">
+        <AppButton
+          variant="primary"
+          size="lg"
+          class="flex-1"
+          @click="confirmAddress"
+        >
           확인
         </AppButton>
       </div>

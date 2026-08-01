@@ -120,7 +120,7 @@ const dashboardDetailTarget = computed(() => {
 const quickActions = [
   {
     label: '증명서',
-    to: null,
+    to: '/certificates',
     icon: IconCertificate,
     bg: 'var(--color-pastel-beige)',
   },
