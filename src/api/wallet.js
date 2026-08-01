@@ -5,9 +5,9 @@ export const walletApi = {
     return api.get('/wallet')
   },
 
-  // 충전 요청
-  charge(accountId, amount) {
-    return api.post('/wallet/charge', { accountId, amount })
+  // 지갑 충전 — 실제 백엔드(aewol-backend WalletController)는 amount를 쿼리 파라미터로 받는다
+  charge(amount) {
+    return api.post('/wallet/deposit', null, { params: { amount } })
   },
 
   getBuckets() {

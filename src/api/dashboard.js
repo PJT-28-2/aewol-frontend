@@ -1,14 +1,16 @@
 import api from './index'
 
+// 실제 백엔드(aewol-backend DashboardController) 기준: /api/dashboard/summary, /api/dashboard/category
 export const dashboardApi = {
-  // 홈 대시보드 조회 — 잔액 요약 + 이번달지출 + 반려동물별 요약/차트를 화면 진입 1회 호출로 반환
-  getHome() {
-    return api.get('/wallet/home')
+  // 월별 지출 요약
+  // params: { month?: 'yyyy-MM' (기본값 이번 달) }
+  getSummary(params) {
+    return api.get('/dashboard/summary', { params })
   },
 
-  // 이번달지출 집계 조회
-  // params: { groupBy: 'CATEGORY' | 'PET' (필수), yearMonth?: 'yyyy-MM' }
-  getMonthly(params) {
-    return api.get('/dashboard/monthly', { params })
+  // 카테고리별 지출
+  // params: { petId?: string }
+  getCategory(params) {
+    return api.get('/dashboard/category', { params })
   },
 }

@@ -3,20 +3,20 @@ import { dashboardApi } from '@/api/dashboard'
 
 export const useDashboardStore = defineStore('dashboard', {
   state: () => ({
-    home: null,
-    monthly: null,
+    summary: null,
+    category: null,
   }),
 
   actions: {
-    async fetchHome() {
-      const { data } = await dashboardApi.getHome()
-      this.home = data
+    async fetchSummary(params) {
+      const { data } = await dashboardApi.getSummary(params)
+      this.summary = data
       return data
     },
 
-    async fetchMonthly(params) {
-      const { data } = await dashboardApi.getMonthly(params)
-      this.monthly = data
+    async fetchCategory(params) {
+      const { data } = await dashboardApi.getCategory(params)
+      this.category = data
       return data
     },
   },
