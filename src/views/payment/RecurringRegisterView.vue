@@ -54,6 +54,8 @@ const canSubmit = computed(
   () => !!merchantName.value.trim() && numericAmount.value > 0 && !!category.value,
 );
 
+const isSubmitting = ref(false);
+
 // mockData.js의 기존 항목과 같은 "다음 M/D" 형식으로 다음 결제일을 계산한다.
 function computeNextPaymentLabel(day) {
   const today = new Date();
@@ -66,21 +68,26 @@ function computeNextPaymentLabel(day) {
 }
 
 async function handleSubmit() {
-  if (!canSubmit.value) return;
-  const pet = petStore.pets.find((p) => p.id === selectedPetId.value);
-  await paymentStore.createRecurringPayment({
-    merchantName: merchantName.value.trim(),
-    amount: numericAmount.value,
-    dayOfMonth: dayOfMonth.value,
-    nextPaymentLabel: computeNextPaymentLabel(dayOfMonth.value),
-    category: category.value,
-    petId: selectedPetId.value,
-    petName: pet?.name ?? null,
-  });
-  router.push({
-    path: '/payment/recurring/register/complete',
-    query: { dayOfMonth: dayOfMonth.value, amount: numericAmount.value },
-  });
+  if (!canSubmit.value || isSubmitting.value) return;
+  isSubmitting.value = true;
+  try {
+    const pet = petStore.pets.find((p) => p.id === selectedPetId.value);
+    await paymentStore.createRecurringPayment({
+      merchantName: merchantName.value.trim(),
+      amount: numericAmount.value,
+      dayOfMonth: dayOfMonth.value,
+      nextPaymentLabel: computeNextPaymentLabel(dayOfMonth.value),
+      category: category.value,
+      petId: selectedPetId.value,
+      petName: pet?.name ?? null,
+    });
+    router.push({
+      path: '/payment/recurring/register/complete',
+      query: { dayOfMonth: dayOfMonth.value, amount: numericAmount.value },
+    });
+  } finally {
+    isSubmitting.value = false;
+  }
 }
 </script>
 
@@ -257,7 +264,7 @@ async function handleSubmit() {
       variant="primary"
       size="lg"
       block
-      :disabled="!canSubmit"
+      :disabled="!canSubmit || isSubmitting"
       @click="handleSubmit"
     >
       정기결제 등록하기
