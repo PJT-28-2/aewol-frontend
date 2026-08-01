@@ -1,5 +1,6 @@
 import api from './index'
 
+// 실제 백엔드(aewol-backend RecurringController) 기준: /api/recurring (GET/POST/DELETE만 존재, PUT 없음)
 export const recurringApi = {
   getRecurrings(params) {
     return api.get('/recurring', { params })
@@ -7,10 +8,6 @@ export const recurringApi = {
 
   createRecurring(data) {
     return api.post('/recurring', data)
-  },
-
-  updateRecurring(id, data) {
-    return api.put(`/recurring/${id}`, data)
   },
 
   deleteRecurring(id) {

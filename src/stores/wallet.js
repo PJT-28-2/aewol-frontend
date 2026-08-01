@@ -38,9 +38,11 @@ export const useWalletStore = defineStore('wallet', {
       this.buckets = this.buckets.filter((b) => b.id !== id)
     },
 
-    async deposit(amount) {
-      const { data } = await walletApi.deposit(amount)
-      if (this.wallet) this.wallet = data
+    async charge(amount) {
+      const { data } = await walletApi.charge(amount)
+      // 백엔드 WalletResponse 필드명(totalBalance) 기준
+      if (this.wallet) this.wallet.totalBalance = data.totalBalance
+      else this.wallet = data
       return data
     },
 

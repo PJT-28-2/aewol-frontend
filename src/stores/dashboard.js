@@ -4,8 +4,7 @@ import { dashboardApi } from '@/api/dashboard'
 export const useDashboardStore = defineStore('dashboard', {
   state: () => ({
     summary: null,
-    trend: [],
-    comparison: null,
+    category: null,
   }),
 
   actions: {
@@ -15,15 +14,9 @@ export const useDashboardStore = defineStore('dashboard', {
       return data
     },
 
-    async fetchTrend(params) {
-      const { data } = await dashboardApi.getTrend(params)
-      this.trend = data
-      return data
-    },
-
-    async fetchComparison(params) {
-      const { data } = await dashboardApi.getComparison(params)
-      this.comparison = data
+    async fetchCategory(params) {
+      const { data } = await dashboardApi.getCategory(params)
+      this.category = data
       return data
     },
   },

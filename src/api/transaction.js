@@ -13,8 +13,9 @@ export const transactionApi = {
     return api.get(`/transactions/${id}`)
   },
 
-  updateCategory(id, category) {
-    return api.patch(`/transactions/${id}/category`, { category })
+  // 결제 재분류(카테고리·반려동물 태그) 저장
+  updateTag(id, { category, petId }) {
+    return api.put(`/transactions/${id}/tag`, { category, petId })
   },
 
   deleteTransaction(id) {
