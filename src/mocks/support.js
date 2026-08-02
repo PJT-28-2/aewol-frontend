@@ -1,40 +1,6 @@
 /**
- * 백엔드 API 연동 전, 화면만 먼저 확인할 수 있도록 만든 목데이터예요.
- *
- * 목 모드 여부는 소스 코드에 고정하지 않고 환경변수(VITE_USE_MOCK_DATA)로 주입해요.
- * - 값을 명시적으로 'true'로 설정한 경우에만 mock이 켜짐
- * - 값이 없거나 그 외의 값이면 기본적으로 꺼짐(false) → 실제 API 호출
- * 로컬 개발 중 mock을 켜고 싶으면 프로젝트 루트에 `.env.local` 파일을 만들고
- * `VITE_USE_MOCK_DATA=true` 한 줄만 추가하면 돼요 (이 파일은 git에 커밋하지 않는 파일이라
- * 배포 빌드에는 절대 영향을 주지 않아요).
+ * 백엔드 API 연동 전, 고객센터 관련 화면을 미리 확인할 수 있도록 만든 목데이터예요.
  */
-export const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true';
-
-// 은행 목록은 Figma 디자인대로 8개를 항상 보여주되,
-// 실제로 연동 가능한 건 KB/toss뿐이라 이 두 개만 활성화해요.
-export const ENABLED_BANK_CODES = ['KB', 'TOSS'];
-
-export const MOCK_BANKS = [
-  { bankCode: 'KB', bankName: 'KB국민은행' },
-  { bankCode: 'TOSS', bankName: '토스뱅크' },
-  { bankCode: 'WOORI', bankName: '우리은행' },
-  { bankCode: 'HANA', bankName: '하나은행' },
-  { bankCode: 'NH', bankName: 'NH농협은행' },
-  { bankCode: 'KAKAOBANK', bankName: '카카오뱅크' },
-  { bankCode: 'SHINHAN', bankName: '신한은행' },
-  { bankCode: 'IBK', bankName: 'IBK기업은행' },
-];
-
-export const MOCK_ACCOUNTS = [
-  {
-    accountId: 1,
-    bankCode: 'KB',
-    accountNumberMasked: '********1234',
-    balance: 482600,
-    isPrimary: true,
-  },
-];
-
 // 카테고리 목록 — 1:1 문의하기 카테고리와 동일 + 검색화면 전용 '전체' 필터
 export const SUPPORT_CATEGORIES = ['지갑·버킷', '보험', '계좌연동', '공동양육', '회원정보', '기타'];
 

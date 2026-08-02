@@ -2,7 +2,7 @@
 import { onMounted, ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useSupportStore } from '@/stores/support';
-import { SUPPORT_CATEGORIES } from '@/utils/mockData';
+import { SUPPORT_CATEGORIES } from '@/mocks/support';
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue';
 import IconSearch from '@/components/common/icons/IconSearch.vue';
 import IconChatBubble from '@/components/common/icons/IconChatBubble.vue';

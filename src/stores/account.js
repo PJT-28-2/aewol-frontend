@@ -9,7 +9,8 @@ import {
   unlinkAccount,
 } from '@/api/account';
 import { getBankMeta } from '@/utils/bankMeta';
-import { MOCK_BANKS, MOCK_ACCOUNTS, USE_MOCK_DATA } from '@/utils/mockData';
+import { MOCK_BANKS, MOCK_ACCOUNTS } from '@/mocks/account';
+import { USE_MOCK_DATA } from '@/mocks/config';
 
 export const useAccountStore = defineStore('account', {
   state: () => ({

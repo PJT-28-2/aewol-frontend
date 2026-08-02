@@ -9,16 +9,13 @@ import IconGroupPurchase from '@/components/common/icons/IconGroupPurchase.vue';
 import IconSavings from '@/components/common/icons/IconSavings.vue';
 import IconSos from '@/components/common/icons/IconSos.vue';
 import IconSupportProgram from '@/components/common/icons/IconSupportProgram.vue';
-
-const memberName = ref('애월');
+import { MOCK_MEMBER_NAME, MOCK_WALLET_BALANCE, MOCK_MONTHLY_EXPENSE, MOCK_HOME_PETS } from '@/mocks/home';
 
 // TODO: 백엔드 API 연동 후 mock 데이터 제거하고 실제 fetch로 교체
-const walletBalance = ref(482600);
-const monthlyExpense = ref({ total: 243000, changeRate: -12 });
-const pets = ref([
-  { id: 1, name: '소로', species: 'DOG', expenseAmount: 168000 },
-  { id: 2, name: '나비', species: 'CAT', expenseAmount: 75000 },
-]);
+const memberName = ref(MOCK_MEMBER_NAME);
+const walletBalance = ref(MOCK_WALLET_BALANCE);
+const monthlyExpense = ref({ ...MOCK_MONTHLY_EXPENSE });
+const pets = ref(MOCK_HOME_PETS.map((p) => ({ ...p })));
 
 const isLoading = ref(true);
 

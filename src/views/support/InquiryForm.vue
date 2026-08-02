@@ -5,7 +5,7 @@ import { useSupportStore } from '@/stores/support';
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue';
 import IconImage from '@/components/common/icons/IconImage.vue';
 import IconClose from '@/components/common/icons/IconClose.vue';
-import { SUPPORT_CATEGORIES } from '@/utils/mockData';
+import { SUPPORT_CATEGORIES } from '@/mocks/support';
 
 const router = useRouter();
 const store = useSupportStore();
