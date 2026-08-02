@@ -20,7 +20,7 @@ const profilePassword = ref('')
 const passwordError = ref('')
 const isVerifying = ref(false)
 const PROFILE_VERIFIED_KEY = 'profileEditPasswordVerified'
-const MOCK_CURRENT_PASSWORD = 'test1234'
+import { MOCK_CURRENT_PASSWORD } from '@/mocks/settings'
 
 const menuItems = [
   {

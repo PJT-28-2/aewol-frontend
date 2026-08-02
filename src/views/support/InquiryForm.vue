@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router';
 import { useSupportStore } from '@/stores/support';
 import IconImage from '@/components/common/icons/IconImage.vue';
 import IconClose from '@/components/common/icons/IconClose.vue';
-import { SUPPORT_CATEGORIES } from '@/utils/mockData';
+import { SUPPORT_CATEGORIES } from '@/mocks/support';
 
 const router = useRouter();
 const store = useSupportStore();

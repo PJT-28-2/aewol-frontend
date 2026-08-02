@@ -19,7 +19,7 @@ const isCurrentPasswordVerified = ref(false)
 const isAddressSearchOpen = ref(false)
 const passwordError = ref('')
 const isVerifyingPassword = ref(false)
-const MOCK_CURRENT_PASSWORD = 'test1234'
+import { MOCK_CURRENT_PASSWORD } from '@/mocks/settings'
 
 const newPasswordCategoryCount = computed(() => {
   const categories = [

@@ -1,11 +1,7 @@
 import { defineStore } from 'pinia'
 import { certificatesApi } from '@/api/certificates'
-import {
-  USE_MOCK_DATA,
-  MOCK_PETS,
-  MOCK_PET_DOCUMENTS,
-  MOCK_REGISTRATION_DETAIL,
-} from '@/utils/mockData'
+import { USE_MOCK_DATA } from '@/mocks/config'
+import { MOCK_PETS, MOCK_PET_DOCUMENTS, MOCK_REGISTRATION_DETAIL } from '@/mocks/pet'
 
 export const useCertificateStore = defineStore('certificate', {
   state: () => ({

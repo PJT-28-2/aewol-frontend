@@ -8,7 +8,7 @@ import IconCheck from '@/components/common/icons/IconCheck.vue';
 import IconChevronDown from '@/components/common/icons/IconChevronDown.vue';
 import { useAccountStore } from '@/stores/account';
 import { formatWon, getBankMeta } from '@/utils/bankMeta';
-import { ENABLED_BANK_CODES, MOCK_ACCOUNTS, MOCK_BANKS } from '@/utils/mockData';
+import { ENABLED_BANK_CODES, MOCK_ACCOUNTS, MOCK_BANKS } from '@/mocks/account';
 
 const route = useRoute();
 const router = useRouter();

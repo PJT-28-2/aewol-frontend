@@ -1,13 +1,13 @@
 import { defineStore } from 'pinia';
 import { getFaqs, getFaqDetail, submitInquiry, getMyInquiries, getInquiryDetail } from '@/api/support';
+import { USE_MOCK_DATA } from '@/mocks/config';
 import {
   MOCK_FAQS,
   MOCK_FAQ_ANSWERS,
   MOCK_FAQ_RELATED,
   MOCK_INQUIRIES,
   MOCK_INQUIRY_ANSWERS,
-  USE_MOCK_DATA,
-} from '@/utils/mockData';
+} from '@/mocks/support';
 
 export const useSupportStore = defineStore('support', {
   state: () => ({
