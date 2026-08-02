@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { recurringApi } from '@/api/recurring'
-import { MOCK_RECURRING_PAYMENTS } from '@/utils/mockData'
+import { MOCK_RECURRING_PAYMENTS } from '@/mocks/account'
 
 // API 명세(recurringId/itemName/cycleDay/price/nextPaymentDate)를
 // 화면이 쓰는 내부 필드명(id/merchantName/dayOfMonth/amount/nextPaymentLabel)으로 변환한다.

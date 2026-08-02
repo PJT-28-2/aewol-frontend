@@ -6,7 +6,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import petSuccess from '@/assets/images/pet-success.png';
 import { useAccountStore } from '@/stores/account';
 import { getBankMeta } from '@/utils/bankMeta';
-import { MOCK_ACCOUNTS } from '@/utils/mockData';
+import { MOCK_ACCOUNTS } from '@/mocks/account';
 
 const route = useRoute();
 const router = useRouter();

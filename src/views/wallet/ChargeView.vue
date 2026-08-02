@@ -5,7 +5,7 @@ import AppButton from '@/components/common/AppButton.vue';
 import BankBadge from '@/components/common/BankBadge.vue';
 import { useAccountStore } from '@/stores/account';
 import { formatWon, getBankMeta } from '@/utils/bankMeta';
-import { MOCK_ACCOUNTS } from '@/utils/mockData';
+import { MOCK_ACCOUNTS } from '@/mocks/account';
 
 const route = useRoute();
 const router = useRouter();

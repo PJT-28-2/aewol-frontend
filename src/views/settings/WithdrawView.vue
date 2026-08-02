@@ -16,7 +16,7 @@ const canWithdraw = computed(
 )
 const PROFILE_VERIFIED_KEY = 'profileEditPasswordVerified'
 const WITHDRAWAL_COMPLETED_KEY = 'withdrawalCompleted'
-const MOCK_CURRENT_PASSWORD = 'test1234'
+import { MOCK_CURRENT_PASSWORD } from '@/mocks/settings'
 
 const handleCancel = async () => {
   window.sessionStorage.setItem(PROFILE_VERIFIED_KEY, 'true')

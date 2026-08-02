@@ -7,36 +7,11 @@ import AppInput from '@/components/common/AppInput.vue';
 import ConfirmDeleteModal from '@/components/common/ConfirmDeleteModal.vue';
 import IconCat from '@/components/common/icons/IconCat.vue';
 import IconDog from '@/components/common/icons/IconDog.vue';
+import { mockPetsById } from '@/mocks/pet';
 
 const route = useRoute();
 const router = useRouter();
 const petId = computed(() => route.params.petId);
-
-// TODO: 백엔드 API 연동 후 mock 데이터 제거하고 실제 fetch로 교체
-const mockPetsById = {
-  1: {
-    id: 1,
-    name: '소로',
-    species: 'DOG',
-    regNumber: '410000012345678',
-    breed: '포메라니안',
-    birthDate: '2023.05.12',
-    neutered: true,
-    medicalHistory: '슬개골 탈구 이력 있음',
-    vaccinationFileName: '접종증명서.jpg',
-  },
-  2: {
-    id: 2,
-    name: '나비',
-    species: 'CAT',
-    regNumber: '',
-    breed: '코리안숏헤어',
-    birthDate: '2024.03.20',
-    neutered: true,
-    medicalHistory: '',
-    vaccinationFileName: '',
-  },
-};
 
 const pet = computed(() => mockPetsById[petId.value]);
 const notFound = computed(() => !pet.value);
