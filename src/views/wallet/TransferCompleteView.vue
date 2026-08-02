@@ -37,11 +37,11 @@ function confirmComplete() {
 
 <template>
   <div
-    class="min-h-screen max-w-[420px] mx-auto bg-(--color-bg) px-(--space-6) pt-24 flex flex-col items-center text-center"
+    class="min-h-screen max-w-[420px] mx-auto bg-(--color-bg) px-(--space-6) pt-(--space-4) flex flex-col items-center text-center"
   >
     <template v-if="isInvalid">
       <h1
-        class="text-(length:--font-xl) font-bold text-(color:--color-navy) mb-(--space-2)"
+        class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-2)"
       >
         송금 정보를 찾을 수 없어요
       </h1>
@@ -67,7 +67,7 @@ function confirmComplete() {
         class="w-32 h-auto mb-(--space-4)"
       >
       <h1
-        class="text-(length:--font-xl) font-bold text-(color:--color-navy) mb-(--space-2)"
+        class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-2)"
       >
         송금을 완료했어요!
       </h1>

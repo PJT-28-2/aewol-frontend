@@ -4,7 +4,7 @@ import withdrawalCompleteImage from '@/assets/images/withdrawal-complete.png'
 
 <template>
   <main
-    class="mx-auto flex min-h-svh w-full max-w-[390px] flex-col justify-center overflow-hidden rounded-[40px] bg-(--color-white) px-[22px] py-12"
+    class="flex min-h-svh w-full flex-col justify-center bg-(--color-white) px-[22px] py-12"
   >
     <img
       class="mx-auto size-[160px] object-contain object-center"
@@ -18,11 +18,11 @@ import withdrawalCompleteImage from '@/assets/images/withdrawal-complete.png'
     >
       <h1
         id="complete-title"
-        class="text-[17px] leading-[1.3] font-(--font-bold) text-(color:--color-navy)"
+        class="text-(length:--font-2xl) leading-[1.3] font-(--font-bold) text-(color:--color-navy)"
       >
-        그동안 애월과 함께해주셔서 감사해요
+        그동안 함께해주셔서 감사해요
       </h1>
-      <p class="mt-[12px] text-[13px] leading-[1.3] text-(color:--color-slate-muted)">
+      <p class="mt-[12px] text-(length:--font-md) leading-[1.3] text-(color:--color-slate-muted)">
         회원 탈퇴가 완료됐어요
       </p>
     </section>

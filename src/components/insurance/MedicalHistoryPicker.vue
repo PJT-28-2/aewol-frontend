@@ -1,16 +1,16 @@
 <script setup>
-import { ref, computed } from 'vue'
-import IconChevronDown from '@/components/common/icons/IconChevronDown.vue'
-import IconCheck from '@/components/common/icons/IconCheck.vue'
-import BottomSheet from '@/components/common/BottomSheet.vue'
+import { ref, computed } from 'vue';
+import IconChevronDown from '@/components/common/icons/IconChevronDown.vue';
+import IconCheck from '@/components/common/icons/IconCheck.vue';
+import BottomSheet from '@/components/common/BottomSheet.vue';
 
 const props = defineProps({
   modelValue: {
     type: Array,
     required: true,
   },
-})
-const emit = defineEmits(['update:modelValue'])
+});
+const emit = defineEmits(['update:modelValue']);
 
 const medicalOptions = [
   { code: 'DENTAL', label: '치과·구강질환' },
@@ -21,61 +21,67 @@ const medicalOptions = [
   { code: 'DIGESTIVE', label: '소화기질환' },
   { code: 'NONE', label: '병력 없음' },
   { code: 'OTHER', label: '기타' },
-]
+];
 
-const pendingCode = ref(medicalOptions[0].code)
-const pendingOtherText = ref('')
-const tagFeedback = ref('')
-let nextTagId = 0
+const pendingCode = ref(medicalOptions[0].code);
+const pendingOtherText = ref('');
+const tagFeedback = ref('');
+let nextTagId = 0;
 
-const isMedicalSheetOpen = ref(false)
+const isMedicalSheetOpen = ref(false);
 const pendingLabel = computed(
-  () => medicalOptions.find((opt) => opt.code === pendingCode.value)?.label ?? '',
-)
+  () =>
+    medicalOptions.find((opt) => opt.code === pendingCode.value)
+      ?.label ?? '',
+);
 
 function selectPendingCode(code) {
-  pendingCode.value = code
-  isMedicalSheetOpen.value = false
+  pendingCode.value = code;
+  isMedicalSheetOpen.value = false;
 }
 
 function addMedicalTag() {
-  tagFeedback.value = ''
+  tagFeedback.value = '';
 
-  const isOther = pendingCode.value === 'OTHER'
+  const isOther = pendingCode.value === 'OTHER';
   const label = isOther
     ? pendingOtherText.value.trim()
-    : medicalOptions.find((opt) => opt.code === pendingCode.value)?.label
+    : medicalOptions.find(
+        (opt) => opt.code === pendingCode.value,
+      )?.label;
 
   if (isOther && !label) {
-    tagFeedback.value = '병력 내용을 입력해주세요.'
-    return
+    tagFeedback.value = '병력 내용을 입력해주세요.';
+    return;
   }
 
   const isDuplicate = props.modelValue.some((tag) =>
-    isOther ? tag.code === 'OTHER' && tag.label === label : tag.code === pendingCode.value,
-  )
+    isOther
+      ? tag.code === 'OTHER' && tag.label === label
+      : tag.code === pendingCode.value,
+  );
   if (isDuplicate) {
-    tagFeedback.value = '이미 추가된 병력이에요.'
-    return
+    tagFeedback.value = '이미 추가된 병력이에요.';
+    return;
   }
 
   const remainingTags =
     pendingCode.value === 'NONE'
       ? []
-      : props.modelValue.filter((tag) => tag.code !== 'NONE')
+      : props.modelValue.filter((tag) => tag.code !== 'NONE');
 
   emit('update:modelValue', [
     ...remainingTags,
     { id: nextTagId++, code: pendingCode.value, label },
-  ])
-  pendingOtherText.value = ''
+  ]);
+  pendingOtherText.value = '';
 }
 
 function removeMedicalTag(id) {
   emit(
     'update:modelValue',
     props.modelValue.filter((tag) => tag.id !== id),
-  )
+  );
 }
 </script>
 
@@ -112,7 +118,7 @@ function removeMedicalTag(id) {
     <div class="flex gap-(--space-2)">
       <button
         type="button"
-        class="flex-1 min-w-0 flex items-center justify-between gap-(--space-2) py-(--space-3) px-(--space-4) border border-(--color-gray-300) rounded-(--radius-md) text-(length:--font-base) bg-(--color-white) text-(color:--color-gray-800)"
+        class="flex-1 min-w-0 flex items-center justify-between gap-(--space-2) py-(--space-3) px-(--space-4) border border-(--color-gray-300) rounded-(--radius-lg) text-(length:--font-base) bg-(--color-white) text-(color:--color-gray-800)"
         aria-haspopup="dialog"
         :aria-expanded="isMedicalSheetOpen"
         aria-labelledby="medical-label"
@@ -130,33 +136,27 @@ function removeMedicalTag(id) {
         type="text"
         placeholder="병력을 입력해주세요"
         aria-label="기타 병력 직접 입력"
-        class="flex-1 min-w-0 py-(--space-3) px-(--space-4) border border-(--color-gray-300) rounded-(--radius-md) text-(length:--font-base)"
-      >
+        class="flex-1 min-w-0 py-(--space-3) px-(--space-4) border border-(--color-gray-300) rounded-(--radius-lg) text-(length:--font-base)"
+      />
       <button
         type="button"
-        class="flex-none px-(--space-4) bg-(--color-navy) text-(color:--color-white) rounded-(--radius-md) text-(length:--font-sm) font-semibold"
+        class="flex-none px-(--space-4) bg-(--color-navy) text-(color:--color-white) rounded-(--radius-lg) text-(length:--font-sm) font-semibold"
         @click="addMedicalTag"
       >
-        + 추가
+        추가
       </button>
     </div>
 
     <p
       v-if="tagFeedback"
-      class="mt-(--space-2) text-(color:--color-danger) text-(length:--font-sm)"
+      class="mt-(--space-2) text-(color:--color-danger-strong) text-(length:--font-sm)"
     >
       {{ tagFeedback }}
     </p>
 
-    <BottomSheet
-      v-model="isMedicalSheetOpen"
-      title="병력 선택"
-    >
+    <BottomSheet v-model="isMedicalSheetOpen" title="병력 선택">
       <ul>
-        <li
-          v-for="opt in medicalOptions"
-          :key="opt.code"
-        >
+        <li v-for="opt in medicalOptions" :key="opt.code">
           <button
             type="button"
             class="w-full flex items-center justify-between py-(--space-3) text-(length:--font-base)"

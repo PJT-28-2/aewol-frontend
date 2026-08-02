@@ -18,12 +18,13 @@ const isVerified = ref(false)
 const isComplete = ref(false)
 const isLoading = ref(false)
 const remainingSeconds = ref(0)
-const toast = ref({ visible: false, type: 'success', message: '' })
+const emailMessage = ref({ type: 'error', text: '' })
+const codeMessage = ref({ type: 'error', text: '' })
+const submitError = ref('')
 // 화면 검수용 우회는 Vite 개발 서버에서만 활성화된다.
 const isDevelopmentPreview = import.meta.env.DEV
 
 let timerId
-let toastTimerId
 
 /**
  * 남은 인증 유효 시간을 사용자가 읽기 쉬운 분·초 형식으로 제공한다.
@@ -31,22 +32,6 @@ let toastTimerId
  * @returns {string} `mm:ss` 형식의 남은 시간
  */
 const formattedTime = computed(() => formatCountdown(remainingSeconds.value))
-
-/**
- * 유효성 검사 결과를 일정 시간 동안 토스트로 안내한다.
- * 연속 메시지가 겹치지 않도록 기존 종료 타이머를 취소하고 다시 시작한다.
- *
- * @param {string} message 사용자에게 표시할 안내 문구
- * @param {'success'|'error'} [type='error'] 메시지 상태
- * @returns {void}
- */
-const showToast = (message, type = 'error') => {
-  toast.value = { visible: true, type, message }
-  window.clearTimeout(toastTimerId)
-  toastTimerId = window.setTimeout(() => {
-    toast.value.visible = false
-  }, 2600)
-}
 
 /**
  * 인증번호의 3분 유효 시간을 시작한다.
@@ -115,7 +100,7 @@ const handleRequestCode = async () => {
   // 입력값 검증
   // =========================
   if (!isValidEmail(email.value)) {
-    showToast('올바른 이메일 형식이 아닙니다')
+    emailMessage.value = { type: 'error', text: '올바른 이메일 형식이 아닙니다' }
     return
   }
 
@@ -138,15 +123,19 @@ const handleRequestCode = async () => {
     isCodeSent.value = true
     isVerified.value = false
     verificationCode.value = ''
+    codeMessage.value = { type: 'error', text: '' }
     startTimer()
-    showToast(
-      isDevelopmentPreview
+    emailMessage.value = {
+      type: 'success',
+      text: isDevelopmentPreview
         ? '개발용 인증번호는 123456입니다'
         : '인증번호를 전송했습니다',
-      'success',
-    )
+    }
   } catch (error) {
-    showToast(error.response?.data?.message ?? '인증번호 전송에 실패했습니다')
+    emailMessage.value = {
+      type: 'error',
+      text: error.response?.data?.message ?? '인증번호 전송에 실패했습니다',
+    }
   } finally {
     isLoading.value = false
   }
@@ -164,18 +153,18 @@ const handleVerifyCode = async () => {
   // =========================
   // 운영 환경에서는 실제 발송한 인증번호만 검증할 수 있어 발송 상태가 필수다.
   if (!isDevelopmentPreview && !isCodeSent.value) {
-    showToast('인증번호를 먼저 받아주세요')
+    codeMessage.value = { type: 'error', text: '인증번호를 먼저 받아주세요' }
     return
   }
 
   if (!/^\d{6}$/.test(verificationCode.value)) {
-    showToast('인증번호가 일치하지 않습니다')
+    codeMessage.value = { type: 'error', text: '인증번호가 일치하지 않습니다' }
     return
   }
 
   // 운영 환경의 만료된 인증번호는 서버 요청 전에 차단해 사용자에게 즉시 안내한다.
   if (!isDevelopmentPreview && remainingSeconds.value === 0) {
-    showToast('인증번호가 만료되었습니다')
+    codeMessage.value = { type: 'error', text: '인증번호가 만료되었습니다' }
     return
   }
 
@@ -188,7 +177,7 @@ const handleVerifyCode = async () => {
     if (isDevelopmentPreview) {
       // 개발용 고정 인증번호이며 프로덕션 빌드에서는 실행되지 않는다.
       if (verificationCode.value !== '123456') {
-        showToast('인증번호가 일치하지 않습니다')
+        codeMessage.value = { type: 'error', text: '인증번호가 일치하지 않습니다' }
         return
       }
     } else {
@@ -202,9 +191,12 @@ const handleVerifyCode = async () => {
     // 이 값이 true가 된 뒤에만 새 비밀번호 입력 영역을 렌더링한다.
     isVerified.value = true
     window.clearInterval(timerId)
-    showToast('인증되었습니다', 'success')
+    codeMessage.value = { type: 'success', text: '인증되었습니다' }
   } catch (error) {
-    showToast(error.response?.data?.message ?? '인증번호가 일치하지 않습니다')
+    codeMessage.value = {
+      type: 'error',
+      text: error.response?.data?.message ?? '인증번호가 일치하지 않습니다',
+    }
   } finally {
     isLoading.value = false
   }
@@ -217,22 +209,24 @@ const handleVerifyCode = async () => {
  * @returns {Promise<void>}
  */
 const handleResetPassword = async () => {
+  submitError.value = ''
+
   // =========================
   // 인증 상태 및 입력값 검증
   // =========================
   // 화면 상태가 변조되더라도 인증 전 변경 요청을 만들지 않도록 다시 확인한다.
   if (!isVerified.value) {
-    showToast('이메일 인증을 완료해주세요')
+    submitError.value = '이메일 인증을 완료해주세요'
     return
   }
 
   if (!isValidPassword(newPassword.value)) {
-    showToast('2가지 조합은 10자리, 3가지 조합은 8자리 이상 입력해주세요')
+    submitError.value = '2가지 조합은 10자리, 3가지 조합은 8자리 이상 입력해주세요'
     return
   }
 
   if (newPassword.value !== newPasswordConfirm.value) {
-    showToast('비밀번호가 일치하지 않습니다')
+    submitError.value = '비밀번호가 일치하지 않습니다'
     return
   }
 
@@ -254,11 +248,10 @@ const handleResetPassword = async () => {
     // =========================
     // 완료 화면 상태 업데이트
     // =========================
-    // 성공 안내를 토스트와 중복 표시하지 않고 Figma 완료 화면으로 전환한다.
-    toast.value.visible = false
     isComplete.value = true
   } catch (error) {
-    showToast(error.response?.data?.message ?? '비밀번호 변경에 실패했습니다')
+    submitError.value =
+      error.response?.data?.message ?? '비밀번호 변경에 실패했습니다'
   } finally {
     isLoading.value = false
   }
@@ -272,7 +265,6 @@ const handleResetPassword = async () => {
  */
 const clearTimers = () => {
   window.clearInterval(timerId)
-  window.clearTimeout(toastTimerId)
 }
 
 onBeforeUnmount(clearTimers)
@@ -280,7 +272,7 @@ onBeforeUnmount(clearTimers)
 
 <template>
   <main
-    class="relative mx-auto min-h-svh w-[min(100%,390px)] overflow-hidden rounded-[40px] bg-(--color-white) px-[22px] pt-[108px] pb-12 min-[391px]:my-[max(0px,calc((100svh-844px)/2))] min-[391px]:min-h-[844px] min-[391px]:shadow-(--shadow-lg)"
+    class="relative min-h-svh w-full bg-(--color-white) px-[22px] pt-[calc(var(--header-height)+var(--space-4))] pb-12"
   >
     <section
       v-if="isComplete"
@@ -294,11 +286,11 @@ onBeforeUnmount(clearTimers)
       >
       <h1
         id="reset-complete-title"
-        class="mt-(--auth-success-title-gap) text-(length:--font-lg) leading-[1.3] font-(--font-bold) text-(color:--color-navy)"
+        class="mt-(--auth-success-title-gap) text-(length:--font-2xl) leading-[1.3] font-(--font-bold) text-(color:--color-navy)"
       >
         비밀번호가 변경됐어요
       </h1>
-      <p class="mt-2 text-[12.5px] leading-[1.3] text-(color:--color-slate-muted)">
+      <p class="mt-2 text-(length:--font-md) leading-[1.3] text-(color:--color-slate-muted)">
         새 비밀번호로 다시 로그인해주세요
       </p>
       <router-link
@@ -310,8 +302,12 @@ onBeforeUnmount(clearTimers)
     </section>
 
     <template v-else>
+      <div
+        class="fixed inset-x-0 top-0 z-100 h-(--header-height) bg-(--color-white)"
+        aria-hidden="true"
+      />
       <button
-        class="absolute top-[60px] left-[22px] size-[26px] text-(color:--color-navy)"
+        class="fixed top-(--space-2) left-(--space-4) z-101 flex size-10 items-center justify-center text-(color:--color-navy)"
         type="button"
         aria-label="이전 화면으로 돌아가기"
         @click="router.back()"
@@ -320,10 +316,10 @@ onBeforeUnmount(clearTimers)
       </button>
 
       <header>
-        <h1 class="text-(length:--auth-font-lg) leading-[1.3] font-(--font-bold) text-(color:--color-navy)">
+        <h1 class="text-(length:--font-2xl) leading-[1.3] font-(--font-bold) text-(color:--color-navy)">
           비밀번호 찾기
         </h1>
-        <p class="mt-0.5 text-[12.5px] leading-[1.45] text-(color:--color-slate-muted)">
+        <p class="mt-0.5 text-(length:--font-md) leading-[1.45] text-(color:--color-slate-muted)">
           가입하신 이메일로 본인 확인 후<br>바로 새 비밀번호를 설정해요
         </p>
       </header>
@@ -338,18 +334,18 @@ onBeforeUnmount(clearTimers)
         >
           이메일
         </label>
-        <div class="mb-[31px] grid grid-cols-[minmax(0,240px)_90px] gap-4">
+        <div class="flex gap-(--space-2)">
           <input
             id="reset-email"
             v-model.trim="email"
-            class="h-[46px] w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-(length:--auth-font-sm) text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy) disabled:opacity-65"
+            class="h-(--control-height-md) min-w-0 flex-1 rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy) disabled:opacity-65"
             type="email"
             autocomplete="email"
             placeholder="example@aewol.com"
             :disabled="isVerified"
           >
           <button
-            class="h-[46px] rounded-(--radius-lg) bg-(--color-navy) text-[11.5px] font-(--font-bold) text-(color:--color-white) disabled:cursor-not-allowed disabled:opacity-55"
+            class="h-(--control-height-md) w-20 shrink-0 rounded-(--radius-lg) bg-(--color-navy) text-[11.5px] font-(--font-bold) text-(color:--color-white) disabled:cursor-not-allowed disabled:opacity-55"
             type="button"
             :disabled="isLoading || isVerified"
             @click="handleRequestCode"
@@ -357,19 +353,31 @@ onBeforeUnmount(clearTimers)
             {{ isCodeSent ? '다시 받기' : '인증번호 받기' }}
           </button>
         </div>
+        <p
+          v-if="emailMessage.text"
+          class="mt-1 text-[11px]"
+          :class="
+            emailMessage.type === 'success'
+              ? 'text-(color:--color-olive)'
+              : 'text-(color:--color-danger-strong)'
+          "
+          role="alert"
+        >
+          {{ emailMessage.text }}
+        </p>
 
         <label
-          class="mb-1 block text-[12.5px] leading-[1.3] font-(--font-bold) text-(color:--color-slate-dark)"
+          class="mt-[11px] mb-1 block text-[12.5px] leading-[1.3] font-(--font-bold) text-(color:--color-slate-dark)"
           for="verification-code"
         >
           인증번호
         </label>
-        <div class="grid grid-cols-[minmax(0,270px)_60px] gap-4">
-          <div class="relative">
+        <div class="flex gap-(--space-2)">
+          <div class="relative min-w-0 flex-1">
             <input
               id="verification-code"
               v-model="verificationCode"
-              class="h-[46px] w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] pr-[70px] text-(length:--auth-font-sm) text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy) disabled:opacity-65"
+              class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] pr-[70px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy) disabled:opacity-65"
               type="text"
               inputmode="numeric"
               autocomplete="one-time-code"
@@ -385,7 +393,7 @@ onBeforeUnmount(clearTimers)
             </span>
           </div>
           <button
-            class="h-[46px] rounded-(--radius-lg) bg-(--color-navy) text-[12.5px] font-(--font-bold) text-(color:--color-white) disabled:cursor-not-allowed disabled:opacity-55"
+            class="h-(--control-height-md) w-20 shrink-0 rounded-(--radius-lg) bg-(--color-navy) text-[12.5px] font-(--font-bold) text-(color:--color-white) disabled:cursor-not-allowed disabled:opacity-55"
             type="button"
             :disabled="isLoading || isVerified"
             @click="handleVerifyCode"
@@ -393,6 +401,18 @@ onBeforeUnmount(clearTimers)
             확인
           </button>
         </div>
+        <p
+          v-if="codeMessage.text"
+          class="mt-1 text-[11px]"
+          :class="
+            codeMessage.type === 'success'
+              ? 'text-(color:--color-olive)'
+              : 'text-(color:--color-danger-strong)'
+          "
+          role="alert"
+        >
+          {{ codeMessage.text }}
+        </p>
       </section>
 
       <section
@@ -421,21 +441,21 @@ onBeforeUnmount(clearTimers)
           <PasswordInput
             id="new-password"
             v-model="newPassword"
-            input-class="h-[46px] w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-(length:--auth-font-sm) text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
+            input-class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
             autocomplete="new-password"
             placeholder="2가지 조합 10자리 / 3가지 조합 8자리 이상"
             required
           />
           <p
             v-if="newPassword && !isNewPasswordValid"
-            class="mt-1 text-[11px] text-(color:--color-danger)"
+            class="mt-1 text-[11px] text-(color:--color-danger-strong)"
             role="alert"
           >
             영문·숫자·특수문자 중 2가지 조합은 10자리, 3가지 조합은 8자리 이상 입력해 주세요.
           </p>
           <p
             v-else-if="newPassword && isNewPasswordValid"
-            class="mt-1 text-[11px] text-(color:--color-success)"
+            class="mt-1 text-[11px] text-(color:--color-olive)"
           >
             사용 가능한 비밀번호입니다.
           </p>
@@ -449,23 +469,31 @@ onBeforeUnmount(clearTimers)
           <PasswordInput
             id="new-password-confirm"
             v-model="newPasswordConfirm"
-            input-class="h-[46px] w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-(length:--auth-font-sm) text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
+            input-class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
             autocomplete="new-password"
             placeholder="비밀번호를 한번 더 입력해주세요"
             required
           />
           <p
             v-if="newPasswordConfirm && !isNewPasswordConfirmed"
-            class="mt-1 text-[11px] text-(color:--color-danger)"
+            class="mt-1 text-[11px] text-(color:--color-danger-strong)"
             role="alert"
           >
             비밀번호가 일치하지 않습니다.
           </p>
           <p
             v-else-if="newPasswordConfirm && isNewPasswordConfirmed"
-            class="mt-1 text-[11px] text-(color:--color-success)"
+            class="mt-1 text-[11px] text-(color:--color-olive)"
           >
             비밀번호가 일치합니다.
+          </p>
+
+          <p
+            v-if="submitError"
+            class="mt-3 text-center text-(length:--font-sm) text-(color:--color-danger-strong)"
+            role="alert"
+          >
+            {{ submitError }}
           </p>
 
           <button
@@ -484,40 +512,6 @@ onBeforeUnmount(clearTimers)
       >
         로그인으로 돌아가기
       </router-link>
-
-      <Teleport to="body">
-        <Transition
-          enter-active-class="transition-[opacity,transform] duration-200 ease-out"
-          enter-from-class="-translate-y-3 opacity-0"
-          leave-active-class="transition-[opacity,transform] duration-200 ease-in"
-          leave-to-class="-translate-y-3 opacity-0"
-        >
-          <div
-            v-if="toast.visible"
-            class="fixed top-7 left-1/2 z-[1100] flex min-h-14 w-[min(calc(100%-44px),346px)] -translate-x-1/2 items-center gap-2 rounded-[14px] border border-(--color-border) bg-(--color-white) px-4 py-3 text-[12.5px] font-(--font-bold) shadow-(--shadow-lg)"
-            :class="
-              toast.type === 'success'
-                ? 'text-(color:--color-olive)'
-                : 'text-(color:--color-danger-strong)'
-            "
-            role="alert"
-            aria-live="assertive"
-          >
-            <span
-              class="inline-flex size-5 shrink-0 items-center justify-center rounded-full text-(length:--auth-font-xs)"
-              :class="
-                toast.type === 'success'
-                  ? 'bg-(--color-pastel-green)'
-                  : 'bg-(--color-danger-soft)'
-              "
-              aria-hidden="true"
-            >
-              {{ toast.type === 'success' ? '✓' : '!' }}
-            </span>
-            <span>{{ toast.message }}</span>
-          </div>
-        </Transition>
-      </Teleport>
     </template>
   </main>
 </template>

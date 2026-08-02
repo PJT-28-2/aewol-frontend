@@ -1,18 +1,13 @@
 <script setup>
 import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
 import AppButton from '@/components/common/AppButton.vue';
-import BottomNavBar from '@/components/common/BottomNavBar.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
-import IconChevronLeft from '@/components/common/icons/IconChevronLeft.vue';
 import IconHospital from '@/components/common/icons/IconHospital.vue';
-import IconChevronRight from '@/components/common/icons/IconChevronRight.vue';
 import IconPhone from '@/components/common/icons/IconPhone.vue';
 import IconWarning from '@/components/common/icons/IconWarning.vue';
 import { mockHospitals } from '@/mocks/emergency';
 
-const router = useRouter();
 const hospitals = ref([]);
 const isLoading = ref(true);
 const mapContainer = ref(null);
@@ -110,18 +105,11 @@ onMounted(async () => {
   <div class="min-h-screen bg-(--color-bg) flex flex-col">
     <!-- 헤더 -->
     <header class="px-(--space-4) pt-(--space-5) pb-(--space-2)">
-      <button
-        class="flex items-center justify-center w-10 h-10 -ml-2 mb-(--space-1)"
-        aria-label="뒤로 가기"
-        @click="router.back()"
-      >
-        <IconChevronLeft :size="24" color="var(--color-navy)" />
-      </button>
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">
         응급 SOS
       </h1>
       <p
-        class="text-(length:--font-sm) text-(color:--color-slate-muted) mt-(--space-1)"
+        class="text-(length:--font-md) text-(color:--color-slate-muted) mt-(--space-1)"
       >
         위급할 때 근처 응급병원을 찾아보세요
       </p>
@@ -156,7 +144,7 @@ onMounted(async () => {
             v-else-if="hospitals.length"
             class="absolute bottom-3 left-3 flex items-center gap-(--space-1) bg-(--color-white) rounded-full px-(--space-3) py-1 shadow-(--shadow-sm)"
           >
-            <span class="w-2 h-2 rounded-full bg-(--color-success) shrink-0" />
+            <span class="w-2 h-2 rounded-full bg-(--color-olive) shrink-0" />
             <span
               class="text-(length:--font-sm) font-semibold text-(color:--color-navy)"
             >
@@ -201,9 +189,9 @@ onMounted(async () => {
             class="flex items-center gap-(--space-3) bg-(--color-white) rounded-(--radius-lg) p-(--space-4) shadow-(--shadow-sm)"
           >
             <div
-              class="flex items-center justify-center w-(--space-9) h-(--space-9) rounded-(--radius-md) bg-(--color-gray-100) shrink-0"
+              class="flex items-center justify-center w-(--space-9) h-(--space-9) rounded-[14px] bg-(--color-gray-100) shrink-0"
             >
-              <IconHospital :size="26" color="var(--color-slate-dark)" />
+              <IconHospital :size="24" color="var(--color-navy)" />
             </div>
 
             <div class="flex-1 min-w-0">
@@ -222,6 +210,7 @@ onMounted(async () => {
                 <AppButton
                   variant="secondary"
                   size="sm"
+                  class="border-(--color-border)!"
                   @click="handleCall(hospital.phone)"
                 >
                   <IconPhone
@@ -237,11 +226,7 @@ onMounted(async () => {
                   @click="handleNavigation(hospital)"
                 >
                   길찾기
-                  <IconChevronRight
-                    :size="14"
-                    color="var(--color-white)"
-                    class="translate-y-px"
-                  />
+                  <span class="text-(length:--font-lg) leading-none text-(color:--color-white)">&rsaquo;</span>
                 </AppButton>
               </div>
             </div>
@@ -249,7 +234,5 @@ onMounted(async () => {
         </ul>
       </section>
     </main>
-
-    <BottomNavBar />
   </div>
 </template>

@@ -4,7 +4,6 @@ import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
 import AppButton from '@/components/common/AppButton.vue'
 import BottomSheet from '@/components/common/BottomSheet.vue'
-import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 import IconCheck from '@/components/common/icons/IconCheck.vue'
 import IconChevronDown from '@/components/common/icons/IconChevronDown.vue'
 import IconImage from '@/components/common/icons/IconImage.vue'
@@ -76,25 +75,15 @@ function goToNextStep() {
 <template>
   <div class="p-(--space-4) pb-(--space-8) bg-(--color-bg) min-h-screen">
     <header class="mb-(--space-5)">
-      <div class="flex items-center justify-between mb-(--space-4)">
-        <router-link
-          to="/group-purchase"
-          class="inline-flex text-(color:--color-navy) no-underline"
-          aria-label="공동구매 목록으로"
-        >
-          <IconArrowLeft
-            size="18"
-            color="var(--color-navy)"
-          />
-        </router-link>
+      <div class="flex items-center justify-end mb-(--space-4)">
         <p class="text-(length:--font-sm) font-bold text-(color:--color-slate-muted)">
           1/3
         </p>
       </div>
-      <h1 class="text-(length:--font-xl) font-bold text-(color:--color-navy) mb-(--space-1)">
+      <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-1)">
         상품 정보
       </h1>
-      <p class="text-(length:--font-sm) text-(color:--color-slate-muted)">
+      <p class="text-(length:--font-md) text-(color:--color-slate-muted)">
         판매할 상품 정보를 입력해주세요
       </p>
     </header>
@@ -112,7 +101,7 @@ function goToNextStep() {
         </span>
       </div>
       <label
-        class="w-full h-[90px] rounded-2xl bg-(--color-white) border-[1.2px] border-(--color-slate-muted) flex flex-col items-center justify-center gap-(--space-1) cursor-pointer"
+        class="w-full h-[90px] rounded-(--radius-xl) bg-(--color-white) border-[1.2px] border-(--color-slate-muted) flex flex-col items-center justify-center gap-(--space-1) cursor-pointer"
       >
         <input
           type="file"
@@ -132,7 +121,7 @@ function goToNextStep() {
       <!-- 업로드한 파일명 + 삭제 -->
       <div
         v-if="image"
-        class="mt-(--space-2) flex items-center justify-between px-(--space-3) py-(--space-2) rounded-lg bg-(--color-surface)"
+        class="mt-(--space-2) flex items-center justify-between px-(--space-3) py-(--space-2) rounded-(--radius-lg) bg-(--color-surface)"
       >
         <span class="text-(length:--font-xs) text-(color:--color-slate-dark) truncate">
           {{ image.name }}
@@ -160,7 +149,7 @@ function goToNextStep() {
         v-model="productName"
         type="text"
         placeholder="예: 프리미엄 사료 15kg"
-        class="w-full h-[46px] px-(--space-4) rounded-xl bg-(--color-surface) border border-(--color-border) text-(length:--font-sm) text-(color:--color-navy) placeholder:text-(color:--color-slate-muted)"
+        class="w-full h-[46px] px-(--space-4) rounded-(--radius-xl) bg-(--color-surface) border border-(--color-border) text-(length:--font-sm) text-(color:--color-navy) placeholder:text-(color:--color-slate-muted)"
       >
     </section>
 
@@ -174,7 +163,7 @@ function goToNextStep() {
       </label>
       <button
         type="button"
-        class="w-full h-[46px] px-(--space-4) rounded-xl bg-(--color-surface) border border-(--color-border) flex items-center justify-between"
+        class="w-full h-[46px] px-(--space-4) rounded-(--radius-xl) bg-(--color-surface) border border-(--color-border) flex items-center justify-between"
         aria-labelledby="category-label category-value"
         @click="isCategorySheetOpen = true"
       >
@@ -236,7 +225,7 @@ function goToNextStep() {
         type="text"
         inputmode="numeric"
         placeholder="40,000 원"
-        class="w-full h-[46px] px-(--space-4) rounded-xl bg-(--color-surface) border border-(--color-border) text-(length:--font-sm) text-(color:--color-navy) placeholder:text-(color:--color-slate-muted)"
+        class="w-full h-[46px] px-(--space-4) rounded-(--radius-xl) bg-(--color-surface) border border-(--color-border) text-(length:--font-sm) text-(color:--color-navy) placeholder:text-(color:--color-slate-muted)"
       >
     </section>
 
@@ -255,7 +244,7 @@ function goToNextStep() {
           type="text"
           inputmode="numeric"
           placeholder="28,000 원"
-          class="w-full h-[46px] pl-(--space-4) pr-(--space-9) rounded-xl bg-(--color-surface) border border-(--color-border) text-(length:--font-sm) text-(color:--color-navy) placeholder:text-(color:--color-slate-muted)"
+          class="w-full h-[46px] pl-(--space-4) pr-(--space-9) rounded-(--radius-xl) bg-(--color-surface) border border-(--color-border) text-(length:--font-sm) text-(color:--color-navy) placeholder:text-(color:--color-slate-muted)"
         >
         <span
           v-if="discountRate > 0"
@@ -266,7 +255,7 @@ function goToNextStep() {
       </div>
       <p
         v-if="isGroupPriceTooHigh"
-        class="mt-(--space-2) text-(length:--font-xs) text-(color:--color-danger)"
+        class="mt-(--space-2) text-(length:--font-xs) text-(color:--color-danger-strong)"
       >
         공동구매 가격은 정가보다 높을 수 없습니다
       </p>

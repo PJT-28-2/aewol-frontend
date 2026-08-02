@@ -1,8 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
-import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue';
 import IconChevronDown from '@/components/common/icons/IconChevronDown.vue';
-import IconChevronRight from '@/components/common/icons/IconChevronRight.vue';
 import IconCheck from '@/components/common/icons/IconCheck.vue';
 import IconGroupPurchase from '@/components/common/icons/IconGroupPurchase.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
@@ -72,7 +70,7 @@ function selectStatus(option) {
 
 // 상태 배지 색상: 진행중은 올리브, 마감(성공)은 중립 그레이, 마감(미달)은 danger 톤으로 구분
 const STATUS_BADGE_CLASS = {
-  진행중: 'bg-(--color-olive-surface) text-(color:--color-olive-dark)',
+  진행중: 'bg-(--color-olive-surface) text-(color:--color-olive)',
   '마감(성공)': 'bg-(--color-gray-200) text-(color:--color-gray-600)',
   '마감(미달)': 'bg-(--color-danger-soft) text-(color:--color-danger-strong)',
 };
@@ -121,15 +119,8 @@ watch(selectedStatus, loadMyGroupPurchases);
   <div class="p-(--space-4) pb-(--space-6) bg-(--color-bg) min-h-screen">
     <!-- 헤더 -->
     <header class="mb-(--space-5)">
-      <router-link
-        to="/group-purchase"
-        aria-label="뒤로 가기"
-        class="inline-flex items-center mb-(--space-3) text-(color:--color-navy)"
-      >
-        <IconArrowLeft size="24" />
-      </router-link>
       <div class="flex items-center justify-between gap-(--space-3) mb-(--space-1)">
-        <h1 class="text-(length:--font-xl) font-bold text-(color:--color-navy)">
+        <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">
           나의 공동구매
         </h1>
         <!-- 상태 선택: 드롭다운이 아니라 바텀시트로 목록을 띄움 -->
@@ -145,7 +136,7 @@ watch(selectedStatus, loadMyGroupPurchases);
           />
         </button>
       </div>
-      <p class="text-(length:--font-sm) text-(color:--color-slate-muted)">
+      <p class="text-(length:--font-md) text-(color:--color-slate-muted)">
         내가 작성하거나 참여한 게시물을 확인해요
       </p>
     </header>
@@ -241,11 +232,7 @@ watch(selectedStatus, loadMyGroupPurchases);
               {{ gp.status }}
             </span>
           </div>
-          <IconChevronRight
-            size="20"
-            color="var(--color-gray-400)"
-            class="shrink-0"
-          />
+          <span class="shrink-0 text-(length:--font-xl) text-(color:--color-gray-400)">&rsaquo;</span>
         </router-link>
       </li>
     </ul>

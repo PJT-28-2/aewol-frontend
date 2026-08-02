@@ -5,7 +5,6 @@ import BottomSheet from '@/components/common/BottomSheet.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import TransactionList from '@/components/common/TransactionList.vue';
 import { formatYearMonth } from '@/utils/date';
-import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue';
 import IconCheck from '@/components/common/icons/IconCheck.vue';
 import IconChevronDown from '@/components/common/icons/IconChevronDown.vue';
 import IconClose from '@/components/common/icons/IconClose.vue';
@@ -143,10 +142,6 @@ const filteredTransactions = computed(() => {
     .sort((a, b) => `${b.date}${b.time}`.localeCompare(`${a.date}${a.time}`));
 });
 
-function goBack() {
-  router.back();
-}
-
 onMounted(() => {
   isLoading.value = false;
 });
@@ -156,14 +151,6 @@ onMounted(() => {
   <div
     class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))] bg-(--color-bg) min-h-screen"
   >
-    <button
-      type="button"
-      class="mb-(--space-3) text-(color:--color-navy)"
-      aria-label="뒤로 가기"
-      @click="goBack"
-    >
-      <IconArrowLeft size="24" />
-    </button>
 
     <h1
       class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-6)"

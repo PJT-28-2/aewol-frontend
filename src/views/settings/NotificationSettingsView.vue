@@ -1,10 +1,5 @@
 <script setup>
 import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
-import BottomNavBar from '@/components/common/BottomNavBar.vue'
-import IconChevronLeft from '@/components/common/icons/IconChevronLeft.vue'
-
-const router = useRouter()
 
 const notificationSettings = ref([
   {
@@ -48,32 +43,21 @@ const isAllEnabled = computed({
   },
 })
 
-const handleBack = () => {
-  router.back()
-}
 </script>
 
 <template>
   <main
-    class="mx-auto min-h-svh w-full max-w-[390px] rounded-[40px] bg-(--color-white) px-[22px] pt-[67px] pb-[62px]"
+    class="mx-auto min-h-svh w-full max-w-[390px] bg-(--color-white) px-[22px] pt-[var(--space-4)] pb-[62px]"
     aria-labelledby="notification-settings-title"
   >
     <header>
-      <button
-        class="-ml-[7px] flex size-[24px] items-center justify-center rounded-full text-(color:--color-navy) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-navy)"
-        type="button"
-        aria-label="뒤로 가기"
-        @click="handleBack"
-      >
-        <IconChevronLeft :size="18" />
-      </button>
       <h1
         id="notification-settings-title"
-        class="mt-[7px] text-[20px] leading-[1.3] font-(--font-bold) text-(color:--color-navy)"
+        class="text-(length:--font-2xl) leading-[1.3] font-(--font-bold) text-(color:--color-navy)"
       >
         알림 설정
       </h1>
-      <p class="mt-[4px] text-[12px] leading-[1.4] text-(color:--color-slate-muted)">
+      <p class="mt-[4px] text-(length:--font-md) leading-[1.4] text-(color:--color-slate-muted)">
         필요한 알림만 받아보세요
       </p>
     </header>
@@ -167,6 +151,4 @@ const handleBack = () => {
       </div>
     </section>
   </main>
-
-  <BottomNavBar />
 </template>

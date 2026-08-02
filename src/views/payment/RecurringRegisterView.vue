@@ -3,7 +3,6 @@ import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import AppButton from '@/components/common/AppButton.vue';
 import BottomSheet from '@/components/common/BottomSheet.vue';
-import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue';
 import IconCat from '@/components/common/icons/IconCat.vue';
 import IconCheck from '@/components/common/icons/IconCheck.vue';
 import IconChevronDown from '@/components/common/icons/IconChevronDown.vue';
@@ -96,21 +95,13 @@ async function handleSubmit() {
     class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+96px)] bg-(--color-bg) min-h-screen"
   >
     <header class="mb-(--space-6)">
-      <button
-        type="button"
-        aria-label="뒤로 가기"
-        class="inline-flex mb-(--space-3) text-(color:--color-navy)"
-        @click="router.back()"
-      >
-        <IconArrowLeft size="24" />
-      </button>
       <h1
         class="text-(length:--font-2xl) font-bold text-(color:--color-navy)"
       >
         정기결제 등록
       </h1>
       <p
-        class="text-(length:--font-sm) text-(color:--color-slate-muted) mt-(--space-1)"
+        class="text-(length:--font-md) text-(color:--color-slate-muted) mt-(--space-1)"
       >
         구독형 결제 정보를 입력해주세요
       </p>

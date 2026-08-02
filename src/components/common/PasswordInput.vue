@@ -57,7 +57,7 @@ const handleInput = (event) => {
     >
       <IconEye
         :size="20"
-        :crossed="isPasswordVisible"
+        :crossed="!isPasswordVisible"
       />
     </button>
   </div>

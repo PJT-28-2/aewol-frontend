@@ -1,10 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue';
-import { useRouter } from 'vue-router';
-import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue';
 import IconUser from '@/components/common/icons/IconUser.vue';
-
-const router = useRouter();
 
 // TODO: 백엔드 API 연동 후 mock 데이터 제거하고 실제 fetch로 교체
 const groupPurchases = ref([
@@ -101,22 +97,14 @@ const filteredGroupPurchases = computed(() => {
   <div
     class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+88px)] bg-(--color-bg) min-h-screen"
   >
-    <button
-      type="button"
-      class="mb-(--space-4) text-(color:--color-navy)"
-      aria-label="뒤로가기"
-      @click="router.back()"
-    >
-      <IconArrowLeft :size="24" />
-    </button>
 
     <!-- 헤더 -->
     <header class="flex items-start justify-between mb-(--space-5)">
       <div>
-        <h1 class="text-(length:--font-xl) font-bold text-(color:--color-navy)">
+        <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">
           반려동물 용품 공동구매
         </h1>
-        <p class="text-(length:--font-sm) text-(color:--color-slate-muted) mt-(--space-1)">
+        <p class="text-(length:--font-md) text-(color:--color-slate-muted) mt-(--space-1)">
           함께 사면 더 저렴해요
         </p>
       </div>
@@ -194,7 +182,7 @@ const filteredGroupPurchases = computed(() => {
           <h3 class="text-(length:--font-md) font-semibold text-(color:--color-gray-900) mb-(--space-1)">
             {{ gp.productName }}
           </h3>
-          <p class="text-(length:--font-xs) text-(color:--color-gray-500) mb-(--space-2)">
+          <p class="text-(length:--font-xs) text-(color:--color-gray-500) mb-(--space-1)">
             {{ gp.currentQuantity }}/{{ gp.targetQuantity }}개 참여 · {{ gp.status === '진행중' ? gp.dDay : gp.status }}
           </p>
           <span class="text-(length:--font-xs) font-semibold text-(color:--color-gold)">
@@ -221,7 +209,7 @@ const filteredGroupPurchases = computed(() => {
     <!-- 글쓰기 버튼 -->
     <router-link
       to="/group-purchase/create/step1"
-      class="fixed bottom-[calc(var(--bottom-nav-height)+var(--space-4))] left-(--space-4) right-(--space-4) flex items-center justify-center p-(--space-4) bg-(--color-gold) text-(color:--color-navy) rounded-(--radius-md) text-(length:--font-base) font-bold no-underline shadow-(--shadow-md)"
+      class="fixed bottom-[calc(var(--bottom-nav-height)+var(--space-4))] left-(--space-4) right-(--space-4) flex items-center justify-center p-(--space-4) bg-(--color-gold) text-(color:--color-navy) rounded-(--radius-xl) text-(length:--font-base) font-bold no-underline shadow-(--shadow-md)"
     >
       + 공동구매 글쓰기
     </router-link>

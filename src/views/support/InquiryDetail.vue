@@ -2,7 +2,6 @@
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useSupportStore } from '@/stores/support';
-import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -43,31 +42,24 @@ onMounted(loadInquiry);
 </script>
 
 <template>
-  <div class="min-h-screen max-w-[420px] mx-auto bg-(--color-bg) px-5 pt-6 pb-10">
-    <button
-      class="-ml-(--space-2) p-(--space-2) flex items-center justify-center mb-(--space-5)"
-      aria-label="뒤로 가기"
-      @click="router.back()"
-    >
-      <IconArrowLeft :size="20" color="var(--color-gray-700)" />
-    </button>
+  <div class="min-h-screen max-w-[420px] mx-auto bg-(--color-bg) px-5 pt-(--space-4) pb-10">
 
     <p v-if="isLoading" class="text-(length:--font-sm) text-(color:--color-gray-500)">불러오는 중이에요…</p>
 
-    <div v-else-if="loadError" class="p-4 rounded-2xl bg-(--color-surface) text-center">
-      <p class="text-(length:--font-sm) text-(color:--color-danger) mb-3">{{ loadError }}</p>
+    <div v-else-if="loadError" class="p-4 rounded-(--radius-xl) bg-(--color-surface) text-center">
+      <p class="text-(length:--font-sm) text-(color:--color-danger-strong) mb-3">{{ loadError }}</p>
       <button
-        class="px-5 py-2 rounded-xl bg-(--color-navy) text-(color:--color-white) text-(length:--font-sm) font-semibold"
+        class="px-5 py-2 rounded-(--radius-xl) bg-(--color-navy) text-(color:--color-white) text-(length:--font-sm) font-semibold"
         @click="loadInquiry"
       >
         다시 시도
       </button>
     </div>
 
-    <div v-else-if="!inquiry" class="p-4 rounded-2xl bg-(--color-surface) text-center">
+    <div v-else-if="!inquiry" class="p-4 rounded-(--radius-xl) bg-(--color-surface) text-center">
       <p class="text-(length:--font-sm) text-(color:--color-gray-600) mb-3">문의 내역을 찾을 수 없어요</p>
       <button
-        class="px-5 py-2 rounded-xl bg-(--color-navy) text-(color:--color-white) text-(length:--font-sm) font-semibold"
+        class="px-5 py-2 rounded-(--radius-xl) bg-(--color-navy) text-(color:--color-white) text-(length:--font-sm) font-semibold"
         @click="router.push({ name: 'MyInquiries' })"
       >
         내 문의 내역으로 이동
@@ -87,7 +79,7 @@ onMounted(loadInquiry);
         </span>
       </div>
 
-      <h1 class="text-(length:--font-xl) font-bold text-(color:--color-navy) mb-2 leading-snug">
+      <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-2 leading-snug">
         {{ inquiry.title }}
       </h1>
       <p class="text-(length:--font-xs) text-(color:--color-gray-500) mb-6">{{ formatDate(inquiry.createdAt) }} 문의</p>
@@ -96,7 +88,7 @@ onMounted(loadInquiry);
 
       <section class="mb-8">
         <h2 class="text-(length:--font-base) font-semibold text-(color:--color-navy) mb-3">문의 내용</h2>
-        <p class="text-(length:--font-md) text-(color:--color-gray-700) leading-relaxed rounded-2xl bg-(--color-surface) p-4">
+        <p class="text-(length:--font-md) text-(color:--color-gray-700) leading-relaxed rounded-(--radius-xl) bg-(--color-surface) p-4">
           {{ inquiry.content }}
         </p>
       </section>
@@ -105,11 +97,11 @@ onMounted(loadInquiry);
         <h2 class="text-(length:--font-base) font-semibold text-(color:--color-navy) mb-3">답변</h2>
         <p
           v-if="inquiry.status === 'ANSWERED'"
-          class="text-(length:--font-md) text-(color:--color-gray-700) leading-relaxed rounded-2xl bg-(--color-surface) p-4"
+          class="text-(length:--font-md) text-(color:--color-gray-700) leading-relaxed rounded-(--radius-xl) bg-(--color-surface) p-4"
         >
           {{ inquiry.answer }}
         </p>
-        <p v-else class="text-(length:--font-sm) text-(color:--color-gray-500) rounded-2xl bg-(--color-surface) p-4 text-center">
+        <p v-else class="text-(length:--font-sm) text-(color:--color-gray-500) rounded-(--radius-xl) bg-(--color-surface) p-4 text-center">
           아직 답변이 등록되지 않았어요. 답변이 완료되면 알려드릴게요.
         </p>
       </section>

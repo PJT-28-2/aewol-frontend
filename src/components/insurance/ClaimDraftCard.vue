@@ -37,7 +37,7 @@ const appendUnit = (field) => {
             <span
               class="text-(length:--font-xs) font-semibold px-(--space-2) py-[3px] rounded-(--radius-full)"
               :class="{
-                'bg-(--color-gold-surface) text-(color:--color-gold-dark)': field.badge === 'required',
+                'bg-(--color-danger-soft) text-(color:--color-danger-strong)': field.badge === 'required',
                 'bg-(--color-info-surface) text-(color:--color-navy)':      field.badge === 'linked',
               }"
             >
@@ -62,7 +62,7 @@ const appendUnit = (field) => {
         <div v-else class="flex items-center py-(--space-3) gap-(--space-2)">
           <span class="text-(length:--font-md) text-(color:--color-gray-600) flex-1">{{ field.label }}</span>
           <span class="text-(length:--font-md) font-semibold text-(color:--color-gray-900) text-right">{{ field.value }}</span>
-          <span class="shrink-0 text-(length:--font-xs) font-semibold px-(--space-2) py-[3px] rounded-(--radius-full) bg-(--color-olive-surface) text-(color:--color-olive-dark)">
+          <span class="shrink-0 text-(length:--font-xs) font-semibold px-(--space-2) py-[3px] rounded-(--radius-full) bg-(--color-olive-surface) text-(color:--color-olive)">
             {{ field.badgeLabel }}
           </span>
         </div>

@@ -8,7 +8,6 @@ import { formatDateDot } from '@/utils/date'
 import AppButton from '@/components/common/AppButton.vue'
 import AppModal from '@/components/common/AppModal.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
-import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 import IconRefresh from '@/components/common/icons/IconRefresh.vue'
 
 const route = useRoute()
@@ -215,14 +214,6 @@ async function handlePhotoDelete() {
 
 <template>
   <div class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))]">
-    <button
-      type="button"
-      class="mb-(--space-4) text-(color:--color-navy)"
-      aria-label="뒤로가기"
-      @click="router.back()"
-    >
-      <IconArrowLeft :size="24" />
-    </button>
 
     <header class="mb-(--space-5)">
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-2)">
@@ -335,7 +326,7 @@ async function handlePhotoDelete() {
           </p>
           <p
             v-if="resyncError"
-            class="text-(length:--font-xs) text-(color:--color-danger) mt-(--space-1)"
+            class="text-(length:--font-xs) text-(color:--color-danger-strong) mt-(--space-1)"
           >
             {{ resyncError }}
           </p>
@@ -430,7 +421,7 @@ async function handlePhotoDelete() {
       </p>
       <p
         v-if="deleteError"
-        class="text-(length:--font-sm) text-(color:--color-danger) mt-(--space-2)"
+        class="text-(length:--font-sm) text-(color:--color-danger-strong) mt-(--space-2)"
       >
         {{ deleteError }}
       </p>
@@ -462,7 +453,7 @@ async function handlePhotoDelete() {
       </p>
       <p
         v-if="photoDeleteError"
-        class="text-(length:--font-sm) text-(color:--color-danger) mt-(--space-2)"
+        class="text-(length:--font-sm) text-(color:--color-danger-strong) mt-(--space-2)"
       >
         {{ photoDeleteError }}
       </p>

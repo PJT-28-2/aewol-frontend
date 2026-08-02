@@ -56,14 +56,14 @@ function onInput(event) {
       {{ label }}
       <span
         v-if="required"
-        class="text-(color:--color-danger) ml-[2px]"
+        class="text-(color:--color-danger-strong) ml-[2px]"
       >*</span>
     </label>
 
     <input
       :id="inputId"
-      class="w-full h-(--control-height-md) px-(--space-3) text-(length:--font-md) text-(color:--color-gray-900) bg-(--color-surface) border rounded-(--radius-lg) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy) focus:shadow-(--shadow-focus)"
-      :class="error ? 'border-(--color-danger)' : 'border-(--color-border)'"
+      class="w-full h-(--control-height-md) px-(--space-3) text-(length:--font-md) text-(color:--color-gray-900) bg-(--color-surface) border rounded-(--radius-lg) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
+      :class="error ? 'border-(--color-danger-strong)' : 'border-(--color-border)'"
       :type="type"
       :value="modelValue"
       :placeholder="placeholder"
@@ -78,7 +78,7 @@ function onInput(event) {
     <p
       v-if="error"
       :id="errorId"
-      class="text-(length:--font-xs) text-(color:--color-danger)"
+      class="text-(length:--font-xs) text-(color:--color-danger-strong)"
     >
       {{ error }}
     </p>

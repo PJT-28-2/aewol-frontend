@@ -131,26 +131,15 @@ function goToNextStep() {
 <template>
   <div class="p-(--space-4) pb-(--space-8) bg-(--color-bg) min-h-screen">
     <header class="mb-(--space-5)">
-      <div class="flex items-center justify-between mb-(--space-4)">
-        <button
-          type="button"
-          class="inline-flex text-(color:--color-navy)"
-          aria-label="이전 단계로"
-          @click="goToPrevStep"
-        >
-          <IconArrowLeft
-            size="18"
-            color="var(--color-navy)"
-          />
-        </button>
+      <div class="flex items-center justify-end mb-(--space-4)">
         <p class="text-(length:--font-sm) font-bold text-(color:--color-slate-muted)">
           2/3
         </p>
       </div>
-      <h1 class="text-(length:--font-xl) font-bold text-(color:--color-navy) mb-(--space-1)">
+      <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-1)">
         구매 조건
       </h1>
-      <p class="text-(length:--font-sm) text-(color:--color-slate-muted)">
+      <p class="text-(length:--font-md) text-(color:--color-slate-muted)">
         공동구매 목표와 마감일을 정해주세요
       </p>
     </header>
@@ -169,7 +158,7 @@ function goToNextStep() {
           :value="targetQuantity"
           type="text"
           inputmode="numeric"
-          class="w-full h-[46px] pl-(--space-4) pr-(--space-8) rounded-xl bg-(--color-surface) border border-(--color-border) text-(length:--font-sm) font-bold text-(color:--color-navy)"
+          class="w-full h-[46px] pl-(--space-4) pr-(--space-8) rounded-(--radius-xl) bg-(--color-surface) border border-(--color-border) text-(length:--font-sm) font-bold text-(color:--color-navy)"
           @input="handleTargetQuantityInput"
           @blur="clampTargetQuantity"
         >
@@ -189,7 +178,7 @@ function goToNextStep() {
       </label>
       <button
         type="button"
-        class="w-full h-[46px] px-(--space-4) rounded-xl bg-(--color-surface) border border-(--color-border) flex items-center justify-between"
+        class="w-full h-[46px] px-(--space-4) rounded-(--radius-xl) bg-(--color-surface) border border-(--color-border) flex items-center justify-between"
         aria-labelledby="deadline-label"
         @click="isDeadlineSheetOpen = true"
       >
@@ -289,7 +278,7 @@ function goToNextStep() {
         type="text"
         :value="deliveryMethod"
         readonly
-        class="w-full h-[46px] px-(--space-4) rounded-xl bg-(--color-surface) border border-(--color-border) text-(length:--font-sm) text-(color:--color-navy) cursor-default"
+        class="w-full h-[46px] px-(--space-4) rounded-(--radius-xl) bg-(--color-surface) border border-(--color-border) text-(length:--font-sm) text-(color:--color-navy) cursor-default"
       >
     </section>
 
@@ -308,7 +297,7 @@ function goToNextStep() {
           type="text"
           inputmode="numeric"
           placeholder="0"
-          class="w-full h-[46px] pl-(--space-4) pr-(--space-8) rounded-xl bg-(--color-surface) border border-(--color-border) text-(length:--font-sm) text-(color:--color-navy) placeholder:text-(color:--color-slate-muted)"
+          class="w-full h-[46px] pl-(--space-4) pr-(--space-8) rounded-(--radius-xl) bg-(--color-surface) border border-(--color-border) text-(length:--font-sm) text-(color:--color-navy) placeholder:text-(color:--color-slate-muted)"
           @input="handleDeliveryFeeInput"
         >
         <span class="absolute right-(--space-4) top-1/2 -translate-y-1/2 text-(length:--font-sm) text-(color:--color-slate-muted)">
@@ -325,7 +314,7 @@ function goToNextStep() {
       >
         배송 예정일 *
       </label>
-      <div class="flex items-center gap-(--space-1) h-[46px] px-(--space-4) rounded-xl bg-(--color-surface) border border-(--color-border) text-(length:--font-sm) text-(color:--color-navy)">
+      <div class="flex items-center gap-(--space-1) h-[46px] px-(--space-4) rounded-(--radius-xl) bg-(--color-surface) border border-(--color-border) text-(length:--font-sm) text-(color:--color-navy)">
         <span>마감일로부터</span>
         <input
           id="delivery-estimate-days"
@@ -354,7 +343,7 @@ function goToNextStep() {
         v-model="description"
         rows="4"
         placeholder="상품 상세 설명, 주의사항 등을 입력하세요"
-        class="w-full h-[130px] p-(--space-4) rounded-xl bg-(--color-surface) border border-(--color-border) text-(length:--font-sm) text-(color:--color-navy) placeholder:text-(color:--color-slate-muted) resize-none"
+        class="w-full h-[130px] p-(--space-4) rounded-(--radius-xl) bg-(--color-surface) border border-(--color-border) text-(length:--font-sm) text-(color:--color-navy) placeholder:text-(color:--color-slate-muted) resize-none"
       />
     </section>
 

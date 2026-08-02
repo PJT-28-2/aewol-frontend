@@ -5,6 +5,8 @@ import AddressSearchLayer from '@/components/common/AddressSearchLayer.vue'
 import AppButton from '@/components/common/AppButton.vue'
 import PasswordInput from '@/components/common/PasswordInput.vue'
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
+import IconCheck from '@/components/common/icons/IconCheck.vue'
+import { formatPhoneNumber } from '@/utils/phone'
 
 const router = useRouter()
 
@@ -67,6 +69,10 @@ const handleKakaoSignup = () => {
   errorMessage.value = ''
 }
 
+const handlePhoneInput = (event) => {
+  form.phone = formatPhoneNumber(event.target.value)
+}
+
 const toggleAllAgreements = () => {
   const nextValue = !isAllAgreed.value
   agreements.terms = nextValue
@@ -93,10 +99,14 @@ const handleSignup = async () => {
 
 <template>
   <main
-    class="mx-auto min-h-svh w-[min(100%,390px)] overflow-hidden bg-(--color-white) px-[22px] pt-[58px] pb-6 min-[391px]:my-6 min-[391px]:rounded-[40px] min-[391px]:shadow-(--shadow-lg)"
+    class="min-h-svh w-full bg-(--color-white) px-[22px] pt-[calc(var(--header-height)+var(--space-4))] pb-6"
   >
+    <div
+      class="fixed inset-x-0 top-0 z-100 h-(--header-height) bg-(--color-white)"
+      aria-hidden="true"
+    />
     <button
-      class="flex size-6 items-center justify-center text-(color:--color-navy)"
+      class="fixed top-(--space-2) left-(--space-4) z-101 flex size-10 items-center justify-center text-(color:--color-navy)"
       type="button"
       aria-label="이전 화면으로 돌아가기"
       @click="router.back()"
@@ -104,13 +114,13 @@ const handleSignup = async () => {
       <IconArrowLeft :size="24" />
     </button>
 
-    <header class="mt-[25px]">
+    <header>
       <h1
-        class="text-[22px] leading-[1.3] font-(--font-bold) text-(color:--color-navy)"
+        class="text-(length:--font-2xl) leading-[1.3] font-(--font-bold) text-(color:--color-navy)"
       >
         회원가입
       </h1>
-      <p class="mt-[3px] text-[12.5px] leading-[1.3] text-(color:--color-slate-dark)">
+      <p class="mt-[3px] text-(length:--font-md) leading-[1.3] text-(color:--color-slate-dark)">
         반려동물을 위한, 전용 전자지갑을 시작하세요
       </p>
     </header>
@@ -173,7 +183,7 @@ const handleSignup = async () => {
       </label>
       <input
         id="signup-phone"
-        v-model="form.phone"
+        :value="form.phone"
         class="h-(--control-height-md) rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy) read-only:cursor-default read-only:text-(color:--color-slate-muted)"
         type="tel"
         autocomplete="tel"
@@ -181,6 +191,7 @@ const handleSignup = async () => {
         placeholder="010-1234-5678"
         :readonly="isKakaoSignup"
         required
+        @input="handlePhoneInput"
       >
 
       <label
@@ -189,7 +200,7 @@ const handleSignup = async () => {
       >
         이메일
       </label>
-      <div class="flex gap-(--space-4)">
+      <div class="flex gap-(--space-2)">
         <input
           id="signup-email"
           v-model="form.email"
@@ -205,13 +216,13 @@ const handleSignup = async () => {
           class="h-(--control-height-md) w-20 shrink-0 rounded-(--radius-lg) bg-(--color-navy) text-[12.5px] font-(--font-bold) text-(color:--color-white)"
           type="button"
         >
-          인증
+          인증하기
         </button>
       </div>
 
       <template v-if="!isKakaoSignup">
         <label
-          class="mt-[27px] mb-1 text-[12.5px] font-(--font-bold) text-(color:--color-slate-dark)"
+          class="mt-[11px] mb-1 text-[12.5px] font-(--font-bold) text-(color:--color-slate-dark)"
           for="signup-code"
         >
           인증번호
@@ -243,14 +254,14 @@ const handleSignup = async () => {
         />
         <p
           v-if="form.password && !isPasswordValid"
-          class="mt-1 text-[11px] text-(color:--color-danger)"
+          class="mt-1 text-[11px] text-(color:--color-danger-strong)"
           role="alert"
         >
           영문·숫자·특수문자 중 2가지 조합은 10자리, 3가지 조합은 8자리 이상 입력해 주세요.
         </p>
         <p
           v-else-if="form.password && isPasswordValid"
-          class="mt-1 text-[11px] text-(color:--color-success)"
+          class="mt-1 text-[11px] text-(color:--color-olive)"
         >
           사용 가능한 비밀번호입니다.
         </p>
@@ -271,14 +282,14 @@ const handleSignup = async () => {
         />
         <p
           v-if="form.passwordConfirm && !isPasswordConfirmed"
-          class="mt-1 text-[11px] text-(color:--color-danger)"
+          class="mt-1 text-[11px] text-(color:--color-danger-strong)"
           role="alert"
         >
           비밀번호가 일치하지 않습니다.
         </p>
         <p
           v-else-if="form.passwordConfirm && isPasswordConfirmed"
-          class="mt-1 text-[11px] text-(color:--color-success)"
+          class="mt-1 text-[11px] text-(color:--color-olive)"
         >
           비밀번호가 일치합니다.
         </p>
@@ -290,14 +301,14 @@ const handleSignup = async () => {
       >
         우편번호
       </label>
-      <div class="flex gap-(--space-4)">
+      <div class="flex gap-(--space-2)">
         <input
           id="signup-zip-code"
           v-model="form.zipCode"
           class="h-(--control-height-md) min-w-0 flex-1 cursor-default rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted)"
           type="text"
           inputmode="numeric"
-          placeholder="12345"
+          placeholder="우편번호를 검색하세요"
           readonly
           required
         >
@@ -307,7 +318,7 @@ const handleSignup = async () => {
           type="button"
           @click="isAddressSearchOpen = true"
         >
-          주소 찾기
+          우편번호 찾기
         </button>
       </div>
 
@@ -323,7 +334,7 @@ const handleSignup = async () => {
         class="h-(--control-height-md) cursor-default rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted)"
         type="text"
         autocomplete="address-line1"
-        placeholder="주소"
+        placeholder="우편번호 찾기를 눌러 입력해주세요"
         readonly
         required
       >
@@ -340,55 +351,87 @@ const handleSignup = async () => {
         class="h-(--control-height-md) rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
         type="text"
         autocomplete="address-line2"
-        placeholder="동, 호수 등 상세주소 입력"
+        placeholder="건물, 아파트, 동/호수 입력"
         required
       >
 
-      <fieldset class="mt-10 rounded-(--radius-xl) bg-(--color-surface) px-[18px] py-4">
+      <fieldset class="mt-8 rounded-(--radius-xl) border border-(--color-border) bg-(--color-surface) px-[18px] py-4">
         <legend class="sr-only">
           약관 동의
         </legend>
         <div class="flex items-center justify-between">
           <span class="text-[13px] font-(--font-bold) text-(color:--color-navy)">전체 동의</span>
-          <input
-            class="size-[18px] accent-(--color-navy)"
-            type="checkbox"
-            :checked="isAllAgreed"
-            aria-label="모든 약관에 동의"
-            @change="toggleAllAgreements"
-          >
+          <label class="relative flex size-[22px] items-center justify-center">
+            <input
+              class="peer sr-only"
+              type="checkbox"
+              :checked="isAllAgreed"
+              aria-label="모든 약관에 동의"
+              @change="toggleAllAgreements"
+            >
+            <span
+              class="flex size-[22px] items-center justify-center rounded-full border border-(--color-border) bg-(--color-white) text-(color:--color-white) peer-checked:border-(--color-navy) peer-checked:bg-(--color-navy)"
+              aria-hidden="true"
+            >
+              <IconCheck size="13" />
+            </span>
+          </label>
         </div>
-        <label class="mt-3 flex items-center gap-[10px] text-[11.5px] text-(color:--color-slate-dark)">
-          <input
-            v-model="agreements.terms"
-            class="size-4 accent-(--color-navy)"
-            type="checkbox"
-            required
-          >
+        <label class="mt-[10px] flex items-center gap-[10px] text-[11.5px] text-(color:--color-slate-dark)">
+          <span class="relative flex size-[18px] shrink-0 items-center justify-center">
+            <input
+              v-model="agreements.terms"
+              class="peer sr-only"
+              type="checkbox"
+              required
+            >
+            <span
+              class="flex size-[18px] items-center justify-center rounded-full border border-(--color-border) bg-(--color-white) text-(color:--color-white) peer-checked:border-(--color-navy) peer-checked:bg-(--color-navy)"
+              aria-hidden="true"
+            >
+              <IconCheck size="11" />
+            </span>
+          </span>
           <span>(필수) 이용약관 동의</span>
         </label>
         <label class="mt-[10px] flex items-center gap-[10px] text-[11.5px] text-(color:--color-slate-dark)">
-          <input
-            v-model="agreements.privacy"
-            class="size-4 accent-(--color-navy)"
-            type="checkbox"
-            required
-          >
+          <span class="relative flex size-[18px] shrink-0 items-center justify-center">
+            <input
+              v-model="agreements.privacy"
+              class="peer sr-only"
+              type="checkbox"
+              required
+            >
+            <span
+              class="flex size-[18px] items-center justify-center rounded-full border border-(--color-border) bg-(--color-white) text-(color:--color-white) peer-checked:border-(--color-navy) peer-checked:bg-(--color-navy)"
+              aria-hidden="true"
+            >
+              <IconCheck size="11" />
+            </span>
+          </span>
           <span>(필수) 개인정보 처리방침 동의</span>
         </label>
         <label class="mt-[10px] flex items-center gap-[10px] text-[11.5px] text-(color:--color-slate-dark)">
-          <input
-            v-model="agreements.marketing"
-            class="size-4 accent-(--color-navy)"
-            type="checkbox"
-          >
+          <span class="relative flex size-[18px] shrink-0 items-center justify-center">
+            <input
+              v-model="agreements.marketing"
+              class="peer sr-only"
+              type="checkbox"
+            >
+            <span
+              class="flex size-[18px] items-center justify-center rounded-full border border-(--color-border) bg-(--color-white) text-(color:--color-white) peer-checked:border-(--color-navy) peer-checked:bg-(--color-navy)"
+              aria-hidden="true"
+            >
+              <IconCheck size="11" />
+            </span>
+          </span>
           <span>(선택) 마케팅 정보 수신 동의</span>
         </label>
       </fieldset>
 
       <p
         v-if="errorMessage"
-        class="mt-3 text-center text-(length:--font-sm) text-(color:--color-danger)"
+        class="mt-3 text-center text-(length:--font-sm) text-(color:--color-danger-strong)"
         role="alert"
       >
         {{ errorMessage }}
@@ -417,6 +460,7 @@ const handleSignup = async () => {
 
     <AddressSearchLayer
       v-model="isAddressSearchOpen"
+      title="우편번호 찾기"
       @select="handleAddressSelect"
     />
   </main>

@@ -172,11 +172,11 @@ onUnmounted(() => {
 }
 
 .timer.expired {
-  color: var(--color-danger);
+  color: var(--color-danger-strong);
 }
 
 .error-text {
-  color: var(--color-danger);
+  color: var(--color-danger-strong);
   font-size: var(--font-sm);
   margin-bottom: var(--space-3);
 }

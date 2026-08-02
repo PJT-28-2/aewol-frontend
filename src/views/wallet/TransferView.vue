@@ -4,7 +4,6 @@ import { useRoute, useRouter } from 'vue-router';
 import AppButton from '@/components/common/AppButton.vue';
 import BankBadge from '@/components/common/BankBadge.vue';
 import BottomSheet from '@/components/common/BottomSheet.vue';
-import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue';
 import IconCheck from '@/components/common/icons/IconCheck.vue';
 import IconChevronDown from '@/components/common/icons/IconChevronDown.vue';
 import { useAccountStore } from '@/stores/account';
@@ -112,21 +111,13 @@ function handleNext() {
     class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+96px)] bg-(--color-bg) min-h-screen"
   >
     <header class="mb-(--space-5)">
-      <button
-        type="button"
-        aria-label="뒤로 가기"
-        class="inline-flex mb-(--space-3) text-(color:--color-navy)"
-        @click="router.back()"
-      >
-        <IconArrowLeft size="24" />
-      </button>
       <h1
         class="text-(length:--font-2xl) font-bold text-(color:--color-navy)"
       >
         얼마를 보낼까요?
       </h1>
       <p
-        class="text-(length:--font-sm) text-(color:--color-slate-muted) mt-(--space-1)"
+        class="text-(length:--font-md) text-(color:--color-slate-muted) mt-(--space-1)"
       >
         받는 계좌로 보낼 금액을 입력해주세요
       </p>
@@ -140,7 +131,7 @@ function handleNext() {
       </h2>
       <button
         type="button"
-        class="w-full flex items-center justify-between p-4 rounded-xl bg-(--color-surface) border border-(--color-border) text-(length:--font-md) font-semibold text-(color:--color-navy)"
+        class="w-full flex items-center justify-between p-4 rounded-(--radius-xl) bg-(--color-surface) border border-(--color-border) text-(length:--font-md) font-semibold text-(color:--color-navy)"
         @click="isBankSheetOpen = true"
       >
         {{ receivingBankName }}
@@ -162,7 +153,7 @@ function handleNext() {
         type="text"
         inputmode="numeric"
         placeholder="123456-12-123456"
-        class="w-full p-4 rounded-xl bg-(--color-surface) border border-(--color-border) text-(length:--font-md) text-(color:--color-navy) outline-none"
+        class="w-full p-4 rounded-(--radius-xl) bg-(--color-surface) border border-(--color-border) text-(length:--font-md) text-(color:--color-navy) outline-none"
       >
     </section>
 
@@ -218,7 +209,7 @@ function handleNext() {
       </button>
       <p
         v-if="isInsufficientBalance"
-        class="text-(length:--font-sm) text-(color:--color-danger) mt-(--space-2)"
+        class="text-(length:--font-sm) text-(color:--color-danger-strong) mt-(--space-2)"
       >
         잔액이 부족해요
       </p>

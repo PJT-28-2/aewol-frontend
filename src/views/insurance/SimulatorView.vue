@@ -1,19 +1,12 @@
 <script setup>
 import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
 import IconDog from '@/components/common/icons/IconDog.vue'
 import IconCat from '@/components/common/icons/IconCat.vue'
-import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 import IconPaw from '@/components/common/icons/IconPaw.vue'
+import AppButton from '@/components/common/AppButton.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import MedicalHistoryPicker from '@/components/insurance/MedicalHistoryPicker.vue'
 import { mockSimulatorPets, mockSimulateResult } from '@/mocks/insurance'
-
-const router = useRouter()
-
-function goBack() {
-  router.back()
-}
 
 const pets = ref(mockSimulatorPets.map((pet) => ({ ...pet })))
 
@@ -37,7 +30,7 @@ const verdictLabels = {
 const verdictColorClasses = {
   FAVORABLE: 'text-(color:--color-gold-light)',
   NEUTRAL: 'text-(color:--color-gray-300)',
-  UNFAVORABLE: 'text-(color:--color-danger)',
+  UNFAVORABLE: 'text-(color:--color-danger-strong)',
 }
 
 async function handleSimulate() {
@@ -86,20 +79,12 @@ function mockSimulate() {
   <div
     class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))] bg-(--color-bg) min-h-[calc(100vh-var(--header-height)-var(--bottom-nav-height))]"
   >
-    <button
-      type="button"
-      class="mb-(--space-3) text-(color:--color-navy)"
-      aria-label="뒤로 가기"
-      @click="goBack"
-    >
-      <IconArrowLeft size="24" />
-    </button>
 
     <header class="mb-(--space-5)">
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">
         펫보험 손익분기 시뮬레이터
       </h1>
-      <p class="text-(length:--font-md) text-(color:--color-gray-600) mt-(--space-2)">
+      <p class="text-(length:--font-md) text-(color:--color-slate-muted) mt-(--space-2)">
         가입이 유리한지 미리 계산해보세요
       </p>
     </header>
@@ -157,36 +142,44 @@ function mockSimulate() {
           <label class="block text-(length:--font-sm) font-medium text-(color:--color-gray-700) mb-(--space-2)">
             견종
           </label>
-          <div class="py-(--space-3) px-(--space-4) bg-(--color-gray-100) rounded-(--radius-md) text-(length:--font-base) text-(color:--color-gray-800)">
-            {{ selectedPet?.breed }}
-          </div>
+          <input
+            class="h-(--control-height-md) w-full cursor-default rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none"
+            type="text"
+            :value="selectedPet?.breed"
+            readonly
+          >
         </div>
 
         <div>
           <label class="block text-(length:--font-sm) font-medium text-(color:--color-gray-700) mb-(--space-2)">
             나이
           </label>
-          <div class="py-(--space-3) px-(--space-4) bg-(--color-gray-100) rounded-(--radius-md) text-(length:--font-base) text-(color:--color-gray-800)">
-            {{ selectedPet?.age }}세
-          </div>
+          <input
+            class="h-(--control-height-md) w-full cursor-default rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none"
+            type="text"
+            :value="selectedPet ? `${selectedPet.age}세` : ''"
+            readonly
+          >
         </div>
 
         <MedicalHistoryPicker v-model="medicalTags" />
 
         <p
           v-if="errorMessage"
-          class="text-(color:--color-danger) text-(length:--font-sm)"
+          class="text-(color:--color-danger-strong) text-(length:--font-sm)"
         >
           {{ errorMessage }}
         </p>
 
-        <button
+        <AppButton
           type="submit"
-          class="w-full py-(--space-3) px-(--space-4) bg-(--color-gold) text-(color:--color-white) rounded-(--radius-md) text-(length:--font-base) font-semibold disabled:opacity-60 disabled:cursor-not-allowed"
-          :disabled="isLoading"
+          variant="primary"
+          size="lg"
+          block
+          :loading="isLoading"
         >
-          {{ isLoading ? '계산 중...' : '결과 계산하기' }}
-        </button>
+          결과 계산하기
+        </AppButton>
       </form>
 
       <section
@@ -224,12 +217,16 @@ function mockSimulate() {
           </p>
         </div>
 
-        <button
-          class="w-full py-(--space-3) px-(--space-4) border border-(--color-gray-300) rounded-(--radius-md) text-(length:--font-md) text-(color:--color-gray-600)"
+        <AppButton
+          type="button"
+          variant="secondary"
+          size="lg"
+          block
+          class="border-(--color-border)!"
           @click="handleReset"
         >
           다시 계산하기
-        </button>
+        </AppButton>
 
         <div>
           <h2 class="text-(length:--font-lg) font-semibold text-(color:--color-navy)">
@@ -266,13 +263,16 @@ function mockSimulate() {
                   {{ coverage }}
                 </li>
               </ul>
-              <button
+              <AppButton
                 type="button"
-                class="w-full mt-(--space-4) py-(--space-3) px-(--space-4) bg-(--color-navy) text-(color:--color-white) rounded-(--radius-md) text-(length:--font-base) font-semibold"
+                variant="navy"
+                size="md"
+                block
+                class="mt-(--space-4)"
                 @click="openProduct(product.productUrl)"
               >
                 상품 보러가기
-              </button>
+              </AppButton>
             </li>
           </ul>
         </div>

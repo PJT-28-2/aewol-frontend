@@ -3,7 +3,6 @@ import { onMounted, ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useSupportStore } from '@/stores/support';
 import { SUPPORT_CATEGORIES } from '@/utils/mockData';
-import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue';
 import IconSearch from '@/components/common/icons/IconSearch.vue';
 import IconChatBubble from '@/components/common/icons/IconChatBubble.vue';
 import IconDocument from '@/components/common/icons/IconDocument.vue';
@@ -76,14 +75,7 @@ function goToFaqDetail(faqId) {
 </script>
 
 <template>
-  <div class="min-h-screen max-w-[420px] mx-auto bg-(--color-bg) px-5 pt-6 pb-10">
-    <button
-      class="-ml-(--space-2) p-(--space-2) flex items-center justify-center mb-(--space-5)"
-      aria-label="뒤로 가기"
-      @click="router.back()"
-    >
-      <IconArrowLeft :size="20" color="var(--color-gray-700)" />
-    </button>
+  <div class="min-h-screen max-w-[420px] mx-auto bg-(--color-bg) px-5 pt-(--space-4) pb-10">
 
     <header class="mb-5">
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">고객센터</h1>
@@ -100,7 +92,7 @@ function goToFaqDetail(faqId) {
         v-model="keyword"
         type="text"
         placeholder="궁금한 내용을 검색해보세요"
-        class="w-full pl-11 pr-11 py-3.5 rounded-xl bg-(--color-surface) text-(length:--font-md) text-(color:--color-navy) outline-none"
+        class="w-full h-(--control-height-md) pl-11 pr-11 rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) text-[13px] text-(color:--color-navy) outline-none focus:border-(--color-navy)"
       />
       <button
         v-if="keyword"
@@ -129,7 +121,7 @@ function goToFaqDetail(faqId) {
 
     <div v-if="!isSearchMode" class="grid grid-cols-2 gap-3 mb-7">
       <button
-        class="flex flex-col items-start gap-2 p-4 rounded-2xl bg-(--color-surface) text-left"
+        class="flex flex-col items-start gap-2 p-4 rounded-(--radius-xl) bg-(--color-surface) text-left"
         @click="router.push({ name: 'InquiryForm' })"
       >
         <IconChatBubble :size="22" color="var(--color-navy)" />
@@ -137,7 +129,7 @@ function goToFaqDetail(faqId) {
         <span class="text-(length:--font-xs) text-(color:--color-gray-500)">문의를 남겨주세요</span>
       </button>
       <button
-        class="flex flex-col items-start gap-2 p-4 rounded-2xl bg-(--color-surface) text-left"
+        class="flex flex-col items-start gap-2 p-4 rounded-(--radius-xl) bg-(--color-surface) text-left"
         @click="router.push({ name: 'MyInquiries' })"
       >
         <IconDocument :size="22" color="var(--color-navy)" />
@@ -156,7 +148,7 @@ function goToFaqDetail(faqId) {
       <ul class="flex flex-col gap-2 mb-6">
         <li v-for="faq in filteredFaqs" :key="faq.faqId">
           <button
-            class="w-full flex items-center justify-between gap-3 p-4 rounded-2xl bg-(--color-surface) text-left"
+            class="w-full flex items-center justify-between gap-3 p-4 rounded-(--radius-xl) bg-(--color-surface) text-left"
             @click="goToFaqDetail(faq.faqId)"
           >
             <div>
@@ -198,10 +190,10 @@ function goToFaqDetail(faqId) {
 
       <p v-if="store.isLoading" class="text-(length:--font-sm) text-(color:--color-gray-500)">불러오는 중이에요…</p>
 
-      <div v-else-if="loadError" class="p-4 rounded-2xl bg-(--color-surface) mb-3 text-center">
-        <p class="text-(length:--font-sm) text-(color:--color-danger) mb-3">{{ loadError }}</p>
+      <div v-else-if="loadError" class="p-4 rounded-(--radius-xl) bg-(--color-surface) mb-3 text-center">
+        <p class="text-(length:--font-sm) text-(color:--color-danger-strong) mb-3">{{ loadError }}</p>
         <button
-          class="px-5 py-2 rounded-xl bg-(--color-navy) text-(color:--color-white) text-(length:--font-sm) font-semibold"
+          class="px-5 py-2 rounded-(--radius-xl) bg-(--color-navy) text-(color:--color-white) text-(length:--font-sm) font-semibold"
           @click="loadFaqs"
         >
           다시 시도
@@ -212,7 +204,7 @@ function goToFaqDetail(faqId) {
         <li
           v-for="faq in filteredFaqs"
           :key="faq.faqId"
-          class="rounded-2xl bg-(--color-surface) overflow-hidden"
+          class="rounded-(--radius-xl) bg-(--color-surface) overflow-hidden"
         >
           <button
             class="w-full flex items-center justify-between gap-3 p-4 text-left"
@@ -230,7 +222,7 @@ function goToFaqDetail(faqId) {
             <p v-if="isLoadingAnswer && !faq.answer" class="text-(length:--font-sm) text-(color:--color-gray-500)">
               불러오는 중이에요…
             </p>
-            <p v-else-if="answerError && !faq.answer" class="text-(length:--font-sm) text-(color:--color-danger)">
+            <p v-else-if="answerError && !faq.answer" class="text-(length:--font-sm) text-(color:--color-danger-strong)">
               {{ answerError }}
             </p>
             <p v-else class="text-(length:--font-sm) text-(color:--color-gray-600) leading-relaxed">{{ faq.answer }}</p>

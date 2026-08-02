@@ -233,7 +233,7 @@ const handlePayment = async () => {
 }
 
 .error-text {
-  color: var(--color-danger);
+  color: var(--color-danger-strong);
   font-size: var(--font-sm);
   margin-bottom: var(--space-3);
 }

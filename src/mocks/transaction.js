@@ -11,7 +11,7 @@ export const mockWalletBalance = 482600
 export const mockTransactions = [
   {
     id: 1,
-    date: '2026-07-18',
+    date: '2026-08-18',
     time: '15:24',
     title: '24시 우리동물병원',
     subtitle: '병원비 · 소로 진료',
@@ -24,7 +24,7 @@ export const mockTransactions = [
   },
   {
     id: 2,
-    date: '2026-07-17',
+    date: '2026-08-17',
     time: '11:32',
     title: '펫사료마트',
     subtitle: '사료·간식 · 정기 구매',
@@ -37,7 +37,7 @@ export const mockTransactions = [
   },
   {
     id: 3,
-    date: '2026-07-17',
+    date: '2026-08-17',
     time: '09:05',
     title: '엄마 · 충전',
     subtitle: '펫지갑에 100,000원 충전',
@@ -47,7 +47,7 @@ export const mockTransactions = [
   },
   {
     id: 4,
-    date: '2026-07-15',
+    date: '2026-08-15',
     time: '14:10',
     title: '미미미용실',
     subtitle: '미용비 · 나비 미용',
@@ -60,7 +60,7 @@ export const mockTransactions = [
   },
   {
     id: 5,
-    date: '2026-07-12',
+    date: '2026-08-12',
     time: '22:47',
     title: '24시 제주동물병원',
     subtitle: '병원비 · 응급진료',
@@ -73,7 +73,7 @@ export const mockTransactions = [
   },
   {
     id: 6,
-    date: '2026-07-10',
+    date: '2026-08-10',
     time: '16:20',
     title: '펫프렌즈',
     subtitle: '위생용품 · 용품 구매',
@@ -86,7 +86,7 @@ export const mockTransactions = [
   },
   {
     id: 7,
-    date: '2026-06-20',
+    date: '2026-07-20',
     time: '18:03',
     title: '24시 우리동물병원',
     subtitle: '병원비 · 나비 진료',
@@ -99,7 +99,7 @@ export const mockTransactions = [
   },
   {
     id: 8,
-    date: '2026-06-05',
+    date: '2026-07-05',
     time: '20:15',
     title: '아빠 · 충전',
     subtitle: '펫지갑에 50,000원 충전',
@@ -109,7 +109,7 @@ export const mockTransactions = [
   },
   {
     id: 9,
-    date: '2026-07-05',
+    date: '2026-08-05',
     time: '10:20',
     title: '발바닥동물병원',
     subtitle: '병원비 · 나비 진료',
@@ -122,7 +122,7 @@ export const mockTransactions = [
   },
   {
     id: 10,
-    date: '2026-07-08',
+    date: '2026-08-08',
     time: '19:30',
     title: '펫프렌즈 라운지',
     subtitle: '기타 · 반려동물 카페',

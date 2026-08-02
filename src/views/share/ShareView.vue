@@ -43,7 +43,7 @@ function retryFetchSharedCare() {
 
 <template>
   <div
-    class="mx-auto min-h-[calc(100dvh-var(--header-height)-var(--bottom-nav-height))] w-full max-w-[var(--mobile-content-width)] box-border bg-(--color-white) px-[var(--space-5)] pb-[calc(var(--space-6)+env(safe-area-inset-bottom))] pt-[var(--space-1)] text-(--color-navy)"
+    class="mx-auto min-h-[calc(100dvh-var(--header-height)-var(--bottom-nav-height))] w-full max-w-[420px] box-border bg-(--color-white) px-[var(--space-5)] pt-[var(--space-4)] pb-[calc(var(--space-6)+env(safe-area-inset-bottom))] text-(--color-navy)"
   >
     <section
       v-if="shareStore.isLoading"
@@ -81,11 +81,11 @@ function retryFetchSharedCare() {
 
     <template v-else>
       <header>
-        <h1 class="m-0 text-[length:var(--font-xl)] font-bold leading-[1.3]">
+        <h1 class="m-0 text-[length:var(--font-2xl)] font-bold leading-[1.3]">
           함께 돌보기
         </h1>
         <p
-          class="mb-0 mt-[var(--space-1)] text-[length:var(--font-sm)] text-(--color-slate-muted)"
+          class="mb-0 mt-[var(--space-1)] text-[length:var(--font-md)] text-(--color-slate-muted)"
         >
           가족과 지갑을 공유하고 기여도를 확인해요
         </p>
@@ -100,6 +100,7 @@ function retryFetchSharedCare() {
           v-for="pet in shareStore.pets"
           :key="pet.id"
           class="min-w-[var(--share-pet-chip-min-width)]"
+          :class="selectedPetId !== pet.id ? 'text-(--color-navy)!' : ''"
           :selected="selectedPetId === pet.id"
           @click="selectedPetId = pet.id"
         >
@@ -110,7 +111,7 @@ function retryFetchSharedCare() {
           {{ pet.name }}
         </SelectableChip>
         <AppButton
-          class="!h-[var(--control-height-sm)] shrink-0"
+          class="!h-[var(--control-height-sm)] shrink-0 border-(--color-border)!"
           variant="secondary"
           size="sm"
           pill

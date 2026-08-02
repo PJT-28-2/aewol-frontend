@@ -119,7 +119,7 @@ async function copyLink() {
     <p
       v-if="feedback"
       class="mb-0 mt-[var(--space-3)] text-[length:var(--font-sm)] text-(--color-slate-dark)"
-      :class="{ 'text-(--color-danger)': isError }"
+      :class="{ 'text-(--color-danger-strong)': isError }"
       :role="isError ? 'alert' : 'status'"
     >
       {{ feedback }}

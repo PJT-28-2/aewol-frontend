@@ -69,19 +69,19 @@ const authRoutes = [
     path: '/account',
     name: 'AccountManagement',
     component: () => import('@/views/account/AccountManagement.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/account/link',
     name: 'AccountLinkSelect',
     component: () => import('@/views/account/AccountLinkSelect.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/account/link/verify',
     name: 'AccountAuthOneWon',
     component: () => import('@/views/account/AccountAuthOneWon.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/account/link/complete',
@@ -99,31 +99,31 @@ const authRoutes = [
     path: '/pets',
     name: 'PetList',
     component: () => import('@/views/pet/PetListView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/pets/register',
     name: 'PetRegister',
     component: () => import('@/views/pet/PetRegisterView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/pets/:petId/edit',
     name: 'PetEdit',
     component: () => import('@/views/pet/PetEditView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/certificates',
     name: 'CertificateList',
     component: () => import('@/views/certificate/CertificateListView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/certificates/:petId/:docId',
     name: 'CertificateDetail',
     component: () => import('@/views/certificate/CertificateDetailView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/wallet',
@@ -135,7 +135,7 @@ const authRoutes = [
     path: '/wallet/charge',
     name: 'Charge',
     component: () => import('@/views/wallet/ChargeView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/wallet/charge/complete',
@@ -147,25 +147,25 @@ const authRoutes = [
     path: '/wallet/charge/account-select',
     name: 'ChargeAccountSelect',
     component: () => import('@/views/wallet/ChargeAccountSelectView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/wallet/transfer',
     name: 'Transfer',
     component: () => import('@/views/wallet/TransferView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/wallet/transfer/account-select',
     name: 'TransferAccountSelect',
     component: () => import('@/views/wallet/TransferAccountSelectView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/wallet/transfer/confirm',
     name: 'TransferConfirm',
     component: () => import('@/views/wallet/TransferConfirmView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/wallet/transfer/complete',
@@ -177,13 +177,13 @@ const authRoutes = [
     path: '/wallet/history',
     name: 'TransactionHistory',
     component: () => import('@/views/wallet/TransactionHistoryView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/wallet/history/:txId',
     name: 'TransactionDetail',
     component: () => import('@/views/wallet/TransactionDetailView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/accounts',
@@ -195,7 +195,7 @@ const authRoutes = [
     path: '/accounts/connect',
     name: 'AccountConnect',
     component: () => import('@/views/account/AccountConnectView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/payment',
@@ -207,13 +207,13 @@ const authRoutes = [
     path: '/payment/recurring',
     name: 'Recurring',
     component: () => import('@/views/payment/RecurringView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/payment/recurring/register',
     name: 'RecurringRegister',
     component: () => import('@/views/payment/RecurringRegisterView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/payment/recurring/register/complete',
@@ -237,7 +237,7 @@ const authRoutes = [
     path: '/dashboard',
     name: 'Dashboard',
     component: () => import('@/views/dashboard/DashboardView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/dashboard/pet/:petId',
@@ -255,13 +255,13 @@ const authRoutes = [
     path: '/insurance/simulator',
     name: 'Simulator',
     component: () => import('@/views/insurance/SimulatorView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/insurance/claim',
     name: 'Claim',
     component: () => import('@/views/insurance/ClaimView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/insurance/claims',
@@ -280,7 +280,7 @@ const authRoutes = [
     path: '/share',
     name: 'Share',
     component: () => import('@/views/share/ShareView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/share/start',
@@ -292,7 +292,7 @@ const authRoutes = [
     path: '/share/join',
     name: 'ShareJoin',
     component: () => import('@/views/share/ShareJoinView.vue'),
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/share/invite',
@@ -304,27 +304,27 @@ const authRoutes = [
     path: '/group-purchase',
     name: 'GroupPurchaseList',
     component: () => import('@/views/grouppurchase/GroupPurchaseListView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/group-purchase/my',
     name: 'GroupPurchaseMy',
     component: () => import('@/views/grouppurchase/GroupPurchaseMyView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/group-purchase/create/step1',
     name: 'GroupPurchaseCreateStep1',
     component: () =>
       import('@/views/grouppurchase/GroupPurchaseCreateStep1.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/group-purchase/create/step2',
     name: 'GroupPurchaseCreateStep2',
     component: () =>
       import('@/views/grouppurchase/GroupPurchaseCreateStep2.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
     // URL 직접 입력/새로고침으로 1단계를 건너뛰고 들어오는 것을 막음
     beforeEnter: () => {
       if (!useGroupPurchaseCreateStore().isStep1Complete) {
@@ -337,7 +337,7 @@ const authRoutes = [
     name: 'GroupPurchaseCreateStep3',
     component: () =>
       import('@/views/grouppurchase/GroupPurchaseCreateStep3.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
     // URL 직접 입력/새로고침으로 1~2단계를 건너뛰고 들어오는 것을 막음
     beforeEnter: () => {
       const store = useGroupPurchaseCreateStore();
@@ -350,14 +350,14 @@ const authRoutes = [
     name: 'GroupPurchaseDetail',
     component: () =>
       import('@/views/grouppurchase/GroupPurchaseDetailView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/group-purchase/:gpId/payment-preview',
     name: 'GroupPurchasePayment',
     component: () =>
       import('@/views/grouppurchase/GroupPurchasePaymentPreview.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/group-purchase/:gpId/status',
@@ -370,19 +370,19 @@ const authRoutes = [
     path: '/donation',
     name: 'Donation',
     component: () => import('@/views/donation/DonationView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout', step: 'main' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', step: 'main', showBack: true },
   },
   {
     path: '/donation/give',
     name: 'DonationGive',
     component: () => import('@/views/donation/DonationView.vue'),
-    meta: { requiresAuth: true, step: 'give' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', step: 'give', showBack: true },
   },
   {
     path: '/donation/withdraw',
     name: 'DonationWithdraw',
     component: () => import('@/views/donation/DonationWithdrawView.vue'),
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/donation/confirm',
@@ -400,55 +400,55 @@ const authRoutes = [
     path: '/donation/explore',
     name: 'DonationExplore',
     component: () => import('@/views/donation/DonationView.vue'),
-    meta: { requiresAuth: true, step: 'explore' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', step: 'explore', showBack: true },
   },
   {
     path: '/donation/settings',
     name: 'DonationSettings',
     component: () => import('@/views/donation/DonationView.vue'),
-    meta: { requiresAuth: true, step: 'settings' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', step: 'settings', showBack: true },
   },
   {
     path: '/support-programs',
     name: 'SupportPrograms',
     component: () => import('@/views/support-programs/SupportProgramsView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/support-programs/:programId',
     name: 'SupportProgramDetail',
     component: () => import('@/views/support-programs/SupportProgramsView.vue'),
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/support',
     name: 'CustomerCenter',
     component: () => import('@/views/support/CustomerCenter.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/support/faqs/:faqId',
     name: 'FaqDetail',
     component: () => import('@/views/support/FaqDetail.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/support/inquiry',
     name: 'InquiryForm',
     component: () => import('@/views/support/InquiryForm.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/support/inquiries',
     name: 'MyInquiries',
     component: () => import('@/views/support/MyInquiries.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/support/inquiries/:inquiryId',
     name: 'InquiryDetail',
     component: () => import('@/views/support/InquiryDetail.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/support/inquiry/complete',
@@ -460,19 +460,19 @@ const authRoutes = [
     path: '/emergency',
     name: 'Emergency',
     component: () => import('@/views/emergency/EmergencyView.vue'),
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/settings',
     name: 'Settings',
     component: () => import('@/views/settings/SettingsView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout', hideHeader: true },
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
     path: '/settings/profile',
     name: 'ProfileEdit',
     component: () => import('@/views/settings/ProfileEditView.vue'),
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
     beforeEnter: () => {
       const verificationKey = 'profileEditPasswordVerified';
       const isVerified = window.sessionStorage.getItem(verificationKey) === 'true';
@@ -486,7 +486,7 @@ const authRoutes = [
     path: '/settings/notifications',
     name: 'NotificationSettings',
     component: () => import('@/views/settings/NotificationSettingsView.vue'),
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/settings/withdraw',
@@ -502,6 +502,13 @@ const authRoutes = [
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [...publicRoutes, ...authRoutes],
+  scrollBehavior(to, from, savedPosition) {
+    // 뒤로/앞으로 가기는 이전 스크롤 위치를 복원하고, 새 이동은 맨 위에서 시작한다.
+    if (savedPosition) {
+      return savedPosition;
+    }
+    return { top: 0 };
+  },
 });
 
 /* ------------------------------------------------------------------ */

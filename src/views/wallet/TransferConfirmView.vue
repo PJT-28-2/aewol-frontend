@@ -4,7 +4,6 @@ import { useRoute, useRouter } from 'vue-router';
 import AppButton from '@/components/common/AppButton.vue';
 import BankBadge from '@/components/common/BankBadge.vue';
 import PinAuthSheet from '@/components/common/PinAuthSheet.vue';
-import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue';
 import { getBankMeta } from '@/utils/bankMeta';
 
 const route = useRoute();
@@ -56,14 +55,6 @@ function handlePinComplete() {
     class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+96px)] bg-(--color-bg) min-h-screen"
   >
     <header class="mb-(--space-6)">
-      <button
-        type="button"
-        aria-label="뒤로 가기"
-        class="inline-flex mb-(--space-3) text-(color:--color-navy)"
-        @click="router.back()"
-      >
-        <IconArrowLeft size="24" />
-      </button>
       <h1
         class="text-(length:--font-2xl) font-bold text-(color:--color-navy)"
       >
@@ -130,7 +121,7 @@ function handlePinComplete() {
           v-model="memo"
           type="text"
           placeholder="메모를 남겨보세요"
-          class="w-full p-4 rounded-xl bg-(--color-surface) border border-(--color-border) text-(length:--font-md) text-(color:--color-navy) outline-none"
+          class="w-full p-4 rounded-(--radius-xl) bg-(--color-surface) border border-(--color-border) text-(length:--font-md) text-(color:--color-navy) outline-none"
         >
       </section>
 

@@ -7,6 +7,10 @@ const props = defineProps({
     type: Boolean,
     required: true,
   },
+  title: {
+    type: String,
+    default: '주소 검색',
+  },
 })
 
 const emit = defineEmits(['update:modelValue', 'select'])
@@ -118,7 +122,7 @@ watch(
           id="address-search-title"
           class="text-(length:--font-md) font-semibold text-(color:--color-navy)"
         >
-          주소 검색
+          {{ title }}
         </h2>
         <AppButton
           variant="ghost"
@@ -143,7 +147,7 @@ watch(
         class="flex flex-1 flex-col items-center justify-center gap-(--space-4) px-(--space-5) text-center"
       >
         <p
-          class="text-(length:--font-sm) text-(color:--color-danger)"
+          class="text-(length:--font-sm) text-(color:--color-danger-strong)"
           role="alert"
         >
           {{ loadError }}

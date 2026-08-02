@@ -30,6 +30,7 @@
   --color-pastel-beige: #efeae3;
   --color-pastel-sage: #e1f2e7;
   --color-pastel-sky: #e5eaf6;
+  --color-pastel-mist: #edf0f7;
   --color-pastel-cream: #fbeed9;
   --color-pastel-violet: #ebe4f5;
   --color-chart-blue: #4a6fa5;
@@ -56,9 +57,6 @@
   --color-danger-muted: #8a5252;
   --color-warning: #ffc107;
   --color-info: #17a2b8;
-  --color-danger-bg: #f7e5e5;
-  --color-danger-border: #c24d4d;
-  --color-danger-text: #8a5252;
   --color-status-info-bg: #e3f2fd;
   --color-status-success-bg: #e8f5e9;
   --color-status-danger-bg: #fce4ec;
@@ -138,10 +136,6 @@
   --control-height-lg: 52px;
 
   /* Auth Success Screen */
-  --auth-screen-width: 390px;
-  --auth-screen-breakpoint: 391px;
-  --auth-screen-radius: 40px;
-  --auth-success-screen-height: 600px;
   --auth-success-content-padding: 22px;
   --auth-signup-success-image-top: 149px;
   --auth-success-image-size: 149px;
@@ -150,14 +144,11 @@
   --auth-success-title-gap: 9px;
   --auth-signup-success-description-gap: 7px;
   --auth-signup-success-action-gap: 44px;
-  --auth-font-xs: 11px;
   --auth-font-sm: 13px;
-  --auth-font-caption: 12.5px;
   --auth-font-button: 14.5px;
   --auth-font-lg: 22px;
 
   /* Support Program */
-  --support-card-min-height: 128px;
   --support-action-height: 24px;
   --support-action-width: 80px;
   --support-status-icon-size: 24px;

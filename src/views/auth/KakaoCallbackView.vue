@@ -122,7 +122,7 @@ onMounted(handleKakaoCallback)
 
 .error-text {
   font-size: var(--font-base);
-  color: var(--color-danger);
+  color: var(--color-danger-strong);
   margin-bottom: var(--space-5);
 }
 

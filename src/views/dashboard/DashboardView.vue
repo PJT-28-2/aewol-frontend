@@ -4,7 +4,6 @@ import { useRoute, useRouter } from 'vue-router';
 import ExpenseDonutChart from '@/components/dashboard/ExpenseDonutChart.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
-import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue';
 import IconCat from '@/components/common/icons/IconCat.vue';
 import IconDog from '@/components/common/icons/IconDog.vue';
 import IconStats from '@/components/common/icons/IconStats.vue';
@@ -180,10 +179,6 @@ function goToPetHistory(petId) {
   });
 }
 
-function goBack() {
-  router.back();
-}
-
 onMounted(() => {
   isLoading.value = false;
 });
@@ -193,14 +188,6 @@ onMounted(() => {
   <div
     class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))] bg-(--color-bg) min-h-screen"
   >
-    <button
-      type="button"
-      class="mb-(--space-3) text-(color:--color-navy)"
-      aria-label="뒤로 가기"
-      @click="goBack"
-    >
-      <IconArrowLeft size="24" />
-    </button>
 
     <header class="mb-(--space-6)">
       <h1

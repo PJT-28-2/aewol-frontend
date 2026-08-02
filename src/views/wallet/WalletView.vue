@@ -144,14 +144,14 @@ onMounted(async () => {
     <div class="flex gap-(--space-2) mb-(--space-7)">
       <button
         type="button"
-        class="flex-1 h-[44px] rounded-md bg-(--color-olive) text-(color:--color-white) text-(length:--font-base) font-semibold"
+        class="flex-1 h-[44px] rounded-(--radius-md) bg-(--color-olive) text-(color:--color-white) text-(length:--font-base) font-semibold"
         @click="handleCharge"
       >
         충전
       </button>
       <button
         type="button"
-        class="flex-1 h-[44px] rounded-md bg-(--color-gray-100) text-(color:--color-slate-dark) text-(length:--font-base) font-semibold"
+        class="flex-1 h-[44px] rounded-(--radius-md) bg-(--color-gray-100) text-(color:--color-slate-dark) text-(length:--font-base) font-semibold"
         @click="handleTransfer"
       >
         송금

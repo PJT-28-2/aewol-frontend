@@ -3,7 +3,6 @@ import { computed, ref, watchEffect } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
 import AppButton from '@/components/common/AppButton.vue'
-import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 import IconImage from '@/components/common/icons/IconImage.vue'
 import IconInfo from '@/components/common/icons/IconInfo.vue'
 // import { groupPurchaseApi } from '@/api/groupPurchase'
@@ -99,32 +98,21 @@ function handleSubmit() {
 <template>
   <div class="p-(--space-4) pb-(--space-8) bg-(--color-bg) min-h-screen">
     <header class="mb-(--space-5)">
-      <div class="flex items-center justify-between mb-(--space-4)">
-        <button
-          type="button"
-          class="inline-flex text-(color:--color-navy)"
-          aria-label="이전 단계로"
-          @click="goToPrevStep"
-        >
-          <IconArrowLeft
-            size="18"
-            color="var(--color-navy)"
-          />
-        </button>
+      <div class="flex items-center justify-end mb-(--space-4)">
         <p class="text-(length:--font-sm) font-bold text-(color:--color-slate-muted)">
           3/3
         </p>
       </div>
-      <h1 class="text-(length:--font-xl) font-bold text-(color:--color-navy) mb-(--space-1)">
+      <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-1)">
         최종 확인
       </h1>
-      <p class="text-(length:--font-sm) text-(color:--color-slate-muted)">
+      <p class="text-(length:--font-md) text-(color:--color-slate-muted)">
         공동구매 정보를 확인해주세요
       </p>
     </header>
 
     <!-- 상품 이미지 미리보기 -->
-    <div class="h-[130px] rounded-2xl bg-(--color-surface) flex flex-col items-center justify-center gap-(--space-2) mb-(--space-4) overflow-hidden">
+    <div class="h-[130px] rounded-(--radius-xl) bg-(--color-surface) flex flex-col items-center justify-center gap-(--space-2) mb-(--space-4) overflow-hidden">
       <img
         v-if="photoPreviewUrl"
         :src="photoPreviewUrl"
@@ -143,7 +131,7 @@ function handleSubmit() {
     </div>
 
     <!-- 상품 요약 -->
-    <div class="p-(--space-4) rounded-2xl bg-(--color-white) border border-(--color-border) mb-(--space-5)">
+    <div class="p-(--space-4) rounded-(--radius-xl) bg-(--color-white) border border-(--color-border) mb-(--space-5)">
       <div class="flex items-center justify-between mb-(--space-1)">
         <p class="text-(length:--font-sm) font-bold text-(color:--color-navy)">
           {{ productName }}
@@ -169,7 +157,7 @@ function handleSubmit() {
     </div>
 
     <!-- 목표 수량 -->
-    <div class="p-(--space-4) rounded-2xl bg-(--color-surface) mb-(--space-4)">
+    <div class="p-(--space-4) rounded-(--radius-xl) bg-(--color-surface) mb-(--space-4)">
       <p class="text-(length:--font-xs) font-bold text-(color:--color-slate-dark) mb-(--space-1)">
         목표 수량
       </p>
@@ -185,7 +173,7 @@ function handleSubmit() {
     </div>
 
     <!-- 마감일 -->
-    <div class="p-(--space-4) rounded-2xl bg-(--color-white) border border-(--color-border) mb-(--space-5)">
+    <div class="p-(--space-4) rounded-(--radius-xl) bg-(--color-white) border border-(--color-border) mb-(--space-5)">
       <p class="text-(length:--font-xs) font-bold text-(color:--color-slate-dark) mb-(--space-1)">
         마감일
       </p>
@@ -195,7 +183,7 @@ function handleSubmit() {
     </div>
 
     <!-- 배송 정보 -->
-    <div class="p-(--space-4) rounded-2xl bg-(--color-surface) mb-(--space-5)">
+    <div class="p-(--space-4) rounded-(--radius-xl) bg-(--color-surface) mb-(--space-5)">
       <p class="text-(length:--font-xs) font-bold text-(color:--color-slate-dark) mb-(--space-3)">
         배송 정보
       </p>
@@ -226,7 +214,7 @@ function handleSubmit() {
     </div>
 
     <!-- 안내 문구 -->
-    <div class="flex items-start gap-(--space-2) p-(--space-4) rounded-xl bg-(--color-surface) mb-(--space-6)">
+    <div class="flex items-start gap-(--space-2) p-(--space-4) rounded-(--radius-xl) bg-(--color-surface) mb-(--space-6)">
       <IconInfo
         size="14"
         color="var(--color-slate-dark)"
