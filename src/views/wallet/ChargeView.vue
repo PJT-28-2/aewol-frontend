@@ -3,7 +3,6 @@ import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import AppButton from '@/components/common/AppButton.vue';
 import BankBadge from '@/components/common/BankBadge.vue';
-import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue';
 import { useAccountStore } from '@/stores/account';
 import { formatWon, getBankMeta } from '@/utils/bankMeta';
 import { MOCK_ACCOUNTS } from '@/utils/mockData';
@@ -76,21 +75,13 @@ function handleCharge() {
     class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+96px)] bg-(--color-bg) min-h-screen"
   >
     <header class="mb-(--space-5)">
-      <button
-        type="button"
-        aria-label="뒤로 가기"
-        class="inline-flex mb-(--space-3) text-(color:--color-navy)"
-        @click="router.back()"
-      >
-        <IconArrowLeft size="24" />
-      </button>
       <h1
         class="text-(length:--font-2xl) font-bold text-(color:--color-navy)"
       >
         충전하기
       </h1>
       <p
-        class="text-(length:--font-sm) text-(color:--color-slate-muted) mt-(--space-1)"
+        class="text-(length:--font-md) text-(color:--color-slate-muted) mt-(--space-1)"
       >
         펫지갑에 충전할 금액을 입력해주세요
       </p>
@@ -127,7 +118,7 @@ function handleCharge() {
       <button
         v-if="selectedAccount"
         type="button"
-        class="w-full flex items-center gap-(--space-3) bg-(--color-white) border border-(--color-border) rounded-[14px] p-(--space-4)"
+        class="w-full flex items-center gap-(--space-3) bg-(--color-white) border border-(--color-border) rounded-(--radius-icon) p-(--space-4)"
         @click="goToAccountSelect"
       >
         <BankBadge

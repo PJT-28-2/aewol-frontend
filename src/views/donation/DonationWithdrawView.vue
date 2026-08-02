@@ -8,7 +8,6 @@ import BottomSheet from '@/components/common/BottomSheet.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import SelectableChip from '@/components/common/SelectableChip.vue'
-import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 import IconInfo from '@/components/common/icons/IconInfo.vue'
 import IconSavings from '@/components/common/icons/IconSavings.vue'
 import { donationAmountPresets } from '@/mocks/donation'
@@ -32,10 +31,6 @@ const withdrawAmountInput = computed(() =>
 const confirmTitle = computed(
   () => `${formatWon(withdrawAmount.value)}을 지갑으로 옮길까요?`,
 )
-
-function goBack() {
-  router.push('/donation')
-}
 
 function onAmountInput(value) {
   const digitsOnly = String(value).replace(/[^\d]/g, '')
@@ -74,7 +69,7 @@ onMounted(() => {
 
 <template>
   <main
-    class="mx-auto min-h-dvh w-full max-w-[var(--mobile-content-width)] box-border bg-(--color-white) px-[var(--space-5)] pb-[calc(var(--space-8)+env(safe-area-inset-bottom))] pt-[calc(var(--header-height)+var(--space-5))] text-(--color-navy)"
+    class="mx-auto min-h-dvh w-full max-w-(--content-max-width) box-border bg-(--color-white) px-[var(--space-5)] pt-[var(--space-4)] pb-[calc(var(--space-8)+env(safe-area-inset-bottom))] text-(--color-navy)"
   >
     <section
       v-if="isLoading"
@@ -103,16 +98,8 @@ onMounted(() => {
     </section>
 
     <template v-else>
-      <button
-        class="-ml-[var(--space-1)] grid size-[var(--control-height-sm)] cursor-pointer place-items-center rounded-(--radius-full) border-0 bg-transparent text-(--color-navy) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-gold)"
-        type="button"
-        aria-label="저금통으로 돌아가기"
-        @click="goBack"
-      >
-        <IconArrowLeft :size="24" />
-      </button>
       <h1
-        class="mb-[var(--space-5)] mt-[var(--space-5)] text-[length:var(--font-xl)]"
+        class="mb-[var(--space-7)] text-[length:var(--font-2xl)] font-bold text-(--color-navy)"
       >
         출금하기
       </h1>
@@ -127,7 +114,7 @@ onMounted(() => {
           ₩{{ balance.toLocaleString('ko-KR') }}
         </strong>
         <small
-          class="block text-[length:var(--font-xs)] text-(--color-slate-light)"
+          class="block text-[length:var(--font-sm)] text-(--color-slate-light)"
         >지갑으로 옮길 금액을 입력해주세요</small>
       </section>
 
@@ -172,7 +159,7 @@ onMounted(() => {
           <span class="text-[length:var(--font-sm)] text-(--color-slate-dark)">
             {{ withdrawError ? '출금 가능 금액' : '출금 후 저금통 잔액' }}
           </span>
-          <strong class="text-[length:var(--font-md)]">
+          <strong class="text-[length:var(--font-md)] font-bold">
             {{
               withdrawError
                 ? formatWon(balance)
@@ -193,7 +180,7 @@ onMounted(() => {
               class="block text-[length:var(--font-sm)] text-(--color-slate-dark)"
             >출금한 잔돈은 지갑 잔액에 바로 반영돼요</strong>
             <span
-              class="mt-[var(--space-1)] block text-[length:var(--font-xs)] text-(--color-slate-muted)"
+              class="mt-[var(--space-1)] block text-[length:var(--font-sm)] text-(--color-slate-muted)"
             >저금통에 남은 금액은 계속 모을 수 있어요</span>
           </div>
         </section>
@@ -259,6 +246,7 @@ onMounted(() => {
         block
         size="lg"
         variant="secondary"
+        class="border-(--color-border)!"
         @click="isConfirmOpen = false"
       >
         취소

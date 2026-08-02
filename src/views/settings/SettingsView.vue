@@ -6,7 +6,6 @@ import AppButton from '@/components/common/AppButton.vue'
 import AppModal from '@/components/common/AppModal.vue'
 import PasswordInput from '@/components/common/PasswordInput.vue'
 import IconAccountCard from '@/components/common/icons/IconAccountCard.vue'
-import IconChevronLeft from '@/components/common/icons/IconChevronLeft.vue'
 import IconDiscussion from '@/components/common/icons/IconDiscussion.vue'
 import IconNotificationBell from '@/components/common/icons/IconNotificationBell.vue'
 import IconPetProfile from '@/components/common/icons/IconPetProfile.vue'
@@ -113,23 +112,23 @@ const confirmLogout = () => {
 
 <template>
   <section
-    class="mx-auto min-h-[calc(100svh-var(--bottom-nav-height))] w-full max-w-[390px] bg-(--color-white) px-[22px] pt-[61px] pb-[27px]"
+    class="min-h-[calc(100svh-var(--header-height)-var(--bottom-nav-height))] w-full bg-(--color-white) p-(--space-4) pb-[27px]"
     aria-labelledby="mypage-title"
   >
     <header class="flex items-start justify-between">
       <div>
         <h1
           id="mypage-title"
-          class="text-[20px] leading-[1.3] font-(--font-bold) text-(color:--color-navy)"
+          class="text-(length:--font-2xl) leading-[1.3] font-(--font-bold) text-(color:--color-navy)"
         >
           마이페이지
         </h1>
-        <p class="mt-[5px] text-[12.5px] leading-[1.3] text-(color:--color-slate-muted)">
+        <p class="mt-[5px] text-(length:--font-md) leading-[1.3] text-(color:--color-slate-muted)">
           계정과 반려동물 정보를 관리해요
         </p>
       </div>
       <button
-        class="mt-[5px] text-[11.5px] leading-[1.3] font-(--font-bold) text-(color:--color-slate-muted) focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--color-navy)"
+        class="text-[11.5px] leading-[1.3] font-(--font-bold) text-(color:--color-slate-muted) focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--color-navy)"
         type="button"
         @click="handleLogout"
       >
@@ -164,7 +163,7 @@ const confirmLogout = () => {
       <button
         v-for="item in menuItems"
         :key="item.title"
-        class="flex h-[66px] w-full items-center rounded-[14px] border border-(--color-border) bg-(--color-white) px-[17px] text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-navy)"
+        class="flex w-full items-center gap-(--space-4) rounded-(--radius-xl) border border-(--color-border) bg-(--color-white) p-(--space-4) text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-navy)"
         :class="
           item.path || item.action
             ? 'cursor-pointer hover:bg-(--color-surface)'
@@ -179,22 +178,15 @@ const confirmLogout = () => {
           class="shrink-0 text-(color:--color-navy)"
           :size="24"
         />
-        <span class="ml-[19px] min-w-0 flex-1">
-          <strong
-            class="block truncate text-[13.5px] leading-[1.3] font-(--font-bold) text-(color:--color-navy)"
-          >
+        <div class="min-w-0 flex-1">
+          <strong class="block truncate text-(length:--font-base) font-semibold text-(color:--color-navy)">
             {{ item.title }}
           </strong>
-          <span
-            class="mt-[3px] block truncate text-[11px] leading-[1.3] text-(color:--color-slate-muted)"
-          >
+          <p class="mt-(--space-1) truncate text-(length:--font-sm) text-(color:--color-slate-muted)">
             {{ item.description }}
-          </span>
-        </span>
-        <IconChevronLeft
-          class="ml-2 shrink-0 rotate-180 text-(color:--color-slate-muted)"
-          :size="16"
-        />
+          </p>
+        </div>
+        <span class="shrink-0 text-(length:--font-xl) text-(color:--color-gray-400)">&rsaquo;</span>
       </button>
     </nav>
 
@@ -221,7 +213,7 @@ const confirmLogout = () => {
         />
         <p
           v-if="passwordError"
-          class="mt-2 text-[12px] text-(color:--color-danger)"
+          class="mt-2 text-[12px] text-(color:--color-danger-strong)"
           role="alert"
         >
           {{ passwordError }}
@@ -247,19 +239,23 @@ const confirmLogout = () => {
       </p>
 
       <template #footer>
-        <AppButton
-          type="button"
-          @click="confirmLogout"
-        >
-          로그아웃
-        </AppButton>
-        <AppButton
-          type="button"
-          variant="secondary"
-          @click="showLogoutModal = false"
-        >
-          취소
-        </AppButton>
+        <div class="flex w-full gap-(--space-3)">
+          <AppButton
+            type="button"
+            variant="secondary"
+            class="flex-1 border-(--color-border)!"
+            @click="showLogoutModal = false"
+          >
+            취소
+          </AppButton>
+          <AppButton
+            type="button"
+            class="flex-1"
+            @click="confirmLogout"
+          >
+            로그아웃
+          </AppButton>
+        </div>
       </template>
     </AppModal>
   </section>

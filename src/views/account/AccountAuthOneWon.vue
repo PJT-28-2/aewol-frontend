@@ -3,8 +3,8 @@ import { ref, computed, onBeforeUnmount, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAccountStore } from '@/stores/account';
 import { getBankMeta } from '@/utils/bankMeta';
+import { registerHeaderBack } from '@/composables/useHeaderBack';
 import BankBadge from '@/components/common/BankBadge.vue';
-import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue';
 import IconLock from '@/components/common/icons/IconLock.vue';
 
 const router = useRouter();
@@ -171,22 +171,16 @@ function goBack() {
     router.back();
   }
 }
+
+registerHeaderBack(goBack);
 </script>
 
 <template>
-  <div class="min-h-screen max-w-[420px] mx-auto bg-(--color-bg) px-(--space-5) pt-(--space-6) pb-(--space-8)">
-    <button
-      class="-ml-(--space-2) p-(--space-2) flex items-center justify-center mb-(--space-5)"
-      aria-label="뒤로 가기"
-      @click="goBack"
-    >
-      <IconArrowLeft :size="20" color="var(--color-gray-700)" />
-    </button>
-
+  <div class="min-h-screen max-w-(--content-max-width) mx-auto bg-(--color-bg) px-(--space-5) pt-(--space-4) pb-(--space-8)">
     <!-- Step 1: 계좌번호 입력 -->
     <template v-if="step === 'accountNumber'">
       <header class="mb-7">
-        <h1 class="text-(length:--font-xl) font-(--font-bold) text-(color:--color-navy) leading-snug">
+        <h1 class="text-(length:--font-2xl) font-(--font-bold) text-(color:--color-navy) leading-snug">
           {{ bankMeta.name }} 계좌번호를 입력해주세요
         </h1>
         <p class="text-(length:--font-md) text-(color:--color-gray-600) mt-(--space-1)">1원을 보내 계좌를 확인할게요</p>
@@ -206,7 +200,7 @@ function goBack() {
         class="w-full p-(--space-4) rounded-(--radius-lg) border border-(--color-border) text-(length:--font-base) text-(color:--color-navy) mb-(--space-2) outline-none focus:border-(--color-navy)"
         @input="onAccountNumberInput"
       />
-      <p v-if="requestError" class="text-(length:--font-sm) text-(color:--color-danger) mb-(--space-4)">{{ requestError }}</p>
+      <p v-if="requestError" class="text-(length:--font-sm) text-(color:--color-danger-strong) mb-(--space-4)">{{ requestError }}</p>
 
       <button
         class="w-full py-(--space-4) rounded-(--radius-lg) bg-(--color-navy) text-(color:--color-white) font-(--font-bold) mt-(--space-4) disabled:opacity-50"
@@ -220,7 +214,7 @@ function goBack() {
     <!-- Step 2: 입금자명 4자리 입력 (RF-CM 목업) -->
     <template v-else>
       <header class="mb-(--space-6)">
-        <h1 class="text-(length:--font-xl) font-(--font-bold) text-(color:--color-navy) leading-snug">
+        <h1 class="text-(length:--font-2xl) font-(--font-bold) text-(color:--color-navy) leading-snug">
           거래내역을 확인 후 입금된 1원의<br />4자리 입금자명을 입력해주세요
         </h1>
       </header>
@@ -240,7 +234,7 @@ function goBack() {
 
       <div class="flex items-center justify-between mb-(--space-3)">
         <span class="text-(length:--font-sm) font-(--font-semibold) text-(color:--color-navy)">입금자명 4자리</span>
-        <span class="text-(length:--font-sm) font-(--font-semibold) text-(color:--color-danger)">{{ timerLabel }}</span>
+        <span class="text-(length:--font-sm) font-(--font-semibold) text-(color:--color-danger-strong)">{{ timerLabel }}</span>
       </div>
 
       <div class="relative flex justify-center gap-(--space-3) mb-(--space-3)" @click="focusHiddenInput">
@@ -272,7 +266,7 @@ function goBack() {
       <p class="text-(length:--font-xs) text-(color:--color-gray-500) leading-relaxed mb-(--space-2)">
         은행 앱 알림이나 입출금 문자에서<br />입금자명(예: 푸른애월)의 앞 4글자를 확인할 수 있어요
       </p>
-      <p v-if="verifyError" class="text-(length:--font-sm) text-(color:--color-danger) mb-(--space-2)">{{ verifyError }}</p>
+      <p v-if="verifyError" class="text-(length:--font-sm) text-(color:--color-danger-strong) mb-(--space-2)">{{ verifyError }}</p>
 
       <button
         class="w-full py-(--space-4) rounded-(--radius-lg) bg-(--color-gold) text-(color:--color-navy) font-(--font-bold) mt-(--space-6) disabled:opacity-50"

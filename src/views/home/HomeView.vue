@@ -119,7 +119,7 @@ const dashboardDetailTarget = computed(() => {
 // 바로가기 메뉴 6종
 const quickActions = [
   {
-    label: '증명서',
+    label: '증명서 관리',
     to: '/certificates',
     icon: IconCertificate,
     bg: 'var(--color-pastel-beige)',
@@ -131,13 +131,13 @@ const quickActions = [
     bg: 'var(--color-pastel-coral)',
   },
   {
-    label: '저금통',
+    label: '짜투리 저금통',
     to: '/donation',
     icon: IconSavings,
     bg: 'var(--color-pastel-sage)',
   },
   {
-    label: '가족관리',
+    label: '함께 돌보기',
     to: '/share',
     icon: IconFamily,
     bg: 'var(--color-pastel-sky)',

@@ -7,7 +7,7 @@ import IconWarning from '@/components/common/icons/IconWarning.vue';
 import BottomSheet from '@/components/common/BottomSheet.vue';
 import AppButton from '@/components/common/AppButton.vue';
 import PinAuthSheet from '@/components/common/PinAuthSheet.vue';
-import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue';
+import { formatPhoneNumber as formatPhoneAsTyped } from '@/utils/phone';
 
 const route = useRoute();
 const router = useRouter();
@@ -16,11 +16,12 @@ const router = useRouter();
 // 등록된 배송지가 없는 상태를 확인하기 위해 초기값은 null로 둠
 const shippingAddress = ref(null);
 
-// TODO: 공동구매 참여 화면에서 선택한 상품/수량/가격 정보를 전달받을 예정, 현재는 mock 데이터
+// TODO: 공동구매 참여 화면에서 선택한 상품/가격 정보를 전달받을 예정, 현재는 mock 데이터
+// 수량은 GroupPurchaseDetailView에서 query.quantity로 전달됨
 const product = ref({
   productName: '프리미엄 사료 15kg',
   optionText: '옵션 없음',
-  purchaseQuantity: 1,
+  purchaseQuantity: Number(route.query.quantity) || 1,
   unitPrice: 40000,
   groupPrice: 28000,
 });
@@ -82,6 +83,10 @@ function handleChangeAddress() {
 }
 
 const isPostcodeOpen = ref(false);
+
+function handlePhoneInput(event) {
+  addressForm.value.phone = formatPhoneAsTyped(event.target.value);
+}
 
 function handleAddressSelect({ zipCode, address }) {
   addressForm.value.zipCode = zipCode;
@@ -178,18 +183,10 @@ const isPinSheetOpen = ref(false);
   <div
     class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+88px)] bg-(--color-bg) min-h-screen"
   >
-    <button
-      type="button"
-      class="mb-(--space-4) text-(color:--color-navy)"
-      aria-label="뒤로가기"
-      @click="router.back()"
-    >
-      <IconArrowLeft :size="24" />
-    </button>
 
     <!-- 헤더 -->
     <h1
-      class="text-(length:--font-xl) font-bold text-(color:--color-navy) mb-(--space-5)"
+      class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-5)"
     >
       결제 확인
     </h1>
@@ -280,7 +277,7 @@ const isPinSheetOpen = ref(false);
         class="flex items-center gap-(--space-3) rounded-(--radius-lg) p-(--space-4)"
         :class="
           isBalanceInsufficient
-            ? 'bg-(--color-danger-bg) border-[1.5px] border-(--color-danger-border)'
+            ? 'bg-(--color-danger-soft) border-[1.5px] border-(--color-danger-strong)'
             : 'bg-(--color-white) border-2 border-(--color-navy)'
         "
       >
@@ -301,7 +298,7 @@ const isPinSheetOpen = ref(false);
           class="shrink-0 text-(length:--font-xs)"
           :class="
             isBalanceInsufficient
-              ? 'font-bold text-(color:--color-danger-border)'
+              ? 'font-bold text-(color:--color-danger-strong)'
               : 'text-(color:--color-gray-500)'
           "
         >
@@ -312,19 +309,19 @@ const isPinSheetOpen = ref(false);
       <!-- 잔액부족 경고 -->
       <div
         v-if="isBalanceInsufficient"
-        class="mt-(--space-3) bg-(--color-danger-bg) rounded-(--radius-lg) p-(--space-4)"
+        class="mt-(--space-3) bg-(--color-danger-soft) rounded-(--radius-lg) p-(--space-4)"
       >
         <p
-          class="flex items-center gap-(--space-1) text-(length:--font-sm) font-bold text-(color:--color-danger-border)"
+          class="flex items-center gap-(--space-1) text-(length:--font-sm) font-bold text-(color:--color-danger-strong)"
         >
           <IconWarning
             :size="14"
-            color="var(--color-danger-border)"
+            color="var(--color-danger-strong)"
           />
           잔액이 부족해요
         </p>
         <p
-          class="text-(length:--font-xs) text-(color:--color-danger-text) mt-(--space-1)"
+          class="text-(length:--font-xs) text-(color:--color-danger-muted) mt-(--space-1)"
         >
           {{ shortfallAmount.toLocaleString() }}원을 충전하면 결제할 수 있어요
         </p>
@@ -398,7 +395,7 @@ const isPinSheetOpen = ref(false);
       variant="primary"
       size="lg"
       block
-      class="fixed bottom-[calc(var(--bottom-nav-height)+var(--space-4))] left-(--space-4) right-(--space-4) shadow-(--shadow-md)"
+      class="fixed bottom-[calc(var(--bottom-nav-height)+var(--space-4))] left-(--space-4) right-(--space-4) !w-auto shadow-(--shadow-md)"
       @click="handleCharge"
     >
       충전하러 가기
@@ -411,7 +408,7 @@ const isPinSheetOpen = ref(false);
       size="lg"
       block
       :disabled="!shippingAddress"
-      class="fixed bottom-[calc(var(--bottom-nav-height)+var(--space-4))] left-(--space-4) right-(--space-4) shadow-(--shadow-md)"
+      class="fixed bottom-[calc(var(--bottom-nav-height)+var(--space-4))] left-(--space-4) right-(--space-4) !w-auto !h-auto !min-h-(--control-height-lg) !py-(--space-3) text-center shadow-(--shadow-md)"
       @click="isPinSheetOpen = true"
     >
       {{
@@ -427,7 +424,7 @@ const isPinSheetOpen = ref(false);
       title="배송지 추가"
     >
       <p
-        class="text-(length:--font-sm) text-(color:--color-gray-500) mb-(--space-4)"
+        class="text-(length:--font-sm) text-(color:--color-slate-muted) mb-(--space-4)"
       >
         상품을 받을 배송지를 입력해주세요
       </p>
@@ -445,13 +442,13 @@ const isPinSheetOpen = ref(false);
           class="w-full h-[46px] px-(--space-4) bg-(--color-surface) border rounded-(--radius-md) text-(length:--font-sm) text-(color:--color-navy) placeholder:text-(color:--color-gray-500)"
           :class="
             addressFormErrors.name
-              ? 'border-(--color-danger)'
+              ? 'border-(--color-danger-strong)'
               : 'border-(--color-border)'
           "
         >
         <p
           v-if="addressFormErrors.name"
-          class="text-(length:--font-xs) text-(color:--color-danger) mt-(--space-1)"
+          class="text-(length:--font-xs) text-(color:--color-danger-strong) mt-(--space-1)"
         >
           {{ addressFormErrors.name }}
         </p>
@@ -464,19 +461,20 @@ const isPinSheetOpen = ref(false);
           전화번호
         </label>
         <input
-          v-model="addressForm.phone"
+          :value="addressForm.phone"
           type="tel"
           placeholder="010-1234-5678"
           class="w-full h-[46px] px-(--space-4) bg-(--color-surface) border rounded-(--radius-md) text-(length:--font-sm) text-(color:--color-navy) placeholder:text-(color:--color-gray-500)"
           :class="
             addressFormErrors.phone
-              ? 'border-(--color-danger)'
+              ? 'border-(--color-danger-strong)'
               : 'border-(--color-border)'
           "
+          @input="handlePhoneInput"
         >
         <p
           v-if="addressFormErrors.phone"
-          class="text-(length:--font-xs) text-(color:--color-danger) mt-(--space-1)"
+          class="text-(length:--font-xs) text-(color:--color-danger-strong) mt-(--space-1)"
         >
           {{ addressFormErrors.phone }}
         </p>
@@ -492,26 +490,26 @@ const isPinSheetOpen = ref(false);
           <input
             v-model="addressForm.zipCode"
             type="text"
-            placeholder="12345"
+            placeholder="우편번호를 검색하세요"
             class="flex-1 min-w-0 h-[46px] px-(--space-4) bg-(--color-surface) border rounded-(--radius-md) text-(length:--font-sm) text-(color:--color-navy) placeholder:text-(color:--color-gray-500)"
             :class="
               addressFormErrors.zipCode
-                ? 'border-(--color-danger)'
+                ? 'border-(--color-danger-strong)'
                 : 'border-(--color-border)'
             "
           >
           <AppButton
+            class="!h-[46px] !w-20 !rounded-(--radius-md) !px-0 shrink-0 whitespace-nowrap !text-[length:var(--font-xs)] !font-bold"
             variant="navy"
-            size="sm"
-            class="shrink-0"
+            type="button"
             @click="isPostcodeOpen = true"
           >
-            주소 찾기
+            우편번호 찾기
           </AppButton>
         </div>
         <p
           v-if="addressFormErrors.zipCode"
-          class="text-(length:--font-xs) text-(color:--color-danger) mt-(--space-1)"
+          class="text-(length:--font-xs) text-(color:--color-danger-strong) mt-(--space-1)"
         >
           {{ addressFormErrors.zipCode }}
         </p>
@@ -526,18 +524,18 @@ const isPinSheetOpen = ref(false);
         <input
           v-model="addressForm.address"
           type="text"
-          placeholder="주소"
+          placeholder="우편번호 찾기를 눌러 입력해주세요"
           readonly
-          class="w-full h-[46px] px-(--space-4) bg-(--color-surface) border rounded-(--radius-md) text-(length:--font-sm) text-(color:--color-navy)"
+          class="w-full h-[46px] px-(--space-4) bg-(--color-surface) border rounded-(--radius-md) text-(length:--font-sm) text-(color:--color-navy) placeholder:text-(color:--color-gray-500)"
           :class="
             addressFormErrors.address
-              ? 'border-(--color-danger)'
+              ? 'border-(--color-danger-strong)'
               : 'border-(--color-border)'
           "
         >
         <p
           v-if="addressFormErrors.address"
-          class="text-(length:--font-xs) text-(color:--color-danger) mt-(--space-1)"
+          class="text-(length:--font-xs) text-(color:--color-danger-strong) mt-(--space-1)"
         >
           {{ addressFormErrors.address }}
         </p>
@@ -556,13 +554,13 @@ const isPinSheetOpen = ref(false);
           class="w-full h-[46px] px-(--space-4) bg-(--color-surface) border rounded-(--radius-md) text-(length:--font-sm) text-(color:--color-navy) placeholder:text-(color:--color-gray-500)"
           :class="
             addressFormErrors.addressDetail
-              ? 'border-(--color-danger)'
+              ? 'border-(--color-danger-strong)'
               : 'border-(--color-border)'
           "
         >
         <p
           v-if="addressFormErrors.addressDetail"
-          class="text-(length:--font-xs) text-(color:--color-danger) mt-(--space-1)"
+          class="text-(length:--font-xs) text-(color:--color-danger-strong) mt-(--space-1)"
         >
           {{ addressFormErrors.addressDetail }}
         </p>
@@ -572,7 +570,7 @@ const isPinSheetOpen = ref(false);
         <AppButton
           variant="secondary"
           size="lg"
-          class="flex-1"
+          class="flex-1 border-(--color-border)!"
           @click="closeAddressSheet"
         >
           취소
@@ -597,6 +595,7 @@ const isPinSheetOpen = ref(false);
 
     <AddressSearchLayer
       v-model="isPostcodeOpen"
+      title="우편번호 찾기"
       @select="handleAddressSelect"
     />
   </div>

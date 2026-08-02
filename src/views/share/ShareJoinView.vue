@@ -2,7 +2,6 @@
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppButton from '@/components/common/AppButton.vue'
-import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 import IconInfo from '@/components/common/icons/IconInfo.vue'
 import { buildMockInviteLink, MOCK_INVITE_CODE } from '@/mocks/share'
 import { useShareStore } from '@/stores/share'
@@ -47,25 +46,13 @@ async function joinShare() {
 
 <template>
   <main
-    class="relative mx-auto flex min-h-dvh w-full max-w-[var(--mobile-content-width)] box-border flex-col bg-(--color-white) px-[var(--space-5)] pb-[calc(var(--space-6)+env(safe-area-inset-bottom))] pt-[calc(var(--header-height)+var(--space-8))] text-(--color-navy)"
+    class="relative mx-auto flex min-h-dvh w-full max-w-(--content-max-width) box-border flex-col bg-(--color-white) px-[var(--space-5)] pt-[var(--space-4)] pb-[calc(var(--space-6)+env(safe-area-inset-bottom))] text-(--color-navy)"
   >
-    <AppButton
-      class="absolute left-[var(--space-5)] top-[var(--header-height)]"
-      variant="ghost"
-      size="sm"
-      pill
-      icon-only
-      aria-label="뒤로 가기"
-      @click="router.back()"
-    >
-      <IconArrowLeft size="24" />
-    </AppButton>
-
-    <h1 class="m-0 text-[length:var(--font-xl)] font-bold">
+    <h1 class="m-0 text-[length:var(--font-2xl)] font-bold">
       초대 링크 입력
     </h1>
     <p
-      class="mb-[var(--space-7)] mt-[var(--space-1)] text-[length:var(--font-sm)] text-(--color-slate-muted)"
+      class="mb-[var(--space-7)] mt-[var(--space-1)] text-[length:var(--font-md)] text-(--color-slate-muted)"
     >
       가족이나 친구가 보낸 초대 링크를 입력해주세요
     </p>
@@ -96,7 +83,7 @@ async function joinShare() {
     </div>
     <p
       v-if="errorMessage"
-      class="mb-0 mt-[var(--space-4)] text-[length:var(--font-sm)] text-(--color-danger)"
+      class="mb-0 mt-[var(--space-4)] text-[length:var(--font-sm)] text-(--color-danger-strong)"
       role="alert"
     >
       {{ errorMessage }}

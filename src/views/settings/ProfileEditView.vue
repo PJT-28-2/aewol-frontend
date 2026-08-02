@@ -1,12 +1,10 @@
 <script setup>
 import { computed, reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
 import AddressSearchLayer from '@/components/common/AddressSearchLayer.vue'
 import AppButton from '@/components/common/AppButton.vue'
 import PasswordInput from '@/components/common/PasswordInput.vue'
-import IconChevronLeft from '@/components/common/icons/IconChevronLeft.vue'
+import { formatPhoneNumber } from '@/utils/phone'
 
-const router = useRouter()
 const form = reactive({
   name: '김애월',
   phone: '010-1234-5678',
@@ -22,10 +20,6 @@ const isAddressSearchOpen = ref(false)
 const passwordError = ref('')
 const isVerifyingPassword = ref(false)
 const MOCK_CURRENT_PASSWORD = 'test1234'
-
-const handleBack = () => {
-  router.back()
-}
 
 const newPasswordCategoryCount = computed(() => {
   const categories = [
@@ -43,6 +37,10 @@ const isNewPasswordValid = computed(() => {
 
   return (categoryCount >= 2 && length >= 10) || (categoryCount >= 3 && length >= 8)
 })
+
+const handlePhoneInput = (event) => {
+  form.phone = formatPhoneNumber(event.target.value)
+}
 
 const handleCurrentPasswordInput = () => {
   isCurrentPasswordVerified.value = false
@@ -89,23 +87,15 @@ const verifyCurrentPassword = async () => {
 
 <template>
   <main
-    class="mx-auto min-h-svh w-full max-w-[390px] bg-(--color-white) px-[22px] pt-[61px] pb-7"
+    class="min-h-svh w-full bg-(--color-white) px-[22px] pt-[var(--space-4)] pb-7"
   >
     <header>
-      <button
-        class="-ml-(--space-2) flex size-(--icon-size-md) items-center justify-center rounded-(--radius-full) text-(color:--color-navy) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-navy)"
-        type="button"
-        aria-label="뒤로 가기"
-        @click="handleBack"
-      >
-        <IconChevronLeft />
-      </button>
       <h1
-        class="mt-(--space-2) text-(length:--font-xl) leading-(--line-height-tight) font-(--font-bold) text-(color:--color-navy)"
+        class="text-(length:--font-2xl) leading-(--line-height-tight) font-(--font-bold) text-(color:--color-navy)"
       >
         프로필 수정
       </h1>
-      <p class="mt-[5px] text-[12.5px] leading-[1.3] text-(color:--color-slate-muted)">
+      <p class="mt-[5px] text-(length:--font-md) leading-[1.3] text-(color:--color-slate-muted)">
         계정 정보를 변경해요
       </p>
     </header>
@@ -136,11 +126,12 @@ const verifyCurrentPassword = async () => {
       </label>
       <input
         id="profile-phone"
-        v-model="form.phone"
+        :value="form.phone"
         class="h-(--control-height-md) rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none focus:border-(--color-navy)"
         type="tel"
         autocomplete="tel"
         required
+        @input="handlePhoneInput"
       >
 
       <label
@@ -149,24 +140,25 @@ const verifyCurrentPassword = async () => {
       >
         우편번호
       </label>
-      <div class="flex gap-(--space-4)">
+      <div class="flex gap-(--space-2)">
         <input
           id="profile-postal-code"
           v-model="form.postalCode"
           class="h-(--control-height-md) min-w-0 flex-1 cursor-default rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none"
           type="text"
           inputmode="numeric"
-          placeholder="12345"
+          placeholder="우편번호를 검색하세요"
           readonly
           required
         >
-        <button
-          class="h-(--control-height-md) w-(--size-form-action-width) shrink-0 rounded-(--radius-lg) bg-(--color-navy) text-(length:--font-xs) font-(--font-bold) text-(color:--color-white) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-navy)"
+        <AppButton
+          class="!h-(--control-height-md) !w-20 !rounded-(--radius-lg) !px-0 shrink-0 whitespace-nowrap !text-[length:var(--font-xs)] !font-(--font-bold)"
+          variant="navy"
           type="button"
           @click="isAddressSearchOpen = true"
         >
-          주소 찾기
-        </button>
+          우편번호 찾기
+        </AppButton>
       </div>
 
       <label
@@ -181,7 +173,7 @@ const verifyCurrentPassword = async () => {
         class="h-(--control-height-md) cursor-default rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none"
         type="text"
         autocomplete="address-line1"
-        placeholder="주소"
+        placeholder="우편번호 찾기를 눌러 입력해주세요"
         readonly
         required
       >
@@ -221,7 +213,7 @@ const verifyCurrentPassword = async () => {
       >
         현재 비밀번호
       </label>
-      <div class="flex gap-(--space-4)">
+      <div class="flex gap-(--space-2)">
         <PasswordInput
           id="current-password"
           v-model="form.currentPassword"
@@ -248,14 +240,14 @@ const verifyCurrentPassword = async () => {
       </p>
       <p
         v-else-if="passwordError"
-        class="mt-1 text-[11px] text-(color:--color-danger)"
+        class="mt-1 text-[11px] text-(color:--color-danger-strong)"
         role="alert"
       >
         {{ passwordError }}
       </p>
       <p
         v-else-if="isCurrentPasswordVerified"
-        class="mt-1 text-[11px] text-(color:--color-success)"
+        class="mt-1 text-[11px] text-(color:--color-olive)"
       >
         현재 비밀번호가 확인되었습니다.
       </p>
@@ -276,14 +268,14 @@ const verifyCurrentPassword = async () => {
       />
       <p
         v-if="form.newPassword && !isNewPasswordValid"
-        class="mt-1 text-[11px] text-(color:--color-danger)"
+        class="mt-1 text-[11px] text-(color:--color-danger-strong)"
         role="alert"
       >
         영문·숫자·특수문자 중 2가지 조합은 10자리, 3가지 조합은 8자리 이상 입력해주세요.
       </p>
       <p
         v-else-if="form.newPassword && isNewPasswordValid"
-        class="mt-1 text-[11px] text-(color:--color-success)"
+        class="mt-1 text-[11px] text-(color:--color-olive)"
       >
         사용 가능한 비밀번호입니다.
       </p>
@@ -323,6 +315,7 @@ const verifyCurrentPassword = async () => {
 
     <AddressSearchLayer
       v-model="isAddressSearchOpen"
+      title="우편번호 찾기"
       @select="handleAddressSelect"
     />
   </main>

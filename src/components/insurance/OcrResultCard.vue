@@ -39,7 +39,7 @@ const finishEdit = () => {
       <p class="text-(length:--font-sm) text-(color:--color-gray-500) mb-(--space-2)">
         OCR 인식 완료 · Gemini Vision
       </p>
-      <span class="inline-block text-(length:--font-xs) font-semibold px-(--space-3) py-[3px] rounded-(--radius-full) bg-(--color-olive-surface) text-(color:--color-olive-dark)">
+      <span class="inline-block text-(length:--font-xs) font-semibold px-(--space-3) py-[3px] rounded-(--radius-full) bg-(--color-olive-surface) text-(color:--color-olive)">
         인식 완료
       </span>
     </div>

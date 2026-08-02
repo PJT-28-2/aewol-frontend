@@ -1,7 +1,10 @@
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import AppButton from '@/components/common/AppButton.vue'
-import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
+import { registerHeaderBack } from '@/composables/useHeaderBack'
+
+const router = useRouter()
 
 const step = ref(1) // 1: bank selection, 2: account form
 const selectedBank = ref('')
@@ -32,18 +35,20 @@ const selectBank = (bankCode) => {
 const handleConnect = async () => {
   // TODO: implement account connection via CODEF API
 }
+
+// 2단계(계좌 입력)에서는 1단계(은행 선택)로 돌아가고, 1단계에서는 계좌 목록으로 돌아간다.
+registerHeaderBack(() => {
+  if (step.value === 2) {
+    step.value = 1
+    return
+  }
+  router.push('/accounts')
+})
 </script>
 
 <template>
   <div class="account-connect-page">
     <header class="page-header">
-      <router-link
-        to="/accounts"
-        aria-label="뒤로 가기"
-        class="back-btn"
-      >
-        <IconArrowLeft size="24" />
-      </router-link>
       <h1>계좌 연결</h1>
     </header>
 
@@ -153,15 +158,8 @@ const handleConnect = async () => {
   margin-bottom: var(--space-5);
 }
 
-.back-btn {
-  font-size: var(--font-md);
-  color: var(--color-navy);
-  text-decoration: none;
-  font-weight: var(--font-medium);
-}
-
 .page-header h1 {
-  font-size: var(--font-xl);
+  font-size: var(--font-2xl);
   font-weight: var(--font-bold);
   color: var(--color-navy);
 }
@@ -244,7 +242,7 @@ const handleConnect = async () => {
 }
 
 .error-text {
-  color: var(--color-danger);
+  color: var(--color-danger-strong);
   font-size: var(--font-sm);
   margin-bottom: var(--space-3);
 }

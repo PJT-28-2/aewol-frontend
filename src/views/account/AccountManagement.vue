@@ -6,7 +6,6 @@ import { getBankMeta } from '@/utils/bankMeta';
 import AccountSummaryCard from '@/components/common/AccountSummaryCard.vue';
 import BottomSheet from '@/components/common/BottomSheet.vue';
 import IconLock from '@/components/common/icons/IconLock.vue';
-import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue';
 import petDeleteWarning from '@/assets/images/pet-delete-warning.png';
 import petCancelWarning from '@/assets/images/pet-cancel-warning.png';
 
@@ -80,7 +79,7 @@ function goToLink() {
 </script>
 
 <template>
-  <div class="min-h-screen max-w-[420px] mx-auto bg-(--color-bg) px-(--space-5) pt-(--space-7) pb-(--space-8)">
+  <div class="min-h-screen max-w-(--content-max-width) mx-auto bg-(--color-bg) px-(--space-5) pt-(--space-4) pb-(--space-8)">
     <!-- 완료 화면: 목록 위에 전체 화면으로 덮음 -->
     <div
       v-if="showUnlinkSuccess"
@@ -100,14 +99,6 @@ function goToLink() {
     </div>
 
        <template v-else>
-      <button
-        class="-ml-(--space-2) p-(--space-2) flex items-center justify-center mb-(--space-3)"
-        aria-label="뒤로 가기"
-        @click="router.back()"
-      >
-        <IconArrowLeft :size="20" color="var(--color-gray-700)" />
-      </button>
-
       <header class="mb-7">
         <h1 class="text-(length:--font-2xl) font-(--font-bold) text-(color:--color-navy)">계좌 관리</h1>
         <p class="text-(length:--font-md) text-(color:--color-gray-600) mt-(--space-1)">CODEF로 연동된 계좌를 확인해요</p>
@@ -119,7 +110,7 @@ function goToLink() {
         <p v-if="store.isLoading" class="text-(length:--font-sm) text-(color:--color-gray-500)">불러오는 중이에요…</p>
 
         <div v-else-if="loadError" class="p-(--space-4) rounded-(--radius-xl) bg-(--color-surface) mb-(--space-3) text-center">
-          <p class="text-(length:--font-sm) text-(color:--color-danger) mb-(--space-3)">{{ loadError }}</p>
+          <p class="text-(length:--font-sm) text-(color:--color-danger-strong) mb-(--space-3)">{{ loadError }}</p>
           <button
             class="px-(--space-5) py-(--space-2) rounded-(--radius-lg) bg-(--color-navy) text-(color:--color-white) text-(length:--font-sm) font-(--font-semibold)"
             @click="loadAccounts"
@@ -200,7 +191,7 @@ function goToLink() {
           </li>
         </ul>
 
-        <p v-if="unlinkError" class="text-(length:--font-sm) text-(color:--color-danger) mb-(--space-3)">{{ unlinkError }}</p>
+        <p v-if="unlinkError" class="text-(length:--font-sm) text-(color:--color-danger-strong) mb-(--space-3)">{{ unlinkError }}</p>
 
         <div class="w-full flex gap-(--space-3)">
           <button
@@ -211,7 +202,7 @@ function goToLink() {
             취소
           </button>
           <button
-            class="flex-1 py-3.5 rounded-(--radius-lg) bg-(--color-danger) text-(color:--color-white) font-(--font-semibold) disabled:opacity-60"
+            class="flex-1 py-3.5 rounded-(--radius-lg) bg-(--color-danger-strong) text-(color:--color-white) font-(--font-semibold) disabled:opacity-60"
             :disabled="isUnlinking"
             @click="confirmUnlink"
           >

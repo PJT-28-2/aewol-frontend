@@ -9,7 +9,7 @@ const router = useRouter()
 
 <template>
   <main
-    class="mx-auto min-h-dvh w-full max-w-[var(--mobile-content-width)] box-border bg-(--color-white) px-[var(--space-5)] py-[calc(var(--header-height)+var(--space-8))] text-(--color-navy)"
+    class="mx-auto min-h-dvh w-full max-w-(--content-max-width) box-border bg-(--color-white) px-[var(--space-5)] py-[calc(var(--header-height)+var(--space-8))] text-(--color-navy)"
   >
     <h1 class="m-0 text-[length:var(--font-2xl)] font-bold">
       애월 시작하기

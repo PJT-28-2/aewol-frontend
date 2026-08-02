@@ -35,13 +35,13 @@ async function handleCancel() {
 
 <template>
   <div
-    class="min-h-screen max-w-[420px] mx-auto bg-(--color-bg) px-(--space-6) pt-24 flex flex-col items-center text-center"
+    class="min-h-screen max-w-(--content-max-width) mx-auto bg-(--color-bg) px-(--space-6) pt-(--space-4) flex flex-col items-center text-center"
   >
     <LoadingSpinner v-if="isLoading" />
 
     <template v-else-if="!payment">
       <h1
-        class="text-(length:--font-xl) font-bold text-(color:--color-navy) mb-(--space-2)"
+        class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-2)"
       >
         정기결제 정보를 찾을 수 없어요
       </h1>
@@ -67,7 +67,7 @@ async function handleCancel() {
         class="w-[139px] h-[139px] mb-(--space-4)"
       >
       <h1
-        class="text-(length:--font-xl) font-bold text-(color:--color-navy) mb-(--space-2)"
+        class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-2)"
       >
         정기결제를 해지할까요?
       </h1>

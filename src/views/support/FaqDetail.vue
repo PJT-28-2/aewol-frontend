@@ -2,7 +2,6 @@
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useSupportStore } from '@/stores/support';
-import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue';
 import IconChevronRight from '@/components/common/icons/IconChevronRight.vue';
 import IconThumbsUp from '@/components/common/icons/IconThumbsUp.vue';
 import IconThumbsDown from '@/components/common/icons/IconThumbsDown.vue';
@@ -78,31 +77,24 @@ function goToRelated(relatedFaqId) {
 </script>
 
 <template>
-  <div class="min-h-screen max-w-[420px] mx-auto bg-(--color-bg) px-5 pt-6 pb-10">
-    <button
-      class="-ml-(--space-2) p-(--space-2) flex items-center justify-center mb-(--space-5)"
-      aria-label="뒤로 가기"
-      @click="router.back()"
-    >
-      <IconArrowLeft :size="20" color="var(--color-gray-700)" />
-    </button>
+  <div class="min-h-screen max-w-(--content-max-width) mx-auto bg-(--color-bg) px-5 pt-(--space-4) pb-10">
 
     <p v-if="isLoading" class="text-(length:--font-sm) text-(color:--color-gray-500)">불러오는 중이에요…</p>
 
-    <div v-else-if="loadError" class="p-4 rounded-2xl bg-(--color-surface) text-center">
-      <p class="text-(length:--font-sm) text-(color:--color-danger) mb-3">{{ loadError }}</p>
+    <div v-else-if="loadError" class="p-4 rounded-(--radius-xl) bg-(--color-surface) text-center">
+      <p class="text-(length:--font-sm) text-(color:--color-danger-strong) mb-3">{{ loadError }}</p>
       <button
-        class="px-5 py-2 rounded-xl bg-(--color-navy) text-(color:--color-white) text-(length:--font-sm) font-semibold"
+        class="px-5 py-2 rounded-(--radius-xl) bg-(--color-navy) text-(color:--color-white) text-(length:--font-sm) font-semibold"
         @click="loadFaq(route.params.faqId)"
       >
         다시 시도
       </button>
     </div>
 
-    <div v-else-if="!faq" class="p-4 rounded-2xl bg-(--color-surface) text-center">
+    <div v-else-if="!faq" class="p-4 rounded-(--radius-xl) bg-(--color-surface) text-center">
       <p class="text-(length:--font-sm) text-(color:--color-gray-600) mb-3">질문을 찾을 수 없어요</p>
       <button
-        class="px-5 py-2 rounded-xl bg-(--color-navy) text-(color:--color-white) text-(length:--font-sm) font-semibold"
+        class="px-5 py-2 rounded-(--radius-xl) bg-(--color-navy) text-(color:--color-white) text-(length:--font-sm) font-semibold"
         @click="router.push({ name: 'CustomerCenter' })"
       >
         고객센터로 이동
@@ -111,7 +103,7 @@ function goToRelated(relatedFaqId) {
 
     <template v-else>
       <p class="text-(length:--font-xs) font-semibold text-(color:--color-gray-500) mb-2">{{ faq.category }}</p>
-      <h1 class="text-(length:--font-xl) font-bold text-(color:--color-navy) mb-6 leading-snug">
+      <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-6 leading-snug">
         {{ faq.question }}
       </h1>
 
@@ -127,13 +119,13 @@ function goToRelated(relatedFaqId) {
         </p>
       </div>
 
-      <div class="rounded-2xl bg-(--color-surface) p-4 mb-8">
+      <div class="rounded-(--radius-xl) bg-(--color-surface) p-4 mb-8">
         <p class="text-(length:--font-sm) font-semibold text-(color:--color-navy) text-center mb-3">
           이 답변이 도움이 되었나요?
         </p>
         <div class="flex gap-2">
           <button
-            class="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-(length:--font-sm) font-medium"
+            class="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-(--radius-xl) text-(length:--font-sm) font-medium"
             :class="
               feedback === 'HELPFUL'
                 ? 'bg-(--color-navy) text-(color:--color-white)'
@@ -145,7 +137,7 @@ function goToRelated(relatedFaqId) {
             도움됨
           </button>
           <button
-            class="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-(length:--font-sm) font-medium"
+            class="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-(--radius-xl) text-(length:--font-sm) font-medium"
             :class="
               feedback === 'NOT_HELPFUL'
                 ? 'bg-(--color-navy) text-(color:--color-white)'
@@ -164,7 +156,7 @@ function goToRelated(relatedFaqId) {
         <ul class="flex flex-col gap-2">
           <li v-for="related in relatedFaqs" :key="related.faqId">
             <button
-              class="w-full flex items-center justify-between gap-3 p-4 rounded-2xl bg-(--color-surface) text-left"
+              class="w-full flex items-center justify-between gap-3 p-4 rounded-(--radius-xl) bg-(--color-surface) text-left"
               @click="goToRelated(related.faqId)"
             >
               <span class="text-(length:--font-md) text-(color:--color-navy)">{{ related.question }}</span>
@@ -175,7 +167,7 @@ function goToRelated(relatedFaqId) {
       </section>
 
       <button
-        class="w-full py-4 rounded-xl bg-(--color-gold) text-(color:--color-navy) font-bold"
+        class="w-full py-4 rounded-(--radius-xl) bg-(--color-gold) text-(color:--color-navy) font-bold"
         @click="router.push({ name: 'InquiryForm' })"
       >
         1:1 문의하기
@@ -194,7 +186,7 @@ function goToRelated(relatedFaqId) {
           v-if="feedbackToastVisible"
           role="status"
           aria-live="polite"
-          class="fixed top-7 left-1/2 z-[1100] -translate-x-1/2 rounded-[14px] border border-(--color-border) bg-(--color-white) px-4 py-3 text-[12.5px] font-(--font-bold) text-(color:--color-navy) shadow-(--shadow-lg)"
+          class="fixed top-7 left-1/2 z-[1100] -translate-x-1/2 rounded-(--radius-icon) border border-(--color-border) bg-(--color-white) px-4 py-3 text-[12.5px] font-(--font-bold) text-(color:--color-navy) shadow-(--shadow-lg)"
         >
           소중한 의견 감사합니다
         </div>

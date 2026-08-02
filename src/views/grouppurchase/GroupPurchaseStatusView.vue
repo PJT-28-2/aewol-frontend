@@ -157,12 +157,12 @@ function confirmCancelSuccess() {
 
       <!-- 상태 안내 -->
       <h1
-        class="text-(length:--font-lg) font-bold text-(color:--color-navy) text-center mb-(--space-2)"
+        class="text-(length:--font-2xl) font-bold text-(color:--color-navy) text-center mb-(--space-2)"
       >
         {{ statusTitle }}
       </h1>
       <p
-        class="text-(length:--font-sm) text-(color:--color-slate-muted) text-center mb-(--space-5)"
+        class="text-(length:--font-md) text-(color:--color-slate-muted) text-center mb-(--space-5)"
       >
         {{ status.noticeMessage }}
       </p>

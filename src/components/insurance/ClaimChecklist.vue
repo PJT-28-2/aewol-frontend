@@ -25,7 +25,7 @@ const props = defineProps({
           role="img"
           :aria-label="item.checked ? `${item.name} 확보 완료` : `${item.name} 미확보`"
           :class="item.checked
-            ? 'bg-(--color-success) border-(--color-success)'
+            ? 'bg-(--color-olive) border-(--color-olive)'
             : 'border-(--color-gray-300)'"
         >
           <IconCheck v-if="item.checked" :size="14" color="var(--color-white)" aria-hidden="true" />

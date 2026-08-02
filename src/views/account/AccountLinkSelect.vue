@@ -5,7 +5,6 @@ import { useAccountStore } from '@/stores/account';
 import { ENABLED_BANK_CODES } from '@/utils/mockData';
 import BankBadge from '@/components/common/BankBadge.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
-import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue';
 
 const router = useRouter();
 const store = useAccountStore();
@@ -46,14 +45,7 @@ function selectBank(bankCode) {
 </script>
 
 <template>
-  <div class="min-h-screen max-w-[420px] mx-auto bg-(--color-bg) px-(--space-5) pt-(--space-6) pb-(--space-8)">
-    <button
-      class="-ml-(--space-2) p-(--space-2) flex items-center justify-center mb-(--space-5)"
-      aria-label="뒤로 가기"
-      @click="router.back()"
-    >
-      <IconArrowLeft :size="20" color="var(--color-gray-700)" />
-    </button>
+  <div class="min-h-screen max-w-(--content-max-width) mx-auto bg-(--color-bg) px-(--space-5) pt-(--space-4) pb-(--space-8)">
 
     <header class="mb-7">
       <h1 class="text-(length:--font-2xl) font-(--font-bold) text-(color:--color-navy)">
@@ -75,7 +67,7 @@ function selectBank(bankCode) {
       v-else-if="loadError"
       class="p-(--space-4) rounded-(--radius-xl) bg-(--color-surface) mb-(--space-6) text-center"
     >
-      <p class="text-(length:--font-sm) text-(color:--color-danger) mb-(--space-3)">
+      <p class="text-(length:--font-sm) text-(color:--color-danger-strong) mb-(--space-3)">
         {{ loadError }}
       </p>
       <button

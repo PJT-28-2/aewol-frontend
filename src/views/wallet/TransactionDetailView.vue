@@ -2,7 +2,6 @@
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import AppButton from '@/components/common/AppButton.vue';
-import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue';
 import IconBarberShop from '@/components/common/icons/IconBarberShop.vue';
 import IconCat from '@/components/common/icons/IconCat.vue';
 import IconDog from '@/components/common/icons/IconDog.vue';
@@ -147,14 +146,6 @@ function handleSave() {
   <div
     class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))] bg-(--color-bg) min-h-screen"
   >
-    <button
-      type="button"
-      class="mb-(--space-3) text-(color:--color-navy)"
-      aria-label="뒤로 가기"
-      @click="goBack"
-    >
-      <IconArrowLeft size="24" />
-    </button>
 
     <div
       v-if="notFound"

@@ -6,6 +6,8 @@ import html2canvas from 'html2canvas'
 import { useInsuranceStore } from '@/stores/insurance'
 import AppModal from '@/components/common/AppModal.vue'
 import AppButton from '@/components/common/AppButton.vue'
+import IconWarning from '@/components/common/icons/IconWarning.vue'
+import aewolMark from '@/assets/images/aewol-mark.png'
 
 const router = useRouter()
 const insuranceStore = useInsuranceStore()
@@ -115,9 +117,11 @@ const goBack = () => {
         <!-- PDF 헤더 -->
         <div class="flex items-center gap-(--space-4) mb-(--space-5)">
           <div class="flex items-center gap-(--space-2)">
-            <div class="w-10 h-10 rounded-full bg-(--color-olive-surface) flex items-center justify-center text-xl">
-              🐾
-            </div>
+            <img
+              :src="aewolMark"
+              alt=""
+              class="w-10 h-10 object-contain"
+            >
             <span class="text-(length:--font-lg) font-bold text-(color:--color-navy)">애월</span>
           </div>
           <div class="ml-auto text-right">
@@ -127,7 +131,7 @@ const goBack = () => {
         </div>
 
         <!-- 구분선 -->
-        <div class="h-0.5 rounded-full mb-(--space-5) [background:linear-gradient(to_right,var(--color-navy),var(--color-gold))]" />
+        <div class="h-0.5 rounded-full mb-(--space-5) bg-(--color-navy)" />
 
         <!-- 청구 정보 -->
         <ul class="mb-(--space-5)">
@@ -150,7 +154,7 @@ const goBack = () => {
               :class="row.extra === 'amount'
                 ? 'text-(length:--font-base) text-(color:--color-navy)'
                 : row.extra === 'biz' && !row.value
-                  ? 'text-(length:--font-sm) text-(color:--color-gold-dark) font-medium'
+                  ? 'text-(length:--font-sm) text-(color:--color-danger-strong) font-medium'
                   : 'text-(length:--font-sm) text-(color:--color-gray-900)'"
             >
               {{ row.extra === 'biz' && !row.value ? '직접 확인 필요' : row.value }}
@@ -159,10 +163,14 @@ const goBack = () => {
         </ul>
 
         <!-- 미확인 항목 경고 -->
-        <div v-if="!claimData.businessNumber" class="flex gap-(--space-3) bg-(--color-gold-surface) rounded-(--radius-md) p-(--space-4) mb-(--space-5)">
-          <span class="text-(length:--font-lg) shrink-0">⚠</span>
+        <div v-if="!claimData.businessNumber" class="flex items-center gap-(--space-3) bg-(--color-gold-surface) rounded-(--radius-md) p-(--space-4) mb-(--space-5)">
+          <IconWarning
+            size="20"
+            color="var(--color-gold-dark)"
+            class="shrink-0"
+          />
           <div>
-            <p class="text-(length:--font-sm) font-semibold text-(color:--color-gold-dark) mb-(--space-1)">직접 확인이 필요한 항목이 있어요</p>
+            <p class="text-(length:--font-sm) font-semibold text-(color:--color-gold-dark)">직접 확인이 필요한 항목이 있어요</p>
             <p class="text-(length:--font-xs) text-(color:--color-gray-600) leading-relaxed">사업자번호는 영수증에서 직접 확인 후 기입해 주세요.</p>
           </div>
         </div>
@@ -180,18 +188,20 @@ const goBack = () => {
     <!-- 하단 다운로드 버튼 -->
     <div class="print:hidden fixed bottom-(--bottom-nav-height) left-0 right-0 px-(--space-4) pt-(--space-3) pb-(--space-4) bg-(--color-white) border-t border-(--color-border)">
       <!-- 필수값 누락 안내 -->
-      <p v-if="missingFields.length > 0" class="text-(length:--font-xs) text-(color:--color-danger) text-center mb-(--space-2)">
-        누락된 항목이 있어요: {{ missingFields.join(', ') }} · 이전 화면에서 채워주세요
+      <p v-if="missingFields.length > 0" class="text-(length:--font-xs) text-(color:--color-danger-strong) text-center mb-(--space-2)">
+        누락된 항목이 있어요: {{ missingFields.join(', ') }}<br>이전 화면으로 돌아가서 채워주세요
       </p>
-      <button
+      <AppButton
         type="button"
-        class="w-full h-(--control-height-lg) bg-(--color-navy) text-(color:--color-white) border-none rounded-(--radius-lg) text-(length:--font-base) font-semibold cursor-pointer transition-opacity disabled:opacity-50 disabled:cursor-not-allowed active:opacity-85"
-        :disabled="isGenerating || !canDownload"
+        variant="navy"
+        size="lg"
+        block
+        :loading="isGenerating"
+        :disabled="!canDownload"
         @click="handleDownload"
       >
-        <span v-if="isGenerating">PDF 생성 중...</span>
-        <span v-else>PDF 저장</span>
-      </button>
+        PDF 저장
+      </AppButton>
     </div>
   </div>
 

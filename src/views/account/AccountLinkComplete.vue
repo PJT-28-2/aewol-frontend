@@ -30,9 +30,9 @@ function goToAccountManagement() {
 </script>
 
 <template>
-  <div class="min-h-screen max-w-[420px] mx-auto bg-(--color-bg) px-(--space-6) pt-24 flex flex-col items-center text-center">
+  <div class="min-h-screen max-w-(--content-max-width) mx-auto bg-(--color-bg) px-(--space-6) pt-(--space-4) flex flex-col items-center text-center">
     <template v-if="showInvalidState">
-      <h1 class="text-(length:--font-xl) font-(--font-bold) text-(color:--color-navy) mb-(--space-2)">
+      <h1 class="text-(length:--font-2xl) font-(--font-bold) text-(color:--color-navy) mb-(--space-2)">
         연동 정보를 찾을 수 없어요
       </h1>
       <p class="text-(length:--font-md) text-(color:--color-gray-600) mb-(--space-8)">
@@ -48,7 +48,7 @@ function goToAccountManagement() {
 
     <template v-else>
       <img :src="petSuccess" alt="" class="w-40 h-auto mb-(--space-6)" />
-      <h1 class="text-(length:--font-xl) font-(--font-bold) text-(color:--color-navy) mb-(--space-2)">
+      <h1 class="text-(length:--font-2xl) font-(--font-bold) text-(color:--color-navy) mb-(--space-2)">
         계좌 연동이 완료됐어요
       </h1>
       <p class="text-(length:--font-md) text-(color:--color-gray-600) mb-(--space-8)">

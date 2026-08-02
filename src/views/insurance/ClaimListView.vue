@@ -211,7 +211,7 @@ const handleFilterChange = async () => {
 
 .status-rejected {
   background-color: var(--color-status-danger-bg);
-  color: var(--color-danger);
+  color: var(--color-danger-strong);
 }
 
 .claim-amount {

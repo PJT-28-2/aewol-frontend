@@ -30,3 +30,17 @@ export function formatYearMonth(year, month) {
 export function formatDateDot(isoDate) {
   return isoDate.replaceAll('-', '.')
 }
+
+/**
+ * 숫자만 남긴 뒤 "YYYY.MM.DD" 형식으로 자릿수에 맞춰 마침표를 채워 넣는다.
+ *
+ * @param {string} value 사용자가 입력 중인 생년월일 문자열
+ * @returns {string} 마침표가 포함된 생년월일
+ */
+export function formatBirthDateInput(value) {
+  const digits = value.replace(/\D/g, '').slice(0, 8)
+
+  if (digits.length < 5) return digits
+  if (digits.length < 7) return `${digits.slice(0, 4)}.${digits.slice(4)}`
+  return `${digits.slice(0, 4)}.${digits.slice(4, 6)}.${digits.slice(6)}`
+}

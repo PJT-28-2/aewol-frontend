@@ -2,13 +2,13 @@
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCertificateStore } from '@/stores/certificate'
-import { formatDateDot } from '@/utils/date'
+import { formatBirthDateInput, formatDateDot } from '@/utils/date'
+import { formatPhoneNumber } from '@/utils/phone'
 import AppButton from '@/components/common/AppButton.vue'
 import AppModal from '@/components/common/AppModal.vue'
 import AppInput from '@/components/common/AppInput.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
-import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 import IconDog from '@/components/common/icons/IconDog.vue'
 import IconCat from '@/components/common/icons/IconCat.vue'
 import IconRegistrationPaper from '@/components/common/icons/IconRegistrationPaper.vue'
@@ -57,6 +57,14 @@ function openLinkFlow() {
   authForm.value = { userName: '', birthDate: '', phoneNo: '' }
   authError.value = ''
   showAuthModal.value = true
+}
+
+function handleBirthDateInput(value) {
+  authForm.value.birthDate = formatBirthDateInput(value)
+}
+
+function handlePhoneNoInput(value) {
+  authForm.value.phoneNo = formatPhoneNumber(value)
 }
 
 async function submitAuth() {
@@ -163,14 +171,6 @@ async function handleMedicalSelect(event) {
 
 <template>
   <div class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))]">
-    <button
-      type="button"
-      class="mb-(--space-4) text-(color:--color-navy)"
-      aria-label="뒤로가기"
-      @click="router.back()"
-    >
-      <IconArrowLeft :size="24" />
-    </button>
 
     <header class="mb-(--space-5)">
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-2)">
@@ -237,7 +237,7 @@ async function handleMedicalSelect(event) {
               <p class="text-(length:--font-md) font-bold text-(color:--color-navy) truncate">
                 {{ certificateStore.registrationDoc.docName }}
               </p>
-              <span class="shrink-0 text-(length:--font-xs) font-semibold px-(--space-2) py-[3px] rounded-(--radius-full) bg-(--color-olive-surface) text-(color:--color-olive-dark)">
+              <span class="shrink-0 text-(length:--font-xs) font-semibold px-(--space-2) py-[3px] rounded-(--radius-full) bg-(--color-olive-surface) text-(color:--color-olive)">
                 APMS 연동됨
               </span>
             </div>
@@ -417,37 +417,43 @@ async function handleMedicalSelect(event) {
           placeholder="홍길동"
         />
         <AppInput
-          v-model="authForm.birthDate"
+          :model-value="authForm.birthDate"
           label="생년월일"
           placeholder="1990.01.01"
           inputmode="numeric"
+          @update:model-value="handleBirthDateInput"
         />
         <AppInput
-          v-model="authForm.phoneNo"
+          :model-value="authForm.phoneNo"
           label="전화번호"
           placeholder="010-1234-5678"
           inputmode="tel"
+          @update:model-value="handlePhoneNoInput"
         />
       </div>
       <p
         v-if="authError"
-        class="text-(length:--font-xs) text-(color:--color-danger) mt-(--space-2)"
+        class="text-(length:--font-xs) text-(color:--color-danger-strong) mt-(--space-2)"
       >
         {{ authError }}
       </p>
       <template #footer>
-        <AppButton
-          variant="secondary"
-          @click="showAuthModal = false"
-        >
-          취소
-        </AppButton>
-        <AppButton
-          :loading="isSubmittingAuth"
-          @click="submitAuth"
-        >
-          조회하기
-        </AppButton>
+        <div class="flex w-full gap-(--space-3)">
+          <AppButton
+            variant="secondary"
+            class="flex-1 border-(--color-border)!"
+            @click="showAuthModal = false"
+          >
+            취소
+          </AppButton>
+          <AppButton
+            class="flex-1"
+            :loading="isSubmittingAuth"
+            @click="submitAuth"
+          >
+            조회하기
+          </AppButton>
+        </div>
       </template>
     </AppModal>
 
@@ -493,7 +499,7 @@ async function handleMedicalSelect(event) {
       </p>
       <p
         v-if="matchError"
-        class="text-(length:--font-xs) text-(color:--color-danger) mt-(--space-2)"
+        class="text-(length:--font-xs) text-(color:--color-danger-strong) mt-(--space-2)"
       >
         {{ matchError }}
       </p>

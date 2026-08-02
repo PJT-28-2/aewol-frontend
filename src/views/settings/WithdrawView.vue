@@ -56,11 +56,6 @@ const handleWithdraw = async () => {
   <main
     class="mx-auto min-h-svh w-full max-w-[390px] overflow-hidden rounded-[32px] bg-(--color-white) px-[22px] pt-4 pb-8"
   >
-    <div
-      class="mx-auto h-[5px] w-10 rounded-(--radius-sm) bg-(--color-border)"
-      aria-hidden="true"
-    />
-
     <img
       class="mx-auto mt-[45px] size-[139px] object-contain"
       :src="withdrawalConfirmImage"
@@ -73,22 +68,22 @@ const handleWithdraw = async () => {
     >
       <h1
         id="withdraw-title"
-        class="text-[18px] leading-[1.3] font-(--font-bold) text-(color:--color-navy)"
+        class="text-(length:--font-2xl) leading-[1.3] font-(--font-bold) text-(color:--color-navy)"
       >
         정말 탈퇴하시겠어요?
       </h1>
-      <p class="mt-[7px] text-[12.5px] leading-[1.45] text-(color:--color-slate-muted)">
+      <p class="mt-[7px] text-(length:--font-md) leading-[1.45] text-(color:--color-slate-muted)">
         탈퇴하면 아래 정보가 모두 삭제되며<br>
         복구할 수 없어요
       </p>
     </section>
 
     <ul
-      class="mt-[22px] flex h-[124px] flex-col justify-center gap-[11px] rounded-[14px] bg-(--color-danger-soft) px-4 text-[11.5px] leading-[1.3] text-(color:--color-danger-muted)"
+      class="mt-[22px] flex h-[124px] flex-col justify-center gap-[11px] rounded-(--radius-icon) bg-(--color-danger-soft) px-4 text-[11.5px] leading-[1.3] text-(color:--color-danger-muted)"
     >
       <li class="flex items-center gap-[9px]">
         <span class="size-[5px] shrink-0 rounded-full bg-(--color-danger-strong)" />
-        <span>펫지갑 잔액, 버킷, SOS포켓, 저금통 전체</span>
+        <span>펫지갑 잔액, SOS포켓, 저금통 전체</span>
       </li>
       <li class="flex items-center gap-[9px]">
         <span class="size-[5px] shrink-0 rounded-full bg-(--color-danger-strong)" />
@@ -124,7 +119,7 @@ const handleWithdraw = async () => {
       />
       <p
         v-if="errorMessage"
-        class="mt-2 text-[12px] text-(color:--color-danger)"
+        class="mt-2 text-[12px] text-(color:--color-danger-strong)"
         role="alert"
       >
         {{ errorMessage }}

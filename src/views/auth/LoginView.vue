@@ -4,8 +4,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import PasswordInput from '@/components/common/PasswordInput.vue'
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
-import loginIllustration from '@/assets/images/auth/login-illustration.png'
-import aewolLogo from '@/assets/images/auth/aewol-logo.png'
+import aewolLogo from '@/assets/images/aewol-logo.png'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -149,11 +148,11 @@ const handleKakaoLogin = () => {
 
 <template>
   <main
-    class="mx-auto min-h-svh w-[min(100%,390px)] overflow-hidden rounded-[40px] bg-(--color-white) min-[391px]:my-[max(0px,calc((100svh-844px)/2))] min-[391px]:min-h-[844px] min-[391px]:shadow-(--shadow-lg) max-h-[700px]:min-h-[700px]"
+    class="min-h-svh w-full bg-(--color-white)"
   >
     <template v-if="!showEmailForm">
       <section
-        class="relative h-[480px] bg-(--color-pastel-blue) max-h-[700px]:h-[420px]"
+        class="relative h-[480px] bg-(--color-pastel-mist) max-h-[700px]:h-[420px]"
         aria-labelledby="login-title"
       >
         <h1
@@ -163,23 +162,13 @@ const handleKakaoLogin = () => {
           애월 로그인
         </h1>
 
-        <div
-          class="absolute top-[93px] left-[89px] h-[174px] w-[180px] overflow-hidden max-h-[700px]:top-[52px]"
-        >
-          <img
-            class="absolute top-[-20.73%] left-[-40.17%] h-[198.31%] w-[191.26%] max-w-none"
-            :src="loginIllustration"
-            alt=""
-          >
-        </div>
-
         <img
-          class="absolute top-[286px] left-1/2 h-[58px] w-[120px] -translate-x-1/2 object-cover max-h-[700px]:top-[245px]"
+          class="absolute top-[93px] left-1/2 h-[250px] w-[250px] -translate-x-1/2 object-contain max-h-[700px]:top-[52px]"
           :src="aewolLogo"
           alt="애월"
         >
         <p
-          class="absolute top-[363px] w-full text-center text-(length:--auth-font-sm) leading-[1.3] text-(color:--color-slate-dark) max-h-[700px]:top-[322px]"
+          class="absolute top-[348px] w-full text-center text-(length:--auth-font-sm) leading-[1.3] text-(color:--color-slate-dark) max-h-[700px]:top-[307px]"
         >
           반려동물을 위한, 전자 지갑
         </p>
@@ -222,7 +211,7 @@ const handleKakaoLogin = () => {
         </nav>
         <p
           v-if="errorMessage"
-          class="text-center text-(length:--font-sm) text-(color:--color-danger)"
+          class="text-center text-(length:--font-sm) text-(color:--color-danger-strong)"
           role="alert"
         >
           {{ errorMessage }}
@@ -232,11 +221,15 @@ const handleKakaoLogin = () => {
 
     <section
       v-else
-      class="relative min-h-[700px] px-[22px] pt-[108px] pb-8"
+      class="relative min-h-[700px] px-[22px] pt-[calc(var(--header-height)+var(--space-4))] pb-8"
       aria-labelledby="email-login-title"
     >
+      <div
+        class="fixed inset-x-0 top-0 z-100 h-(--header-height) bg-(--color-white)"
+        aria-hidden="true"
+      />
       <button
-        class="absolute top-[60px] left-[22px] size-[26px] text-(color:--color-navy)"
+        class="fixed top-(--space-2) left-(--space-4) z-101 flex size-10 items-center justify-center text-(color:--color-navy)"
         type="button"
         aria-label="이전 화면으로 돌아가기"
         @click="closeEmailLogin"
@@ -246,11 +239,11 @@ const handleKakaoLogin = () => {
 
       <h2
         id="email-login-title"
-        class="text-(length:--font-xl) leading-[1.3] font-(--font-bold) text-(color:--color-navy)"
+        class="text-(length:--font-2xl) leading-[1.3] font-(--font-bold) text-(color:--color-navy)"
       >
         이메일로 로그인
       </h2>
-      <p class="mt-[3px] text-[12.5px] leading-[1.3] text-(color:--color-slate-muted)">
+      <p class="mt-[3px] text-(length:--font-md) leading-[1.3] text-(color:--color-slate-muted)">
         계정 정보를 입력해주세요
       </p>
 
@@ -273,7 +266,7 @@ const handleKakaoLogin = () => {
         <input
           id="email"
           v-model="email"
-          class="h-[46px] w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-(length:--auth-font-sm) text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
+          class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
           type="email"
           autocomplete="email"
           placeholder="example@aewol.com"
@@ -288,7 +281,7 @@ const handleKakaoLogin = () => {
         <PasswordInput
           id="password"
           v-model="password"
-          input-class="h-[46px] w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-(length:--auth-font-sm) text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
+          input-class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
           autocomplete="current-password"
           placeholder="8자 이상 입력해주세요"
           minlength="8"
@@ -322,7 +315,7 @@ const handleKakaoLogin = () => {
 
       <p
         v-if="errorMessage"
-        class="text-center text-(length:--font-sm) text-(color:--color-danger)"
+        class="text-center text-(length:--font-sm) text-(color:--color-danger-strong)"
         role="alert"
       >
         {{ errorMessage }}

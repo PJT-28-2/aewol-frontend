@@ -3,7 +3,6 @@ import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import AppButton from '@/components/common/AppButton.vue';
 import AppInput from '@/components/common/AppInput.vue';
-import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue';
 import IconCat from '@/components/common/icons/IconCat.vue';
 import IconDog from '@/components/common/icons/IconDog.vue';
 
@@ -51,10 +50,6 @@ function onFileChange(event) {
   vaccinationFile.value = event.target.files[0] ?? null;
 }
 
-function goBack() {
-  router.back();
-}
-
 async function handleSubmit() {
   const validationError = validateForm();
   if (validationError) {
@@ -71,14 +66,6 @@ async function handleSubmit() {
   <div
     class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))] bg-(--color-bg) min-h-screen"
   >
-    <button
-      type="button"
-      class="mb-(--space-3) text-(color:--color-navy)"
-      aria-label="뒤로 가기"
-      @click="goBack"
-    >
-      <IconArrowLeft size="24" />
-    </button>
 
     <header class="mb-(--space-6)">
       <h1
@@ -244,7 +231,7 @@ async function handleSubmit() {
 
       <p
         v-if="errorMessage"
-        class="text-(length:--font-sm) text-(color:--color-danger)"
+        class="text-(length:--font-sm) text-(color:--color-danger-strong)"
       >
         {{ errorMessage }}
       </p>

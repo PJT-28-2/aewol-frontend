@@ -1,5 +1,6 @@
 <script setup>
 import { useRouter } from 'vue-router'
+import { useHeaderBackHandler } from '@/composables/useHeaderBack'
 import IconArrowLeft from './icons/IconArrowLeft.vue'
 
 defineProps({
@@ -14,8 +15,13 @@ defineProps({
 })
 
 const router = useRouter()
+const backHandler = useHeaderBackHandler()
 
 function goBack() {
+  if (backHandler.value) {
+    backHandler.value()
+    return
+  }
   router.back()
 }
 </script>

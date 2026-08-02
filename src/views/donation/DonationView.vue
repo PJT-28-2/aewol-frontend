@@ -8,15 +8,15 @@ import EmptyState from '@/components/common/EmptyState.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import SelectableChip from '@/components/common/SelectableChip.vue'
 import ToggleSwitch from '@/components/common/ToggleSwitch.vue'
-import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 import IconDog from '@/components/common/icons/IconDog.vue'
 import IconHeart from '@/components/common/icons/IconHeart.vue'
-import IconPaw from '@/components/common/icons/IconPaw.vue'
 import IconPlus from '@/components/common/icons/IconPlus.vue'
 import IconSearch from '@/components/common/icons/IconSearch.vue'
 import IconSettings from '@/components/common/icons/IconSettings.vue'
 import IconStar from '@/components/common/icons/IconStar.vue'
 import IconWarning from '@/components/common/icons/IconWarning.vue'
+import donationCompleteImage from '@/assets/images/donation-complete.png'
+import donationConfirmImage from '@/assets/images/donation-confirm.png'
 import { donationAmountPresets, donationCategories, savingUnits } from '@/mocks/donation'
 import { useDonationStore } from '@/stores/donation'
 import { formatWon } from '@/utils/bankMeta'
@@ -79,11 +79,11 @@ onMounted(loadDonationData)
 
 <template>
   <div
-    class="mx-auto w-full max-w-[var(--mobile-content-width)] box-border bg-(--color-white) px-[var(--space-5)] text-(--color-navy)"
+    class="mx-auto w-full max-w-(--content-max-width) box-border bg-(--color-white) px-[var(--space-5)] pt-[var(--space-4)] text-(--color-navy)"
     :class="
       isMain
-        ? 'min-h-[calc(100dvh-var(--header-height)-var(--bottom-nav-height))] pb-[calc(var(--space-8)+env(safe-area-inset-bottom))] pt-[var(--space-5)]'
-        : 'min-h-dvh pb-[calc(var(--space-8)+env(safe-area-inset-bottom))] pt-[calc(var(--header-height)+var(--space-5))]'
+        ? 'min-h-[calc(100dvh-var(--header-height)-var(--bottom-nav-height))] pb-[calc(var(--space-8)+env(safe-area-inset-bottom))]'
+        : 'min-h-dvh pb-[calc(var(--space-8)+env(safe-area-inset-bottom))]'
     "
   >
     <section
@@ -137,13 +137,13 @@ onMounted(loadDonationData)
         class="mt-[var(--space-5)] rounded-[var(--radius-xl)] bg-(--color-olive-surface) p-[var(--space-5)]"
       >
         <b
-          class="block text-[length:var(--font-sm)] text-(--color-olive-dark)"
+          class="block text-[length:var(--font-sm)] text-(--color-olive)"
         >누적 저금액</b>
         <strong
-          class="mt-[var(--space-1)] block text-[length:var(--font-3xl)] text-(--color-olive)"
+          class="block text-[length:var(--font-3xl)] text-(--color-olive)"
         >{{ formatWon(balance) }}</strong>
         <span
-          class="block text-[length:var(--font-xs)] text-(--color-olive-muted)"
+          class="block text-[length:var(--font-sm)] text-(--color-olive)"
         >이번 달 {{ formatWon(monthlySaved) }} 모았어요</span>
         <div class="mt-[var(--space-3)] flex gap-[var(--space-3)]">
           <AppButton
@@ -170,13 +170,13 @@ onMounted(loadDonationData)
       <section
         class="mt-[var(--space-5)] flex flex-col gap-[var(--space-2)] rounded-[var(--radius-lg)] bg-(--color-surface) p-[var(--space-4)]"
       >
-        <b class="text-[length:var(--font-sm)] text-(--color-slate-dark)">
+        <div class="flex items-center gap-[var(--space-1)]">
           <IconHeart
-            class="mr-[var(--space-1)] inline-block text-(--color-olive)"
+            class="shrink-0 text-(--color-olive)"
             :size="16"
           />
-          지금까지 모은 잔돈으로
-        </b>
+          <b class="text-[length:var(--font-sm)] text-(--color-slate-dark)">지금까지 모은 잔돈으로</b>
+        </div>
         <span
           class="text-[length:var(--font-xs)] text-(--color-slate-muted)"
         >{{ impactMessage }}</span>
@@ -204,7 +204,7 @@ onMounted(loadDonationData)
           class="shrink-0 rounded-(--radius-full) px-[var(--space-3)] py-[var(--space-1)] text-[length:var(--font-xs)] font-bold"
           :class="
             autoDonate
-              ? 'bg-(--color-olive-surface) text-(--color-olive-dark)'
+              ? 'bg-(--color-olive-surface) text-(--color-olive)'
               : 'bg-(--color-surface) text-(--color-slate-dark)'
           "
         >
@@ -215,16 +215,8 @@ onMounted(loadDonationData)
 
     <!-- RF-SI-02 · 기부하기 -->
     <template v-else-if="screen === 'give'">
-      <button
-        class="-ml-[var(--space-1)] grid size-[var(--control-height-sm)] cursor-pointer place-items-center rounded-(--radius-full) border-0 bg-transparent text-(--color-navy) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-gold)"
-        type="button"
-        aria-label="저금통으로 돌아가기"
-        @click="go('/donation')"
-      >
-        <IconArrowLeft :size="24" />
-      </button>
       <h1
-        class="mb-[var(--space-7)] mt-[var(--space-5)] text-[length:var(--font-xl)]"
+        class="mb-[var(--space-7)] text-[length:var(--font-2xl)] font-bold text-(--color-navy)"
       >
         기부하기
       </h1>
@@ -239,7 +231,7 @@ onMounted(loadDonationData)
           ₩{{ balance.toLocaleString() }}
         </strong>
         <small
-          class="block text-[length:var(--font-xs)] text-(--color-slate-light)"
+          class="block text-[length:var(--font-sm)] text-(--color-slate-light)"
         >잔돈을 모아 좋은 곳에 전해보세요</small>
       </section>
 
@@ -258,6 +250,7 @@ onMounted(loadDonationData)
         <SelectableChip
           v-for="campaign in donationStore.preferredCampaigns"
           :key="campaign.id"
+          :class="currentCampaign?.id !== campaign.id ? 'text-(--color-navy)!' : ''"
           :selected="currentCampaign?.id === campaign.id"
           @click="donationStore.selectCampaign(campaign.id)"
         >
@@ -285,13 +278,13 @@ onMounted(loadDonationData)
       >
         <div class="grid h-28 place-items-center bg-(--color-border)">
           <IconDog
-            class="text-(--color-slate)"
+            class="text-(--color-navy)"
             :size="34"
             color="currentColor"
           />
         </div>
         <b
-          class="mx-[var(--space-4)] mt-[var(--space-3)] block text-[length:var(--font-xs)] text-(--color-gold-dark)"
+          class="mx-[var(--space-4)] mt-[var(--space-3)] block text-[length:var(--font-sm)] text-(--color-gold-dark)"
         >{{ currentCampaign.organization }}</b>
         <strong
           class="mx-[var(--space-4)] mt-[var(--space-2)] block text-[length:var(--font-md)]"
@@ -309,7 +302,7 @@ onMounted(loadDonationData)
           />
         </div>
         <small
-          class="mx-[var(--space-4)] mt-[var(--space-3)] block text-[length:var(--font-xs)] text-(--color-slate-muted)"
+          class="mx-[var(--space-4)] mt-[var(--space-3)] block text-[length:var(--font-sm)] text-(--color-slate-muted)"
         >
           {{ formatWon(currentCampaign.raised) }} 모금 · 참여
           {{ currentCampaign.participants.toLocaleString() }}명
@@ -348,7 +341,7 @@ onMounted(loadDonationData)
       </div>
       <p
         v-if="!donationStore.canDonate"
-        class="mt-[var(--space-2)] text-[length:var(--font-sm)] text-(--color-danger)"
+        class="mt-[var(--space-2)] text-[length:var(--font-sm)] text-(--color-danger-strong)"
         role="alert"
       >
         잔액 안에서 기부 금액을 선택해주세요.
@@ -379,10 +372,10 @@ onMounted(loadDonationData)
             @click="donationStore.selectCampaign(campaign.id)"
           >
             <span
-              class="grid size-10 shrink-0 place-items-center rounded-(--radius-md) bg-(--color-border)"
+              class="grid size-10 shrink-0 place-items-center rounded-(--radius-icon) bg-(--color-border)"
             >
               <IconDog
-                class="text-(--color-slate)"
+                class="text-(--color-navy)"
                 :size="20"
                 color="currentColor"
               />
@@ -392,11 +385,11 @@ onMounted(loadDonationData)
                 class="block truncate text-[length:var(--font-sm)]"
               >{{ campaign.title }}</strong>
               <span
-                class="block text-[length:var(--font-xs)] text-(--color-slate-muted)"
+                class="block text-[length:var(--font-sm)] text-(--color-slate-muted)"
               >{{ campaign.organization }}</span>
             </span>
             <em
-              class="shrink-0 not-italic text-[length:var(--font-xs)] text-(--color-gold-dark)"
+              class="shrink-0 not-italic text-[length:var(--font-sm)] text-(--color-gold-dark)"
             >{{ campaign.progress }}%</em>
           </button>
         </li>
@@ -417,10 +410,12 @@ onMounted(loadDonationData)
     <!-- RF-SI-03 · 기부확인 -->
     <template v-else-if="screen === 'confirm'">
       <section class="pt-[var(--space-2)] text-center">
-        <div
-          class="mx-auto mb-[var(--space-6)] h-[var(--space-1)] w-[var(--space-8)] rounded-(--radius-full) bg-(--color-border)"
-        />
-        <h1 class="m-0 text-[length:var(--font-xl)]">
+        <img
+          class="mx-auto mt-[45px] size-[139px] object-contain"
+          :src="donationConfirmImage"
+          alt=""
+        >
+        <h1 class="mt-[10px] text-[length:var(--font-2xl)] font-bold text-(--color-navy)">
           {{ formatWon(amount) }}을 기부할까요?
         </h1>
         <p
@@ -435,14 +430,14 @@ onMounted(loadDonationData)
         >
           <b class="block">{{ currentCampaign.organization }}</b>
           <span
-            class="mt-[var(--space-2)] block text-[length:var(--font-xs)] text-(--color-slate-muted)"
+            class="mt-[var(--space-2)] block text-[length:var(--font-sm)] text-(--color-slate-muted)"
           >{{ currentCampaign.title }}</span>
           <hr class="my-[var(--space-3)] border-0 border-t border-(--color-border)">
           <div
             class="flex justify-between text-[length:var(--font-sm)] text-(--color-slate-dark)"
           >
             <span>기부 금액</span>
-            <strong>{{ formatWon(amount) }}</strong>
+            <strong class="text-[length:var(--font-md)] font-bold">{{ formatWon(amount) }}</strong>
           </div>
         </div>
 
@@ -450,11 +445,11 @@ onMounted(loadDonationData)
           class="mx-[var(--space-3)] my-[var(--space-7)] flex justify-between text-[length:var(--font-sm)] text-(--color-slate-dark)"
         >
           <span>기부 후 저금통 잔액</span>
-          <strong>{{ formatWon(donationStore.balanceAfterDonation) }}</strong>
+          <strong class="text-[length:var(--font-md)] font-bold">{{ formatWon(donationStore.balanceAfterDonation) }}</strong>
         </div>
         <p
           v-if="!donationStore.canDonate"
-          class="mt-[var(--space-2)] text-[length:var(--font-sm)] text-(--color-danger)"
+          class="mt-[var(--space-2)] text-[length:var(--font-sm)] text-(--color-danger-strong)"
           role="alert"
         >
           잔액이 부족해 기부할 수 없어요.
@@ -464,6 +459,7 @@ onMounted(loadDonationData)
             block
             size="lg"
             variant="secondary"
+            class="border-(--color-border)!"
             @click="go('/donation/give')"
           >
             취소
@@ -484,19 +480,16 @@ onMounted(loadDonationData)
     <!-- RF-SI-04 · 기부완료 -->
     <template v-else-if="screen === 'complete'">
       <section class="pt-32 text-center">
-        <div
-          class="mx-auto mb-[var(--space-6)] grid size-24 place-items-center rounded-(--radius-full) bg-(--color-olive-surface)"
+        <img
+          class="mx-auto mb-[var(--space-6)] size-[160px] object-contain"
+          :src="donationCompleteImage"
+          alt=""
         >
-          <IconPaw
-            class="text-(--color-olive)"
-            :size="44"
-          />
-        </div>
-        <h1 class="m-0 text-[length:var(--font-xl)]">
+        <h1 class="m-0 text-[length:var(--font-2xl)] font-bold text-(--color-navy)">
           기부해주셔서 감사해요
         </h1>
         <p
-          class="mt-[var(--space-2)] text-[length:var(--font-sm)] text-(--color-slate-muted)"
+          class="mt-[var(--space-2)] text-[length:var(--font-md)] text-(--color-slate-muted)"
         >
           {{ currentCampaign?.organization }}에 {{ formatWon(amount) }}을
           전달했어요
@@ -515,20 +508,12 @@ onMounted(loadDonationData)
 
     <!-- RF-SI-05 · 기부처둘러보기 -->
     <template v-else-if="screen === 'explore'">
-      <button
-        class="-ml-[var(--space-1)] grid size-[var(--control-height-sm)] cursor-pointer place-items-center rounded-(--radius-full) border-0 bg-transparent text-(--color-navy) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-gold)"
-        type="button"
-        aria-label="기부하기로 돌아가기"
-        @click="go('/donation/give')"
-      >
-        <IconArrowLeft :size="24" />
-      </button>
       <h1
-        class="mb-[var(--space-2)] mt-[var(--space-5)] text-[length:var(--font-xl)]"
+        class="mb-[var(--space-2)] text-[length:var(--font-2xl)] font-bold text-(--color-navy)"
       >
         기부처 둘러보기
       </h1>
-      <p class="m-0 text-[length:var(--font-sm)] text-(--color-slate-muted)">
+      <p class="m-0 text-[length:var(--font-md)] text-(--color-slate-muted)">
         우리 아이들을 위한 캠페인을 만나보세요
       </p>
 
@@ -566,13 +551,13 @@ onMounted(loadDonationData)
         >
           <span class="grid h-24 place-items-center bg-(--color-border)">
             <IconDog
-              class="text-(--color-slate)"
+              class="text-(--color-navy)"
               :size="30"
               color="currentColor"
             />
           </span>
           <b
-            class="mx-[var(--space-3)] mt-[var(--space-2)] block text-[length:var(--font-xs)] text-(--color-gold-dark)"
+            class="mx-[var(--space-3)] mt-[var(--space-2)] block text-[length:var(--font-sm)] text-(--color-gold-dark)"
           >{{ item.organization }}</b>
           <strong
             class="mx-[var(--space-3)] mt-[var(--space-2)] block text-[length:var(--font-sm)]"
@@ -590,7 +575,7 @@ onMounted(loadDonationData)
             />
           </span>
           <small
-            class="mx-[var(--space-3)] mb-[var(--space-3)] mt-[var(--space-2)] block text-[length:var(--font-xs)] text-(--color-slate-muted)"
+            class="mx-[var(--space-3)] mb-[var(--space-3)] mt-[var(--space-2)] block text-[length:var(--font-sm)] text-(--color-slate-muted)"
           >{{ item.progress }}% 달성</small>
         </button>
       </div>
@@ -607,20 +592,12 @@ onMounted(loadDonationData)
 
     <!-- RF-SI-06 · 저금통설정 -->
     <template v-else-if="screen === 'settings'">
-      <button
-        class="-ml-[var(--space-1)] grid size-[var(--control-height-sm)] cursor-pointer place-items-center rounded-(--radius-full) border-0 bg-transparent text-(--color-navy) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-gold)"
-        type="button"
-        aria-label="저금통으로 돌아가기"
-        @click="go('/donation')"
-      >
-        <IconArrowLeft :size="24" />
-      </button>
       <h1
-        class="mb-[var(--space-2)] mt-[var(--space-5)] text-[length:var(--font-xl)]"
+        class="mb-[var(--space-2)] text-[length:var(--font-2xl)] font-bold text-(--color-navy)"
       >
         저금통 설정
       </h1>
-      <p class="m-0 text-[length:var(--font-sm)] text-(--color-slate-muted)">
+      <p class="m-0 text-[length:var(--font-md)] text-(--color-slate-muted)">
         짜투리 저금 방식을 설정해요
       </p>
 
@@ -630,7 +607,7 @@ onMounted(loadDonationData)
         <div class="min-w-0 flex-1">
           <b class="block">짜투리 저금통 사용</b>
           <span
-            class="mt-[var(--space-2)] block text-[length:var(--font-xs)] text-(--color-slate-muted)"
+            class="mt-[var(--space-1)] block text-[length:var(--font-xs)] text-(--color-slate-muted)"
           >결제할 때마다 잔돈을 자동으로 모아요</span>
         </div>
         <ToggleSwitch
@@ -659,32 +636,32 @@ onMounted(loadDonationData)
       </div>
 
       <section
-        class="mt-[var(--space-4)] rounded-[var(--radius-lg)] bg-(--color-olive-surface) p-[var(--space-4)] text-(--color-olive-dark)"
+        class="mt-[var(--space-4)] rounded-[var(--radius-lg)] bg-(--color-olive-surface) p-[var(--space-4)] text-(--color-olive)"
       >
         <b class="block">예시</b>
         <strong
           class="mt-[var(--space-2)] block text-[length:var(--font-sm)] leading-snug"
         >
-          31,275원 결제 시, {{ formatWon(savingUnit) }} 미만 끝자리
-          {{ formatWon(31275 % savingUnit) }}이 자동으로 저금통에 적립돼요
+          31,275원 결제 시, {{ formatWon(savingUnit) }} 미만 잔돈인
+          {{ formatWon(31275 % savingUnit) }}이 자동으로 저금통에 쌓여요
         </strong>
         <span
-          class="mt-[var(--space-1)] block text-[length:var(--font-xs)] text-(--color-olive-muted)"
+          class="mt-[var(--space-1)] block text-[length:var(--font-sm)] text-(--color-olive)"
         >결제 금액 자체는 그대로 나가고, 잔돈만 별도로 모여요</span>
       </section>
 
-      <div
-        class="mb-[var(--space-3)] mt-[var(--space-7)] border-t border-(--color-border) pt-[var(--space-3)] text-center text-[length:var(--font-sm)] text-(--color-slate-muted)"
+      <h3
+        class="mb-[var(--space-3)] mt-[var(--space-6)] text-[length:var(--font-sm)] text-(--color-slate-dark)"
       >
         자동 기부
-      </div>
+      </h3>
       <section
         class="flex items-start gap-[var(--space-4)] rounded-[var(--radius-xl)] bg-(--color-surface) p-[var(--space-4)]"
       >
         <div class="min-w-0 flex-1">
           <b class="block">매달 자동으로 기부하기</b>
           <span
-            class="mt-[var(--space-2)] block text-[length:var(--font-xs)] text-(--color-slate-muted)"
+            class="mt-[var(--space-1)] block text-[length:var(--font-xs)] text-(--color-slate-muted)"
           >매월 말일, 모인 잔돈을 선택한 기부처로 자동 전달해요</span>
         </div>
         <ToggleSwitch

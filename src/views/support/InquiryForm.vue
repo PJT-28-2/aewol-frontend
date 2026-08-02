@@ -2,7 +2,6 @@
 import { ref, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useSupportStore } from '@/stores/support';
-import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue';
 import IconImage from '@/components/common/icons/IconImage.vue';
 import IconClose from '@/components/common/icons/IconClose.vue';
 import { SUPPORT_CATEGORIES } from '@/utils/mockData';
@@ -104,14 +103,7 @@ async function submit() {
 </script>
 
 <template>
-  <div class="min-h-screen max-w-[420px] mx-auto bg-(--color-bg) px-5 pt-6 pb-10">
-    <button
-      class="-ml-(--space-2) p-(--space-2) flex items-center justify-center mb-(--space-5)"
-      aria-label="뒤로 가기"
-      @click="router.back()"
-    >
-      <IconArrowLeft :size="20" color="var(--color-gray-700)" />
-    </button>
+  <div class="min-h-screen max-w-(--content-max-width) mx-auto bg-(--color-bg) px-5 pt-(--space-4) pb-10">
 
     <header class="mb-6">
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">1:1 문의하기</h1>
@@ -142,7 +134,7 @@ async function submit() {
         v-model="title"
         type="text"
         placeholder="문의 제목을 입력해주세요"
-        class="w-full p-4 rounded-xl bg-(--color-surface) text-(length:--font-md) text-(color:--color-navy) outline-none"
+        class="w-full h-(--control-height-md) px-[13px] rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
       />
     </section>
 
@@ -153,43 +145,45 @@ async function submit() {
         rows="5"
         placeholder="어떤 점이 궁금하신가요?
 최대한 자세히 남겨주시면 더 빠르고 정확하게 답변드릴 수 있어요."
-        class="w-full p-4 rounded-xl bg-(--color-surface) text-(length:--font-md) text-(color:--color-navy) outline-none resize-none"
+        class="w-full p-[13px] rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy) resize-none"
       />
     </section>
 
-    <input
-      ref="fileInput"
-      type="file"
-      accept="image/*"
-      multiple
-      class="hidden"
-      @change="onFilesSelected"
-    />
-    <button
-      class="w-full flex items-center justify-center gap-2 py-4 rounded-xl border border-(--color-border) text-(length:--font-sm) text-(color:--color-gray-600) mb-1 disabled:opacity-50"
-      :disabled="attachments.length >= MAX_ATTACHMENT_COUNT"
-      @click="openFilePicker"
-    >
-      <IconImage :size="16" color="var(--color-gray-500)" />
-      스크린샷 · 이미지 첨부 (최대 3장, 합쳐서 최대 10MB)
-    </button>
-    <p v-if="attachmentError" class="text-(length:--font-xs) text-(color:--color-danger) mb-3">{{ attachmentError }}</p>
-
-    <div v-if="attachments.length" class="flex gap-2 mb-6">
-      <div
-        v-for="(item, index) in attachments"
-        :key="index"
-        class="relative w-16 h-16 rounded-lg overflow-hidden bg-(--color-surface)"
+    <section class="mb-6">
+      <input
+        ref="fileInput"
+        type="file"
+        accept="image/*"
+        multiple
+        class="hidden"
+        @change="onFilesSelected"
+      />
+      <button
+        class="w-full flex items-center justify-center gap-2 py-4 rounded-(--radius-xl) border border-(--color-border) text-(length:--font-sm) text-(color:--color-gray-600) disabled:opacity-50"
+        :disabled="attachments.length >= MAX_ATTACHMENT_COUNT"
+        @click="openFilePicker"
       >
-        <img :src="item.previewUrl" alt="" class="w-full h-full object-cover" />
-        <button
-          class="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-(--color-navy) flex items-center justify-center"
-          @click="removeAttachment(index)"
+        <IconImage :size="16" color="var(--color-gray-500)" />
+        스크린샷 · 이미지 첨부 (최대 3장, 합쳐서 최대 10MB)
+      </button>
+      <p v-if="attachmentError" class="text-(length:--font-xs) text-(color:--color-danger-strong) mt-2">{{ attachmentError }}</p>
+
+      <div v-if="attachments.length" class="flex gap-2 mt-3">
+        <div
+          v-for="(item, index) in attachments"
+          :key="index"
+          class="relative w-16 h-16 rounded-(--radius-lg) overflow-hidden bg-(--color-surface)"
         >
-          <IconClose :size="10" color="var(--color-white)" />
-        </button>
+          <img :src="item.previewUrl" alt="" class="w-full h-full object-cover" />
+          <button
+            class="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-(--color-navy) flex items-center justify-center"
+            @click="removeAttachment(index)"
+          >
+            <IconClose :size="10" color="var(--color-white)" />
+          </button>
+        </div>
       </div>
-    </div>
+    </section>
 
     <section class="mb-6">
       <h2 class="text-(length:--font-sm) font-semibold text-(color:--color-navy) mb-2">회신받을 이메일</h2>
@@ -197,20 +191,20 @@ async function submit() {
         v-model="email"
         type="email"
         placeholder="example@aewol.com"
-        class="w-full p-4 rounded-xl bg-(--color-surface) text-(length:--font-md) text-(color:--color-navy) outline-none"
+        class="w-full h-(--control-height-md) px-[13px] rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
       />
       <p
         v-if="email.trim() && !isEmailValid()"
-        class="text-(length:--font-xs) text-(color:--color-danger) mt-1"
+        class="text-(length:--font-xs) text-(color:--color-danger-strong) mt-1"
       >
         올바른 이메일 형식으로 입력해주세요
       </p>
     </section>
 
-    <p v-if="submitError" class="text-(length:--font-sm) text-(color:--color-danger) mb-3">{{ submitError }}</p>
+    <p v-if="submitError" class="text-(length:--font-sm) text-(color:--color-danger-strong) mb-3">{{ submitError }}</p>
 
     <button
-      class="w-full py-4 rounded-xl bg-(--color-gold) text-(color:--color-navy) font-bold disabled:opacity-50"
+      class="w-full py-4 rounded-(--radius-xl) bg-(--color-gold) text-(color:--color-navy) font-bold disabled:opacity-50"
       :disabled="!isFormValid() || isSubmitting"
       @click="submit"
     >

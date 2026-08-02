@@ -1,14 +1,10 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue';
-import { useRouter } from 'vue-router';
 import EmptyState from '@/components/common/EmptyState.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
-import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue';
 import IconCat from '@/components/common/icons/IconCat.vue';
 import IconDog from '@/components/common/icons/IconDog.vue';
 import IconPaw from '@/components/common/icons/IconPaw.vue';
-
-const router = useRouter();
 
 // TODO: 백엔드 API 연동 후 mock 데이터 제거하고 실제 fetch로 교체
 const pets = ref([
@@ -61,10 +57,6 @@ function getAge(birthDate) {
   return age;
 }
 
-function goBack() {
-  router.back();
-}
-
 onMounted(async () => {
   // TODO: fetch pet list from pet store/API
   isLoading.value = false;
@@ -75,15 +67,6 @@ onMounted(async () => {
   <div
     class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))] bg-(--color-bg) min-h-screen"
   >
-    <button
-      type="button"
-      class="mb-(--space-3) text-(color:--color-navy)"
-      aria-label="뒤로 가기"
-      @click="goBack"
-    >
-      <IconArrowLeft size="24" />
-    </button>
-
     <header class="mb-(--space-6)">
       <h1
         class="text-(length:--font-2xl) font-bold text-(color:--color-navy)"
@@ -123,7 +106,7 @@ onMounted(async () => {
           class="flex items-center gap-(--space-4) bg-(--color-white) border border-(--color-border) rounded-(--radius-xl) p-(--space-4) no-underline"
         >
           <span
-            class="flex items-center justify-center shrink-0 w-(--space-9) h-(--space-9) rounded-[14px]"
+            class="flex items-center justify-center shrink-0 w-(--space-9) h-(--space-9) rounded-(--radius-icon)"
             :style="{ backgroundColor: petIconBg(pet.species) }"
           >
             <component
