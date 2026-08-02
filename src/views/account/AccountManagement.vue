@@ -79,7 +79,7 @@ function goToLink() {
 </script>
 
 <template>
-  <div class="min-h-screen max-w-[420px] mx-auto bg-(--color-bg) px-(--space-5) pt-(--space-4) pb-(--space-8)">
+  <div class="min-h-screen max-w-(--content-max-width) mx-auto bg-(--color-bg) px-(--space-5) pt-(--space-4) pb-(--space-8)">
     <!-- 완료 화면: 목록 위에 전체 화면으로 덮음 -->
     <div
       v-if="showUnlinkSuccess"

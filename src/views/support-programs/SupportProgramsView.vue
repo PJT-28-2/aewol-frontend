@@ -57,7 +57,7 @@ watch(
 
 <template>
   <div
-    class="mx-auto w-full max-w-[420px] box-border bg-(--color-white) px-[22px] text-(--color-navy)"
+    class="mx-auto w-full max-w-(--content-max-width) box-border bg-(--color-white) px-[22px] text-(--color-navy)"
     :class="
       isDetail
         ? 'min-h-dvh pt-[var(--space-4)] pb-[calc(var(--space-6)+env(safe-area-inset-bottom))]'
@@ -173,7 +173,7 @@ watch(
         {{ selectedProgram.agency }} · {{ selectedProgram.benefit }}
       </p>
 
-      <section class="mt-[var(--space-7)] rounded-[14px] bg-(--color-surface) p-[var(--space-4)]">
+      <section class="mt-[var(--space-7)] rounded-(--radius-icon) bg-(--color-surface) p-[var(--space-4)]">
         <h2 class="m-0 text-(length:--font-sm) font-bold text-(--color-slate-dark)">
           신청 기간
         </h2>
@@ -221,7 +221,7 @@ watch(
 
       <section
         v-if="!selectedProgram.eligible"
-        class="mt-[var(--space-7)] rounded-[14px] bg-(--color-surface) p-[var(--space-4)]"
+        class="mt-[var(--space-7)] rounded-(--radius-icon) bg-(--color-surface) p-[var(--space-4)]"
       >
         <div class="flex items-start gap-[var(--space-2)] text-(length:--font-sm) leading-[1.4] text-(--color-slate-dark)">
           <IconInfo

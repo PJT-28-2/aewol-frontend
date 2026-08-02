@@ -78,7 +78,7 @@ function goToWallet() {
 
 <template>
   <div
-    class="min-h-screen max-w-[420px] mx-auto bg-(--color-bg) px-(--space-6) pt-(--space-4) flex flex-col items-center text-center"
+    class="min-h-screen max-w-(--content-max-width) mx-auto bg-(--color-bg) px-(--space-6) pt-(--space-4) flex flex-col items-center text-center"
   >
     <LoadingSpinner v-if="isLoading" />
 

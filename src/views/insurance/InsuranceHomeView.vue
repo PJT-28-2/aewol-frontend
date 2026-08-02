@@ -41,7 +41,7 @@ const menus = [
           class="flex items-center gap-(--space-4) rounded-(--radius-xl) border border-(--color-border) bg-(--color-white) p-(--space-4) no-underline"
         >
           <span
-            class="flex h-(--space-9) w-(--space-9) shrink-0 items-center justify-center rounded-[14px]"
+            class="flex h-(--space-9) w-(--space-9) shrink-0 items-center justify-center rounded-(--radius-icon)"
             :style="{ backgroundColor: menu.bg }"
           >
             <component

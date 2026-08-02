@@ -79,7 +79,7 @@ onMounted(loadDonationData)
 
 <template>
   <div
-    class="mx-auto w-full max-w-[420px] box-border bg-(--color-white) px-[var(--space-5)] pt-[var(--space-4)] text-(--color-navy)"
+    class="mx-auto w-full max-w-(--content-max-width) box-border bg-(--color-white) px-[var(--space-5)] pt-[var(--space-4)] text-(--color-navy)"
     :class="
       isMain
         ? 'min-h-[calc(100dvh-var(--header-height)-var(--bottom-nav-height))] pb-[calc(var(--space-8)+env(safe-area-inset-bottom))]'
@@ -372,7 +372,7 @@ onMounted(loadDonationData)
             @click="donationStore.selectCampaign(campaign.id)"
           >
             <span
-              class="grid size-10 shrink-0 place-items-center rounded-[14px] bg-(--color-border)"
+              class="grid size-10 shrink-0 place-items-center rounded-(--radius-icon) bg-(--color-border)"
             >
               <IconDog
                 class="text-(--color-navy)"

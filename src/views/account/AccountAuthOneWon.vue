@@ -176,7 +176,7 @@ registerHeaderBack(goBack);
 </script>
 
 <template>
-  <div class="min-h-screen max-w-[420px] mx-auto bg-(--color-bg) px-(--space-5) pt-(--space-4) pb-(--space-8)">
+  <div class="min-h-screen max-w-(--content-max-width) mx-auto bg-(--color-bg) px-(--space-5) pt-(--space-4) pb-(--space-8)">
     <!-- Step 1: 계좌번호 입력 -->
     <template v-if="step === 'accountNumber'">
       <header class="mb-7">

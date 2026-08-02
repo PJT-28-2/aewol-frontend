@@ -16,7 +16,7 @@ const groupPurchase = ref({
   unitPrice: 40000,
   currentQuantity: 32,
   targetQuantity: 50,
-  deadline: '2026-08-01',
+  deadline: '2026-08-05',
   deliveryMethod: '공동구매 마감 후 3일 이내 발송',
   deliveryFee: 0,
   deliveryDate: '2026-08-04',
@@ -127,6 +127,9 @@ const deadlineLabel = computed(() => {
   return `D-${diffDays}`;
 });
 
+// 마감 여부: 마감 후에는 수량 선택/결제를 막는다
+const isExpired = computed(() => deadlineLabel.value === '마감');
+
 // delivery_fee가 0원이면 무료로 표시
 const deliveryFeeLabel = computed(() =>
   groupPurchase.value.deliveryFee === 0
@@ -150,9 +153,10 @@ const arrivalDateLabel = computed(() => {
 });
 
 function goToPaymentPreview() {
-  router.push(
-    `/group-purchase/${route.params.gpId}/payment-preview`,
-  );
+  router.push({
+    path: `/group-purchase/${route.params.gpId}/payment-preview`,
+    query: { quantity: quantity.value },
+  });
 }
 </script>
 
@@ -274,7 +278,7 @@ function goToPaymentPreview() {
           <button
             type="button"
             class="size-(--size-stepper-btn) rounded-(--radius-lg) bg-(--color-white) border border-(--color-border) text-(length:--font-md) font-bold text-(color:--color-slate-dark) disabled:opacity-40"
-            :disabled="quantity <= 1"
+            :disabled="quantity <= 1 || isExpired"
             @click="decreaseQuantity"
           >
             −
@@ -286,7 +290,8 @@ function goToPaymentPreview() {
           </p>
           <button
             type="button"
-            class="size-(--size-stepper-btn) rounded-(--radius-lg) bg-(--color-white) border border-(--color-border) text-(length:--font-md) font-bold text-(color:--color-slate-dark)"
+            class="size-(--size-stepper-btn) rounded-(--radius-lg) bg-(--color-white) border border-(--color-border) text-(length:--font-md) font-bold text-(color:--color-slate-dark) disabled:opacity-40"
+            :disabled="isExpired"
             @click="increaseQuantity"
           >
             +
@@ -341,9 +346,10 @@ function goToPaymentPreview() {
         variant="navy"
         size="lg"
         block
+        :disabled="isExpired"
         @click="goToPaymentPreview"
       >
-        {{ totalPrice.toLocaleString() }}원 결제하기
+        {{ isExpired ? '마감된 공동구매예요' : `${totalPrice.toLocaleString()}원 결제하기` }}
       </AppButton>
     </div>
   </div>

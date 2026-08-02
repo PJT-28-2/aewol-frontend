@@ -106,7 +106,7 @@ onMounted(async () => {
           class="flex items-center gap-(--space-4) bg-(--color-white) border border-(--color-border) rounded-(--radius-xl) p-(--space-4) no-underline"
         >
           <span
-            class="flex items-center justify-center shrink-0 w-(--space-9) h-(--space-9) rounded-[14px]"
+            class="flex items-center justify-center shrink-0 w-(--space-9) h-(--space-9) rounded-(--radius-icon)"
             :style="{ backgroundColor: petIconBg(pet.species) }"
           >
             <component

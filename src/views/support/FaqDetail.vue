@@ -77,7 +77,7 @@ function goToRelated(relatedFaqId) {
 </script>
 
 <template>
-  <div class="min-h-screen max-w-[420px] mx-auto bg-(--color-bg) px-5 pt-(--space-4) pb-10">
+  <div class="min-h-screen max-w-(--content-max-width) mx-auto bg-(--color-bg) px-5 pt-(--space-4) pb-10">
 
     <p v-if="isLoading" class="text-(length:--font-sm) text-(color:--color-gray-500)">불러오는 중이에요…</p>
 
@@ -186,7 +186,7 @@ function goToRelated(relatedFaqId) {
           v-if="feedbackToastVisible"
           role="status"
           aria-live="polite"
-          class="fixed top-7 left-1/2 z-[1100] -translate-x-1/2 rounded-[14px] border border-(--color-border) bg-(--color-white) px-4 py-3 text-[12.5px] font-(--font-bold) text-(color:--color-navy) shadow-(--shadow-lg)"
+          class="fixed top-7 left-1/2 z-[1100] -translate-x-1/2 rounded-(--radius-icon) border border-(--color-border) bg-(--color-white) px-4 py-3 text-[12.5px] font-(--font-bold) text-(color:--color-navy) shadow-(--shadow-lg)"
         >
           소중한 의견 감사합니다
         </div>

@@ -79,7 +79,7 @@ const handleWithdraw = async () => {
     </section>
 
     <ul
-      class="mt-[22px] flex h-[124px] flex-col justify-center gap-[11px] rounded-[14px] bg-(--color-danger-soft) px-4 text-[11.5px] leading-[1.3] text-(color:--color-danger-muted)"
+      class="mt-[22px] flex h-[124px] flex-col justify-center gap-[11px] rounded-(--radius-icon) bg-(--color-danger-soft) px-4 text-[11.5px] leading-[1.3] text-(color:--color-danger-muted)"
     >
       <li class="flex items-center gap-[9px]">
         <span class="size-[5px] shrink-0 rounded-full bg-(--color-danger-strong)" />

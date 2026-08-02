@@ -69,7 +69,7 @@ onMounted(() => {
 
 <template>
   <main
-    class="mx-auto min-h-dvh w-full max-w-[420px] box-border bg-(--color-white) px-[var(--space-5)] pt-[var(--space-4)] pb-[calc(var(--space-8)+env(safe-area-inset-bottom))] text-(--color-navy)"
+    class="mx-auto min-h-dvh w-full max-w-(--content-max-width) box-border bg-(--color-white) px-[var(--space-5)] pt-[var(--space-4)] pb-[calc(var(--space-8)+env(safe-area-inset-bottom))] text-(--color-navy)"
   >
     <section
       v-if="isLoading"

@@ -30,7 +30,7 @@ function goToAccountManagement() {
 </script>
 
 <template>
-  <div class="min-h-screen max-w-[420px] mx-auto bg-(--color-bg) px-(--space-6) pt-(--space-4) flex flex-col items-center text-center">
+  <div class="min-h-screen max-w-(--content-max-width) mx-auto bg-(--color-bg) px-(--space-6) pt-(--space-4) flex flex-col items-center text-center">
     <template v-if="showInvalidState">
       <h1 class="text-(length:--font-2xl) font-(--font-bold) text-(color:--color-navy) mb-(--space-2)">
         연동 정보를 찾을 수 없어요

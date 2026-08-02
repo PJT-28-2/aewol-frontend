@@ -370,7 +370,7 @@ const handleSignup = async () => {
               @change="toggleAllAgreements"
             >
             <span
-              class="flex size-[22px] items-center justify-center rounded-full border border-(--color-border) bg-(--color-white) text-(color:--color-white) peer-checked:border-(--color-navy) peer-checked:bg-(--color-navy)"
+              class="flex size-[22px] items-center justify-center rounded-full border border-(--color-border) bg-(--color-white) text-(color:--color-white) peer-checked:border-(--color-navy) peer-checked:bg-(--color-navy) peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-(--color-navy)"
               aria-hidden="true"
             >
               <IconCheck size="13" />
@@ -386,7 +386,7 @@ const handleSignup = async () => {
               required
             >
             <span
-              class="flex size-[18px] items-center justify-center rounded-full border border-(--color-border) bg-(--color-white) text-(color:--color-white) peer-checked:border-(--color-navy) peer-checked:bg-(--color-navy)"
+              class="flex size-[18px] items-center justify-center rounded-full border border-(--color-border) bg-(--color-white) text-(color:--color-white) peer-checked:border-(--color-navy) peer-checked:bg-(--color-navy) peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-(--color-navy)"
               aria-hidden="true"
             >
               <IconCheck size="11" />
@@ -403,7 +403,7 @@ const handleSignup = async () => {
               required
             >
             <span
-              class="flex size-[18px] items-center justify-center rounded-full border border-(--color-border) bg-(--color-white) text-(color:--color-white) peer-checked:border-(--color-navy) peer-checked:bg-(--color-navy)"
+              class="flex size-[18px] items-center justify-center rounded-full border border-(--color-border) bg-(--color-white) text-(color:--color-white) peer-checked:border-(--color-navy) peer-checked:bg-(--color-navy) peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-(--color-navy)"
               aria-hidden="true"
             >
               <IconCheck size="11" />
@@ -419,7 +419,7 @@ const handleSignup = async () => {
               type="checkbox"
             >
             <span
-              class="flex size-[18px] items-center justify-center rounded-full border border-(--color-border) bg-(--color-white) text-(color:--color-white) peer-checked:border-(--color-navy) peer-checked:bg-(--color-navy)"
+              class="flex size-[18px] items-center justify-center rounded-full border border-(--color-border) bg-(--color-white) text-(color:--color-white) peer-checked:border-(--color-navy) peer-checked:bg-(--color-navy) peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-(--color-navy)"
               aria-hidden="true"
             >
               <IconCheck size="11" />

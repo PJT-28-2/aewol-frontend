@@ -16,6 +16,7 @@ const isVerified = ref(false)
 const isResultVisible = ref(false)
 const foundEmail = ref('')
 const remainingSeconds = ref(0)
+const nameMessage = ref({ type: 'error', text: '' })
 const phoneMessage = ref({ type: 'error', text: '' })
 const codeMessage = ref({ type: 'error', text: '' })
 const submitError = ref('')
@@ -71,8 +72,10 @@ const handleRequestCode = () => {
   // =========================
   // 입력값 검증
   // =========================
+  nameMessage.value = { type: 'error', text: '' }
+
   if (!name.value.trim()) {
-    phoneMessage.value = { type: 'error', text: '이름을 입력해주세요' }
+    nameMessage.value = { type: 'error', text: '이름을 입력해주세요' }
     return
   }
 
@@ -270,6 +273,13 @@ onBeforeUnmount(clearTimers)
           autocomplete="name"
           placeholder="홍길동"
         >
+        <p
+          v-if="nameMessage.text"
+          class="mt-1 text-[11px] text-(color:--color-danger-strong)"
+          role="alert"
+        >
+          {{ nameMessage.text }}
+        </p>
 
         <label
           class="mt-[11px] mb-1 text-[12.5px] leading-[1.3] font-(--font-bold) text-(color:--color-slate-dark)"

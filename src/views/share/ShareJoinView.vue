@@ -46,7 +46,7 @@ async function joinShare() {
 
 <template>
   <main
-    class="relative mx-auto flex min-h-dvh w-full max-w-[420px] box-border flex-col bg-(--color-white) px-[var(--space-5)] pt-[var(--space-4)] pb-[calc(var(--space-6)+env(safe-area-inset-bottom))] text-(--color-navy)"
+    class="relative mx-auto flex min-h-dvh w-full max-w-(--content-max-width) box-border flex-col bg-(--color-white) px-[var(--space-5)] pt-[var(--space-4)] pb-[calc(var(--space-6)+env(safe-area-inset-bottom))] text-(--color-navy)"
   >
     <h1 class="m-0 text-[length:var(--font-2xl)] font-bold">
       초대 링크 입력

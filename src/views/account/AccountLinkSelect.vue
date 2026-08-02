@@ -45,7 +45,7 @@ function selectBank(bankCode) {
 </script>
 
 <template>
-  <div class="min-h-screen max-w-[420px] mx-auto bg-(--color-bg) px-(--space-5) pt-(--space-4) pb-(--space-8)">
+  <div class="min-h-screen max-w-(--content-max-width) mx-auto bg-(--color-bg) px-(--space-5) pt-(--space-4) pb-(--space-8)">
 
     <header class="mb-7">
       <h1 class="text-(length:--font-2xl) font-(--font-bold) text-(color:--color-navy)">

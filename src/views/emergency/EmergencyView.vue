@@ -189,7 +189,7 @@ onMounted(async () => {
             class="flex items-center gap-(--space-3) bg-(--color-white) rounded-(--radius-lg) p-(--space-4) shadow-(--shadow-sm)"
           >
             <div
-              class="flex items-center justify-center w-(--space-9) h-(--space-9) rounded-[14px] bg-(--color-gray-100) shrink-0"
+              class="flex items-center justify-center w-(--space-9) h-(--space-9) rounded-(--radius-icon) bg-(--color-gray-100) shrink-0"
             >
               <IconHospital :size="24" color="var(--color-navy)" />
             </div>

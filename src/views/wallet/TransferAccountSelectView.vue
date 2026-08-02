@@ -88,7 +88,7 @@ function confirmChange() {
       >
         <button
           type="button"
-          class="w-full flex items-center gap-(--space-3) bg-(--color-white) border rounded-[14px] p-(--space-4)"
+          class="w-full flex items-center gap-(--space-3) bg-(--color-white) border rounded-(--radius-icon) p-(--space-4)"
           :class="
             isSelected(account)
               ? 'border-(--color-gold) border-2'

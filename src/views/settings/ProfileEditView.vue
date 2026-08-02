@@ -151,13 +151,14 @@ const verifyCurrentPassword = async () => {
           readonly
           required
         >
-        <button
-          class="h-(--control-height-md) w-20 shrink-0 rounded-(--radius-lg) bg-(--color-navy) text-(length:--font-xs) font-(--font-bold) text-(color:--color-white) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-navy)"
+        <AppButton
+          class="!h-(--control-height-md) !w-20 !rounded-(--radius-lg) !px-0 shrink-0 whitespace-nowrap !text-[length:var(--font-xs)] !font-(--font-bold)"
+          variant="navy"
           type="button"
           @click="isAddressSearchOpen = true"
         >
           우편번호 찾기
-        </button>
+        </AppButton>
       </div>
 
       <label

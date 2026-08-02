@@ -1,6 +1,10 @@
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import AppButton from '@/components/common/AppButton.vue'
+import { registerHeaderBack } from '@/composables/useHeaderBack'
+
+const router = useRouter()
 
 const step = ref(1) // 1: bank selection, 2: account form
 const selectedBank = ref('')
@@ -31,6 +35,15 @@ const selectBank = (bankCode) => {
 const handleConnect = async () => {
   // TODO: implement account connection via CODEF API
 }
+
+// 2단계(계좌 입력)에서는 1단계(은행 선택)로 돌아가고, 1단계에서는 계좌 목록으로 돌아간다.
+registerHeaderBack(() => {
+  if (step.value === 2) {
+    step.value = 1
+    return
+  }
+  router.push('/accounts')
+})
 </script>
 
 <template>

@@ -42,7 +42,7 @@ onMounted(loadInquiry);
 </script>
 
 <template>
-  <div class="min-h-screen max-w-[420px] mx-auto bg-(--color-bg) px-5 pt-(--space-4) pb-10">
+  <div class="min-h-screen max-w-(--content-max-width) mx-auto bg-(--color-bg) px-5 pt-(--space-4) pb-10">
 
     <p v-if="isLoading" class="text-(length:--font-sm) text-(color:--color-gray-500)">불러오는 중이에요…</p>
 

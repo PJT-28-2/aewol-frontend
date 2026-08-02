@@ -16,11 +16,12 @@ const router = useRouter();
 // 등록된 배송지가 없는 상태를 확인하기 위해 초기값은 null로 둠
 const shippingAddress = ref(null);
 
-// TODO: 공동구매 참여 화면에서 선택한 상품/수량/가격 정보를 전달받을 예정, 현재는 mock 데이터
+// TODO: 공동구매 참여 화면에서 선택한 상품/가격 정보를 전달받을 예정, 현재는 mock 데이터
+// 수량은 GroupPurchaseDetailView에서 query.quantity로 전달됨
 const product = ref({
   productName: '프리미엄 사료 15kg',
   optionText: '옵션 없음',
-  purchaseQuantity: 1,
+  purchaseQuantity: Number(route.query.quantity) || 1,
   unitPrice: 40000,
   groupPrice: 28000,
 });
@@ -497,13 +498,14 @@ const isPinSheetOpen = ref(false);
                 : 'border-(--color-border)'
             "
           >
-          <button
-            class="h-[46px] w-20 shrink-0 rounded-(--radius-md) bg-(--color-navy) text-(length:--font-xs) font-bold text-(color:--color-white) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-navy)"
+          <AppButton
+            class="!h-[46px] !w-20 !rounded-(--radius-md) !px-0 shrink-0 whitespace-nowrap !text-[length:var(--font-xs)] !font-bold"
+            variant="navy"
             type="button"
             @click="isPostcodeOpen = true"
           >
             우편번호 찾기
-          </button>
+          </AppButton>
         </div>
         <p
           v-if="addressFormErrors.zipCode"

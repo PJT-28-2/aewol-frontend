@@ -118,7 +118,7 @@ function handleCharge() {
       <button
         v-if="selectedAccount"
         type="button"
-        class="w-full flex items-center gap-(--space-3) bg-(--color-white) border border-(--color-border) rounded-[14px] p-(--space-4)"
+        class="w-full flex items-center gap-(--space-3) bg-(--color-white) border border-(--color-border) rounded-(--radius-icon) p-(--space-4)"
         @click="goToAccountSelect"
       >
         <BankBadge

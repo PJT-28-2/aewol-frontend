@@ -103,7 +103,7 @@ async function submit() {
 </script>
 
 <template>
-  <div class="min-h-screen max-w-[420px] mx-auto bg-(--color-bg) px-5 pt-(--space-4) pb-10">
+  <div class="min-h-screen max-w-(--content-max-width) mx-auto bg-(--color-bg) px-5 pt-(--space-4) pb-10">
 
     <header class="mb-6">
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">1:1 문의하기</h1>

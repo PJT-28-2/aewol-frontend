@@ -70,7 +70,7 @@ function goToCancel(id) {
         <li
           v-for="payment in paymentStore.recurringPayments"
           :key="payment.id"
-          class="flex items-center gap-(--space-3) bg-(--color-white) border border-(--color-border) rounded-[14px] p-(--space-4)"
+          class="flex items-center gap-(--space-3) bg-(--color-white) border border-(--color-border) rounded-(--radius-icon) p-(--space-4)"
         >
           <span
             class="flex items-center justify-center w-[40px] h-[40px] rounded-(--radius-lg) shrink-0"

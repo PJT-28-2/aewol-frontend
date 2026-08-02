@@ -9,11 +9,15 @@ import IconDog from '@/components/common/icons/IconDog.vue';
 import IconStats from '@/components/common/icons/IconStats.vue';
 import { usePetStore } from '@/stores/pet';
 import { useTransactionStore } from '@/stores/transaction';
+import { registerHeaderBack } from '@/composables/useHeaderBack';
 
 const router = useRouter();
 const route = useRoute();
 const petStore = usePetStore();
 const transactionStore = useTransactionStore();
+
+// /dashboard로 직접 진입하면 히스토리가 없을 수 있어, 뒤로가기를 항상 홈으로 고정한다.
+registerHeaderBack(() => router.push('/home'));
 
 const pets = computed(() => petStore.pets);
 

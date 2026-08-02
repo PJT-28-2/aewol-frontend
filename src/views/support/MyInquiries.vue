@@ -43,7 +43,7 @@ function goToInquiryDetail(inquiryId) {
 </script>
 
 <template>
-  <div class="min-h-screen max-w-[420px] mx-auto bg-(--color-bg) px-5 pt-(--space-4) pb-10">
+  <div class="min-h-screen max-w-(--content-max-width) mx-auto bg-(--color-bg) px-5 pt-(--space-4) pb-10">
 
     <header class="mb-6">
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">내 문의 내역</h1>

@@ -67,7 +67,7 @@ const isAllEnabled = computed({
       aria-label="전체 알림 설정"
     >
       <div
-        class="flex h-[66px] items-center justify-between rounded-[14px] bg-(--color-surface) px-[17px]"
+        class="flex h-[66px] items-center justify-between rounded-(--radius-icon) bg-(--color-surface) px-[17px]"
       >
         <span>
           <strong
@@ -118,7 +118,7 @@ const isAllEnabled = computed({
         <div
           v-for="setting in notificationSettings"
           :key="setting.id"
-          class="flex h-[66px] items-center justify-between rounded-[14px] border border-(--color-border) px-[17px]"
+          class="flex h-[66px] items-center justify-between rounded-(--radius-icon) border border-(--color-border) px-[17px]"
         >
           <span class="min-w-0 pr-4">
             <strong
