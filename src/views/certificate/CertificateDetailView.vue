@@ -91,7 +91,8 @@ async function captureCard() {
   return html2canvas(detailCardRef.value, {
     scale: 2,
     useCORS: true,
-    backgroundColor: '#ffffff',
+    // CSS 변수는 html2canvas가 직접 해석하지 못해 실제 계산된 색상값을 런타임에 읽어서 전달
+    backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--color-white').trim(),
   })
 }
 
