@@ -22,14 +22,14 @@ const mockSharedCareByPet = {
         id: 'member-aewol',
         name: '김애월',
         role: '대표 보호자',
-        avatarClass: 'bg-(--color-gold)',
+        avatarClass: 'bg-(--color-navy)',
         badgeClass: 'bg-(--color-info-surface) text-(--color-navy)',
       },
       {
         id: 'member-jiwon',
         name: '이지원',
         role: '함께 돌봄',
-        avatarClass: 'bg-(--color-slate-dark)',
+        avatarClass: 'bg-(--color-gold)',
         badgeClass: 'bg-(--color-olive-surface) text-(--color-olive-dark)',
       },
       {

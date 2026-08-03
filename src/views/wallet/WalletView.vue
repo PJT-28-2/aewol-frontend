@@ -5,16 +5,20 @@ import BottomSheet from '@/components/common/BottomSheet.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import TransactionList from '@/components/common/TransactionList.vue';
 import { formatYearMonth } from '@/utils/date';
+import IconCat from '@/components/common/icons/IconCat.vue';
 import IconCheck from '@/components/common/icons/IconCheck.vue';
 import IconStats from '@/components/common/icons/IconStats.vue';
 import IconSavings from '@/components/common/icons/IconSavings.vue';
 import IconSearch from '@/components/common/icons/IconSearch.vue';
 import IconRecurring from '@/components/common/icons/IconRecurring.vue';
 import IconChevronDown from '@/components/common/icons/IconChevronDown.vue';
+import IconDog from '@/components/common/icons/IconDog.vue';
 import { mockWalletBalance } from '@/mocks/transaction';
+import { usePetStore } from '@/stores/pet';
 import { useTransactionStore } from '@/stores/transaction';
 
 const transactionStore = useTransactionStore();
+const petStore = usePetStore();
 
 // TODO: 백엔드 API 연동 후 mock 데이터 제거하고 실제 fetch로 교체
 const walletBalance = ref(mockWalletBalance);
@@ -75,13 +79,42 @@ function selectMonth(option) {
   isMonthSheetOpen.value = false;
 }
 
-// 거래 필터 (전체/충전/출금 + 선택된 월)
+// 거래 유형 선택 바텀시트 (전체/충전/출금)
 const filters = [
   { key: 'all', label: '전체' },
   { key: 'charge', label: '충전' },
   { key: 'withdraw', label: '출금' },
 ];
 const activeFilter = ref('all');
+const isTypeSheetOpen = ref(false);
+const activeFilterLabel = computed(() =>
+  activeFilter.value === 'all'
+    ? '유형'
+    : filters.find((filter) => filter.key === activeFilter.value)?.label ?? '유형',
+);
+
+function selectType(key) {
+  activeFilter.value = key;
+  isTypeSheetOpen.value = false;
+}
+
+// 반려동물 선택 바텀시트
+const isPetSheetOpen = ref(false);
+const petFilter = ref(null);
+const petFilterLabel = computed(
+  () => petStore.pets.find((pet) => pet.id === petFilter.value)?.name ?? '',
+);
+const petFilterButtonLabel = computed(() => petFilterLabel.value || '반려동물');
+const hasMultiplePets = computed(() => petStore.pets.length > 1);
+
+function petIcon(species) {
+  return species === 'CAT' ? IconCat : IconDog;
+}
+
+function selectPetFilter(petId) {
+  petFilter.value = petId;
+  isPetSheetOpen.value = false;
+}
 
 const filteredTransactions = computed(() => {
   return transactions.value
@@ -92,7 +125,8 @@ const filteredTransactions = computed(() => {
         txMonth === activeMonth.value.month;
       const matchesType =
         activeFilter.value === 'all' || tx.type === activeFilter.value;
-      return matchesMonth && matchesType;
+      const matchesPet = !petFilter.value || tx.petId === petFilter.value;
+      return matchesMonth && matchesType && matchesPet;
     })
     .sort((a, b) => `${b.date}${b.time}`.localeCompare(`${a.date}${a.time}`));
 });
@@ -191,20 +225,39 @@ onMounted(async () => {
       <div
         class="flex items-center justify-between mb-(--space-4)"
       >
-        <div class="flex gap-(--space-2)">
+        <div class="flex items-center gap-(--space-3)">
           <button
-            v-for="filter in filters"
-            :key="filter.key"
             type="button"
-            class="h-(--space-7) px-(--space-4) rounded-full text-(length:--font-sm) font-semibold"
+            class="flex items-center gap-(--space-1) text-(length:--font-sm)"
             :class="
-              activeFilter === filter.key
-                ? 'bg-(--color-navy) text-(color:--color-white)'
-                : 'bg-(--color-surface) text-(color:--color-slate-muted)'
+              activeFilter !== 'all'
+                ? 'font-semibold text-(color:--color-navy)'
+                : 'text-(color:--color-slate-muted)'
             "
-            @click="activeFilter = filter.key"
+            @click="isTypeSheetOpen = true"
           >
-            {{ filter.label }}
+            {{ activeFilterLabel }}
+            <IconChevronDown
+              size="14"
+              :color="activeFilter !== 'all' ? 'var(--color-navy)' : 'var(--color-slate-muted)'"
+            />
+          </button>
+          <button
+            v-if="hasMultiplePets"
+            type="button"
+            class="flex items-center gap-(--space-1) text-(length:--font-sm)"
+            :class="
+              petFilter
+                ? 'font-semibold text-(color:--color-navy)'
+                : 'text-(color:--color-slate-muted)'
+            "
+            @click="isPetSheetOpen = true"
+          >
+            {{ petFilterButtonLabel }}
+            <IconChevronDown
+              size="14"
+              :color="petFilter ? 'var(--color-navy)' : 'var(--color-slate-muted)'"
+            />
           </button>
         </div>
         <button
@@ -223,6 +276,91 @@ onMounted(async () => {
       <!-- 거래 리스트 -->
       <TransactionList :transactions="filteredTransactions" />
     </template>
+
+    <BottomSheet
+      v-model="isTypeSheetOpen"
+      title="거래 유형"
+    >
+      <ul>
+        <li
+          v-for="filter in filters"
+          :key="filter.key"
+        >
+          <button
+            type="button"
+            class="w-full flex items-center justify-between py-(--space-3) text-(length:--font-base)"
+            :class="
+              activeFilter === filter.key
+                ? 'text-(color:--color-gold) font-bold'
+                : 'text-(color:--color-slate-dark)'
+            "
+            @click="selectType(filter.key)"
+          >
+            <span>{{ filter.label }}</span>
+            <IconCheck
+              v-if="activeFilter === filter.key"
+              size="18"
+              color="var(--color-gold)"
+            />
+          </button>
+        </li>
+      </ul>
+    </BottomSheet>
+
+    <BottomSheet
+      v-model="isPetSheetOpen"
+      title="반려동물 선택"
+    >
+      <ul>
+        <li>
+          <button
+            type="button"
+            class="w-full flex items-center justify-between py-(--space-3) text-(length:--font-base)"
+            :class="
+              !petFilter
+                ? 'text-(color:--color-gold) font-bold'
+                : 'text-(color:--color-slate-dark)'
+            "
+            @click="selectPetFilter(null)"
+          >
+            <span>전체</span>
+            <IconCheck
+              v-if="!petFilter"
+              size="18"
+              color="var(--color-gold)"
+            />
+          </button>
+        </li>
+        <li
+          v-for="pet in petStore.pets"
+          :key="pet.id"
+        >
+          <button
+            type="button"
+            class="w-full flex items-center justify-between py-(--space-3) text-(length:--font-base)"
+            :class="
+              petFilter === pet.id
+                ? 'text-(color:--color-gold) font-bold'
+                : 'text-(color:--color-slate-dark)'
+            "
+            @click="selectPetFilter(pet.id)"
+          >
+            <span class="flex items-center gap-(--space-2)">
+              <component
+                :is="petIcon(pet.species)"
+                :size="18"
+              />
+              {{ pet.name }}
+            </span>
+            <IconCheck
+              v-if="petFilter === pet.id"
+              size="18"
+              color="var(--color-gold)"
+            />
+          </button>
+        </li>
+      </ul>
+    </BottomSheet>
 
     <BottomSheet
       v-model="isMonthSheetOpen"

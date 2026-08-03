@@ -2,12 +2,23 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { usePetStore } from '@/stores/pet'
 import PasswordInput from '@/components/common/PasswordInput.vue'
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 import aewolLogo from '@/assets/images/aewol-logo.png'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const petStore = usePetStore()
+
+/**
+ * 로그인 직후 이동할 화면을 정한다.
+ * 등록된 반려동물이 없으면 반려동물 등록/가족 참여를 먼저 안내하는 시작 화면으로 보낸다.
+ *
+ * @returns {string}
+ */
+const resolvePostLoginPath = () =>
+  petStore.pets.length === 0 ? '/share/start' : '/home'
 
 const showEmailForm = ref(false)
 const email = ref('')
@@ -80,7 +91,7 @@ const handleEmailLogin = async () => {
       email.value === DEV_MOCK_EMAIL &&
       password.value === DEV_MOCK_PASSWORD
     ) {
-      await router.push('/home')
+      await router.push(resolvePostLoginPath())
       return
     }
 
@@ -92,7 +103,7 @@ const handleEmailLogin = async () => {
 
     // 뒤로가기로 무효화된 요청은 성공하더라도 화면을 이동시키지 않는다.
     if (currentAttemptId !== loginAttemptId) return
-    await router.push('/home')
+    await router.push(resolvePostLoginPath())
   } catch (error) {
     // 뒤로간 뒤 도착한 오류가 로그인 선택 화면에 노출되는 것을 방지한다.
     if (currentAttemptId !== loginAttemptId) return
