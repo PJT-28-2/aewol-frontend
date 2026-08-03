@@ -44,6 +44,7 @@ export function getMyInquiries() {
 /**
  * 문의 상세 조회
  * GET /api/support/inquiries/{inquiryId}
+ * result: { inquiryId, inquiryNumber, category, title, content, replyEmail, attachments, status, answer, createdAt, answeredAt }
  */
 export function getInquiryDetail(inquiryId) {
   return api.get(`/support/inquiries/${inquiryId}`);

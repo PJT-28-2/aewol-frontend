@@ -29,27 +29,42 @@ export const MOCK_FAQ_RELATED = {
 export const MOCK_INQUIRIES = [
   {
     inquiryId: 1,
+    inquiryNumber: 'AEW-20260715-0031',
     category: '지갑·버킷',
     title: '정기결제 취소는 어디서 하나요?',
     content: '매달 자동으로 나가는 사료 정기결제를 취소하고 싶은데 어디서 할 수 있나요?',
+    replyEmail: 'minju@aewol.com',
+    attachments: [],
     status: 'ANSWERED',
     createdAt: '2026-07-15',
+    answeredAt: '2026-07-16',
   },
   {
     inquiryId: 2,
+    inquiryNumber: 'AEW-20260712-0087',
     category: '지갑·버킷',
     title: 'SOS 포켓 결제가 안 돼요',
     content: 'SOS 포켓 잔액이 충분한데도 결제 시 실패했다는 메시지가 떠요.',
+    replyEmail: 'minju@aewol.com',
+    attachments: ['https://cdn.example.com/inquiries/2/error-screenshot.png'],
     status: 'ANSWERED',
     createdAt: '2026-07-12',
+    answeredAt: '2026-07-13',
   },
   {
     inquiryId: 3,
+    inquiryNumber: 'AEW-20260717-0142',
     category: '계좌연동',
     title: '계좌 연동이 계속 실패해요',
     content: 'KB국민은행 계좌를 연동하려는데 1원 인증 단계에서 계속 실패로 떠요.',
+    replyEmail: 'minju@aewol.com',
+    attachments: [
+      'https://cdn.example.com/inquiries/3/error-1.jpg',
+      'https://cdn.example.com/inquiries/3/error-2.pdf',
+    ],
     status: 'PENDING',
     createdAt: '2026-07-17',
+    answeredAt: null,
   },
 ]
 
