@@ -220,10 +220,19 @@ function confirmAddress() {
 const isPaying = ref(false);
 const paymentError = ref('');
 
-// 참여 신청 · 결제가 한 번에 처리됨(비밀번호 인증 완료 후 호출)
+// 참여 신청 · 결제가 한 번에 처리됨. PinAuthSheet의 @complete에서 직접 호출되므로
+// 버튼 disabled와 별개로 진입 시점에 잔액/배송지 상태를 다시 검사한다
 async function handlePayment() {
   if (USE_MOCK_DATA) {
+    isPinSheetOpen.value = false;
     router.push(`/group-purchase/${route.params.gpId}/status`);
+    return;
+  }
+
+  // PIN 시트가 열려 있는 동안 잔액이 바뀌거나 배송지가 없어졌을 수 있어 재검사
+  if (isBalanceInsufficient.value || !shippingAddress.value) {
+    isPinSheetOpen.value = false;
+    paymentError.value = '결제 정보가 변경됐어요. 다시 확인해주세요.';
     return;
   }
 
@@ -245,6 +254,7 @@ async function handlePayment() {
     paymentError.value = '결제에 실패했어요. 다시 시도해주세요.';
   } finally {
     isPaying.value = false;
+    isPinSheetOpen.value = false;
   }
 }
 
