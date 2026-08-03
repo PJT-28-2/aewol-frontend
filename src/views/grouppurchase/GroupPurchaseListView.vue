@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import IconUser from '@/components/common/icons/IconUser.vue';
+import IconChevronDown from '@/components/common/icons/IconChevronDown.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import AppButton from '@/components/common/AppButton.vue';
 import { MOCK_GROUP_PURCHASE_LIST } from '@/mocks/groupPurchase';
@@ -139,7 +140,10 @@ const filteredGroupPurchases = computed(() => {
           @click="toggleStatusDropdown"
         >
           {{ statusLabel }}
-          <span class="text-(length:--font-xs) text-(color:--color-gray-500)">▾</span>
+          <IconChevronDown
+            size="14"
+            color="var(--color-gray-500)"
+          />
         </button>
         <ul
           v-if="isStatusOpen"

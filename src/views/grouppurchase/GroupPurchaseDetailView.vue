@@ -3,6 +3,8 @@ import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import AppButton from '@/components/common/AppButton.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
+import IconPlus from '@/components/common/icons/IconPlus.vue';
+import IconMinus from '@/components/common/icons/IconMinus.vue';
 import { MOCK_GROUP_PURCHASE_DETAIL } from '@/mocks/groupPurchase';
 import { USE_MOCK_DATA } from '@/mocks/config';
 import { groupPurchaseApi } from '@/api/groupPurchase';
@@ -319,11 +321,14 @@ function goToPaymentPreview() {
           <div class="flex items-center gap-(--space-3)">
             <button
               type="button"
-              class="size-(--size-stepper-btn) rounded-(--radius-lg) bg-(--color-white) border border-(--color-border) text-(length:--font-md) font-bold text-(color:--color-slate-dark) disabled:opacity-40"
+              class="flex items-center justify-center size-(--size-stepper-btn) rounded-(--radius-lg) bg-(--color-white) border border-(--color-border) disabled:opacity-40"
               :disabled="quantity <= 1 || isExpired"
               @click="decreaseQuantity"
             >
-              −
+              <IconMinus
+                size="14"
+                color="var(--color-slate-dark)"
+              />
             </button>
             <p
               class="w-(--size-stepper-value) text-center text-(length:--font-sm) font-bold text-(color:--color-navy)"
@@ -332,11 +337,14 @@ function goToPaymentPreview() {
             </p>
             <button
               type="button"
-              class="size-(--size-stepper-btn) rounded-(--radius-lg) bg-(--color-white) border border-(--color-border) text-(length:--font-md) font-bold text-(color:--color-slate-dark) disabled:opacity-40"
+              class="flex items-center justify-center size-(--size-stepper-btn) rounded-(--radius-lg) bg-(--color-white) border border-(--color-border) disabled:opacity-40"
               :disabled="isExpired"
               @click="increaseQuantity"
             >
-              +
+              <IconPlus
+                size="14"
+                color="var(--color-slate-dark)"
+              />
             </button>
           </div>
         </div>

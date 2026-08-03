@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
 import IconChevronDown from '@/components/common/icons/IconChevronDown.vue';
+import IconChevronRight from '@/components/common/icons/IconChevronRight.vue';
 import IconCheck from '@/components/common/icons/IconCheck.vue';
 import IconGroupPurchase from '@/components/common/icons/IconGroupPurchase.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
@@ -194,7 +195,11 @@ watch(selectedStatus, loadMyGroupPurchases);
               {{ gp.status }}
             </span>
           </div>
-          <span class="shrink-0 text-(length:--font-xl) text-(color:--color-gray-400)">&rsaquo;</span>
+          <IconChevronRight
+            class="shrink-0"
+            size="18"
+            color="var(--color-gray-400)"
+          />
         </router-link>
       </li>
     </ul>
