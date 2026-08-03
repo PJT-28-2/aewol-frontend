@@ -64,8 +64,10 @@ function startOfToday() {
 }
 
 const quantity = ref(1);
+const quantityError = ref('');
 
 function decreaseQuantity() {
+  quantityError.value = '';
   if (quantity.value > 1) quantity.value -= 1; // 최소 수량 1개 미만으로는 내려가지 않도록 제한
 }
 
@@ -75,9 +77,10 @@ function increaseQuantity() {
     groupPurchase.value.currentQuantity + nextQuantity >
     groupPurchase.value.targetQuantity
   ) {
-    alert('목표 수량을 초과하여 더 이상 선택할 수 없습니다.'); // 목표 수량 초과 선택 차단
+    quantityError.value = '목표 수량을 초과하여 더 이상 선택할 수 없어요.'; // 목표 수량 초과 선택 차단
     return;
   }
+  quantityError.value = '';
   quantity.value = nextQuantity;
 }
 
@@ -312,7 +315,7 @@ function goToPaymentPreview() {
           >
             {{ quantity }}개
           </p>
-          <!-- 수량 스테퍼: -는 1개에서 비활성화, +는 목표 초과 시 alert로 차단 -->
+          <!-- 수량 스테퍼: -는 1개에서 비활성화, +는 목표 초과 시 인라인 에러로 차단 -->
           <div class="flex items-center gap-(--space-3)">
             <button
               type="button"
@@ -337,6 +340,12 @@ function goToPaymentPreview() {
             </button>
           </div>
         </div>
+        <p
+          v-if="quantityError"
+          class="mt-(--space-2) text-(length:--font-xs) text-(color:--color-danger-strong)"
+        >
+          {{ quantityError }}
+        </p>
       </section>
 
       <!-- 배송 안내 -->
