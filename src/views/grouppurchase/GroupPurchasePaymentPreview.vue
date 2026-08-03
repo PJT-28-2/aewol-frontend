@@ -219,9 +219,10 @@ async function handlePayment() {
   paymentError.value = '';
   isPaying.value = true;
   try {
-    // group_purchase_participant 컬럼 기준(gp_id는 URL 경로, member_id는 인증 토큰으로 서버가 채움)
-    await groupPurchaseApi.join(route.params.gpId, {
-      purchaseQuantity: product.value.purchaseQuantity,
+    // 수량은 quantity 쿼리 파라미터로 전달(백엔드가 현재 이것만 읽음).
+    // 배송지는 group_purchase_participant 컬럼 기준으로 본문에 실어 보내지만,
+    // 백엔드가 아직 본문을 처리하지 않아 실제로 저장되지는 않는다(백엔드 작업 필요)
+    await groupPurchaseApi.join(route.params.gpId, product.value.purchaseQuantity, {
       recipientName: shippingAddress.value.recipientName,
       recipientPhone: shippingAddress.value.recipientPhone,
       zipCode: shippingAddress.value.zipCode,
