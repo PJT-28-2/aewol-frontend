@@ -21,6 +21,9 @@ const selectedPetId = ref(shareStore.pets[0]?.id ?? '')
 const hasPets = computed(() => shareStore.pets.length > 0)
 const hasMembers = computed(() => shareStore.members.length > 0)
 const hasContributions = computed(() => shareStore.contributions.length > 0)
+const sortedContributions = computed(() =>
+  [...shareStore.contributions].sort((a, b) => b.percentage - a.percentage),
+)
 const isInviteOpen = computed({
   get: () => route.name === 'ShareInvite',
   set: (isOpen) => {
@@ -58,7 +61,7 @@ function retryFetchSharedCare() {
       class="flex min-h-[calc(100dvh-var(--header-height)-var(--bottom-nav-height))] flex-col items-center justify-center text-center"
       role="alert"
     >
-      <p class="m-0 text-[length:var(--font-md)] text-(--color-slate-dark)">
+      <p class="m-0 text-(length:--font-md) text-(--color-slate-dark)">
         {{ shareStore.error }}
       </p>
       <AppButton
@@ -81,47 +84,59 @@ function retryFetchSharedCare() {
 
     <template v-else>
       <header>
-        <h1 class="m-0 text-[length:var(--font-2xl)] font-bold leading-[1.3]">
+        <h1 class="m-0 text-(length:--font-2xl) font-bold text-(--color-navy) leading-[1.3]">
           함께 돌보기
         </h1>
         <p
-          class="mb-0 mt-[var(--space-1)] text-[length:var(--font-md)] text-(--color-slate-muted)"
+          class="mb-0 mt-[var(--space-1)] text-(length:--font-md) text-(--color-slate-muted)"
         >
           가족과 지갑을 공유하고 기여도를 확인해요
         </p>
       </header>
 
-      <div
-        class="mt-[var(--space-7)] flex items-center gap-[var(--space-2)]"
-        role="group"
-        aria-label="반려동물 선택"
+      <section
+        class="mt-[var(--space-7)]"
+        aria-labelledby="pet-select-title"
       >
-        <SelectableChip
-          v-for="pet in shareStore.pets"
-          :key="pet.id"
-          class="min-w-[var(--share-pet-chip-min-width)]"
-          :class="selectedPetId !== pet.id ? 'text-(--color-navy)!' : ''"
-          :selected="selectedPetId === pet.id"
-          @click="selectedPetId = pet.id"
+        <h2
+          id="pet-select-title"
+          class="m-0 text-(length:--font-base) font-semibold text-(--color-navy)"
         >
-          <component
-            :is="pet.type === 'cat' ? IconCat : IconDog"
-            :size="16"
-          />
-          {{ pet.name }}
-        </SelectableChip>
-        <AppButton
-          class="!h-[var(--control-height-sm)] shrink-0 border-(--color-border)!"
-          variant="secondary"
-          size="sm"
-          pill
-          icon-only
-          aria-label="반려동물 추가"
-          @click="router.push('/pets/register')"
+          반려동물 선택
+        </h2>
+
+        <div
+          class="mt-[var(--space-4)] flex items-center gap-[var(--space-2)]"
+          role="group"
+          aria-labelledby="pet-select-title"
         >
-          <IconPlus :size="20" />
-        </AppButton>
-      </div>
+          <SelectableChip
+            v-for="pet in shareStore.pets"
+            :key="pet.id"
+            class="min-w-[var(--share-pet-chip-min-width)]"
+            :class="selectedPetId !== pet.id ? 'text-(--color-navy)!' : ''"
+            :selected="selectedPetId === pet.id"
+            @click="selectedPetId = pet.id"
+          >
+            <component
+              :is="pet.type === 'cat' ? IconCat : IconDog"
+              :size="16"
+            />
+            {{ pet.name }}
+          </SelectableChip>
+          <AppButton
+            class="!h-[var(--control-height-sm)] shrink-0 border-(--color-border)!"
+            variant="secondary"
+            size="sm"
+            pill
+            icon-only
+            aria-label="반려동물 추가"
+            @click="router.push({ path: '/share/start', query: { from: 'share' } })"
+          >
+            <IconPlus :size="20" />
+          </AppButton>
+        </div>
+      </section>
 
       <section
         class="mt-[var(--space-4)]"
@@ -129,14 +144,14 @@ function retryFetchSharedCare() {
       >
         <h2
           id="members-title"
-          class="m-0 text-[length:var(--font-lg)] font-bold"
+          class="m-0 text-(length:--font-base) font-semibold text-(--color-navy)"
         >
           참여 중인 가족
         </h2>
 
         <div
           v-if="hasMembers"
-          class="mt-[var(--space-4)] flex items-start gap-[var(--space-3)] overflow-x-auto pb-[var(--space-2)]"
+          class="mt-[var(--space-4)] flex items-start gap-[var(--space-3)] overflow-x-auto pb-[var(--space-2)] [scrollbar-color:transparent_transparent] scrollbar-thin hover:[scrollbar-color:var(--color-gray-300)_transparent] [&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-transparent [&::-webkit-scrollbar-track]:bg-transparent hover:[&::-webkit-scrollbar-thumb]:bg-(--color-gray-300)"
         >
           <article
             v-for="member in shareStore.members"
@@ -144,13 +159,13 @@ function retryFetchSharedCare() {
             class="flex w-[var(--share-member-width)] shrink-0 flex-col items-center"
           >
             <span
-              class="grid size-[var(--share-avatar-size)] place-items-center rounded-full text-[length:var(--font-lg)] font-bold text-(--color-white)"
+              class="grid size-[var(--share-avatar-size)] place-items-center rounded-full text-(length:--font-lg) font-bold text-(--color-white)"
               :class="member.avatarClass"
             >
               {{ member.name.slice(0, 1) }}
             </span>
             <strong
-              class="mt-[var(--space-2)] w-full truncate text-center text-[length:var(--font-sm)]"
+              class="mt-[var(--space-2)] w-full truncate text-center text-(length:--font-sm)"
             >
               {{ member.name }}
             </strong>
@@ -167,7 +182,7 @@ function retryFetchSharedCare() {
               >
                 <IconPlus :size="24" />
               </span>
-              <strong class="mt-[var(--space-2)] text-[length:var(--font-sm)]">
+              <strong class="mt-[var(--space-2)] text-(length:--font-sm)">
                 초대
               </strong>
             </span>
@@ -175,7 +190,7 @@ function retryFetchSharedCare() {
         </div>
         <p
           v-else
-          class="mb-0 mt-[var(--space-4)] text-[length:var(--font-sm)] text-(--color-slate-muted)"
+          class="mb-0 mt-[var(--space-4)] text-(length:--font-sm) text-(--color-slate-muted)"
         >
           함께 돌볼 가족을 초대해 주세요.
         </p>
@@ -195,12 +210,12 @@ function retryFetchSharedCare() {
           >
             <h2
               id="contribution-title"
-              class="m-0 text-[length:var(--font-base)] font-bold"
+              class="m-0 text-(length:--font-base) font-semibold text-(--color-navy)"
             >
               기여 비율
             </h2>
             <span
-              class="mt-[var(--space-1)] text-[length:var(--font-sm)] text-(--color-slate-muted)"
+              class="mt-[var(--space-1)] text-(length:--font-sm) text-(--color-slate-muted)"
             >
               이번 달
             </span>
@@ -208,7 +223,7 @@ function retryFetchSharedCare() {
         </div>
         <p
           v-else
-          class="my-[calc(var(--space-10)+var(--space-4))] text-[length:var(--font-sm)] text-(--color-slate-muted)"
+          class="my-[calc(var(--space-10)+var(--space-4))] text-(length:--font-sm) text-(--color-slate-muted)"
         >
           아직 기여도 내역이 없어요.
         </p>
@@ -216,14 +231,21 @@ function retryFetchSharedCare() {
 
       <section
         class="mt-[var(--space-7)]"
-        aria-label="가족별 기여도"
+        aria-labelledby="contribution-list-title"
       >
+        <h2
+          id="contribution-list-title"
+          class="m-0 text-(length:--font-base) font-semibold text-(--color-navy)"
+        >
+          가족별 기여도
+        </h2>
+
         <ul
           v-if="hasContributions"
-          class="m-0 list-none space-y-[var(--space-3)] p-0"
+          class="mt-[var(--space-4)] list-none space-y-[var(--space-3)] p-0"
         >
           <li
-            v-for="contribution in shareStore.contributions"
+            v-for="contribution in sortedContributions"
             :key="contribution.id"
             class="flex h-[var(--control-height-md)] items-center rounded-[var(--radius-lg)] bg-(--color-surface) px-[var(--space-4)]"
           >
@@ -231,11 +253,11 @@ function retryFetchSharedCare() {
               class="mr-[var(--space-3)] size-[var(--share-contribution-dot-size)] shrink-0 rounded-full"
               :class="contribution.toneClass"
             />
-            <strong class="text-[length:var(--font-sm)]">
+            <strong class="text-(length:--font-sm)">
               {{ contribution.name }}
             </strong>
             <span
-              class="ml-auto text-[length:var(--font-md)] font-bold text-(--color-slate-dark)"
+              class="ml-auto text-(length:--font-md) font-bold text-(--color-slate-dark)"
             >
               {{ contribution.percentage }}%
             </span>
@@ -243,7 +265,7 @@ function retryFetchSharedCare() {
         </ul>
         <p
           v-else
-          class="m-0 text-[length:var(--font-sm)] text-(--color-slate-muted)"
+          class="mt-[var(--space-4)] mb-0 text-(length:--font-sm) text-(--color-slate-muted)"
         >
           가족이 지출을 기록하면 기여도를 확인할 수 있어요.
         </p>

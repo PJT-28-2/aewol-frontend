@@ -132,7 +132,7 @@ watch(
           </h2>
 
           <div
-            class="flex-1 min-h-0 px-(--space-5) pt-(--space-2) pb-(--space-6) overflow-y-auto"
+            class="flex-1 min-h-0 px-(--space-5) pt-(--space-2) pb-(--space-6) overflow-y-auto [scrollbar-color:transparent_transparent] scrollbar-thin hover:[scrollbar-color:var(--color-gray-300)_transparent] [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-transparent [&::-webkit-scrollbar-track]:bg-transparent hover:[&::-webkit-scrollbar-thumb]:bg-(--color-gray-300)"
           >
             <slot />
           </div>

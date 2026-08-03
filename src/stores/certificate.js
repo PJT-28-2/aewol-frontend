@@ -1,14 +1,32 @@
 import { defineStore } from 'pinia'
 import { certificatesApi } from '@/api/certificates'
-import { usePetStore } from '@/stores/pet'
+import { petApi } from '@/api/pet'
 import { USE_MOCK_DATA } from '@/mocks/config'
-import { MOCK_PET_DOCUMENTS, MOCK_REGISTRATION_DETAIL } from '@/mocks/pet'
+import { MOCK_PET_DOCUMENTS, MOCK_REGISTRATION_DETAIL } from '@/mocks/certificate'
+
+// mock 모드의 펫 탭 목록은 MOCK_REGISTRATION_DETAIL에서 뽑아 쓴다(등록증 연동 여부와 무관하게
+// 모든 펫이 하나씩 항목을 가지고 있음). 문서 상세 전용 필드(docId, rfidCd 등)는 제외한다
+function toPetSummary(detail) {
+  return {
+    petId: detail.petId,
+    memberId: detail.memberId,
+    name: detail.name,
+    species: detail.species,
+    breed: detail.breed,
+    birthDate: detail.birthDate,
+    gender: detail.gender,
+    weight: detail.weight,
+    neutered: detail.neutered,
+    regNumber: detail.regNumber,
+    medicalHistory: detail.medicalHistory,
+  }
+}
 
 export const useCertificateStore = defineStore('certificate', {
   state: () => ({
-    // 반려동물 목록/선택은 usePetStore가 단일 소스 — 여기서는 마지막으로 조회한 petId만
-    // 기록해뒀다가 연동/삭제 후 재조회(fetchCertificates)할 때 쓴다
-    petId: null,
+    // 상단 펫 탭 — petId(문자열) 기준. usePetStore(id 기준)와는 별개로 이 도메인에서 자체 관리한다
+    pets: [],
+    selectedPetId: null,
 
     // mock 모드에서 세션 동안 유지되는 문서 전체 목록 (업로드/연동으로 추가된 항목 포함)
     documents: [],
@@ -26,6 +44,7 @@ export const useCertificateStore = defineStore('certificate', {
 
   getters: {
     isLoading: (state) => state.pendingRequestCount > 0,
+    selectedPet: (state) => state.pets.find((pet) => pet.petId === state.selectedPetId) ?? null,
   },
 
   actions: {
@@ -42,21 +61,54 @@ export const useCertificateStore = defineStore('certificate', {
       }
     },
 
-    // 선택된 펫이 없어질 때(펫 전체 삭제, 계정 전환 등) 호출 — fetchCertificates가 실행되지 않아
-    // 이전 펫의 문서/등록증 상태가 화면에 그대로 남는 것을 방지
+    // 선택된 펫이 없어질 때(펫 전체 삭제, 계정 전환 등) 호출 — 이전 펫의 문서/등록증 상태가
+    // 화면에 그대로 남는 것을 방지
     resetCertificates() {
-      this.petId = null
       this.documents = []
       this.registrationDoc = null
       this.vaccinationDocs = []
       this.medicalDocs = []
     },
 
+    // 사용자가 키우는 반려동물 전체를 상단 탭에 노출
+    // 화면 재진입마다 다시 호출되므로, 목데이터 시딩은 최초 1회만 — 그렇지 않으면
+    // 세션 중 업로드/연동/삭제로 바뀐 documents/registrationDetails가 매번 초기화됨
+    async fetchPets() {
+      if (USE_MOCK_DATA) {
+        if (this.pets.length === 0) {
+          this.registrationDetails = structuredClone(MOCK_REGISTRATION_DETAIL)
+          this.pets = Object.values(this.registrationDetails).map(toPetSummary)
+          this.documents = structuredClone(MOCK_PET_DOCUMENTS)
+        }
+        this._syncSelectedPetId()
+        return
+      }
+      return this._withRequestState(async () => {
+        const { data } = await petApi.getPets()
+        this.pets = data.result ?? []
+        this._syncSelectedPetId()
+      })
+    },
+
+    // 새로 받아온 pets 기준으로 selectedPetId가 여전히 유효한지 확인.
+    // 펫 삭제나 계정 전환 후 이전 목록의 ID가 남아있을 수 있어, 목록에 없으면 첫 번째 펫으로 재설정(없으면 null)
+    _syncSelectedPetId() {
+      const stillExists = this.pets.some((pet) => pet.petId === this.selectedPetId)
+      if (!stillExists) {
+        this.selectedPetId = this.pets[0]?.petId ?? null
+        if (!this.selectedPetId) this.resetCertificates()
+      }
+    },
+
+    async selectPet(petId) {
+      this.selectedPetId = petId
+      await this.fetchCertificates(petId)
+    },
+
     // GET /api/certificates
     // 화면 재진입마다 다시 호출되므로, mock 문서 시딩은 documents가 비어있을 때만 — 그렇지 않으면
     // 세션 중 업로드/연동/삭제로 바뀐 documents/registrationDetails가 매번 초기화됨
     async fetchCertificates(petId) {
-      this.petId = petId
       if (USE_MOCK_DATA) {
         if (this.documents.length === 0) {
           this.documents = structuredClone(MOCK_PET_DOCUMENTS)
@@ -70,9 +122,9 @@ export const useCertificateStore = defineStore('certificate', {
       }
       await this._withRequestState(async () => {
         const { data } = await certificatesApi.getList(petId)
-        // 응답을 받는 사이 다른 펫 탭으로 전환해 this.petId가 바뀌었으면, 이 응답은 더 이상
+        // 응답을 받는 사이 다른 펫 탭으로 전환해 selectedPetId가 바뀌었으면, 이 응답은 더 이상
         // 현재 선택된 펫의 것이 아니므로 버린다(빠른 탭 전환 시 이전 응답이 최신 상태를 덮어쓰는 것 방지)
-        if (this.petId !== petId) return
+        if (this.selectedPetId !== petId) return
         const docs = data.result ?? []
         // CertificateDetailView가 docId로 문서를 찾을 때 documents를 참조하므로 mock 모드와 동일하게 채워둔다
         this.documents = docs
@@ -114,7 +166,7 @@ export const useCertificateStore = defineStore('certificate', {
         const linkedPetIds = new Set(
           this.documents.filter((doc) => doc.docType === 'REGISTRATION').map((doc) => doc.petId),
         )
-        const candidates = usePetStore().pets
+        const candidates = this.pets
           .filter((pet) => !linkedPetIds.has(pet.petId))
           .map((pet) => ({
             petId: pet.petId,
@@ -147,17 +199,16 @@ export const useCertificateStore = defineStore('certificate', {
       if (!USE_MOCK_DATA) {
         return this._withRequestState(async () => {
           await certificatesApi.saveRegistrationLinks(candidates)
-          if (this.petId) {
-            await this.fetchCertificates(this.petId)
+          if (this.selectedPetId) {
+            await this.fetchCertificates(this.selectedPetId)
           }
         })
       }
 
-      const petStore = usePetStore()
       const today = new Date().toISOString().slice(0, 10)
 
       for (const candidate of candidates) {
-        const pet = petStore.pets.find((p) => p.petId === candidate.petId)
+        const pet = this.pets.find((p) => p.petId === candidate.petId)
         const docId = `doc-reg-${candidate.petId}`
 
         const detail = {
@@ -181,8 +232,8 @@ export const useCertificateStore = defineStore('certificate', {
         this.documents = [newDoc, ...this.documents.filter((doc) => doc.docId !== docId)]
       }
 
-      if (this.petId) {
-        await this.fetchCertificates(this.petId)
+      if (this.selectedPetId) {
+        await this.fetchCertificates(this.selectedPetId)
       }
     },
 
@@ -220,7 +271,7 @@ export const useCertificateStore = defineStore('certificate', {
         delete nextDetails[docId]
         this.registrationDetails = nextDetails
 
-        const pet = doc ? usePetStore().pets.find((p) => p.petId === doc.petId) : null
+        const pet = doc ? this.pets.find((p) => p.petId === doc.petId) : null
         if (pet) pet.regNumber = ''
 
         if (this.registrationDoc?.docId === docId) this.registrationDoc = null

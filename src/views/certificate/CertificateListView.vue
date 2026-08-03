@@ -2,7 +2,6 @@
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCertificateStore } from '@/stores/certificate'
-import { usePetStore } from '@/stores/pet'
 import { formatBirthDateInput, formatDateDot } from '@/utils/date'
 import { formatPhoneNumber } from '@/utils/phone'
 import AppButton from '@/components/common/AppButton.vue'
@@ -19,27 +18,17 @@ import IconChevronRight from '@/components/common/icons/IconChevronRight.vue'
 
 const router = useRouter()
 const certificateStore = useCertificateStore()
-const petStore = usePetStore()
 
 onMounted(async () => {
-  await petStore.fetchPets()
-  if (petStore.selectedPetId) {
-    await certificateStore.fetchCertificates(petStore.selectedPetId)
-  } else {
-    // 펫이 하나도 없으면(전체 삭제 등) 이전 선택 펫의 증명서 상태가 남아있지 않도록 초기화
-    certificateStore.resetCertificates()
+  await certificateStore.fetchPets()
+  if (certificateStore.selectedPetId) {
+    await certificateStore.fetchCertificates(certificateStore.selectedPetId)
   }
 })
 
-// 반려동물 탭 선택 — 선택 상태는 petStore가 소유, 인증서 재조회만 이 화면에서 트리거
-function selectPet(petId) {
-  petStore.selectPet(petId)
-  certificateStore.fetchCertificates(petId)
-}
-
 function goToRegistrationDetail() {
   if (!certificateStore.registrationDoc) return
-  router.push(`/certificates/${petStore.selectedPetId}/${certificateStore.registrationDoc.docId}`)
+  router.push(`/certificates/${certificateStore.selectedPetId}/${certificateStore.registrationDoc.docId}`)
 }
 
 // 접종증명서/진료확인서도 동물등록증 "보기"와 같은 상세 페이지로 이동
@@ -139,7 +128,7 @@ function openVaccinationUpload() {
 async function handleVaccinationSelect(event) {
   const file = event.target.files[0]
   event.target.value = ''
-  if (!file || !petStore.selectedPetId) return
+  if (!file || !certificateStore.selectedPetId) return
   if (!file.type.startsWith('image/')) {
     alert('이미지 파일만 업로드할 수 있어요.')
     return
@@ -149,7 +138,7 @@ async function handleVaccinationSelect(event) {
     return
   }
   try {
-    await certificateStore.uploadVaccination(petStore.selectedPetId, file)
+    await certificateStore.uploadVaccination(certificateStore.selectedPetId, file)
   } catch {
     alert('업로드에 실패했어요. 다시 시도해주세요.')
   }
@@ -163,7 +152,7 @@ function openMedicalUpload() {
 async function handleMedicalSelect(event) {
   const file = event.target.files[0]
   event.target.value = ''
-  if (!file || !petStore.selectedPetId) return
+  if (!file || !certificateStore.selectedPetId) return
   if (!file.type.startsWith('image/')) {
     alert('이미지 파일만 업로드할 수 있어요.')
     return
@@ -173,7 +162,7 @@ async function handleMedicalSelect(event) {
     return
   }
   try {
-    await certificateStore.uploadMedicalConfirmation(petStore.selectedPetId, file)
+    await certificateStore.uploadMedicalConfirmation(certificateStore.selectedPetId, file)
   } catch {
     alert('업로드에 실패했어요. 다시 시도해주세요.')
   }
@@ -198,23 +187,23 @@ async function handleMedicalSelect(event) {
       aria-label="반려동물 선택"
     >
       <button
-        v-for="pet in petStore.pets"
+        v-for="pet in certificateStore.pets"
         :key="pet.petId"
         type="button"
         role="tab"
-        :aria-selected="petStore.selectedPetId === pet.petId"
+        :aria-selected="certificateStore.selectedPetId === pet.petId"
         class="inline-flex h-(--control-height-sm) items-center gap-(--space-1) px-(--space-4) rounded-(--radius-full) border text-(length:--font-sm) font-bold transition-opacity hover:opacity-80"
         :class="
-          petStore.selectedPetId === pet.petId
+          certificateStore.selectedPetId === pet.petId
             ? 'border-(--color-navy) bg-(--color-navy) text-(color:--color-white)'
             : 'border-(--color-border) bg-(--color-surface) text-(color:--color-slate-dark)'
         "
-        @click="selectPet(pet.petId)"
+        @click="certificateStore.selectPet(pet.petId)"
       >
         <component
           :is="pet.species === 'CAT' ? IconCat : IconDog"
           :size="16"
-          :color="petStore.selectedPetId === pet.petId ? 'var(--color-white)' : 'var(--color-slate-dark)'"
+          :color="certificateStore.selectedPetId === pet.petId ? 'var(--color-white)' : 'var(--color-slate-dark)'"
         />
         {{ pet.name }}
       </button>
@@ -252,7 +241,7 @@ async function handleMedicalSelect(event) {
               </span>
             </div>
             <p class="text-(length:--font-xs) text-(color:--color-gray-500)">
-              등록번호: {{ petStore.selectedPet?.regNumber }}
+              등록번호: {{ certificateStore.selectedPet?.regNumber }}
             </p>
           </div>
           <button

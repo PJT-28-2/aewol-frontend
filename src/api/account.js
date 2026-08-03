@@ -20,19 +20,21 @@ export function getAccounts() {
 }
 
 /**
- * 1원 인증 요청 — 선택한 은행 계좌로 1원을 송금하고 입금자명 4자리를 발급
+ * 1원 인증 요청 — 선택한 은행 계좌로 1원을 송금
  * POST /api/accounts/verify-deposit
- * body: { bankCode, accountNumber }
- * result: { verificationId, maskedAccountNumber, expiresInSeconds }
+ * body: { bankCode, accountNumber, accountHolder }
+ * result: { transactionId }
+ * ⚠️ maskedAccountNumber/expiresInSeconds는 서버가 안 내려줘요.
+ * store(requestDepositAuth)에서 클라이언트가 직접 계산해서 채워요.
  */
 export function requestDepositVerification(payload) {
   return api.post('/accounts/verify-deposit', payload);
 }
 
 /**
- * 1원 인증 확인 — 사용자가 입력한 입금자명 4자리 검증
+ * 1원 인증 확인 — 입금자명에 찍힌 랜덤 한글 4자(예: 파란애월) 검증
  * POST /api/accounts/verify-deposit/confirm
- * body: { verificationId, depositorName }
+ * body: { transactionId, verificationCode }
  * result: { verified: boolean }
  */
 export function confirmDepositVerification(payload) {
@@ -42,9 +44,9 @@ export function confirmDepositVerification(payload) {
 /**
  * 계좌 등록 — 1원 인증 완료 후 실제 계좌 연동 확정
  * POST /api/accounts
- * body: { verificationId, bankCode, accountNumber }
- * result: { accountId, bankCode, accountNumberMasked, isPrimary }
- * ⚠️ 실제 백엔드 AccountResponse엔 balance가 없어요.
+ * body: { transactionId }
+ * result: { accountId, bankCode, bankName, accountNumber, isPrimary }
+ * ⚠️ 실제 백엔드 응답엔 balance가 없어요.
  * 등록 후 잔액이 필요하면 store에서 GET /api/accounts로 다시 조회해 채워요.
  */
 export function registerAccount(payload) {

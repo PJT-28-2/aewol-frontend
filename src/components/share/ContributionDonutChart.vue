@@ -33,6 +33,7 @@ function renderChart() {
           type: 'pie',
           radius: ['64%', '100%'],
           avoidLabelOverlap: true,
+          silent: true,
           itemStyle: {
             borderColor: getColor('--color-white'),
             borderWidth: 3,
@@ -43,6 +44,9 @@ function renderChart() {
           },
           labelLine: {
             show: false,
+          },
+          emphasis: {
+            scale: false,
           },
           data: props.contributions.map((contribution) => ({
             value: contribution.percentage,

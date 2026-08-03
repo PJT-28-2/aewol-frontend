@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { useGroupPurchaseCreateStore } from '@/stores/groupPurchase';
+import { usePetStore } from '@/stores/pet';
 
 /* ------------------------------------------------------------------ */
 /*  Public (no auth required) routes                                  */
@@ -110,6 +111,10 @@ const authRoutes = [
     name: 'PetList',
     component: () => import('@/views/pet/PetListView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
+    // 등록된 반려동물이 없으면 관리 화면 대신 반려동물 등록/가족 참여 안내 화면으로 보낸다.
+    beforeEnter: () => {
+      if (usePetStore().pets.length === 0) return '/share/start';
+    },
   },
   {
     path: '/pets/register',
