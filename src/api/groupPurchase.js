@@ -5,8 +5,18 @@ export const groupPurchaseApi = {
     return api.get('/group-purchase', { params })
   },
 
+  // create()가 요구하는 image는 파일이 아니라 URL 문자열(VARCHAR(500))이라, 사진은 먼저 이 엔드포인트로
+  // 업로드해서 URL을 받아온 뒤 그 문자열을 create()의 JSON 바디에 실어 보낸다
+  // (백엔드가 이 업로드 엔드포인트와 group_purchase.image INSERT 매핑을 함께 구현해줘야 실제로 저장됨)
+  uploadImage(formData) {
+    return api.post('/group-purchase/images', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
+
+  // 백엔드가 POST /api/group-purchase에서 @RequestBody Map<String, Object>로 받음 (JSON)
   create(data) {
-    return api.post('/group-purchase/create', data)
+    return api.post('/group-purchase', data)
   },
 
   getDetail(id) {
@@ -22,8 +32,11 @@ export const groupPurchaseApi = {
     return api.get('/group-purchase/my', { params })
   },
 
-  join(id) {
-    return api.post(`/group-purchase/${id}/join`)
+  // 참여 신청과 결제가 한 번에 처리됨. 백엔드가 현재 quantity 쿼리 파라미터만 읽어서
+  // group_purchase_participant.purchase_quantity 컬럼에 저장함(DB에는 quantity 컬럼 없음, 쿼리 파라미터명만 quantity).
+  // 본문(shippingAddress 포함)은 아직 처리하지 않음 — 배송지 저장은 백엔드가 본문을 읽도록 구현되기 전까지는 반영되지 않는다
+  join(id, quantity, data) {
+    return api.post(`/group-purchase/${id}/join`, data, { params: { quantity } })
   },
 
   leave(id) {

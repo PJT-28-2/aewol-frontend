@@ -5,7 +5,8 @@ import { useRouter } from 'vue-router'
 import AppButton from '@/components/common/AppButton.vue'
 import IconImage from '@/components/common/icons/IconImage.vue'
 import IconInfo from '@/components/common/icons/IconInfo.vue'
-// import { groupPurchaseApi } from '@/api/groupPurchase'
+import { groupPurchaseApi } from '@/api/groupPurchase'
+import { USE_MOCK_DATA } from '@/mocks/config'
 import { useGroupPurchaseCreateStore } from '@/stores/groupPurchase'
 
 // 1~2단계에서 입력한 데이터를 그대로 가져와 확인 화면을 채움
@@ -21,6 +22,7 @@ const {
   deliveryMethod,
   deliveryFee,
   deliveryEstimateDays,
+  description,
 } = storeToRefs(groupPurchaseCreateStore)
 
 // 1단계에서 업로드한 사진 미리보기 (없으면 아이콘 placeholder)
@@ -73,25 +75,60 @@ function goToPrevStep() {
   router.push('/group-purchase/create/step2')
 }
 
-// TODO: 백엔드 DB 연동 후 아래 API 호출 주석 해제 (async/await 함께 복원)
-function handleSubmit() {
-  // const payload = {
-  //   image: image.value,
-  //   productName: productName.value,
-  //   category: category.value,
-  //   unitPrice: parsePrice(unitPrice.value),
-  //   groupPrice: parsePrice(groupPrice.value),
-  //   targetQuantity: Number(targetQuantity.value),
-  //   deadline: deadline.value,
-  //   deliveryMethod: deliveryMethod.value,
-  //   deliveryFee: parsePrice(deliveryFee.value),
-  //   // TODO: DB의 delivery_date(실제 날짜)는 deadline + deliveryEstimateDays로 백엔드에서 계산한다고 가정. 프론트는 일수만 전달
-  //   deliveryEstimateDays: Number(deliveryEstimateDays.value),
-  //   description: description.value,
-  // }
-  // await groupPurchaseApi.create(payload) // POST /group-purchase/create
+const isSubmitting = ref(false)
+const submitError = ref('')
 
-  router.push('/group-purchase/my')
+async function handleSubmit() {
+  // 라우터 가드가 진입 시점엔 필수 값을 확인하지만, 그 이후 이미지를 삭제하는 등으로 스토어가
+  // 다시 비워질 수 있어(FormData.append(null)은 문자열 "null"로 전송돼 서버에 손상된 파일이 감) 제출 직전에도 재검사
+  if (!groupPurchaseCreateStore.isStep1Complete) {
+    router.push('/group-purchase/create/step1')
+    return
+  }
+  if (!groupPurchaseCreateStore.isStep2Complete) {
+    router.push('/group-purchase/create/step2')
+    return
+  }
+
+  if (USE_MOCK_DATA) {
+    groupPurchaseCreateStore.reset()
+    router.push('/group-purchase/my')
+    return
+  }
+
+  submitError.value = ''
+  isSubmitting.value = true
+  try {
+    // 1) 사진을 먼저 업로드해서 URL을 받고 2) 그 URL을 JSON 생성 요청의 image 필드에 실어 보낸다
+    const imageFormData = new FormData()
+    imageFormData.append('image', image.value)
+    const { data: uploadData } = await groupPurchaseApi.uploadImage(imageFormData)
+    const imageUrl = uploadData.result
+
+    // 백엔드가 POST /api/group-purchase에서 JSON(Map<String, Object>)으로 받음
+    const payload = {
+      image: imageUrl,
+      productName: productName.value,
+      category: category.value,
+      unitPrice: parsePrice(unitPrice.value),
+      groupPrice: parsePrice(groupPrice.value),
+      targetQuantity: Number(targetQuantity.value),
+      deadline: deadline.value,
+      deliveryMethod: deliveryMethod.value,
+      deliveryFee: parsePrice(deliveryFee.value),
+      // TODO: DB의 delivery_date(실제 날짜)는 deadline + deliveryEstimateDays로 백엔드에서 계산한다고 가정. 프론트는 일수만 전달
+      deliveryEstimateDays: Number(deliveryEstimateDays.value),
+      description: description.value,
+    }
+
+    await groupPurchaseApi.create(payload)
+    groupPurchaseCreateStore.reset()
+    router.push('/group-purchase/my')
+  } catch {
+    submitError.value = '등록에 실패했어요. 다시 시도해주세요.'
+  } finally {
+    isSubmitting.value = false
+  }
 }
 </script>
 
@@ -224,12 +261,20 @@ function handleSubmit() {
       </p>
     </div>
 
-    <!-- 이전 / 글 올리기: API 연동은 주석 처리, 지금은 /group-purchase/my로 이동만 -->
+    <p
+      v-if="submitError"
+      class="text-(length:--font-xs) text-(color:--color-danger-strong) text-center mb-(--space-3)"
+    >
+      {{ submitError }}
+    </p>
+
+    <!-- 이전 / 글 올리기 -->
     <div class="flex gap-(--space-3)">
       <AppButton
         variant="secondary"
         size="lg"
         class="flex-1"
+        :disabled="isSubmitting"
         @click="goToPrevStep"
       >
         이전
@@ -238,6 +283,7 @@ function handleSubmit() {
         variant="primary"
         size="lg"
         class="flex-1"
+        :loading="isSubmitting"
         @click="handleSubmit"
       >
         글 올리기

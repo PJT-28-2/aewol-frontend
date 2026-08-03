@@ -22,8 +22,8 @@ export function getFaqDetail(faqId) {
 /**
  * 1:1 문의 등록
  * POST /api/support/inquiries
- * multipart/form-data: category, title, content, email, images(최대 3장)
- * result: { inquiryId, inquiryNumber, submittedAt }
+ * multipart/form-data: category, title, content, replyEmail, attachments(선택, 최대 3개, 파일당 10MB, jpg/jpeg/png/pdf만 허용)
+ * result: { inquiryId, inquiryNumber }
  */
 export function submitInquiry(formData) {
   // FormData를 넘기면 Axios(브라우저)가 Content-Type과 boundary를 자동으로 설정해요.
@@ -44,6 +44,7 @@ export function getMyInquiries() {
 /**
  * 문의 상세 조회
  * GET /api/support/inquiries/{inquiryId}
+ * result: { inquiryId, inquiryNumber, category, title, content, replyEmail, attachments, status, answer, createdAt, answeredAt }
  */
 export function getInquiryDetail(inquiryId) {
   return api.get(`/support/inquiries/${inquiryId}`);

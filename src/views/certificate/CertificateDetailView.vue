@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
 import { useCertificateStore } from '@/stores/certificate'
-import { formatDateDot } from '@/utils/date'
+import { formatDateDot, formatDateTimeDot } from '@/utils/date'
 import AppButton from '@/components/common/AppButton.vue'
 import AppModal from '@/components/common/AppModal.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
@@ -21,11 +21,9 @@ const currentDoc = ref(null)
 const isPhotoDoc = computed(() => currentDoc.value?.docType && currentDoc.value.docType !== 'REGISTRATION')
 
 onMounted(async () => {
-  // 목록 화면을 거치지 않고 이 화면으로 바로 진입(새로고침·직접 접속 등)하면
-  // documents/registrationDetails가 비어있을 수 있어 먼저 보장해준다.
-  if (certificateStore.pets.length === 0) {
-    await certificateStore.fetchPets()
-  }
+  // 목록 화면을 거치지 않고 이 화면으로 바로 진입(새로고침·직접 접속 등)해도
+  // fetchCertificates가 mock 시딩/실제 조회를 모두 처리하므로 바로 호출하면 된다.
+  await certificateStore.fetchCertificates(route.params.petId)
 
   currentDoc.value = certificateStore.documents.find((doc) => doc.docId === route.params.docId) ?? null
 
@@ -54,6 +52,9 @@ const genderText = computed(() => {
   return `${genderLabel}(${neuteredLabel})`
 })
 
+// 등록칩 구분: Y-내장, M-외장, N-인식표
+const RFID_GUBUN_LABEL = { Y: '내장', M: '외장', N: '인식표' }
+
 const infoRows = computed(() => {
   const detail = certificateStore.detail
   if (!detail) return []
@@ -63,12 +64,13 @@ const infoRows = computed(() => {
     { label: '품종', value: detail.breed },
     { label: '성별', value: genderText.value },
     { label: '출생연월일', value: formatDateDot(detail.birthDate) },
-    { label: '털색', value: detail.furColor },
-    { label: '체중', value: `${detail.weight}kg` },
-    { label: '소유자', value: detail.ownerName },
-    { label: '등록일', value: formatDateDot(detail.registerDate) },
-    { label: '발급일자', value: formatDateDot(detail.issueDate) },
-    { label: '발급기관', value: detail.issueOrg },
+    { label: '등록칩 구분', value: RFID_GUBUN_LABEL[detail.rfidGubun] ?? '' },
+    { label: '등록칩번호', value: detail.rfidCd },
+    { label: '관할기관', value: detail.orgNm },
+    { label: '관할기관 연락처', value: detail.officeTel },
+    { label: '승인여부', value: detail.aprGbnNm },
+    { label: '등록일시', value: formatDateTimeDot(detail.regTm) },
+    { label: '승인일시', value: formatDateTimeDot(detail.aprTm) },
   ]
 })
 
@@ -87,7 +89,8 @@ async function captureCard() {
   return html2canvas(detailCardRef.value, {
     scale: 2,
     useCORS: true,
-    backgroundColor: '#ffffff',
+    // CSS 변수는 html2canvas가 직접 해석하지 못해 실제 계산된 색상값을 런타임에 읽어서 전달
+    backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--color-white').trim(),
   })
 }
 
@@ -214,7 +217,6 @@ async function handlePhotoDelete() {
 
 <template>
   <div class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))]">
-
     <header class="mb-(--space-5)">
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-2)">
         {{ pageTitle }}

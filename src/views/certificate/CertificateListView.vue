@@ -171,7 +171,6 @@ async function handleMedicalSelect(event) {
 
 <template>
   <div class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))]">
-
     <header class="mb-(--space-5)">
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-2)">
         증명서 관리

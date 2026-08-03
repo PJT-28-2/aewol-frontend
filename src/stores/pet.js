@@ -1,6 +1,7 @@
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { petApi } from '@/api/pet'
 import { mockPets } from '@/mocks/pet'
+import { USE_MOCK_DATA } from '@/mocks/config'
 
 export const usePetStore = defineStore('pet', {
   state: () => ({
@@ -10,9 +11,15 @@ export const usePetStore = defineStore('pet', {
 
   actions: {
     async fetchPets() {
+      if (USE_MOCK_DATA) {
+        if (this.pets.length === 0) {
+          this.pets = mockPets.map((pet) => ({ ...pet }))
+        }
+        return this.pets
+      }
       const { data } = await petApi.getPets()
-      this.pets = data
-      return data
+      this.pets = data.result ?? []
+      return this.pets
     },
 
     async fetchPet(id) {

@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 import { useSupportStore } from '@/stores/support';
 import IconImage from '@/components/common/icons/IconImage.vue';
 import IconClose from '@/components/common/icons/IconClose.vue';
+import IconDocument from '@/components/common/icons/IconDocument.vue';
 import { SUPPORT_CATEGORIES } from '@/mocks/support';
 
 const router = useRouter();
@@ -11,22 +12,19 @@ const store = useSupportStore();
 
 const CATEGORIES = SUPPORT_CATEGORIES;
 const MAX_ATTACHMENT_COUNT = 3;
-const MAX_TOTAL_ATTACHMENT_SIZE = 10 * 1024 * 1024; // 3장 합쳐서 최대 10MB — 백엔드 multipart 요청 한도에 맞춤
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 파일당 최대 10MB
+const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/png', 'application/pdf'];
 
 const category = ref('지갑·버킷');
 const title = ref('');
 const content = ref('');
 const email = ref('');
-const attachments = ref([]); // { file, previewUrl }
+const attachments = ref([]); // { file, previewUrl } — previewUrl은 이미지일 때만 채워지고 pdf는 null
 const isSubmitting = ref(false);
 const submitError = ref('');
 const attachmentError = ref('');
 
 const fileInput = ref(null);
-
-function totalAttachmentSize(list) {
-  return list.reduce((sum, item) => sum + item.file.size, 0);
-}
 
 function openFilePicker() {
   if (attachments.value.length >= MAX_ATTACHMENT_COUNT) return;
@@ -37,31 +35,47 @@ function onFilesSelected(event) {
   attachmentError.value = '';
   const files = Array.from(event.target.files ?? []);
   const remainingSlots = MAX_ATTACHMENT_COUNT - attachments.value.length;
-  let currentTotal = totalAttachmentSize(attachments.value);
 
-  const filesToAdd = files.slice(0, remainingSlots);
-  const droppedCount = files.length - filesToAdd.length;
-
-  for (const file of filesToAdd) {
-    if (currentTotal + file.size > MAX_TOTAL_ATTACHMENT_SIZE) {
-      attachmentError.value = '첨부 이미지 용량은 3장 합쳐서 최대 10MB까지 가능해요';
-      break;
+  // 남은 슬롯만큼 "먼저" 자르면, 그 안에 형식/용량이 안 맞는 파일이 섞여있을 때
+  // 뒤에 있는 멀쩡한 파일까지 통째로 버려져요. 그래서 전체 파일을 먼저 형식/용량으로
+  // 걸러내고, 유효한 파일만 모은 다음 그 목록을 남은 슬롯만큼 잘라요.
+  const validFiles = [];
+  for (const file of files) {
+    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+      attachmentError.value = 'jpg, png, pdf 파일만 첨부할 수 있어요';
+      continue;
     }
-    attachments.value.push({ file, previewUrl: URL.createObjectURL(file) });
-    currentTotal += file.size;
+    if (file.size > MAX_FILE_SIZE) {
+      attachmentError.value = '파일당 최대 10MB까지 첨부할 수 있어요';
+      continue;
+    }
+    validFiles.push(file);
   }
 
-  // 용량 초과로 이미 에러 메시지가 떴으면 그걸 우선하고, 그게 아니라 개수 제한 때문에
+  const filesToAdd = validFiles.slice(0, remainingSlots);
+  const droppedCount = validFiles.length - filesToAdd.length;
+
+  for (const file of filesToAdd) {
+    attachments.value.push({
+      file,
+      previewUrl: file.type === 'application/pdf' ? null : URL.createObjectURL(file),
+    });
+  }
+
+  // 형식/용량 에러로 이미 메시지가 떴으면 그걸 우선하고, 그게 아니라 개수 제한 때문에
   // 잘려나간 파일이 있으면 왜 다 안 들어갔는지 알려줘요.
   if (!attachmentError.value && droppedCount > 0) {
-    attachmentError.value = `최대 ${MAX_ATTACHMENT_COUNT}장까지만 첨부할 수 있어서 ${droppedCount}장은 제외됐어요`;
+    attachmentError.value = `최대 ${MAX_ATTACHMENT_COUNT}장까지만 첨부할 수 있어서 ${droppedCount}개는 제외됐어요`;
   }
 
   event.target.value = '';
 }
 
 function removeAttachment(index) {
-  URL.revokeObjectURL(attachments.value[index].previewUrl);
+  const { previewUrl } = attachments.value[index];
+  if (previewUrl) {
+    URL.revokeObjectURL(previewUrl);
+  }
   attachments.value.splice(index, 1);
   attachmentError.value = '';
 }
@@ -70,7 +84,7 @@ function removeAttachment(index) {
 // removeAttachment를 거치지 않고 화면을 벗어나는 모든 경우를 대비해
 // 남아있는 첨부 미리보기 object URL을 여기서 한 번에 정리해요.
 onUnmounted(() => {
-  attachments.value.forEach((item) => URL.revokeObjectURL(item.previewUrl));
+  attachments.value.forEach((item) => item.previewUrl && URL.revokeObjectURL(item.previewUrl));
 });
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -153,7 +167,7 @@ async function submit() {
       <input
         ref="fileInput"
         type="file"
-        accept="image/*"
+        accept="image/jpeg,image/png,application/pdf"
         multiple
         class="hidden"
         @change="onFilesSelected"
@@ -164,7 +178,7 @@ async function submit() {
         @click="openFilePicker"
       >
         <IconImage :size="16" color="var(--color-gray-500)" />
-        스크린샷 · 이미지 첨부 (최대 3장, 합쳐서 최대 10MB)
+        스크린샷 · 이미지 · PDF 첨부 (최대 3장, 파일당 최대 10MB)
       </button>
       <p v-if="attachmentError" class="text-(length:--font-xs) text-(color:--color-danger-strong) mt-2">{{ attachmentError }}</p>
 
@@ -174,7 +188,11 @@ async function submit() {
           :key="index"
           class="relative w-16 h-16 rounded-(--radius-lg) overflow-hidden bg-(--color-surface)"
         >
-          <img :src="item.previewUrl" alt="" class="w-full h-full object-cover" />
+          <img v-if="item.previewUrl" :src="item.previewUrl" alt="" class="w-full h-full object-cover" />
+          <div v-else class="w-full h-full flex flex-col items-center justify-center gap-1 px-1">
+            <IconDocument :size="20" color="var(--color-gray-500)" />
+            <span class="text-(length:--font-xs) text-(color:--color-gray-600) truncate w-full text-center">{{ item.file.name }}</span>
+          </div>
           <button
             class="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-(--color-navy) flex items-center justify-center"
             @click="removeAttachment(index)"
