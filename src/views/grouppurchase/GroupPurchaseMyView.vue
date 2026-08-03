@@ -78,7 +78,12 @@ const emptyStateActionText = computed(() =>
   myGroupPurchases.value.length === 0 ? '공동구매 둘러보기' : '',
 );
 
+// 상태 필터를 빠르게 바꾸면 이전 요청이 나중에 응답할 수 있어, 가장 최근에 시작한 요청의
+// 결과만 상태에 반영하도록 순번으로 구분한다
+let latestRequestId = 0;
+
 async function loadMyGroupPurchases() {
+  const requestId = ++latestRequestId;
   isLoading.value = true;
   isError.value = false;
 
@@ -98,6 +103,8 @@ async function loadMyGroupPurchases() {
     const { data } = await groupPurchaseApi.getMyList(params);
     const items = data.result ?? [];
 
+    if (requestId !== latestRequestId) return; // 그 사이 더 최신 요청이 시작됐으면 이 결과는 버린다
+
     myGroupPurchases.value = items.map((item) => ({
       gpId: item.gpId,
       productName: item.productName,
@@ -109,9 +116,9 @@ async function loadMyGroupPurchases() {
       createdAt: item.createdAt,
     }));
   } catch {
-    isError.value = true;
+    if (requestId === latestRequestId) isError.value = true;
   } finally {
-    isLoading.value = false;
+    if (requestId === latestRequestId) isLoading.value = false;
   }
 }
 
