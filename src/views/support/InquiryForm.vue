@@ -36,10 +36,11 @@ function onFilesSelected(event) {
   const files = Array.from(event.target.files ?? []);
   const remainingSlots = MAX_ATTACHMENT_COUNT - attachments.value.length;
 
-  const filesToAdd = files.slice(0, remainingSlots);
-  const droppedCount = files.length - filesToAdd.length;
-
-  for (const file of filesToAdd) {
+  // 남은 슬롯만큼 "먼저" 자르면, 그 안에 형식/용량이 안 맞는 파일이 섞여있을 때
+  // 뒤에 있는 멀쩡한 파일까지 통째로 버려져요. 그래서 전체 파일을 먼저 형식/용량으로
+  // 걸러내고, 유효한 파일만 모은 다음 그 목록을 남은 슬롯만큼 잘라요.
+  const validFiles = [];
+  for (const file of files) {
     if (!ALLOWED_FILE_TYPES.includes(file.type)) {
       attachmentError.value = 'jpg, png, pdf 파일만 첨부할 수 있어요';
       continue;
@@ -48,6 +49,13 @@ function onFilesSelected(event) {
       attachmentError.value = '파일당 최대 10MB까지 첨부할 수 있어요';
       continue;
     }
+    validFiles.push(file);
+  }
+
+  const filesToAdd = validFiles.slice(0, remainingSlots);
+  const droppedCount = validFiles.length - filesToAdd.length;
+
+  for (const file of filesToAdd) {
     attachments.value.push({
       file,
       previewUrl: file.type === 'application/pdf' ? null : URL.createObjectURL(file),
