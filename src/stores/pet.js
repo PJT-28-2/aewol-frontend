@@ -1,18 +1,41 @@
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { petApi } from '@/api/pet'
 import { mockPets } from '@/mocks/pet'
+import { USE_MOCK_DATA } from '@/mocks/config'
 
 export const usePetStore = defineStore('pet', {
   state: () => ({
     pets: mockPets.map((pet) => ({ ...pet })),
     currentPet: null,
+    // 증명서 등 여러 화면이 공유하는 "현재 선택된 반려동물" — petId 기준
+    selectedPetId: null,
   }),
+
+  getters: {
+    selectedPet: (state) => state.pets.find((pet) => pet.petId === state.selectedPetId) ?? null,
+  },
 
   actions: {
     async fetchPets() {
+      if (USE_MOCK_DATA) {
+        if (this.pets.length === 0) {
+          this.pets = mockPets.map((pet) => ({ ...pet }))
+        }
+        if (!this.selectedPetId) {
+          this.selectedPetId = this.pets[0]?.petId ?? null
+        }
+        return this.pets
+      }
       const { data } = await petApi.getPets()
-      this.pets = data
-      return data
+      this.pets = data.result ?? []
+      if (!this.selectedPetId) {
+        this.selectedPetId = this.pets[0]?.petId ?? null
+      }
+      return this.pets
+    },
+
+    selectPet(petId) {
+      this.selectedPetId = petId
     },
 
     async fetchPet(id) {

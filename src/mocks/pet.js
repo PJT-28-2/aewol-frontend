@@ -1,7 +1,40 @@
-// 반려동물 기본 목록 (선택 UI 등에서 사용)
+// 반려동물 목록 — usePetStore(기존 화면들의 id 기준)와 증명서 도메인(petId 기준)
+// 양쪽에서 같은 목록을 쓰도록 두 키를 함께 둔다. ERD의 pet 테이블 필드명을 camelCase로 매핑했다.
 export const mockPets = [
-  { id: 1, name: '소로', species: 'DOG' },
-  { id: 2, name: '나비', species: 'CAT' },
+  {
+    id: 1,
+    petId: 'pet-1',
+    memberId: 'member-1',
+    name: '소로',
+    species: 'DOG',
+    breed: '포메라니안',
+    birthDate: '2023-05-12',
+    gender: 'MALE',
+    weight: 3.2,
+    neutered: 'Y',
+    regNumber: '410000012345678',
+    medicalHistory: 'N',
+    isActive: 1,
+    createdAt: '2023-06-02T00:00:00',
+    updatedAt: '2023-06-02T00:00:00',
+  },
+  {
+    id: 2,
+    petId: 'pet-2',
+    memberId: 'member-1',
+    name: '나비',
+    species: 'CAT',
+    breed: '코리안숏헤어',
+    birthDate: '2022-11-03',
+    gender: 'FEMALE',
+    weight: 3.8,
+    neutered: 'Y',
+    regNumber: '', // 아직 동물등록증이 연동되지 않은 케이스(빈 상태 확인용)
+    medicalHistory: 'N',
+    isActive: 1,
+    createdAt: '2023-01-15T00:00:00',
+    updatedAt: '2023-01-15T00:00:00',
+  },
 ]
 
 // 반려동물 상세 정보 (PetEditView 등에서 사용)
@@ -30,42 +63,6 @@ export const mockPetsById = {
     vaccinationFileName: '',
   },
 }
-
-// 증명서 관리(목록/상세) 화면 목데이터 — ERD의 pet, pet_document 테이블 필드명을 camelCase로 매핑했어요.
-export const MOCK_PETS = [
-  {
-    petId: 'pet-1',
-    memberId: 'member-1',
-    name: '소로',
-    species: 'DOG',
-    breed: '포메라니안',
-    birthDate: '2023-05-12',
-    gender: 'MALE',
-    weight: 3.2,
-    neutered: 'Y',
-    regNumber: '410000012345678',
-    medicalHistory: 'N',
-    isActive: 1,
-    createdAt: '2023-06-02T00:00:00',
-    updatedAt: '2023-06-02T00:00:00',
-  },
-  {
-    petId: 'pet-2',
-    memberId: 'member-1',
-    name: '나비',
-    species: 'CAT',
-    breed: '코리안숏헤어',
-    birthDate: '2022-11-03',
-    gender: 'FEMALE',
-    weight: 3.8,
-    neutered: 'Y',
-    regNumber: '', // 아직 동물등록증이 연동되지 않은 케이스(빈 상태 확인용)
-    medicalHistory: 'N',
-    isActive: 1,
-    createdAt: '2023-01-15T00:00:00',
-    updatedAt: '2023-01-15T00:00:00',
-  },
-]
 
 export const MOCK_PET_DOCUMENTS = [
   {

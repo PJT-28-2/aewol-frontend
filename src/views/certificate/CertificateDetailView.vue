@@ -21,12 +21,8 @@ const currentDoc = ref(null)
 const isPhotoDoc = computed(() => currentDoc.value?.docType && currentDoc.value.docType !== 'REGISTRATION')
 
 onMounted(async () => {
-  // 목록 화면을 거치지 않고 이 화면으로 바로 진입(새로고침·직접 접속 등)하면
-  // pets/documents가 비어있을 수 있어 먼저 보장해준다.
-  if (certificateStore.pets.length === 0) {
-    await certificateStore.fetchPets()
-  }
-  // fetchPets()는 pets만 갱신하므로, documents에서 현재 문서를 찾기 전에 해당 펫의 문서 목록을 조회해야 한다
+  // 목록 화면을 거치지 않고 이 화면으로 바로 진입(새로고침·직접 접속 등)해도
+  // fetchCertificates가 mock 시딩/실제 조회를 모두 처리하므로 바로 호출하면 된다.
   await certificateStore.fetchCertificates(route.params.petId)
 
   currentDoc.value = certificateStore.documents.find((doc) => doc.docId === route.params.docId) ?? null

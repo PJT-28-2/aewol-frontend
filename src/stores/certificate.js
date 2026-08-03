@@ -1,14 +1,14 @@
 import { defineStore } from 'pinia'
 import { certificatesApi } from '@/api/certificates'
-import { petApi } from '@/api/pet'
+import { usePetStore } from '@/stores/pet'
 import { USE_MOCK_DATA } from '@/mocks/config'
-import { MOCK_PETS, MOCK_PET_DOCUMENTS, MOCK_REGISTRATION_DETAIL } from '@/mocks/pet'
+import { MOCK_PET_DOCUMENTS, MOCK_REGISTRATION_DETAIL } from '@/mocks/pet'
 
 export const useCertificateStore = defineStore('certificate', {
   state: () => ({
-    // 상단 펫 탭 — petApi.getPets() 결과를 이 스토어에서 자체 관리 (petId 기준, usePetStore와는 별도)
-    pets: [],
-    selectedPetId: null,
+    // 반려동물 목록/선택은 usePetStore가 단일 소스 — 여기서는 마지막으로 조회한 petId만
+    // 기록해뒀다가 연동/삭제 후 재조회(fetchCertificates)할 때 쓴다
+    petId: null,
 
     // mock 모드에서 세션 동안 유지되는 문서 전체 목록 (업로드/연동으로 추가된 항목 포함)
     documents: [],
@@ -26,8 +26,6 @@ export const useCertificateStore = defineStore('certificate', {
 
   getters: {
     isLoading: (state) => state.pendingRequestCount > 0,
-    selectedPet: (state) =>
-      state.pets.find((pet) => pet.petId === state.selectedPetId) ?? null,
   },
 
   actions: {
@@ -44,38 +42,16 @@ export const useCertificateStore = defineStore('certificate', {
       }
     },
 
-    // 사용자가 키우는 반려동물 전체를 상단 탭에 노출
-    // 화면 재진입마다 다시 호출되므로, 목데이터 시딩은 최초 1회만 — 그렇지 않으면
+    // GET /api/certificates
+    // 화면 재진입마다 다시 호출되므로, mock 문서 시딩은 documents가 비어있을 때만 — 그렇지 않으면
     // 세션 중 업로드/연동/삭제로 바뀐 documents/registrationDetails가 매번 초기화됨
-    async fetchPets() {
+    async fetchCertificates(petId) {
+      this.petId = petId
       if (USE_MOCK_DATA) {
-        if (this.pets.length === 0) {
-          this.pets = structuredClone(MOCK_PETS)
+        if (this.documents.length === 0) {
           this.documents = structuredClone(MOCK_PET_DOCUMENTS)
           this.registrationDetails = structuredClone(MOCK_REGISTRATION_DETAIL)
         }
-        if (!this.selectedPetId) {
-          this.selectedPetId = this.pets[0]?.petId ?? null
-        }
-        return
-      }
-      return this._withRequestState(async () => {
-        const { data } = await petApi.getPets()
-        this.pets = data.result ?? []
-        if (!this.selectedPetId) {
-          this.selectedPetId = this.pets[0]?.petId ?? null
-        }
-      })
-    },
-
-    async selectPet(petId) {
-      this.selectedPetId = petId
-      await this.fetchCertificates(petId)
-    },
-
-    // GET /api/certificates
-    async fetchCertificates(petId) {
-      if (USE_MOCK_DATA) {
         const docs = this.documents.filter((doc) => doc.petId === petId)
         this.registrationDoc = docs.find((doc) => doc.docType === 'REGISTRATION') ?? null
         this.vaccinationDocs = docs.filter((doc) => doc.docType === 'VACCINATION')
@@ -125,7 +101,7 @@ export const useCertificateStore = defineStore('certificate', {
         const linkedPetIds = new Set(
           this.documents.filter((doc) => doc.docType === 'REGISTRATION').map((doc) => doc.petId),
         )
-        const candidates = this.pets
+        const candidates = usePetStore().pets
           .filter((pet) => !linkedPetIds.has(pet.petId))
           .map((pet) => ({
             petId: pet.petId,
@@ -158,16 +134,17 @@ export const useCertificateStore = defineStore('certificate', {
       if (!USE_MOCK_DATA) {
         return this._withRequestState(async () => {
           await certificatesApi.saveRegistrationLinks(candidates)
-          if (this.selectedPetId) {
-            await this.fetchCertificates(this.selectedPetId)
+          if (this.petId) {
+            await this.fetchCertificates(this.petId)
           }
         })
       }
 
+      const petStore = usePetStore()
       const today = new Date().toISOString().slice(0, 10)
 
       for (const candidate of candidates) {
-        const pet = this.pets.find((p) => p.petId === candidate.petId)
+        const pet = petStore.pets.find((p) => p.petId === candidate.petId)
         const docId = `doc-reg-${candidate.petId}`
 
         const detail = {
@@ -191,8 +168,8 @@ export const useCertificateStore = defineStore('certificate', {
         this.documents = [newDoc, ...this.documents.filter((doc) => doc.docId !== docId)]
       }
 
-      if (this.selectedPetId) {
-        await this.fetchCertificates(this.selectedPetId)
+      if (this.petId) {
+        await this.fetchCertificates(this.petId)
       }
     },
 
@@ -230,7 +207,7 @@ export const useCertificateStore = defineStore('certificate', {
         delete nextDetails[docId]
         this.registrationDetails = nextDetails
 
-        const pet = doc ? this.pets.find((p) => p.petId === doc.petId) : null
+        const pet = doc ? usePetStore().pets.find((p) => p.petId === doc.petId) : null
         if (pet) pet.regNumber = ''
 
         if (this.registrationDoc?.docId === docId) this.registrationDoc = null
@@ -240,7 +217,7 @@ export const useCertificateStore = defineStore('certificate', {
 
       return this._withRequestState(async () => {
         await certificatesApi.deleteDocument(petId, docId)
-        if (this.selectedPetId) await this.fetchCertificates(this.selectedPetId)
+        await this.fetchCertificates(petId)
       })
     },
 
@@ -316,7 +293,7 @@ export const useCertificateStore = defineStore('certificate', {
 
       return this._withRequestState(async () => {
         await certificatesApi.deleteDocument(petId, docId)
-        if (this.selectedPetId) await this.fetchCertificates(this.selectedPetId)
+        await this.fetchCertificates(petId)
       })
     },
   },
