@@ -5,12 +5,12 @@ export const ENABLED_BANK_CODES = ['KB', 'TOSS']
 export const MOCK_BANKS = [
   { bankCode: 'KB', bankName: 'KB국민은행' },
   { bankCode: 'TOSS', bankName: '토스뱅크' },
-  { bankCode: 'WOORI', bankName: '우리은행' },
-  { bankCode: 'HANA', bankName: '하나은행' },
-  { bankCode: 'NH', bankName: 'NH농협은행' },
-  { bankCode: 'KAKAOBANK', bankName: '카카오뱅크' },
   { bankCode: 'SHINHAN', bankName: '신한은행' },
+  { bankCode: 'HANA', bankName: '하나은행' },
+  { bankCode: 'WOORI', bankName: '우리은행' },
+  { bankCode: 'NH', bankName: 'NH농협은행' },
   { bankCode: 'IBK', bankName: 'IBK기업은행' },
+  { bankCode: 'KAKAOBANK', bankName: '카카오뱅크' },
 ]
 
 export const MOCK_ACCOUNTS = [

@@ -69,3 +69,13 @@ export function setPrimaryAccount(accountId) {
 export function unlinkAccount(accountId) {
   return api.delete(`/accounts/${accountId}`);
 }
+
+/**
+ * 간편 비밀번호 설정 — 최초 계좌 연동 시 1회만 호출 (계정당 하나)
+ * POST /api/members/simple-password
+ * body: { password }
+ * ⚠️ 아직 Notion API 명세서에 없는 엔드포인트예요. 명세 확정되면 경로/응답 다시 확인 필요.
+ */
+export function setSimplePassword(password) {
+  return api.post('/members/simple-password', { password });
+}

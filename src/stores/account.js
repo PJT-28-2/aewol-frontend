@@ -7,6 +7,7 @@ import {
   registerAccount,
   setPrimaryAccount,
   unlinkAccount,
+  setSimplePassword,
 } from '@/api/account';
 import { getBankMeta } from '@/utils/bankMeta';
 import { MOCK_BANKS, MOCK_ACCOUNTS } from '@/mocks/account';
@@ -22,6 +23,14 @@ export const useAccountStore = defineStore('account', {
     pendingRequestCount: 0,
     error: null,
 
+    // 간편 비밀번호는 계정당 하나만 존재해요. 최초 계좌 연동 때 한 번만 설정하고
+    // 이후 계좌 연동부터는 이 값으로 설정 단계 자체를 건너뛰어요.
+    // 실제 비밀번호 값은 저장하지 않고, "설정된 적이 있는지" 여부만 남겨요.
+    hasSimplePassword: localStorage.getItem('hasSimplePassword') === 'true',
+    // 완료 화면에서 "비밀번호 설정까지 완료됐어요" 문구를 이번 플로우에서만
+    // 보여주기 위한 1회성 플래그. resetLinkingState()에서 함께 초기화돼요.
+    justSetSimplePassword: false,
+
     // 계좌 연동 플로우 진행 중 상태
     linking: {
       bankCode: null,
@@ -30,6 +39,8 @@ export const useAccountStore = defineStore('account', {
       verificationId: null,
       maskedAccountNumber: '',
       expiresInSeconds: 0,
+      // 비밀번호 설정 화면에서 입력한 값을 확인 화면으로 넘길 때까지만 메모리에 잠깐 보관
+      password: '',
     },
 
     // 연동 해제 대상 (바텀시트에서 참조)
@@ -191,8 +202,33 @@ export const useAccountStore = defineStore('account', {
         verificationId: null,
         maskedAccountNumber: '',
         expiresInSeconds: 0,
+        password: '',
       };
       this.lastLinkedAccountId = null;
+      this.justSetSimplePassword = false;
+    },
+
+    // 비밀번호 설정 화면에서 입력한 값을 확인 화면에서 비교할 수 있도록 잠깐 보관
+    setPendingPassword(password) {
+      this.linking.password = password;
+    },
+
+    // POST /api/members/simple-password — 확인 화면에서 재입력한 값이 최초 입력값과
+    // 일치할 때만 호출해요. 목데이터 모드에선 API 호출 없이 바로 통과시켜요.
+    async confirmSimplePassword(password) {
+      if (password !== this.linking.password) {
+        return false;
+      }
+      if (!USE_MOCK_DATA) {
+        await this._withRequestState(async () => {
+          await setSimplePassword(password);
+        });
+      }
+      this.hasSimplePassword = true;
+      this.justSetSimplePassword = true;
+      localStorage.setItem('hasSimplePassword', 'true');
+      this.linking.password = '';
+      return true;
     },
 
     // PATCH /api/accounts/{accountId}

@@ -4,8 +4,9 @@ import { useRouter } from 'vue-router';
 import { useAccountStore } from '@/stores/account';
 import { getBankMeta } from '@/utils/bankMeta';
 import AccountSummaryCard from '@/components/common/AccountSummaryCard.vue';
+import AppButton from '@/components/common/AppButton.vue';
 import BottomSheet from '@/components/common/BottomSheet.vue';
-import IconLock from '@/components/common/icons/IconLock.vue';
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import petDeleteWarning from '@/assets/images/pet-delete-warning.png';
 import petCancelWarning from '@/assets/images/pet-cancel-warning.png';
 
@@ -40,7 +41,7 @@ function openUnlink(account) {
   showUnlinkSheet.value = true;
 }
 
-// 해제 요청이 진행 중일 때는 바텀시트를 닫지 못하게 막아요.
+// 해지 요청이 진행 중일 때는 바텀시트를 닫지 못하게 막아요.
 // (진행 중에 취소/배경클릭으로 닫히면 pendingUnlinkAccount가 비워지면서
 //  이미 나간 실제 요청과 상태가 어긋나 TypeError로 이어질 수 있어요.)
 function closeUnlinkSheet() {
@@ -63,7 +64,7 @@ async function confirmUnlink() {
     pendingAccount.value = null;
     showUnlinkSuccess.value = true;
   } catch {
-    unlinkError.value = '연동 해제에 실패했어요. 다시 시도해주세요';
+    unlinkError.value = '연동 해지에 실패했어요. 다시 시도해주세요';
   } finally {
     isUnlinking.value = false;
   }
@@ -85,38 +86,43 @@ function goToLink() {
       v-if="showUnlinkSuccess"
       class="fixed inset-0 z-40 bg-(--color-white) flex flex-col items-center justify-center px-(--space-6)"
     >
-      <img :src="petCancelWarning" alt="" class="w-40 h-auto mb-(--space-6)" />
-      <h2 class="text-(length:--font-xl) font-(--font-bold) text-(color:--color-navy) mb-(--space-2)">계좌 연동이 해제됐어요</h2>
-      <p class="text-(length:--font-md) text-(color:--color-gray-600) mb-(--space-8)">
+      <img :src="petCancelWarning" alt="" class="w-32 h-auto mb-(--space-4)" />
+      <h2 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-2)">계좌 연동이 해지됐어요</h2>
+      <p class="text-(length:--font-md) text-(color:--color-slate-muted) mb-(--space-8)">
         {{ unlinkedAccountName }} 계좌가 목록에서 제거됐어요
       </p>
-      <button
-        class="w-full max-w-[340px] py-(--space-4) rounded-(--radius-lg) bg-(--color-gold) text-(color:--color-navy) font-(--font-bold)"
+      <AppButton
+        variant="primary"
+        size="lg"
+        block
         @click="closeUnlinkSuccess"
       >
         확인
-      </button>
+      </AppButton>
     </div>
 
        <template v-else>
       <header class="mb-7">
-        <h1 class="text-(length:--font-2xl) font-(--font-bold) text-(color:--color-navy)">계좌 관리</h1>
-        <p class="text-(length:--font-md) text-(color:--color-gray-600) mt-(--space-1)">CODEF로 연동된 계좌를 확인해요</p>
+        <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">계좌 관리</h1>
+        <p class="text-(length:--font-md) text-(color:--color-slate-muted) mt-(--space-1)">CODEF로 연동된 계좌를 확인해요</p>
       </header>
 
       <section class="mb-(--space-6)">
-        <h2 class="text-(length:--font-base) font-(--font-semibold) text-(color:--color-navy) mb-(--space-3)">연동된 계좌</h2>
+        <h2 class="text-(length:--font-base) font-semibold text-(color:--color-navy) mb-(--space-3)">연동된 계좌</h2>
 
-        <p v-if="store.isLoading" class="text-(length:--font-sm) text-(color:--color-gray-500)">불러오는 중이에요…</p>
+        <div v-if="store.isLoading" class="py-(--space-8)">
+          <LoadingSpinner />
+        </div>
 
         <div v-else-if="loadError" class="p-(--space-4) rounded-(--radius-xl) bg-(--color-surface) mb-(--space-3) text-center">
           <p class="text-(length:--font-sm) text-(color:--color-danger-strong) mb-(--space-3)">{{ loadError }}</p>
-          <button
-            class="px-(--space-5) py-(--space-2) rounded-(--radius-lg) bg-(--color-navy) text-(color:--color-white) text-(length:--font-sm) font-(--font-semibold)"
+          <AppButton
+            variant="navy"
+            size="sm"
             @click="loadAccounts"
           >
             다시 시도
-          </button>
+          </AppButton>
         </div>
 
         <p v-else-if="store.accounts.length === 0" class="text-(length:--font-sm) text-(color:--color-gray-500)">
@@ -134,10 +140,11 @@ function goToLink() {
             >
               <template #action>
                 <button
-                  class="text-(length:--font-sm) text-(color:--color-gray-500) underline underline-offset-2"
+                  type="button"
+                  class="shrink-0 px-(--space-3) py-(--space-1) rounded-(--radius-full) bg-(--color-white) border border-(--color-danger-soft) text-(length:--font-sm) text-(color:--color-danger-strong) font-semibold"
                   @click="openUnlink(account)"
                 >
-                  해제
+                  해지
                 </button>
               </template>
             </AccountSummaryCard>
@@ -145,29 +152,32 @@ function goToLink() {
         </ul>
       </section>
 
-      <button
-        class="w-full py-(--space-4) rounded-(--radius-lg) bg-(--color-navy) text-(color:--color-white) font-(--font-bold) mb-(--space-6)"
+      <AppButton
+        class="mb-(--space-6)"
+        variant="navy"
+        size="lg"
+        block
         @click="goToLink"
       >
         + 계좌 연동하기
-      </button>
+      </AppButton>
 
       <div class="p-(--space-4) rounded-(--radius-xl) bg-(--color-surface)">
         <p class="text-(length:--font-sm) font-(--font-semibold) text-(color:--color-navy) mb-(--space-1)">
           계좌 데이터는 CODEF API를 통해 조회 전용으로 연동돼요
         </p>
         <p class="text-(length:--font-xs) text-(color:--color-gray-600) leading-relaxed">
-          실제 자금은 이동하지 않으며, 잔액 확인 및 버킷 관리 목적에만 사용됩니다
+          실제 자금은 이동하지 않으며, 잔액 확인 목적에만 사용됩니다
         </p>
       </div>
     </template>
 
-    <!-- 해제 확인 바텀시트 -->
+    <!-- 해지 확인 바텀시트 -->
     <BottomSheet :model-value="showUnlinkSheet" size="tall" @update:model-value="closeUnlinkSheet">
       <div v-if="pendingAccount" class="flex flex-col items-center text-center">
-        <img :src="petDeleteWarning" alt="" class="w-24 h-auto mb-(--space-3)" />
-        <h3 class="text-(length:--font-lg) font-(--font-bold) text-(color:--color-navy) mb-(--space-1)">계좌 연동을 해제할까요?</h3>
-        <p class="text-(length:--font-sm) text-(color:--color-gray-600) mb-(--space-5)">해제 후에도 언제든 다시 연동할 수 있어요</p>
+        <img :src="petDeleteWarning" alt="" class="w-[139px] h-[139px] mt-(--space-5) mb-(--space-4)" />
+        <h3 class="text-(length:--font-lg) font-bold text-(color:--color-navy) mb-(--space-2)">계좌 연동을 해지할까요?</h3>
+        <p class="text-(length:--font-sm) text-(color:--color-slate-muted) mb-(--space-4)">해지 후에도 언제든 다시 연동할 수 있어요</p>
 
         <AccountSummaryCard
           :bank-code="pendingAccount.bankCode"
@@ -176,38 +186,41 @@ function goToLink() {
           class="w-full mb-(--space-4)"
         />
 
-        <ul class="w-full flex flex-col gap-(--space-2) mb-(--space-6) text-left">
-          <li class="flex items-start gap-(--space-2) text-(length:--font-sm) text-(color:--color-gray-600)">
-            <span class="w-1 h-1 rounded-(--radius-full) bg-(--color-gray-500) mt-(--space-2) shrink-0" />
-            이 계좌가 포함된 버킷·SOS포켓 잔액 표시가 중단돼요
+        <ul class="w-full bg-(--color-danger-soft) rounded-(--radius-lg) p-(--space-4) flex flex-col gap-(--space-2) mb-(--space-5) text-left">
+          <li class="flex items-center gap-(--space-2) text-(length:--font-sm) text-(color:--color-danger-muted)">
+            <span class="w-[6px] h-[6px] rounded-full bg-(--color-danger-strong) shrink-0" />
+            이 계좌가 포함된 응급 SOS 잔액 표시가 중단돼요
           </li>
-          <li class="flex items-start gap-(--space-2) text-(length:--font-sm) text-(color:--color-gray-600)">
-            <span class="w-1 h-1 rounded-(--radius-full) bg-(--color-gray-500) mt-(--space-2) shrink-0" />
+          <li class="flex items-center gap-(--space-2) text-(length:--font-sm) text-(color:--color-danger-muted)">
+            <span class="w-[6px] h-[6px] rounded-full bg-(--color-danger-strong) shrink-0" />
             결제 내역·자동 태깅 기록은 그대로 보관돼요
           </li>
-          <li class="flex items-start gap-(--space-2) text-(length:--font-sm) text-(color:--color-gray-600)">
-            <IconLock :size="12" color="var(--color-gray-500)" class="mt-(--space-1) shrink-0" />
+          <li class="flex items-center gap-(--space-2) text-(length:--font-sm) text-(color:--color-danger-muted)">
+            <span class="w-[6px] h-[6px] rounded-full bg-(--color-danger-strong) shrink-0" />
             다시 연동하면 잔액이 새로 조회돼요
           </li>
         </ul>
 
         <p v-if="unlinkError" class="text-(length:--font-sm) text-(color:--color-danger-strong) mb-(--space-3)">{{ unlinkError }}</p>
 
-        <div class="w-full flex gap-(--space-3)">
+        <div class="grid grid-cols-2 gap-(--space-3) w-full">
           <button
-            class="flex-1 py-3.5 rounded-(--radius-lg) border border-(--color-border) text-(color:--color-navy) font-(--font-semibold) disabled:opacity-60"
+            type="button"
+            class="w-full h-[52px] rounded-(--radius-lg) border border-(--color-border) bg-(--color-white) text-(color:--color-slate-dark) text-(length:--font-base) font-semibold"
             :disabled="isUnlinking"
             @click="closeUnlinkSheet"
           >
             취소
           </button>
-          <button
-            class="flex-1 py-3.5 rounded-(--radius-lg) bg-(--color-danger-strong) text-(color:--color-white) font-(--font-semibold) disabled:opacity-60"
+          <AppButton
+            variant="danger"
+            size="lg"
+            class="w-full"
             :disabled="isUnlinking"
             @click="confirmUnlink"
           >
-            {{ isUnlinking ? '해제하는 중…' : '해제하기' }}
-          </button>
+            {{ isUnlinking ? '해지하는 중…' : '해지하기' }}
+          </AppButton>
         </div>
       </div>
     </BottomSheet>
