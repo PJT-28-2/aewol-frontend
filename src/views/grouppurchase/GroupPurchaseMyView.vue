@@ -11,11 +11,24 @@ import AppButton from '@/components/common/AppButton.vue';
 import { MOCK_MY_GROUP_PURCHASES } from '@/mocks/groupPurchase';
 import { USE_MOCK_DATA } from '@/mocks/config';
 import { groupPurchaseApi } from '@/api/groupPurchase';
+import { memberApi } from '@/api/member';
 
 const isLoading = ref(true);
 const isError = ref(false);
 
 const myGroupPurchases = ref([]);
+
+// 백엔드 상태 코드(OPEN/COMPLETED/CANCELLED) ↔ 화면 라벨 매핑
+const STATUS_LABEL = {
+  OPEN: '진행중',
+  COMPLETED: '마감(성공)',
+  CANCELLED: '마감(미달)',
+};
+const STATUS_CODE = {
+  진행중: 'OPEN',
+  '마감(성공)': 'COMPLETED',
+  '마감(미달)': 'CANCELLED',
+};
 
 // 상태 필터: 마감 여부와 무관하게 전부 조회 가능
 const statusOptions = ['전체', '진행중', '마감(성공)', '마감(미달)'];
@@ -33,6 +46,16 @@ const STATUS_BADGE_CLASS = {
   '마감(성공)': 'bg-(--color-gray-200) text-(color:--color-gray-600)',
   '마감(미달)': 'bg-(--color-danger-soft) text-(color:--color-danger-strong)',
 };
+
+// 'YYYY-MM-DD...' 형태의 deadline에서 D-day 라벨 계산 (GroupPurchaseDetailView와 동일한 방식)
+function computeDDayLabel(deadline) {
+  const [year, month, day] = deadline.slice(0, 10).split('-').map(Number);
+  const deadlineDate = new Date(year, month - 1, day);
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const diffDays = Math.ceil((deadlineDate - startOfToday) / (1000 * 60 * 60 * 24));
+  return diffDays <= 0 ? '마감' : `D-${diffDays}`;
+}
 
 // 상태 필터 + 최신순(createdAt desc) 정렬을 함께 적용
 const filteredGroupPurchases = computed(() => {
@@ -64,8 +87,27 @@ async function loadMyGroupPurchases() {
       myGroupPurchases.value = MOCK_MY_GROUP_PURCHASES;
       return;
     }
-    const { data } = await groupPurchaseApi.getMyList({ status: selectedStatus.value });
-    myGroupPurchases.value = data.result ?? [];
+
+    // 서버는 group_purchase_participant 레코드를 반환하고 role은 내려주지 않으므로,
+    // 로그인한 회원의 memberId와 각 항목의 작성자 memberId를 비교해 '작성'/'참여'를 직접 구분한다
+    const { data: profileData } = await memberApi.getProfile();
+    const myMemberId = (profileData.result ?? profileData)?.memberId;
+
+    // '전체'는 상태 필터 없이 조회, 그 외에는 백엔드 상태 코드로 변환해서 전달
+    const params = selectedStatus.value === '전체' ? {} : { status: STATUS_CODE[selectedStatus.value] };
+    const { data } = await groupPurchaseApi.getMyList(params);
+    const items = data.result ?? [];
+
+    myGroupPurchases.value = items.map((item) => ({
+      gpId: item.gpId,
+      productName: item.productName,
+      role: item.memberId === myMemberId ? '작성' : '참여',
+      status: STATUS_LABEL[item.status] ?? item.status,
+      currentQuantity: item.currentQuantity,
+      targetQuantity: item.targetQuantity,
+      dDay: computeDDayLabel(item.deadline),
+      createdAt: item.createdAt,
+    }));
   } catch {
     isError.value = true;
   } finally {

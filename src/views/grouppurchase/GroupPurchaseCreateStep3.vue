@@ -79,6 +79,17 @@ const isSubmitting = ref(false)
 const submitError = ref('')
 
 async function handleSubmit() {
+  // 라우터 가드가 진입 시점엔 필수 값을 확인하지만, 그 이후 이미지를 삭제하는 등으로 스토어가
+  // 다시 비워질 수 있어(FormData.append(null)은 문자열 "null"로 전송돼 서버에 손상된 파일이 감) 제출 직전에도 재검사
+  if (!groupPurchaseCreateStore.isStep1Complete) {
+    router.push('/group-purchase/create/step1')
+    return
+  }
+  if (!groupPurchaseCreateStore.isStep2Complete) {
+    router.push('/group-purchase/create/step2')
+    return
+  }
+
   if (USE_MOCK_DATA) {
     groupPurchaseCreateStore.reset()
     router.push('/group-purchase/my')

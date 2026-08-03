@@ -228,7 +228,7 @@ function goToPaymentPreview() {
         >
           <img
             :src="groupPurchase.image"
-            alt="groupPurchase.productName"
+            :alt="groupPurchase.productName"
             class="w-full h-full object-cover"
           >
         </div>
