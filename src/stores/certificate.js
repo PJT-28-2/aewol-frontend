@@ -70,6 +70,9 @@ export const useCertificateStore = defineStore('certificate', {
       }
       await this._withRequestState(async () => {
         const { data } = await certificatesApi.getList(petId)
+        // 응답을 받는 사이 다른 펫 탭으로 전환해 this.petId가 바뀌었으면, 이 응답은 더 이상
+        // 현재 선택된 펫의 것이 아니므로 버린다(빠른 탭 전환 시 이전 응답이 최신 상태를 덮어쓰는 것 방지)
+        if (this.petId !== petId) return
         const docs = data.result ?? []
         // CertificateDetailView가 docId로 문서를 찾을 때 documents를 참조하므로 mock 모드와 동일하게 채워둔다
         this.documents = docs
