@@ -31,6 +31,9 @@ async function loadStatus() {
     }
     const { data } = await groupPurchaseApi.getStatus(route.params.gpId);
     status.value = data.result ?? null;
+    if (!status.value) {
+      isError.value = true;
+    }
   } catch {
     isError.value = true;
   } finally {

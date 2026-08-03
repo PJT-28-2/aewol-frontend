@@ -26,6 +26,9 @@ async function loadDetail() {
     }
     const { data } = await groupPurchaseApi.getDetail(route.params.gpId);
     groupPurchase.value = data.result ?? null;
+    if (!groupPurchase.value) {
+      isError.value = true;
+    }
   } catch {
     isError.value = true;
   } finally {
