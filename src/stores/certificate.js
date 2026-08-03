@@ -85,6 +85,8 @@ export const useCertificateStore = defineStore('certificate', {
       await this._withRequestState(async () => {
         const { data } = await certificatesApi.getList(petId)
         const docs = data.result ?? []
+        // CertificateDetailView가 docId로 문서를 찾을 때 documents를 참조하므로 mock 모드와 동일하게 채워둔다
+        this.documents = docs
         this.registrationDoc = docs.find((doc) => doc.docType === 'REGISTRATION') ?? null
         this.vaccinationDocs = docs.filter((doc) => doc.docType === 'VACCINATION')
         this.medicalDocs = docs.filter((doc) => doc.docType === 'MEDICAL_CONFIRMATION')
