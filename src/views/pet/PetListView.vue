@@ -1,30 +1,14 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue';
+import { storeToRefs } from 'pinia';
 import EmptyState from '@/components/common/EmptyState.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import IconCat from '@/components/common/icons/IconCat.vue';
 import IconDog from '@/components/common/icons/IconDog.vue';
 import IconPaw from '@/components/common/icons/IconPaw.vue';
+import { usePetStore } from '@/stores/pet';
 
-// TODO: 백엔드 API 연동 후 mock 데이터 제거하고 실제 fetch로 교체
-const pets = ref([
-  {
-    id: 1,
-    name: '소로',
-    species: 'DOG',
-    breed: '포메라니안',
-    birthDate: '2023-05-12',
-    neutered: true,
-  },
-  {
-    id: 2,
-    name: '나비',
-    species: 'CAT',
-    breed: '코리안숏헤어',
-    birthDate: '2024-03-20',
-    neutered: true,
-  },
-]);
+const { pets } = storeToRefs(usePetStore());
 
 const isLoading = ref(true);
 
@@ -58,7 +42,7 @@ function getAge(birthDate) {
 }
 
 onMounted(async () => {
-  // TODO: fetch pet list from pet store/API
+  // TODO: usePetStore().fetchPets()가 실제 백엔드 연동으로 교체되면 여기서 호출
   isLoading.value = false;
 });
 </script>

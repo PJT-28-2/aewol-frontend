@@ -2,12 +2,14 @@
 import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { usePetStore } from '@/stores/pet'
 
 const KAKAO_OAUTH_STATE_KEY = 'kakaoOAuthState'
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const petStore = usePetStore()
 const errorMessage = ref('')
 
 /**
@@ -58,7 +60,7 @@ const handleKakaoCallback = async () => {
   try {
     // 백엔드가 카카오 인증 코드를 교환하고 애월 토큰을 발급하도록 요청한다.
     await authStore.kakaoLogin(code)
-    await router.replace('/home')
+    await router.replace(petStore.pets.length === 0 ? '/share/start' : '/home')
   } catch (error) {
     errorMessage.value =
       error.response?.data?.message ?? '카카오 로그인 처리에 실패했습니다.'

@@ -1,7 +1,21 @@
 // 반려동물 기본 목록 (선택 UI 등에서 사용)
 export const mockPets = [
-  { id: 1, name: '소로', species: 'DOG' },
-  { id: 2, name: '나비', species: 'CAT' },
+  {
+    id: 1,
+    name: '소로',
+    species: 'DOG',
+    breed: '포메라니안',
+    birthDate: '2023-05-12',
+    neutered: true,
+  },
+  {
+    id: 2,
+    name: '나비',
+    species: 'CAT',
+    breed: '코리안숏헤어',
+    birthDate: '2024-03-20',
+    neutered: true,
+  },
 ]
 
 // 반려동물 상세 정보 (PetEditView 등에서 사용)
