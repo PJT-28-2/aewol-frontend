@@ -8,6 +8,10 @@ import BottomSheet from '@/components/common/BottomSheet.vue';
 import AppButton from '@/components/common/AppButton.vue';
 import PinAuthSheet from '@/components/common/PinAuthSheet.vue';
 import { formatPhoneNumber as formatPhoneAsTyped } from '@/utils/phone';
+import {
+  MOCK_GROUP_PURCHASE_PAYMENT_PRODUCT,
+  MOCK_GROUP_PURCHASE_PAYMENT_METHOD,
+} from '@/mocks/groupPurchase';
 
 const route = useRoute();
 const router = useRouter();
@@ -19,19 +23,12 @@ const shippingAddress = ref(null);
 // TODO: 공동구매 참여 화면에서 선택한 상품/가격 정보를 전달받을 예정, 현재는 mock 데이터
 // 수량은 GroupPurchaseDetailView에서 query.quantity로 전달됨
 const product = ref({
-  productName: '프리미엄 사료 15kg',
-  optionText: '옵션 없음',
+  ...MOCK_GROUP_PURCHASE_PAYMENT_PRODUCT,
   purchaseQuantity: Number(route.query.quantity) || 1,
-  unitPrice: 40000,
-  groupPrice: 28000,
 });
 
 // TODO: 등록된 결제 수단(계좌) 연동 예정, 현재는 mock 데이터
-// 잔액부족 상태를 확인하기 위해 결제 금액(28,000원)보다 적은 잔액으로 설정
-const paymentMethod = ref({
-  name: '애월 통합 지갑',
-  balance: 415000,
-});
+const paymentMethod = ref({ ...MOCK_GROUP_PURCHASE_PAYMENT_METHOD });
 
 // 참여 화면에서 전달받은 수량 · 정가 · 할인가 기준으로 결제 금액 계산
 const productAmount = computed(
@@ -183,7 +180,6 @@ const isPinSheetOpen = ref(false);
   <div
     class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+88px)] bg-(--color-bg) min-h-screen"
   >
-
     <!-- 헤더 -->
     <h1
       class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-5)"

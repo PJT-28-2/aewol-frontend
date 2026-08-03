@@ -26,8 +26,8 @@ export const certificatesApi = {
 
   // 동물등록증 조회 — 신원 정보로 신청인 명의의 동물을 국가동물보호정보시스템(APMS)에서 조회.
   // 외부 조회 API 연동은 백엔드가 대신 처리하고, 프론트는 결과 후보 목록만 받는다.
-  // 응답: { result: [{ petId, regNumber, name, breed, gender, neutered, birthDate, furColor,
-  //   ownerName, ownerPhone, issueDate, registerDate, issueOrg, regState, regType }] }
+  // 응답: { result: [{ petId, regNumber, name, breed, gender, neutered, birthDate,
+  //   rfidCd, rfidGubun, orgNm, officeTel, aprGbnNm, regTm, aprTm }] }
   syncRegistration({ userName, birthDate, phoneNo }) {
     return api.post('/certificates/registration/sync', { userName, birthDate, phoneNo })
   },

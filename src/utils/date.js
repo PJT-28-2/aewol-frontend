@@ -32,6 +32,17 @@ export function formatDateDot(isoDate) {
 }
 
 /**
+ * "YYYY-MM-DDTHH:mm:ss" 형식의 날짜시간 문자열을 "YYYY.MM.DD HH:mm" 형식으로 변환한다.
+ *
+ * @param {string} isoDateTime `YYYY-MM-DDTHH:mm:ss` 형식의 날짜시간 문자열
+ * @returns {string} `YYYY.MM.DD HH:mm` 형식의 문자열
+ */
+export function formatDateTimeDot(isoDateTime) {
+  const [datePart, timePart] = isoDateTime.split('T')
+  return timePart ? `${formatDateDot(datePart)} ${timePart.slice(0, 5)}` : formatDateDot(datePart)
+}
+
+/**
  * 숫자만 남긴 뒤 "YYYY.MM.DD" 형식으로 자릿수에 맞춰 마침표를 채워 넣는다.
  *
  * @param {string} value 사용자가 입력 중인 생년월일 문자열

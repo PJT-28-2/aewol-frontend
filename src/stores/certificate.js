@@ -111,7 +111,7 @@ export const useCertificateStore = defineStore('certificate', {
         // 조회 API 응답 지연 흉내
         await new Promise((resolve) => setTimeout(resolve, 800))
 
-        const today = new Date().toISOString().slice(0, 10)
+        const nowIso = new Date().toISOString().slice(0, 19)
         // 이미 연동된 동물등록증이 없는 펫들을 "신청인 명의로 조회된 동물"로 흉내냄
         const linkedPetIds = new Set(
           this.documents.filter((doc) => doc.docType === 'REGISTRATION').map((doc) => doc.petId),
@@ -126,14 +126,13 @@ export const useCertificateStore = defineStore('certificate', {
             gender: pet.gender,
             neutered: pet.neutered,
             birthDate: pet.birthDate,
-            furColor: '크림색',
-            ownerName: userName,
-            ownerPhone: phoneNo,
-            issueDate: today,
-            registerDate: today,
-            issueOrg: '국가동물보호정보시스템',
-            regState: '승인',
-            regType: '소유',
+            rfidCd: `41000001${String(Date.now()).slice(-8)}${pet.petId.slice(-1)}`,
+            rfidGubun: 'Y',
+            orgNm: '제주특별자치도 제주시',
+            officeTel: '064-728-2114',
+            aprGbnNm: '승인완료',
+            regTm: nowIso,
+            aprTm: nowIso,
           }))
 
         return candidates
@@ -165,7 +164,6 @@ export const useCertificateStore = defineStore('certificate', {
         const detail = {
           docId,
           ...candidate,
-          weight: pet?.weight ?? 0,
           lastSyncedAt: today,
         }
         this.registrationDetails = { ...this.registrationDetails, [docId]: detail }
@@ -178,7 +176,7 @@ export const useCertificateStore = defineStore('certificate', {
           docName: `${candidate.name} · 동물등록증`,
           docType: 'REGISTRATION',
           fileUrl: '',
-          issuedDate: candidate.issueDate,
+          issuedDate: today,
           createdAt: new Date().toISOString(),
         }
         this.documents = [newDoc, ...this.documents.filter((doc) => doc.docId !== docId)]

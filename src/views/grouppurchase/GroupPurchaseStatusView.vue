@@ -9,6 +9,7 @@ import PinAuthSheet from '@/components/common/PinAuthSheet.vue';
 import statusWaitingImage from '@/assets/images/group-purchase-waiting.png';
 import statusConfirmedImage from '@/assets/images/group-purchase-confirmed.png';
 import statusCancelledImage from '@/assets/images/group-purchase-cancelled.png';
+import { MOCK_GROUP_PURCHASE_STATUS } from '@/mocks/groupPurchase';
 
 const route = useRoute();
 const router = useRouter();
@@ -18,27 +19,12 @@ const isLoading = ref(true);
 const isError = ref(false);
 
 // TODO: groupPurchaseApi.getStatus(route.params.gpId) 연동 예정, 현재는 응답 포맷과 동일한 mock 데이터
-// productName은 API 응답의 title 필드에 대응
 async function loadStatus() {
   isLoading.value = true;
   isError.value = false;
 
   try {
-    status.value = {
-      gpId: route.params.gpId,
-      productName: '프리미엄 사료 15kg',
-      status: 'waiting',
-      currentQuantity: 3,
-      targetQuantity: 5,
-      deadline: '2026-07-30T23:59:59',
-      participantInfo: {
-        participantId: 10523,
-        paidAmount: 28000,
-        paymentStatus: 'COMPLETED',
-        paidAt: '2026-07-22T14:45:00',
-      },
-      noticeMessage: '목표 인원이 모두 모이면 공동구매가 최종 확정됩니다.',
-    };
+    status.value = { gpId: route.params.gpId, ...MOCK_GROUP_PURCHASE_STATUS };
   } catch {
     isError.value = true;
   } finally {
@@ -151,7 +137,7 @@ function confirmCancelSuccess() {
             :src="statusImage"
             alt=""
             class="w-full h-full object-cover"
-          />
+          >
         </div>
       </div>
 
@@ -290,7 +276,10 @@ function confirmCancelSuccess() {
           <div
             class="flex items-center justify-center size-16 rounded-full bg-(--color-danger-soft) mb-(--space-4)"
           >
-            <IconCheck :size="28" color="var(--color-danger-strong)" />
+            <IconCheck
+              :size="28"
+              color="var(--color-danger-strong)"
+            />
           </div>
           <h2
             class="text-(length:--font-lg) font-bold text-(color:--color-navy) mb-(--space-2)"

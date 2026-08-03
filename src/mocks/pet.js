@@ -99,25 +99,24 @@ export const MOCK_PET_DOCUMENTS = [
 
 // GET /api/pets/{petId}/documents/{docId} 상세 응답 목데이터 (동물등록증 상세 전용, key: docId)
 // 국가동물보호정보시스템(APMS) 동물등록번호 조회 결과를 담는 필드 구성이에요.
+// 필드명은 ERD의 pet_registration 테이블 컬럼 기준(APMS 원본 필드명은 각 필드 주석 참고)
 export const MOCK_REGISTRATION_DETAIL = {
   'doc-reg-pet-1': {
     docId: 'doc-reg-pet-1',
     petId: 'pet-1',
-    regNumber: '410000012345678',
-    name: '소로',
-    breed: '포메라니안',
-    gender: 'MALE',
-    neutered: 'Y',
-    birthDate: '2023-05-12',
-    furColor: '크림색',
-    weight: 3.2,
-    ownerName: '김애월',
-    ownerPhone: '010-1234-5678',
-    issueDate: '2023-06-02',
-    registerDate: '2023-06-02',
-    issueOrg: '국가동물보호정보시스템',
-    regState: '승인',
-    regType: '소유',
-    lastSyncedAt: '2026-07-15',
+    regNumber: '410000012345678', // ← dogRegNo
+    name: '소로', // ← dogNm
+    breed: '포메라니안', // ← kindNm
+    gender: 'MALE', // ← sexNm
+    neutered: 'Y', // ← neuterYn
+    birthDate: '2023-05-12', // ← birthDt, 포맷 미확정이라 String 유지
+    rfidCd: '410000012345678', // 등록칩번호 ← rfidCd
+    rfidGubun: 'Y', // 등록칩 구분: Y-내장, M-외장, N-인식표 ← rfidGubun
+    orgNm: '제주특별자치도 제주시', // 관할기관 ← orgNm
+    officeTel: '064-728-2114', // 관할기관 연락처 ← officeTel
+    aprGbnNm: '승인완료', // 승인여부 ← aprGbnNm
+    regTm: '2023-06-02T09:15:00', // 등록일시 ← regTm
+    aprTm: '2023-06-02T10:40:00', // 승인일시 ← aprTm
+    lastSyncedAt: '2026-07-15', // 자체 재동기화 시각
   },
 }

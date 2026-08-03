@@ -7,56 +7,13 @@ import EmptyState from '@/components/common/EmptyState.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import BottomSheet from '@/components/common/BottomSheet.vue';
 import AppButton from '@/components/common/AppButton.vue';
+import { MOCK_MY_GROUP_PURCHASES } from '@/mocks/groupPurchase';
 
 const isLoading = ref(true);
 const isError = ref(false);
 
 // TODO: 백엔드 API 연동 후 mock 데이터 제거하고 groupPurchaseApi.getMyList()로 교체
-// role: group_purchase_participant에 로그인 유저 member_id의 참여 row가 있으면 '참여',
-// 없이 group_purchase 작성자 member_id만 일치하면 '작성'으로 판정
-// '참여'는 GroupPurchaseStatusView(결제/취소)로, '작성'은 GroupPurchaseDetailView(읽기 전용)로 이동
-const myGroupPurchases = ref([
-  {
-    gpId: 1,
-    productName: '프리미엄 사료 15kg',
-    role: '참여',
-    status: '진행중',
-    currentQuantity: 32,
-    targetQuantity: 50,
-    dDay: 'D-3',
-    createdAt: '2026-07-27T10:00:00',
-  },
-  {
-    gpId: 2,
-    productName: '강아지 사료 정기배송',
-    role: '작성',
-    status: '진행중',
-    currentQuantity: 18,
-    targetQuantity: 20,
-    dDay: 'D-2',
-    createdAt: '2026-07-26T09:30:00',
-  },
-  {
-    gpId: 3,
-    productName: '고양이 화장실 모래 대용량',
-    role: '참여',
-    status: '마감(성공)',
-    currentQuantity: 15,
-    targetQuantity: 15,
-    dDay: 'D-0',
-    createdAt: '2026-07-18T09:30:00',
-  },
-  {
-    gpId: 4,
-    productName: '강아지 간식 세트',
-    role: '작성',
-    status: '마감(미달)',
-    currentQuantity: 8,
-    targetQuantity: 10,
-    dDay: 'D-0',
-    createdAt: '2026-07-15T18:20:00',
-  },
-]);
+const myGroupPurchases = ref(MOCK_MY_GROUP_PURCHASES);
 
 // 상태 필터: 마감 여부와 무관하게 전부 조회 가능
 const statusOptions = ['전체', '진행중', '마감(성공)', '마감(미달)'];

@@ -1,26 +1,14 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import productImage from '@/assets/images/mock-product-dogfood.png';
 import AppButton from '@/components/common/AppButton.vue';
+import { MOCK_GROUP_PURCHASE_DETAIL } from '@/mocks/groupPurchase';
 
 const route = useRoute();
 const router = useRouter();
 
 // TODO: 백엔드 API 연동 후 mock 데이터 제거하고 실제 fetch로 교체 (상세 데이터 연동은 별도 작업에서 진행)
-// 필드명은 group_purchase 테이블 컬럼(gp_id, delivery_method, delivery_fee, delivery_date, deadline 등) 기준
-const groupPurchase = ref({
-  productName: '프리미엄 사료 15kg',
-  image: productImage,
-  groupPrice: 28000,
-  unitPrice: 40000,
-  currentQuantity: 32,
-  targetQuantity: 50,
-  deadline: '2026-08-05',
-  deliveryMethod: '공동구매 마감 후 3일 이내 발송',
-  deliveryFee: 0,
-  deliveryDate: '2026-08-04',
-});
+const groupPurchase = ref(MOCK_GROUP_PURCHASE_DETAIL);
 
 // isOwner: 상세 API 응답의 작성자 member_id와 로그인 유저 member_id 비교 결과로 교체 예정.
 // 지금은 마이페이지의 "작성" 글 카드가 붙여주는 ?owner=1 쿼리로 흉내냄 —
@@ -186,7 +174,7 @@ function goToPaymentPreview() {
           :src="groupPurchase.image"
           alt="groupPurchase.productName"
           class="w-full h-full object-cover"
-        />
+        >
       </div>
       <h2
         class="text-(length:--font-md) font-bold text-(color:--color-navy) mb-(--space-2)"
@@ -259,7 +247,10 @@ function goToPaymentPreview() {
     </section>
 
     <!-- 수량 선택: 작성자가 자기 글을 보는 경우엔 구매 대상이 아니므로 숨김 -->
-    <section v-if="!isOwner" class="mb-(--space-6)">
+    <section
+      v-if="!isOwner"
+      class="mb-(--space-6)"
+    >
       <p
         class="text-(length:--font-sm) font-bold text-(color:--color-slate-dark) mb-(--space-3)"
       >
