@@ -27,12 +27,9 @@ const walletStore = useWalletStore();
 // 이번 참여 건의 group_purchase_participant 레코드에만 저장됨(결제 시 handlePayment에서 join과 함께 전송)
 const shippingAddress = ref(null);
 
-// TODO: 공동구매 참여 화면에서 선택한 상품/가격 정보를 전달받을 예정, 현재는 mock 데이터
-// 수량은 GroupPurchaseDetailView에서 query.quantity로 전달됨
-const product = ref({
-  ...MOCK_GROUP_PURCHASE_PAYMENT_PRODUCT,
-  purchaseQuantity: Number(route.query.quantity) || 1,
-});
+// 수량은 GroupPurchaseDetailView에서 query.quantity로 전달됨, 나머지 상품/가격 정보는
+// loadPaymentMethod에서 groupPurchaseApi.getDetail()로 채움 (mock 모드에서는 mock 데이터 사용)
+const product = ref(null);
 
 // 지갑 잔액 — 결제수단(계좌) 자체는 아직 여러 개를 고를 수 없어 "애월 통합 지갑" 고정, 잔액만 walletApi로 조회
 const paymentMethod = ref(null);
@@ -44,10 +41,24 @@ async function loadPaymentMethod() {
   isError.value = false;
   try {
     if (USE_MOCK_DATA) {
+      product.value = {
+        ...MOCK_GROUP_PURCHASE_PAYMENT_PRODUCT,
+        purchaseQuantity: Number(route.query.quantity) || 1,
+      };
       paymentMethod.value = { ...MOCK_GROUP_PURCHASE_PAYMENT_METHOD };
       shippingAddress.value = { ...MOCK_MEMBER_SHIPPING_ADDRESS };
       return;
     }
+
+    const { data: detailData } = await groupPurchaseApi.getDetail(route.params.gpId);
+    const detail = detailData.result ?? detailData;
+    product.value = {
+      productName: detail.productName,
+      optionText: '옵션 없음', // group_purchase에 옵션 개념이 없어 고정 문구 유지
+      unitPrice: detail.unitPrice,
+      groupPrice: detail.groupPrice,
+      purchaseQuantity: Number(route.query.quantity) || 1,
+    };
 
     const wallet = await walletStore.fetchWallet();
     paymentMethod.value = {
@@ -276,7 +287,7 @@ const isPinSheetOpen = ref(false);
       </AppButton>
     </div>
 
-    <template v-else-if="paymentMethod">
+    <template v-else-if="paymentMethod && product">
       <!-- 헤더 -->
       <h1
         class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-5)"
