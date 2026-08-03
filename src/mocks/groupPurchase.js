@@ -144,3 +144,14 @@ export const MOCK_GROUP_PURCHASE_PAYMENT_METHOD = {
   name: '애월 통합 지갑',
   balance: 415000,
 }
+
+// 결제 확인 화면 기본 배송지 — 실제로는 memberApi.getProfile() 응답의 주소를 그대로 사용
+// (배송지를 바꾸면 회원 프로필이 아니라 이번 참여 건의 group_purchase_participant 레코드에만 저장됨)
+// TODO: 백엔드 API 연동 후 제거
+export const MOCK_MEMBER_SHIPPING_ADDRESS = {
+  recipientName: '김애월',
+  recipientPhone: '010-1234-5678',
+  zipCode: '16856',
+  address: '서울특별시 광진구 화양동',
+  addressDetail: '세종대점 컴포즈 302호',
+}

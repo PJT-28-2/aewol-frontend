@@ -12,17 +12,19 @@ import { formatPhoneNumber as formatPhoneAsTyped } from '@/utils/phone';
 import {
   MOCK_GROUP_PURCHASE_PAYMENT_PRODUCT,
   MOCK_GROUP_PURCHASE_PAYMENT_METHOD,
+  MOCK_MEMBER_SHIPPING_ADDRESS,
 } from '@/mocks/groupPurchase';
 import { USE_MOCK_DATA } from '@/mocks/config';
 import { groupPurchaseApi } from '@/api/groupPurchase';
+import { memberApi } from '@/api/member';
 import { useWalletStore } from '@/stores/wallet';
 
 const route = useRoute();
 const router = useRouter();
 const walletStore = useWalletStore();
 
-// TODO: 사용자 프로필/배송지 DB 연동 예정, 현재는 mock 데이터
-// 등록된 배송지가 없는 상태를 확인하기 위해 초기값은 null로 둠
+// 기본값은 회원 프로필의 배송지 — 사용자가 바꾸면(confirmAddress) 프로필이 아니라
+// 이번 참여 건의 group_purchase_participant 레코드에만 저장됨(결제 시 handlePayment에서 join과 함께 전송)
 const shippingAddress = ref(null);
 
 // TODO: 공동구매 참여 화면에서 선택한 상품/가격 정보를 전달받을 예정, 현재는 mock 데이터
@@ -43,13 +45,28 @@ async function loadPaymentMethod() {
   try {
     if (USE_MOCK_DATA) {
       paymentMethod.value = { ...MOCK_GROUP_PURCHASE_PAYMENT_METHOD };
+      shippingAddress.value = { ...MOCK_MEMBER_SHIPPING_ADDRESS };
       return;
     }
+
     const wallet = await walletStore.fetchWallet();
     paymentMethod.value = {
       name: '애월 통합 지갑',
       balance: wallet.totalBalance,
     };
+
+    // member 프로필 필드명(name, phone, zipCode, address, addressDetail) 기준으로 매핑 — 실제 DTO 확인 필요
+    const { data } = await memberApi.getProfile();
+    const profile = data.result ?? data;
+    if (profile?.address) {
+      shippingAddress.value = {
+        recipientName: profile.name,
+        recipientPhone: profile.phone,
+        zipCode: profile.zipCode,
+        address: profile.address,
+        addressDetail: profile.addressDetail,
+      };
+    }
   } catch {
     isError.value = true;
   } finally {
@@ -174,7 +191,8 @@ function validateAddressForm() {
   return Object.values(errors).every((message) => !message);
 }
 
-// 입력한 배송지로 교체 (현재는 화면 상태만 갱신, DB 저장은 추후 연동)
+// 입력한 배송지로 교체 — 회원 프로필은 건드리지 않고 화면 상태만 갱신.
+// 실제 저장은 결제 시 handlePayment의 join() 호출에 실려서 이번 참여 건의 참여자 레코드에만 반영됨
 function confirmAddress() {
   if (!validateAddressForm()) return;
 
