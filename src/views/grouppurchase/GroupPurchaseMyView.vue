@@ -1,62 +1,34 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
 import IconChevronDown from '@/components/common/icons/IconChevronDown.vue';
+import IconChevronRight from '@/components/common/icons/IconChevronRight.vue';
 import IconCheck from '@/components/common/icons/IconCheck.vue';
 import IconGroupPurchase from '@/components/common/icons/IconGroupPurchase.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import BottomSheet from '@/components/common/BottomSheet.vue';
 import AppButton from '@/components/common/AppButton.vue';
+import { MOCK_MY_GROUP_PURCHASES } from '@/mocks/groupPurchase';
+import { USE_MOCK_DATA } from '@/mocks/config';
+import { groupPurchaseApi } from '@/api/groupPurchase';
+import { memberApi } from '@/api/member';
 
 const isLoading = ref(true);
 const isError = ref(false);
 
-// TODO: 백엔드 API 연동 후 mock 데이터 제거하고 groupPurchaseApi.getMyList()로 교체
-// role: group_purchase_participant에 로그인 유저 member_id의 참여 row가 있으면 '참여',
-// 없이 group_purchase 작성자 member_id만 일치하면 '작성'으로 판정
-// '참여'는 GroupPurchaseStatusView(결제/취소)로, '작성'은 GroupPurchaseDetailView(읽기 전용)로 이동
-const myGroupPurchases = ref([
-  {
-    gpId: 1,
-    productName: '프리미엄 사료 15kg',
-    role: '참여',
-    status: '진행중',
-    currentQuantity: 32,
-    targetQuantity: 50,
-    dDay: 'D-3',
-    createdAt: '2026-07-27T10:00:00',
-  },
-  {
-    gpId: 2,
-    productName: '강아지 사료 정기배송',
-    role: '작성',
-    status: '진행중',
-    currentQuantity: 18,
-    targetQuantity: 20,
-    dDay: 'D-2',
-    createdAt: '2026-07-26T09:30:00',
-  },
-  {
-    gpId: 3,
-    productName: '고양이 화장실 모래 대용량',
-    role: '참여',
-    status: '마감(성공)',
-    currentQuantity: 15,
-    targetQuantity: 15,
-    dDay: 'D-0',
-    createdAt: '2026-07-18T09:30:00',
-  },
-  {
-    gpId: 4,
-    productName: '강아지 간식 세트',
-    role: '작성',
-    status: '마감(미달)',
-    currentQuantity: 8,
-    targetQuantity: 10,
-    dDay: 'D-0',
-    createdAt: '2026-07-15T18:20:00',
-  },
-]);
+const myGroupPurchases = ref([]);
+
+// 백엔드 상태 코드(OPEN/COMPLETED/CANCELLED) ↔ 화면 라벨 매핑
+const STATUS_LABEL = {
+  OPEN: '진행중',
+  COMPLETED: '마감(성공)',
+  CANCELLED: '마감(미달)',
+};
+const STATUS_CODE = {
+  진행중: 'OPEN',
+  '마감(성공)': 'COMPLETED',
+  '마감(미달)': 'CANCELLED',
+};
 
 // 상태 필터: 마감 여부와 무관하게 전부 조회 가능
 const statusOptions = ['전체', '진행중', '마감(성공)', '마감(미달)'];
@@ -74,6 +46,16 @@ const STATUS_BADGE_CLASS = {
   '마감(성공)': 'bg-(--color-gray-200) text-(color:--color-gray-600)',
   '마감(미달)': 'bg-(--color-danger-soft) text-(color:--color-danger-strong)',
 };
+
+// 'YYYY-MM-DD...' 형태의 deadline에서 D-day 라벨 계산 (GroupPurchaseDetailView와 동일한 방식)
+function computeDDayLabel(deadline) {
+  const [year, month, day] = deadline.slice(0, 10).split('-').map(Number);
+  const deadlineDate = new Date(year, month - 1, day);
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const diffDays = Math.ceil((deadlineDate - startOfToday) / (1000 * 60 * 60 * 24));
+  return diffDays <= 0 ? '마감' : `D-${diffDays}`;
+}
 
 // 상태 필터 + 최신순(createdAt desc) 정렬을 함께 적용
 const filteredGroupPurchases = computed(() => {
@@ -96,17 +78,47 @@ const emptyStateActionText = computed(() =>
   myGroupPurchases.value.length === 0 ? '공동구매 둘러보기' : '',
 );
 
+// 상태 필터를 빠르게 바꾸면 이전 요청이 나중에 응답할 수 있어, 가장 최근에 시작한 요청의
+// 결과만 상태에 반영하도록 순번으로 구분한다
+let latestRequestId = 0;
+
 async function loadMyGroupPurchases() {
+  const requestId = ++latestRequestId;
   isLoading.value = true;
   isError.value = false;
 
   try {
-    // TODO: const { data } = await groupPurchaseApi.getMyList({ status: selectedStatus.value })
-    // myGroupPurchases.value = data
+    if (USE_MOCK_DATA) {
+      myGroupPurchases.value = MOCK_MY_GROUP_PURCHASES;
+      return;
+    }
+
+    // 서버는 group_purchase_participant 레코드를 반환하고 role은 내려주지 않으므로,
+    // 로그인한 회원의 memberId와 각 항목의 작성자 memberId를 비교해 '작성'/'참여'를 직접 구분한다
+    const { data: profileData } = await memberApi.getProfile();
+    const myMemberId = (profileData.result ?? profileData)?.memberId;
+
+    // '전체'는 상태 필터 없이 조회, 그 외에는 백엔드 상태 코드로 변환해서 전달
+    const params = selectedStatus.value === '전체' ? {} : { status: STATUS_CODE[selectedStatus.value] };
+    const { data } = await groupPurchaseApi.getMyList(params);
+    const items = data.result ?? [];
+
+    if (requestId !== latestRequestId) return; // 그 사이 더 최신 요청이 시작됐으면 이 결과는 버린다
+
+    myGroupPurchases.value = items.map((item) => ({
+      gpId: item.gpId,
+      productName: item.productName,
+      role: item.memberId === myMemberId ? '작성' : '참여',
+      status: STATUS_LABEL[item.status] ?? item.status,
+      currentQuantity: item.currentQuantity,
+      targetQuantity: item.targetQuantity,
+      dDay: computeDDayLabel(item.deadline),
+      createdAt: item.createdAt,
+    }));
   } catch {
-    isError.value = true;
+    if (requestId === latestRequestId) isError.value = true;
   } finally {
-    isLoading.value = false;
+    if (requestId === latestRequestId) isLoading.value = false;
   }
 }
 
@@ -232,7 +244,11 @@ watch(selectedStatus, loadMyGroupPurchases);
               {{ gp.status }}
             </span>
           </div>
-          <span class="shrink-0 text-(length:--font-xl) text-(color:--color-gray-400)">&rsaquo;</span>
+          <IconChevronRight
+            class="shrink-0"
+            size="18"
+            color="var(--color-gray-400)"
+          />
         </router-link>
       </li>
     </ul>
