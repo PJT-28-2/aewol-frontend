@@ -20,6 +20,9 @@ const bankMeta = computed(() => getBankMeta(store.linking.bankCode));
 // step 2: 1원 인증 - 입금자명 4자리 입력 (RF-CM 목업 그대로)
 const step = ref('accountNumber');
 const accountNumber = ref('');
+// 명세서(POST /api/accounts/verify-deposit)가 accountHolder를 요구해서 추가한 입력값.
+// TODO: Figma에 이 입력 필드가 없어서 임시로 추가함 — 디자인 확정되면 화면 구성 다시 확인 필요.
+const accountHolder = ref('');
 const isRequesting = ref(false);
 const requestError = ref('');
 
@@ -39,15 +42,35 @@ const isAccountNumberValid = computed(
     accountNumber.value.length <= ACCOUNT_NUMBER_MAX_LENGTH,
 );
 
+const isAccountHolderValid = computed(() => accountHolder.value.trim().length >= 2);
+
+// 이 화면은 개인 계좌 연동만 대상으로 해서 예금주명은 한글/영어만 허용해요(사업자/법인
+// 계좌명에 들어가는 숫자·괄호 등은 지원 대상이 아니에요). 백엔드는 문자 제한이 없지만,
+// 이전엔 허용 안 된 문자를 아무 안내 없이 조용히 지워서 사용자가 눈치채기 어려웠어요 —
+// 이제는 걸러내면서 왜 지워졌는지 에러 메시지로 같이 보여줘요.
+const accountHolderError = ref('');
+
+function onAccountHolderInput(event) {
+  const raw = event.target.value;
+  const filtered = raw.replace(/[^가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z\s]/g, '');
+  accountHolderError.value = filtered !== raw ? '한글, 영문만 입력할 수 있어요' : '';
+  accountHolder.value = filtered;
+  event.target.value = filtered;
+}
+
 async function submitAccountNumber() {
   if (!isAccountNumberValid.value) {
     requestError.value = `계좌번호는 숫자 ${ACCOUNT_NUMBER_MIN_LENGTH}~${ACCOUNT_NUMBER_MAX_LENGTH}자리로 입력해주세요`;
     return;
   }
+  if (!isAccountHolderValid.value) {
+    requestError.value = '예금주명을 입력해주세요';
+    return;
+  }
   isRequesting.value = true;
   requestError.value = '';
   try {
-    await store.requestDepositAuth(accountNumber.value);
+    await store.requestDepositAuth(accountNumber.value, accountHolder.value.trim());
     step.value = 'depositorName';
     startTimer();
     await nextTick();
@@ -200,11 +223,21 @@ registerHeaderBack(goBack);
         class="w-full p-(--space-4) rounded-(--radius-lg) border border-(--color-border) text-(length:--font-base) text-(color:--color-navy) mb-(--space-2) outline-none focus:border-(--color-navy)"
         @input="onAccountNumberInput"
       />
+
+      <input
+        :value="accountHolder"
+        type="text"
+        autocomplete="off"
+        placeholder="예금주명을 입력해주세요"
+        class="w-full p-(--space-4) rounded-(--radius-lg) border border-(--color-border) text-(length:--font-base) text-(color:--color-navy) mb-(--space-2) outline-none focus:border-(--color-navy)"
+        @input="onAccountHolderInput"
+      />
+      <p v-if="accountHolderError" class="text-(length:--font-sm) text-(color:--color-danger-strong) mb-(--space-2)">{{ accountHolderError }}</p>
       <p v-if="requestError" class="text-(length:--font-sm) text-(color:--color-danger-strong) mb-(--space-4)">{{ requestError }}</p>
 
       <button
         class="w-full py-(--space-4) rounded-(--radius-lg) bg-(--color-navy) text-(color:--color-white) font-(--font-bold) mt-(--space-4) disabled:opacity-50"
-        :disabled="!isAccountNumberValid || isRequesting"
+        :disabled="!isAccountNumberValid || !isAccountHolderValid || isRequesting"
         @click="submitAccountNumber"
       >
         {{ isRequesting ? '1원 보내는 중…' : '1원 인증 시작하기' }}
