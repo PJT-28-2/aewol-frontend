@@ -1,11 +1,12 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import AddressSearchLayer from '@/components/common/AddressSearchLayer.vue';
 import IconWallet from '@/components/common/icons/IconWallet.vue';
 import IconWarning from '@/components/common/icons/IconWarning.vue';
 import BottomSheet from '@/components/common/BottomSheet.vue';
 import AppButton from '@/components/common/AppButton.vue';
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import PinAuthSheet from '@/components/common/PinAuthSheet.vue';
 import { formatPhoneNumber as formatPhoneAsTyped } from '@/utils/phone';
 import {
@@ -14,9 +15,11 @@ import {
 } from '@/mocks/groupPurchase';
 import { USE_MOCK_DATA } from '@/mocks/config';
 import { groupPurchaseApi } from '@/api/groupPurchase';
+import { useWalletStore } from '@/stores/wallet';
 
 const route = useRoute();
 const router = useRouter();
+const walletStore = useWalletStore();
 
 // TODO: 사용자 프로필/배송지 DB 연동 예정, 현재는 mock 데이터
 // 등록된 배송지가 없는 상태를 확인하기 위해 초기값은 null로 둠
@@ -29,8 +32,32 @@ const product = ref({
   purchaseQuantity: Number(route.query.quantity) || 1,
 });
 
-// TODO: 등록된 결제 수단(계좌) 연동 예정, 현재는 mock 데이터
-const paymentMethod = ref({ ...MOCK_GROUP_PURCHASE_PAYMENT_METHOD });
+// 지갑 잔액 — 결제수단(계좌) 자체는 아직 여러 개를 고를 수 없어 "애월 통합 지갑" 고정, 잔액만 walletApi로 조회
+const paymentMethod = ref(null);
+const isLoading = ref(true);
+const isError = ref(false);
+
+async function loadPaymentMethod() {
+  isLoading.value = true;
+  isError.value = false;
+  try {
+    if (USE_MOCK_DATA) {
+      paymentMethod.value = { ...MOCK_GROUP_PURCHASE_PAYMENT_METHOD };
+      return;
+    }
+    const wallet = await walletStore.fetchWallet();
+    paymentMethod.value = {
+      name: '애월 통합 지갑',
+      balance: wallet.totalBalance,
+    };
+  } catch {
+    isError.value = true;
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+onMounted(loadPaymentMethod);
 
 // 참여 화면에서 전달받은 수량 · 정가 · 할인가 기준으로 결제 금액 계산
 const productAmount = computed(
@@ -206,428 +233,454 @@ const isPinSheetOpen = ref(false);
   <div
     class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+88px)] bg-(--color-bg) min-h-screen"
   >
-    <!-- 헤더 -->
-    <h1
-      class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-5)"
+    <!-- 로딩 상태 -->
+    <div
+      v-if="isLoading"
+      class="flex justify-center py-(--space-9)"
     >
-      결제 확인
-    </h1>
+      <LoadingSpinner />
+    </div>
 
-    <!-- 배송지: 잔액부족 상태에서는 표시하지 않음 -->
-    <section
-      v-if="!isBalanceInsufficient"
-      class="bg-(--color-surface) rounded-(--radius-lg) p-(--space-4) mb-(--space-4)"
+    <!-- 에러 상태 -->
+    <div
+      v-else-if="isError"
+      class="flex flex-col items-center justify-center gap-(--space-4) py-(--space-9) px-(--space-4) text-center"
     >
-      <template v-if="shippingAddress">
-        <div class="flex items-center justify-between mb-(--space-2)">
+      <p class="text-(length:--font-sm) text-(color:--color-slate-muted)">
+        결제 정보를 불러오지 못했어요
+      </p>
+      <AppButton
+        variant="navy"
+        @click="loadPaymentMethod"
+      >
+        다시 시도
+      </AppButton>
+    </div>
+
+    <template v-else-if="paymentMethod">
+      <!-- 헤더 -->
+      <h1
+        class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-5)"
+      >
+        결제 확인
+      </h1>
+
+      <!-- 배송지: 잔액부족 상태에서는 표시하지 않음 -->
+      <section
+        v-if="!isBalanceInsufficient"
+        class="bg-(--color-surface) rounded-(--radius-lg) p-(--space-4) mb-(--space-4)"
+      >
+        <template v-if="shippingAddress">
+          <div class="flex items-center justify-between mb-(--space-2)">
+            <span
+              class="text-(length:--font-sm) font-semibold text-(color:--color-slate-dark)"
+            >
+              배송지
+            </span>
+            <AppButton
+              variant="ghost"
+              size="sm"
+              @click="handleChangeAddress"
+            >
+              변경
+            </AppButton>
+          </div>
+          <p class="text-(length:--font-md) font-bold text-(color:--color-navy)">
+            {{ shippingAddress.recipientName }}
+            {{ shippingAddress.recipientPhone }}
+          </p>
+          <p
+            class="text-(length:--font-sm) text-(color:--color-gray-500) mt-(--space-1)"
+          >
+            {{ shippingAddress.address }}, {{ shippingAddress.addressDetail }}
+          </p>
+        </template>
+        <template v-else>
           <span
             class="text-(length:--font-sm) font-semibold text-(color:--color-slate-dark)"
           >
             배송지
           </span>
+          <p
+            class="text-(length:--font-sm) text-(color:--color-gray-500) mt-(--space-2) mb-(--space-3)"
+          >
+            등록된 배송지가 없어요
+          </p>
           <AppButton
-            variant="ghost"
-            size="sm"
+            variant="secondary"
+            block
             @click="handleChangeAddress"
           >
-            변경
+            + 배송지 추가하기
           </AppButton>
+        </template>
+      </section>
+
+      <!-- 상품 정보 -->
+      <section
+        class="flex items-center gap-(--space-3) bg-(--color-surface) rounded-(--radius-lg) p-(--space-4) mb-(--space-4)"
+      >
+        <div
+          class="shrink-0 w-[48px] h-[48px] bg-(--color-white) border border-(--color-border) rounded-(--radius-md)"
+        />
+        <div class="flex-1 min-w-0">
+          <h3 class="text-(length:--font-md) font-bold text-(color:--color-navy)">
+            {{ product.productName }}
+          </h3>
+          <p
+            class="text-(length:--font-xs) text-(color:--color-gray-500) mt-(--space-1)"
+          >
+            {{ product.purchaseQuantity }}개 · {{ product.optionText }}
+          </p>
         </div>
-        <p class="text-(length:--font-md) font-bold text-(color:--color-navy)">
-          {{ shippingAddress.recipientName }}
-          {{ shippingAddress.recipientPhone }}
-        </p>
         <p
-          class="text-(length:--font-sm) text-(color:--color-gray-500) mt-(--space-1)"
+          class="shrink-0 text-(length:--font-md) font-bold text-(color:--color-navy)"
         >
-          {{ shippingAddress.address }}, {{ shippingAddress.addressDetail }}
+          {{ totalAmount.toLocaleString() }}원
         </p>
-      </template>
-      <template v-else>
-        <span
-          class="text-(length:--font-sm) font-semibold text-(color:--color-slate-dark)"
-        >
-          배송지
-        </span>
-        <p
-          class="text-(length:--font-sm) text-(color:--color-gray-500) mt-(--space-2) mb-(--space-3)"
-        >
-          등록된 배송지가 없어요
-        </p>
-        <AppButton
-          variant="secondary"
-          block
-          @click="handleChangeAddress"
-        >
-          + 배송지 추가하기
-        </AppButton>
-      </template>
-    </section>
+      </section>
 
-    <!-- 상품 정보 -->
-    <section
-      class="flex items-center gap-(--space-3) bg-(--color-surface) rounded-(--radius-lg) p-(--space-4) mb-(--space-4)"
-    >
-      <div
-        class="shrink-0 w-[48px] h-[48px] bg-(--color-white) border border-(--color-border) rounded-(--radius-md)"
-      />
-      <div class="flex-1 min-w-0">
-        <h3 class="text-(length:--font-md) font-bold text-(color:--color-navy)">
-          {{ product.productName }}
-        </h3>
-        <p
-          class="text-(length:--font-xs) text-(color:--color-gray-500) mt-(--space-1)"
+      <!-- 결제 수단 -->
+      <section class="mb-(--space-4)">
+        <h2
+          class="text-(length:--font-sm) font-semibold text-(color:--color-slate-dark) mb-(--space-2)"
         >
-          {{ product.purchaseQuantity }}개 · {{ product.optionText }}
-        </p>
-      </div>
-      <p
-        class="shrink-0 text-(length:--font-md) font-bold text-(color:--color-navy)"
-      >
-        {{ totalAmount.toLocaleString() }}원
-      </p>
-    </section>
-
-    <!-- 결제 수단 -->
-    <section class="mb-(--space-4)">
-      <h2
-        class="text-(length:--font-sm) font-semibold text-(color:--color-slate-dark) mb-(--space-2)"
-      >
-        결제 수단
-      </h2>
-      <div
-        class="flex items-center gap-(--space-3) rounded-(--radius-lg) p-(--space-4)"
-        :class="
-          isBalanceInsufficient
-            ? 'bg-(--color-danger-soft) border-[1.5px] border-(--color-danger-strong)'
-            : 'bg-(--color-white) border-2 border-(--color-navy)'
-        "
-      >
-        <span
-          class="inline-flex items-center justify-center w-10 h-6 rounded-(--radius-sm) bg-(--color-navy)"
-        >
-          <IconWallet
-            :size="16"
-            color="var(--color-white)"
-          />
-        </span>
-        <p
-          class="flex-1 text-(length:--font-md) font-bold text-(color:--color-navy)"
-        >
-          {{ paymentMethod.name }}
-        </p>
-        <p
-          class="shrink-0 text-(length:--font-xs)"
+          결제 수단
+        </h2>
+        <div
+          class="flex items-center gap-(--space-3) rounded-(--radius-lg) p-(--space-4)"
           :class="
             isBalanceInsufficient
-              ? 'font-bold text-(color:--color-danger-strong)'
-              : 'text-(color:--color-gray-500)'
+              ? 'bg-(--color-danger-soft) border-[1.5px] border-(--color-danger-strong)'
+              : 'bg-(--color-white) border-2 border-(--color-navy)'
           "
         >
-          잔액 {{ paymentMethod.balance.toLocaleString() }}원
-        </p>
-      </div>
+          <span
+            class="inline-flex items-center justify-center w-10 h-6 rounded-(--radius-sm) bg-(--color-navy)"
+          >
+            <IconWallet
+              :size="16"
+              color="var(--color-white)"
+            />
+          </span>
+          <p
+            class="flex-1 text-(length:--font-md) font-bold text-(color:--color-navy)"
+          >
+            {{ paymentMethod.name }}
+          </p>
+          <p
+            class="shrink-0 text-(length:--font-xs)"
+            :class="
+              isBalanceInsufficient
+                ? 'font-bold text-(color:--color-danger-strong)'
+                : 'text-(color:--color-gray-500)'
+            "
+          >
+            잔액 {{ paymentMethod.balance.toLocaleString() }}원
+          </p>
+        </div>
 
-      <!-- 잔액부족 경고 -->
-      <div
+        <!-- 잔액부족 경고 -->
+        <div
+          v-if="isBalanceInsufficient"
+          class="mt-(--space-3) bg-(--color-danger-soft) rounded-(--radius-lg) p-(--space-4)"
+        >
+          <p
+            class="flex items-center gap-(--space-1) text-(length:--font-sm) font-bold text-(color:--color-danger-strong)"
+          >
+            <IconWarning
+              :size="14"
+              color="var(--color-danger-strong)"
+            />
+            잔액이 부족해요
+          </p>
+          <p
+            class="text-(length:--font-xs) text-(color:--color-danger-muted) mt-(--space-1)"
+          >
+            {{ shortfallAmount.toLocaleString() }}원을 충전하면 결제할 수 있어요
+          </p>
+        </div>
+      </section>
+
+      <!-- 결제 금액: 잔액부족 상태에서는 상세 내역 없이 총액만 표시 -->
+      <section
         v-if="isBalanceInsufficient"
-        class="mt-(--space-3) bg-(--color-danger-soft) rounded-(--radius-lg) p-(--space-4)"
+        class="mb-(--space-4)"
       >
-        <p
-          class="flex items-center gap-(--space-1) text-(length:--font-sm) font-bold text-(color:--color-danger-strong)"
-        >
-          <IconWarning
-            :size="14"
-            color="var(--color-danger-strong)"
-          />
-          잔액이 부족해요
-        </p>
-        <p
-          class="text-(length:--font-xs) text-(color:--color-danger-muted) mt-(--space-1)"
-        >
-          {{ shortfallAmount.toLocaleString() }}원을 충전하면 결제할 수 있어요
-        </p>
-      </div>
-    </section>
-
-    <!-- 결제 금액: 잔액부족 상태에서는 상세 내역 없이 총액만 표시 -->
-    <section
-      v-if="isBalanceInsufficient"
-      class="mb-(--space-4)"
-    >
-      <div class="flex items-center justify-between">
-        <span
-          class="text-(length:--font-sm) font-semibold text-(color:--color-slate-dark)"
+        <div class="flex items-center justify-between">
+          <span
+            class="text-(length:--font-sm) font-semibold text-(color:--color-slate-dark)"
+          >
+            결제 금액
+          </span>
+          <span
+            class="text-(length:--font-lg) font-bold text-(color:--color-navy)"
+          >
+            {{ totalAmount.toLocaleString() }}원
+          </span>
+        </div>
+      </section>
+      <section
+        v-else
+        class="mb-(--space-4)"
+      >
+        <h2
+          class="text-(length:--font-sm) font-semibold text-(color:--color-slate-dark) mb-(--space-3)"
         >
           결제 금액
-        </span>
-        <span
-          class="text-(length:--font-lg) font-bold text-(color:--color-navy)"
+        </h2>
+        <div
+          class="flex items-center justify-between text-(length:--font-sm) text-(color:--color-slate-dark) mb-(--space-2)"
         >
-          {{ totalAmount.toLocaleString() }}원
-        </span>
-      </div>
-    </section>
-    <section
-      v-else
-      class="mb-(--space-4)"
-    >
-      <h2
-        class="text-(length:--font-sm) font-semibold text-(color:--color-slate-dark) mb-(--space-3)"
-      >
-        결제 금액
-      </h2>
-      <div
-        class="flex items-center justify-between text-(length:--font-sm) text-(color:--color-slate-dark) mb-(--space-2)"
-      >
-        <span>상품 금액</span>
-        <span class="text-(color:--color-navy)">{{ productAmount.toLocaleString() }}원</span>
-      </div>
-      <div
-        class="flex items-center justify-between text-(length:--font-sm) text-(color:--color-gold) mb-(--space-3)"
-      >
-        <span>공동구매 할인</span>
-        <span class="font-bold">-{{ discountAmount.toLocaleString() }}원</span>
-      </div>
-      <div
-        class="border-t border-(--color-border) pt-(--space-3) flex items-center justify-between"
-      >
-        <span
-          class="text-(length:--font-base) font-bold text-(color:--color-navy)"
-        >총 결제금액</span>
-        <span
-          class="text-(length:--font-lg) font-bold text-(color:--color-navy)"
+          <span>상품 금액</span>
+          <span class="text-(color:--color-navy)">{{ productAmount.toLocaleString() }}원</span>
+        </div>
+        <div
+          class="flex items-center justify-between text-(length:--font-sm) text-(color:--color-gold) mb-(--space-3)"
         >
-          {{ totalAmount.toLocaleString() }}원
-        </span>
-      </div>
-    </section>
+          <span>공동구매 할인</span>
+          <span class="font-bold">-{{ discountAmount.toLocaleString() }}원</span>
+        </div>
+        <div
+          class="border-t border-(--color-border) pt-(--space-3) flex items-center justify-between"
+        >
+          <span
+            class="text-(length:--font-base) font-bold text-(color:--color-navy)"
+          >총 결제금액</span>
+          <span
+            class="text-(length:--font-lg) font-bold text-(color:--color-navy)"
+          >
+            {{ totalAmount.toLocaleString() }}원
+          </span>
+        </div>
+      </section>
 
-    <!-- 안내 문구: 잔액부족 상태에서는 표시하지 않음 -->
-    <p
-      v-if="!isBalanceInsufficient"
-      class="bg-(--color-surface) rounded-(--radius-md) p-(--space-4) text-(length:--font-xs) text-(color:--color-slate-dark) leading-relaxed"
-    >
-      공동구매는 목표 인원 달성 시 확정되며, 미달 시 전액 환불됩니다.
-    </p>
-
-    <!-- 결제 실패 안내 -->
-    <p
-      v-if="paymentError"
-      class="text-(length:--font-xs) text-(color:--color-danger-strong) text-center mb-(--space-3)"
-    >
-      {{ paymentError }}
-    </p>
-
-    <!-- 잔액부족: 충전하러 가기 버튼 -->
-    <AppButton
-      v-if="isBalanceInsufficient"
-      variant="primary"
-      size="lg"
-      block
-      class="fixed bottom-[calc(var(--bottom-nav-height)+var(--space-4))] left-(--space-4) right-(--space-4) !w-auto shadow-(--shadow-md)"
-      @click="handleCharge"
-    >
-      충전하러 가기
-    </AppButton>
-
-    <!-- 결제하기 버튼: 배송지 미등록 시 비활성화 -->
-    <AppButton
-      v-else
-      variant="navy"
-      size="lg"
-      block
-      :disabled="!shippingAddress"
-      :loading="isPaying"
-      class="fixed bottom-[calc(var(--bottom-nav-height)+var(--space-4))] left-(--space-4) right-(--space-4) !w-auto !h-auto !min-h-(--control-height-lg) !py-(--space-3) text-center shadow-(--shadow-md)"
-      @click="isPinSheetOpen = true"
-    >
-      {{
-        shippingAddress
-          ? `${totalAmount.toLocaleString()}원 결제하기`
-          : '배송지를 먼저 등록해주세요'
-      }}
-    </AppButton>
-
-    <!-- 배송지 변경 바텀시트 -->
-    <BottomSheet
-      v-model="isAddressSheetOpen"
-      title="배송지 추가"
-    >
+      <!-- 안내 문구: 잔액부족 상태에서는 표시하지 않음 -->
       <p
-        class="text-(length:--font-sm) text-(color:--color-slate-muted) mb-(--space-4)"
+        v-if="!isBalanceInsufficient"
+        class="bg-(--color-surface) rounded-(--radius-md) p-(--space-4) text-(length:--font-xs) text-(color:--color-slate-dark) leading-relaxed"
       >
-        상품을 받을 배송지를 입력해주세요
+        공동구매는 목표 인원 달성 시 확정되며, 미달 시 전액 환불됩니다.
       </p>
 
-      <div class="mb-(--space-4)">
-        <label
-          class="block text-(length:--font-sm) font-semibold text-(color:--color-slate-dark) mb-(--space-2)"
-        >
-          이름
-        </label>
-        <input
-          v-model="addressForm.name"
-          type="text"
-          placeholder="홍길동"
-          class="w-full h-[46px] px-(--space-4) bg-(--color-surface) border rounded-(--radius-md) text-(length:--font-sm) text-(color:--color-navy) placeholder:text-(color:--color-gray-500)"
-          :class="
-            addressFormErrors.name
-              ? 'border-(--color-danger-strong)'
-              : 'border-(--color-border)'
-          "
-        >
-        <p
-          v-if="addressFormErrors.name"
-          class="text-(length:--font-xs) text-(color:--color-danger-strong) mt-(--space-1)"
-        >
-          {{ addressFormErrors.name }}
-        </p>
-      </div>
+      <!-- 결제 실패 안내 -->
+      <p
+        v-if="paymentError"
+        class="text-(length:--font-xs) text-(color:--color-danger-strong) text-center mb-(--space-3)"
+      >
+        {{ paymentError }}
+      </p>
 
-      <div class="mb-(--space-4)">
-        <label
-          class="block text-(length:--font-sm) font-semibold text-(color:--color-slate-dark) mb-(--space-2)"
-        >
-          전화번호
-        </label>
-        <input
-          :value="addressForm.phone"
-          type="tel"
-          placeholder="010-1234-5678"
-          class="w-full h-[46px] px-(--space-4) bg-(--color-surface) border rounded-(--radius-md) text-(length:--font-sm) text-(color:--color-navy) placeholder:text-(color:--color-gray-500)"
-          :class="
-            addressFormErrors.phone
-              ? 'border-(--color-danger-strong)'
-              : 'border-(--color-border)'
-          "
-          @input="handlePhoneInput"
-        >
-        <p
-          v-if="addressFormErrors.phone"
-          class="text-(length:--font-xs) text-(color:--color-danger-strong) mt-(--space-1)"
-        >
-          {{ addressFormErrors.phone }}
-        </p>
-      </div>
+      <!-- 잔액부족: 충전하러 가기 버튼 -->
+      <AppButton
+        v-if="isBalanceInsufficient"
+        variant="primary"
+        size="lg"
+        block
+        class="fixed bottom-[calc(var(--bottom-nav-height)+var(--space-4))] left-(--space-4) right-(--space-4) !w-auto shadow-(--shadow-md)"
+        @click="handleCharge"
+      >
+        충전하러 가기
+      </AppButton>
 
-      <div class="mb-(--space-3)">
-        <label
-          class="block text-(length:--font-sm) font-semibold text-(color:--color-slate-dark) mb-(--space-2)"
+      <!-- 결제하기 버튼: 배송지 미등록 시 비활성화 -->
+      <AppButton
+        v-else
+        variant="navy"
+        size="lg"
+        block
+        :disabled="!shippingAddress"
+        :loading="isPaying"
+        class="fixed bottom-[calc(var(--bottom-nav-height)+var(--space-4))] left-(--space-4) right-(--space-4) !w-auto !h-auto !min-h-(--control-height-lg) !py-(--space-3) text-center shadow-(--shadow-md)"
+        @click="isPinSheetOpen = true"
+      >
+        {{
+          shippingAddress
+            ? `${totalAmount.toLocaleString()}원 결제하기`
+            : '배송지를 먼저 등록해주세요'
+        }}
+      </AppButton>
+
+      <!-- 배송지 변경 바텀시트 -->
+      <BottomSheet
+        v-model="isAddressSheetOpen"
+        title="배송지 추가"
+      >
+        <p
+          class="text-(length:--font-sm) text-(color:--color-slate-muted) mb-(--space-4)"
         >
-          우편번호
-        </label>
-        <div class="flex gap-(--space-2)">
+          상품을 받을 배송지를 입력해주세요
+        </p>
+
+        <div class="mb-(--space-4)">
+          <label
+            class="block text-(length:--font-sm) font-semibold text-(color:--color-slate-dark) mb-(--space-2)"
+          >
+            이름
+          </label>
           <input
-            v-model="addressForm.zipCode"
+            v-model="addressForm.name"
             type="text"
-            placeholder="우편번호를 검색하세요"
-            class="flex-1 min-w-0 h-[46px] px-(--space-4) bg-(--color-surface) border rounded-(--radius-md) text-(length:--font-sm) text-(color:--color-navy) placeholder:text-(color:--color-gray-500)"
+            placeholder="홍길동"
+            class="w-full h-[46px] px-(--space-4) bg-(--color-surface) border rounded-(--radius-md) text-(length:--font-sm) text-(color:--color-navy) placeholder:text-(color:--color-gray-500)"
             :class="
-              addressFormErrors.zipCode
+              addressFormErrors.name
                 ? 'border-(--color-danger-strong)'
                 : 'border-(--color-border)'
             "
           >
-          <AppButton
-            class="!h-[46px] !w-20 !rounded-(--radius-md) !px-0 shrink-0 whitespace-nowrap !text-[length:var(--font-xs)] !font-bold"
-            variant="navy"
-            type="button"
-            @click="isPostcodeOpen = true"
+          <p
+            v-if="addressFormErrors.name"
+            class="text-(length:--font-xs) text-(color:--color-danger-strong) mt-(--space-1)"
           >
-            우편번호 찾기
+            {{ addressFormErrors.name }}
+          </p>
+        </div>
+
+        <div class="mb-(--space-4)">
+          <label
+            class="block text-(length:--font-sm) font-semibold text-(color:--color-slate-dark) mb-(--space-2)"
+          >
+            전화번호
+          </label>
+          <input
+            :value="addressForm.phone"
+            type="tel"
+            placeholder="010-1234-5678"
+            class="w-full h-[46px] px-(--space-4) bg-(--color-surface) border rounded-(--radius-md) text-(length:--font-sm) text-(color:--color-navy) placeholder:text-(color:--color-gray-500)"
+            :class="
+              addressFormErrors.phone
+                ? 'border-(--color-danger-strong)'
+                : 'border-(--color-border)'
+            "
+            @input="handlePhoneInput"
+          >
+          <p
+            v-if="addressFormErrors.phone"
+            class="text-(length:--font-xs) text-(color:--color-danger-strong) mt-(--space-1)"
+          >
+            {{ addressFormErrors.phone }}
+          </p>
+        </div>
+
+        <div class="mb-(--space-3)">
+          <label
+            class="block text-(length:--font-sm) font-semibold text-(color:--color-slate-dark) mb-(--space-2)"
+          >
+            우편번호
+          </label>
+          <div class="flex gap-(--space-2)">
+            <input
+              v-model="addressForm.zipCode"
+              type="text"
+              placeholder="우편번호를 검색하세요"
+              class="flex-1 min-w-0 h-[46px] px-(--space-4) bg-(--color-surface) border rounded-(--radius-md) text-(length:--font-sm) text-(color:--color-navy) placeholder:text-(color:--color-gray-500)"
+              :class="
+                addressFormErrors.zipCode
+                  ? 'border-(--color-danger-strong)'
+                  : 'border-(--color-border)'
+              "
+            >
+            <AppButton
+              class="!h-[46px] !w-20 !rounded-(--radius-md) !px-0 shrink-0 whitespace-nowrap !text-[length:var(--font-xs)] !font-bold"
+              variant="navy"
+              type="button"
+              @click="isPostcodeOpen = true"
+            >
+              우편번호 찾기
+            </AppButton>
+          </div>
+          <p
+            v-if="addressFormErrors.zipCode"
+            class="text-(length:--font-xs) text-(color:--color-danger-strong) mt-(--space-1)"
+          >
+            {{ addressFormErrors.zipCode }}
+          </p>
+        </div>
+
+        <div class="mb-(--space-3)">
+          <label
+            class="block text-(length:--font-sm) font-semibold text-(color:--color-slate-dark) mb-(--space-2)"
+          >
+            주소
+          </label>
+          <input
+            v-model="addressForm.address"
+            type="text"
+            placeholder="우편번호 찾기를 눌러 입력해주세요"
+            readonly
+            class="w-full h-[46px] px-(--space-4) bg-(--color-surface) border rounded-(--radius-md) text-(length:--font-sm) text-(color:--color-navy) placeholder:text-(color:--color-gray-500)"
+            :class="
+              addressFormErrors.address
+                ? 'border-(--color-danger-strong)'
+                : 'border-(--color-border)'
+            "
+          >
+          <p
+            v-if="addressFormErrors.address"
+            class="text-(length:--font-xs) text-(color:--color-danger-strong) mt-(--space-1)"
+          >
+            {{ addressFormErrors.address }}
+          </p>
+        </div>
+
+        <div class="mb-(--space-5)">
+          <label
+            class="block text-(length:--font-sm) font-semibold text-(color:--color-slate-dark) mb-(--space-2)"
+          >
+            상세주소
+          </label>
+          <input
+            v-model="addressForm.addressDetail"
+            type="text"
+            placeholder="동, 호수 등 상세주소 입력"
+            class="w-full h-[46px] px-(--space-4) bg-(--color-surface) border rounded-(--radius-md) text-(length:--font-sm) text-(color:--color-navy) placeholder:text-(color:--color-gray-500)"
+            :class="
+              addressFormErrors.addressDetail
+                ? 'border-(--color-danger-strong)'
+                : 'border-(--color-border)'
+            "
+          >
+          <p
+            v-if="addressFormErrors.addressDetail"
+            class="text-(length:--font-xs) text-(color:--color-danger-strong) mt-(--space-1)"
+          >
+            {{ addressFormErrors.addressDetail }}
+          </p>
+        </div>
+
+        <div class="flex gap-(--space-3)">
+          <AppButton
+            variant="secondary"
+            size="lg"
+            class="flex-1 border-(--color-border)!"
+            @click="closeAddressSheet"
+          >
+            취소
+          </AppButton>
+          <AppButton
+            variant="primary"
+            size="lg"
+            class="flex-1"
+            @click="confirmAddress"
+          >
+            확인
           </AppButton>
         </div>
-        <p
-          v-if="addressFormErrors.zipCode"
-          class="text-(length:--font-xs) text-(color:--color-danger-strong) mt-(--space-1)"
-        >
-          {{ addressFormErrors.zipCode }}
-        </p>
-      </div>
+      </BottomSheet>
 
-      <div class="mb-(--space-3)">
-        <label
-          class="block text-(length:--font-sm) font-semibold text-(color:--color-slate-dark) mb-(--space-2)"
-        >
-          주소
-        </label>
-        <input
-          v-model="addressForm.address"
-          type="text"
-          placeholder="우편번호 찾기를 눌러 입력해주세요"
-          readonly
-          class="w-full h-[46px] px-(--space-4) bg-(--color-surface) border rounded-(--radius-md) text-(length:--font-sm) text-(color:--color-navy) placeholder:text-(color:--color-gray-500)"
-          :class="
-            addressFormErrors.address
-              ? 'border-(--color-danger-strong)'
-              : 'border-(--color-border)'
-          "
-        >
-        <p
-          v-if="addressFormErrors.address"
-          class="text-(length:--font-xs) text-(color:--color-danger-strong) mt-(--space-1)"
-        >
-          {{ addressFormErrors.address }}
-        </p>
-      </div>
+      <!-- 송금 비밀번호 인증 바텀시트 -->
+      <PinAuthSheet
+        v-model="isPinSheetOpen"
+        :description="`${totalAmount.toLocaleString()}원을 안전하게 보내기 위해 확인해요`"
+        @complete="handlePayment"
+      />
 
-      <div class="mb-(--space-5)">
-        <label
-          class="block text-(length:--font-sm) font-semibold text-(color:--color-slate-dark) mb-(--space-2)"
-        >
-          상세주소
-        </label>
-        <input
-          v-model="addressForm.addressDetail"
-          type="text"
-          placeholder="동, 호수 등 상세주소 입력"
-          class="w-full h-[46px] px-(--space-4) bg-(--color-surface) border rounded-(--radius-md) text-(length:--font-sm) text-(color:--color-navy) placeholder:text-(color:--color-gray-500)"
-          :class="
-            addressFormErrors.addressDetail
-              ? 'border-(--color-danger-strong)'
-              : 'border-(--color-border)'
-          "
-        >
-        <p
-          v-if="addressFormErrors.addressDetail"
-          class="text-(length:--font-xs) text-(color:--color-danger-strong) mt-(--space-1)"
-        >
-          {{ addressFormErrors.addressDetail }}
-        </p>
-      </div>
-
-      <div class="flex gap-(--space-3)">
-        <AppButton
-          variant="secondary"
-          size="lg"
-          class="flex-1 border-(--color-border)!"
-          @click="closeAddressSheet"
-        >
-          취소
-        </AppButton>
-        <AppButton
-          variant="primary"
-          size="lg"
-          class="flex-1"
-          @click="confirmAddress"
-        >
-          확인
-        </AppButton>
-      </div>
-    </BottomSheet>
-
-    <!-- 송금 비밀번호 인증 바텀시트 -->
-    <PinAuthSheet
-      v-model="isPinSheetOpen"
-      :description="`${totalAmount.toLocaleString()}원을 안전하게 보내기 위해 확인해요`"
-      @complete="handlePayment"
-    />
-
-    <AddressSearchLayer
-      v-model="isPostcodeOpen"
-      title="우편번호 찾기"
-      @select="handleAddressSelect"
-    />
+      <AddressSearchLayer
+        v-model="isPostcodeOpen"
+        title="우편번호 찾기"
+        @select="handleAddressSelect"
+      />
+    </template>
   </div>
 </template>
