@@ -26,6 +26,7 @@ export const useAccountStore = defineStore('account', {
     linking: {
       bankCode: null,
       accountNumber: '',
+      accountHolder: '',
       verificationId: null,
       maskedAccountNumber: '',
       expiresInSeconds: 0,
@@ -89,17 +90,22 @@ export const useAccountStore = defineStore('account', {
     },
 
     // POST /api/accounts/verify-deposit — 목데이터 모드에선 아무 계좌번호나 넣어도 바로 통과
-    async requestDepositAuth(accountNumber) {
+    // ⚠️ 실제 API는 transactionId만 내려주고 maskedAccountNumber/expiresInSeconds는
+    // 안 내려주기 때문에, 두 값 다 클라이언트에서 직접 계산해서 채워요.
+    async requestDepositAuth(accountNumber, accountHolder) {
       this.linking.accountNumber = accountNumber;
+      this.linking.accountHolder = accountHolder;
+
+      const masked =
+        accountNumber.length > 4
+          ? `${'*'.repeat(accountNumber.length - 4)}${accountNumber.slice(-4)}`
+          : accountNumber;
+      const DEPOSIT_AUTH_TIMEOUT_SECONDS = 180;
 
       if (USE_MOCK_DATA) {
-        const masked =
-          accountNumber.length > 4
-            ? `${'*'.repeat(accountNumber.length - 4)}${accountNumber.slice(-4)}`
-            : accountNumber;
         this.linking.verificationId = `mock-${Date.now()}`;
         this.linking.maskedAccountNumber = masked;
-        this.linking.expiresInSeconds = 180;
+        this.linking.expiresInSeconds = DEPOSIT_AUTH_TIMEOUT_SECONDS;
         return { verificationId: this.linking.verificationId };
       }
 
@@ -107,23 +113,25 @@ export const useAccountStore = defineStore('account', {
         const { data } = await requestDepositVerification({
           bankCode: this.linking.bankCode,
           accountNumber,
+          accountHolder,
         });
-        this.linking.verificationId = data.result.verificationId;
-        this.linking.maskedAccountNumber = data.result.maskedAccountNumber;
-        this.linking.expiresInSeconds = data.result.expiresInSeconds;
-        return data.result;
+        this.linking.verificationId = data.result.transactionId;
+        this.linking.maskedAccountNumber = masked;
+        this.linking.expiresInSeconds = DEPOSIT_AUTH_TIMEOUT_SECONDS;
+        return { verificationId: this.linking.verificationId };
       });
     },
 
     // POST /api/accounts/verify-deposit/confirm — 목데이터 모드에선 4자리만 채우면 통과
-    async confirmDepositAuth(depositorName) {
+    // verificationCode: 입금자명에 찍히는 랜덤 한글 4자 (예: 파란애월)
+    async confirmDepositAuth(verificationCode) {
       if (USE_MOCK_DATA) {
-        return depositorName.length === 4;
+        return verificationCode.length === 4;
       }
       return this._withRequestState(async () => {
         const { data } = await confirmDepositVerification({
-          verificationId: this.linking.verificationId,
-          depositorName,
+          transactionId: this.linking.verificationId,
+          verificationCode,
         });
         return data.result.verified;
       });
@@ -145,10 +153,10 @@ export const useAccountStore = defineStore('account', {
         return mockAccount;
       }
       return this._withRequestState(async () => {
+        // 명세서 요구사항: body는 transactionId 하나뿐. bankCode/accountNumber는
+        // 이미 인증 단계(transactionId)로 서버가 알고 있어서 다시 보낼 필요 없어요.
         const { data } = await registerAccount({
-          verificationId: this.linking.verificationId,
-          bankCode: this.linking.bankCode,
-          accountNumber: this.linking.accountNumber,
+          transactionId: this.linking.verificationId,
         });
         this.lastLinkedAccountId = data.result.accountId;
 
@@ -166,6 +174,7 @@ export const useAccountStore = defineStore('account', {
       this.linking = {
         bankCode: null,
         accountNumber: '',
+        accountHolder: '',
         verificationId: null,
         maskedAccountNumber: '',
         expiresInSeconds: 0,
