@@ -22,14 +22,29 @@ function selectCategory(option) {
   isCategorySheetOpen.value = false
 }
 
+const imageError = ref('')
+
 function handleImageChange(event) {
   const file = event.target.files?.[0]
-  if (file) image.value = file
   event.target.value = ''
+  if (!file) return
+
+  if (!file.type.startsWith('image/')) {
+    imageError.value = '이미지 파일만 업로드할 수 있어요.'
+    return
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    imageError.value = '파일 크기는 10MB 이하여야 해요.'
+    return
+  }
+
+  imageError.value = ''
+  image.value = file
 }
 
 function removeImage() {
   image.value = null
+  imageError.value = ''
 }
 
 // 콤마/원 등 숫자 외 문자를 제거해 실제 금액만 추출, 음수X
@@ -134,6 +149,13 @@ function goToNextStep() {
           삭제
         </button>
       </div>
+
+      <p
+        v-if="imageError"
+        class="mt-(--space-2) text-(length:--font-xs) text-(color:--color-danger-strong)"
+      >
+        {{ imageError }}
+      </p>
     </section>
 
     <!-- 상품명 -->
