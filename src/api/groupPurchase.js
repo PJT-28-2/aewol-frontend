@@ -5,8 +5,9 @@ export const groupPurchaseApi = {
     return api.get('/group-purchase', { params })
   },
 
+  // TODO: 백엔드에 아직 매핑된 엔드포인트가 없음(호출하면 항상 실패) — 구현되면 연결.
   // create()가 요구하는 image는 파일이 아니라 URL 문자열(VARCHAR(500))이라, 사진은 먼저 이 엔드포인트로
-  // 업로드해서 URL을 받아온 뒤 그 문자열을 create()의 JSON 바디에 실어 보낸다
+  // 업로드해서 URL을 받아온 뒤 그 문자열을 create()의 JSON 바디에 실어 보내는 방식을 가정함
   uploadImage(formData) {
     return api.post('/group-purchase/images', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },

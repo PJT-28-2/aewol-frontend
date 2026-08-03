@@ -51,7 +51,7 @@ async function loadPaymentMethod() {
     }
 
     const { data: detailData } = await groupPurchaseApi.getDetail(route.params.gpId);
-    const detail = detailData.result ?? detailData;
+    const detail = detailData.result;
     product.value = {
       productName: detail.productName,
       optionText: '옵션 없음', // group_purchase에 옵션 개념이 없어 고정 문구 유지

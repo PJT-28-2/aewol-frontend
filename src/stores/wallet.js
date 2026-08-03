@@ -9,9 +9,9 @@ export const useWalletStore = defineStore('wallet', {
 
   actions: {
     async fetchWallet() {
-      // 백엔드 응답은 { status, message, data: WalletResponse } 래퍼라 data.data가 실제 지갑 정보
+      // 백엔드 응답은 { status, message, result: WalletResponse } 래퍼라 data.result가 실제 지갑 정보
       const { data } = await walletApi.getWallet()
-      this.wallet = data.data
+      this.wallet = data.result
       return this.wallet
     },
 

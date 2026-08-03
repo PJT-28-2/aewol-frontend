@@ -99,15 +99,10 @@ async function handleSubmit() {
   submitError.value = ''
   isSubmitting.value = true
   try {
-    // 1) 사진을 먼저 업로드해서 URL을 받고 2) 그 URL을 JSON 생성 요청의 image 필드에 실어 보낸다
-    const imageFormData = new FormData()
-    imageFormData.append('image', image.value)
-    const { data: uploadData } = await groupPurchaseApi.uploadImage(imageFormData)
-    const imageUrl = uploadData.result
-
+    // TODO: 이미지 업로드 백엔드 구현 대기 중 — groupPurchaseApi.uploadImage()는 아직 매핑된 엔드포인트가
+    // 없어서 호출하면 항상 실패한다. 구현되기 전까지는 이미지 없이 나머지 정보만 제출한다.
     // 백엔드가 POST /api/group-purchase에서 JSON(Map<String, Object>)으로 받음
     const payload = {
-      image: imageUrl,
       productName: productName.value,
       category: category.value,
       unitPrice: parsePrice(unitPrice.value),
