@@ -116,6 +116,7 @@ onMounted(loadInquiry);
             v-for="url in inquiry.attachments"
             :key="url"
             :href="url"
+            :aria-label="`첨부파일 ${attachmentFileName(url)}`"
             target="_blank"
             rel="noopener noreferrer"
             class="block w-16 h-16 rounded-(--radius-lg) overflow-hidden bg-(--color-surface) shrink-0"
