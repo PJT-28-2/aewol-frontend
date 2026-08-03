@@ -100,8 +100,11 @@ const isCancelling = ref(false);
 const cancelError = ref('');
 
 // TODO: 저장된 결제 비밀번호와 비교하는 로직 연동 예정 (DB 연동 전이라 현재는 비교 없이 통과)
+// PinAuthSheet의 @complete에서 직접 호출됨
 async function cancelParticipation() {
   if (USE_MOCK_DATA) {
+    isPinSheetOpen.value = false;
+    status.value = { ...status.value, status: 'cancelled' };
     isCancelSuccessSheetOpen.value = true;
     return;
   }
@@ -110,11 +113,14 @@ async function cancelParticipation() {
   isCancelling.value = true;
   try {
     await groupPurchaseApi.leave(route.params.gpId);
+    // "참여 취소하기" 버튼이 계속 보이지 않도록 이전 상태(waiting)를 취소 완료로 갱신
+    status.value = { ...status.value, status: 'cancelled' };
     isCancelSuccessSheetOpen.value = true;
   } catch {
     cancelError.value = '참여 취소에 실패했어요. 다시 시도해주세요.';
   } finally {
     isCancelling.value = false;
+    isPinSheetOpen.value = false;
   }
 }
 
