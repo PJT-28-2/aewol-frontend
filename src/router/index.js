@@ -8,7 +8,17 @@ import { useGroupPurchaseCreateStore } from '@/stores/groupPurchase';
 const publicRoutes = [
   {
     path: '/',
-    redirect: '/login',
+    redirect: '/onboarding',
+  },
+  {
+    path: '/onboarding',
+    name: 'Onboarding',
+    component: () => import('@/views/onboarding/OnboardingView.vue'),
+    // 개발 모드는 인증 가드를 우회하므로, 로그인된 사용자에게는
+    // 이 라우트에서 직접 온보딩을 건너뛰도록 별도로 처리한다.
+    beforeEnter: () => {
+      if (useAuthStore().isAuthenticated) return '/home';
+    },
   },
   {
     path: '/login',
