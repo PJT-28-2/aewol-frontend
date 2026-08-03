@@ -44,9 +44,16 @@ const isAccountNumberValid = computed(
 
 const isAccountHolderValid = computed(() => accountHolder.value.trim().length >= 2);
 
-// 예금주명은 한글/영어만 허용 (숫자, 특수문자 입력 차단)
+// 이 화면은 개인 계좌 연동만 대상으로 해서 예금주명은 한글/영어만 허용해요(사업자/법인
+// 계좌명에 들어가는 숫자·괄호 등은 지원 대상이 아니에요). 백엔드는 문자 제한이 없지만,
+// 이전엔 허용 안 된 문자를 아무 안내 없이 조용히 지워서 사용자가 눈치채기 어려웠어요 —
+// 이제는 걸러내면서 왜 지워졌는지 에러 메시지로 같이 보여줘요.
+const accountHolderError = ref('');
+
 function onAccountHolderInput(event) {
-  const filtered = event.target.value.replace(/[^가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z\s]/g, '');
+  const raw = event.target.value;
+  const filtered = raw.replace(/[^가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z\s]/g, '');
+  accountHolderError.value = filtered !== raw ? '한글, 영문만 입력할 수 있어요' : '';
   accountHolder.value = filtered;
   event.target.value = filtered;
 }
@@ -225,6 +232,7 @@ registerHeaderBack(goBack);
         class="w-full p-(--space-4) rounded-(--radius-lg) border border-(--color-border) text-(length:--font-base) text-(color:--color-navy) mb-(--space-2) outline-none focus:border-(--color-navy)"
         @input="onAccountHolderInput"
       />
+      <p v-if="accountHolderError" class="text-(length:--font-sm) text-(color:--color-danger-strong) mb-(--space-2)">{{ accountHolderError }}</p>
       <p v-if="requestError" class="text-(length:--font-sm) text-(color:--color-danger-strong) mb-(--space-4)">{{ requestError }}</p>
 
       <button
