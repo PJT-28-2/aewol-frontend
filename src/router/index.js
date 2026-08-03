@@ -105,7 +105,7 @@ const authRoutes = [
     path: '/account/link/complete',
     name: 'AccountLinkComplete',
     component: () => import('@/views/account/AccountLinkComplete.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout', hideHeader: true },
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
     path: '/home',
