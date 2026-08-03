@@ -5,7 +5,8 @@ import { useRouter } from 'vue-router'
 import AppButton from '@/components/common/AppButton.vue'
 import IconImage from '@/components/common/icons/IconImage.vue'
 import IconInfo from '@/components/common/icons/IconInfo.vue'
-// import { groupPurchaseApi } from '@/api/groupPurchase'
+import { groupPurchaseApi } from '@/api/groupPurchase'
+import { USE_MOCK_DATA } from '@/mocks/config'
 import { useGroupPurchaseCreateStore } from '@/stores/groupPurchase'
 
 // 1~2단계에서 입력한 데이터를 그대로 가져와 확인 화면을 채움
@@ -21,6 +22,7 @@ const {
   deliveryMethod,
   deliveryFee,
   deliveryEstimateDays,
+  description,
 } = storeToRefs(groupPurchaseCreateStore)
 
 // 1단계에서 업로드한 사진 미리보기 (없으면 아이콘 placeholder)
@@ -73,25 +75,41 @@ function goToPrevStep() {
   router.push('/group-purchase/create/step2')
 }
 
-// TODO: 백엔드 DB 연동 후 아래 API 호출 주석 해제 (async/await 함께 복원)
-function handleSubmit() {
-  // const payload = {
-  //   image: image.value,
-  //   productName: productName.value,
-  //   category: category.value,
-  //   unitPrice: parsePrice(unitPrice.value),
-  //   groupPrice: parsePrice(groupPrice.value),
-  //   targetQuantity: Number(targetQuantity.value),
-  //   deadline: deadline.value,
-  //   deliveryMethod: deliveryMethod.value,
-  //   deliveryFee: parsePrice(deliveryFee.value),
-  //   // TODO: DB의 delivery_date(실제 날짜)는 deadline + deliveryEstimateDays로 백엔드에서 계산한다고 가정. 프론트는 일수만 전달
-  //   deliveryEstimateDays: Number(deliveryEstimateDays.value),
-  //   description: description.value,
-  // }
-  // await groupPurchaseApi.create(payload) // POST /group-purchase/create
+const isSubmitting = ref(false)
+const submitError = ref('')
 
-  router.push('/group-purchase/my')
+async function handleSubmit() {
+  if (USE_MOCK_DATA) {
+    groupPurchaseCreateStore.reset()
+    router.push('/group-purchase/my')
+    return
+  }
+
+  submitError.value = ''
+  isSubmitting.value = true
+  try {
+    const formData = new FormData()
+    formData.append('image', image.value)
+    formData.append('productName', productName.value)
+    formData.append('category', category.value)
+    formData.append('unitPrice', parsePrice(unitPrice.value))
+    formData.append('groupPrice', parsePrice(groupPrice.value))
+    formData.append('targetQuantity', Number(targetQuantity.value))
+    formData.append('deadline', deadline.value)
+    formData.append('deliveryMethod', deliveryMethod.value)
+    formData.append('deliveryFee', parsePrice(deliveryFee.value))
+    // TODO: DB의 delivery_date(실제 날짜)는 deadline + deliveryEstimateDays로 백엔드에서 계산한다고 가정. 프론트는 일수만 전달
+    formData.append('deliveryEstimateDays', Number(deliveryEstimateDays.value))
+    formData.append('description', description.value)
+
+    await groupPurchaseApi.create(formData) // POST /group-purchase/create
+    groupPurchaseCreateStore.reset()
+    router.push('/group-purchase/my')
+  } catch {
+    submitError.value = '등록에 실패했어요. 다시 시도해주세요.'
+  } finally {
+    isSubmitting.value = false
+  }
 }
 </script>
 
@@ -224,12 +242,20 @@ function handleSubmit() {
       </p>
     </div>
 
-    <!-- 이전 / 글 올리기: API 연동은 주석 처리, 지금은 /group-purchase/my로 이동만 -->
+    <p
+      v-if="submitError"
+      class="text-(length:--font-xs) text-(color:--color-danger-strong) text-center mb-(--space-3)"
+    >
+      {{ submitError }}
+    </p>
+
+    <!-- 이전 / 글 올리기 -->
     <div class="flex gap-(--space-3)">
       <AppButton
         variant="secondary"
         size="lg"
         class="flex-1"
+        :disabled="isSubmitting"
         @click="goToPrevStep"
       >
         이전
@@ -238,6 +264,7 @@ function handleSubmit() {
         variant="primary"
         size="lg"
         class="flex-1"
+        :loading="isSubmitting"
         @click="handleSubmit"
       >
         글 올리기

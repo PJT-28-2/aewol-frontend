@@ -10,6 +10,8 @@ import statusWaitingImage from '@/assets/images/group-purchase-waiting.png';
 import statusConfirmedImage from '@/assets/images/group-purchase-confirmed.png';
 import statusCancelledImage from '@/assets/images/group-purchase-cancelled.png';
 import { MOCK_GROUP_PURCHASE_STATUS } from '@/mocks/groupPurchase';
+import { USE_MOCK_DATA } from '@/mocks/config';
+import { groupPurchaseApi } from '@/api/groupPurchase';
 
 const route = useRoute();
 const router = useRouter();
@@ -18,13 +20,17 @@ const status = ref(null);
 const isLoading = ref(true);
 const isError = ref(false);
 
-// TODO: groupPurchaseApi.getStatus(route.params.gpId) 연동 예정, 현재는 응답 포맷과 동일한 mock 데이터
 async function loadStatus() {
   isLoading.value = true;
   isError.value = false;
 
   try {
-    status.value = { gpId: route.params.gpId, ...MOCK_GROUP_PURCHASE_STATUS };
+    if (USE_MOCK_DATA) {
+      status.value = { gpId: route.params.gpId, ...MOCK_GROUP_PURCHASE_STATUS };
+      return;
+    }
+    const { data } = await groupPurchaseApi.getStatus(route.params.gpId);
+    status.value = data.result ?? null;
   } catch {
     isError.value = true;
   } finally {
@@ -87,11 +93,26 @@ function goToList() {
 // 참여 취소 비밀번호 인증 바텀시트
 const isPinSheetOpen = ref(false);
 const isCancelSuccessSheetOpen = ref(false);
+const isCancelling = ref(false);
+const cancelError = ref('');
 
 // TODO: 저장된 결제 비밀번호와 비교하는 로직 연동 예정 (DB 연동 전이라 현재는 비교 없이 통과)
-// TODO: 참여 취소 + 환불 API 연동 예정 (groupPurchaseApi.leave 활용 여부는 취소/환불 정책 확정 후 결정), 현재는 성공 처리만 시뮬레이션
-function cancelParticipation() {
-  isCancelSuccessSheetOpen.value = true;
+async function cancelParticipation() {
+  if (USE_MOCK_DATA) {
+    isCancelSuccessSheetOpen.value = true;
+    return;
+  }
+
+  cancelError.value = '';
+  isCancelling.value = true;
+  try {
+    await groupPurchaseApi.leave(route.params.gpId);
+    isCancelSuccessSheetOpen.value = true;
+  } catch {
+    cancelError.value = '참여 취소에 실패했어요. 다시 시도해주세요.';
+  } finally {
+    isCancelling.value = false;
+  }
 }
 
 function confirmCancelSuccess() {
@@ -258,10 +279,17 @@ function confirmCancelSuccess() {
         variant="danger"
         size="lg"
         block
+        :loading="isCancelling"
         @click="isPinSheetOpen = true"
       >
         참여 취소하기
       </AppButton>
+      <p
+        v-if="cancelError"
+        class="text-(length:--font-xs) text-(color:--color-danger-strong) text-center mt-(--space-2)"
+      >
+        {{ cancelError }}
+      </p>
 
       <!-- 참여 취소 비밀번호 인증 바텀시트 -->
       <PinAuthSheet

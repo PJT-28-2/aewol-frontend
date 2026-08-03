@@ -8,12 +8,13 @@ import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import BottomSheet from '@/components/common/BottomSheet.vue';
 import AppButton from '@/components/common/AppButton.vue';
 import { MOCK_MY_GROUP_PURCHASES } from '@/mocks/groupPurchase';
+import { USE_MOCK_DATA } from '@/mocks/config';
+import { groupPurchaseApi } from '@/api/groupPurchase';
 
 const isLoading = ref(true);
 const isError = ref(false);
 
-// TODO: 백엔드 API 연동 후 mock 데이터 제거하고 groupPurchaseApi.getMyList()로 교체
-const myGroupPurchases = ref(MOCK_MY_GROUP_PURCHASES);
+const myGroupPurchases = ref([]);
 
 // 상태 필터: 마감 여부와 무관하게 전부 조회 가능
 const statusOptions = ['전체', '진행중', '마감(성공)', '마감(미달)'];
@@ -58,8 +59,12 @@ async function loadMyGroupPurchases() {
   isError.value = false;
 
   try {
-    // TODO: const { data } = await groupPurchaseApi.getMyList({ status: selectedStatus.value })
-    // myGroupPurchases.value = data
+    if (USE_MOCK_DATA) {
+      myGroupPurchases.value = MOCK_MY_GROUP_PURCHASES;
+      return;
+    }
+    const { data } = await groupPurchaseApi.getMyList({ status: selectedStatus.value });
+    myGroupPurchases.value = data.result ?? [];
   } catch {
     isError.value = true;
   } finally {

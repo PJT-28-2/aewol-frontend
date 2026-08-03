@@ -1,10 +1,35 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import IconUser from '@/components/common/icons/IconUser.vue';
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
+import AppButton from '@/components/common/AppButton.vue';
 import { MOCK_GROUP_PURCHASE_LIST } from '@/mocks/groupPurchase';
+import { USE_MOCK_DATA } from '@/mocks/config';
+import { groupPurchaseApi } from '@/api/groupPurchase';
 
-// TODO: 백엔드 API 연동 후 mock 데이터 제거하고 실제 fetch로 교체
-const groupPurchases = ref(MOCK_GROUP_PURCHASE_LIST);
+const groupPurchases = ref([]);
+const isLoading = ref(true);
+const isError = ref(false);
+
+// 카테고리 · 상태 · 검색어는 지금은 클라이언트에서만 필터링 (서버 필터 파라미터 규격이 정해지면 params로 교체 예정)
+async function loadGroupPurchases() {
+  isLoading.value = true;
+  isError.value = false;
+  try {
+    if (USE_MOCK_DATA) {
+      groupPurchases.value = MOCK_GROUP_PURCHASE_LIST;
+      return;
+    }
+    const { data } = await groupPurchaseApi.getList();
+    groupPurchases.value = data.result ?? [];
+  } catch {
+    isError.value = true;
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+onMounted(loadGroupPurchases);
 
 // 카테고리 필터: mock 데이터의 category 필드 기준으로 필터링 (현재는 클라이언트에서만 처리)
 const categories = ['전체', '사료', '영양제', '장난감', '기타'];
@@ -136,8 +161,35 @@ const filteredGroupPurchases = computed(() => {
       </div>
     </div>
 
+    <!-- 로딩 상태 -->
+    <div
+      v-if="isLoading"
+      class="flex justify-center py-(--space-9)"
+    >
+      <LoadingSpinner />
+    </div>
+
+    <!-- 에러 상태 -->
+    <div
+      v-else-if="isError"
+      class="flex flex-col items-center justify-center gap-(--space-4) py-(--space-9) px-(--space-4) text-center"
+    >
+      <p class="text-(length:--font-sm) text-(color:--color-slate-muted)">
+        공동구매 목록을 불러오지 못했어요
+      </p>
+      <AppButton
+        variant="navy"
+        @click="loadGroupPurchases"
+      >
+        다시 시도
+      </AppButton>
+    </div>
+
     <!-- 공동구매 목록 -->
-    <ul class="list-none p-0 m-0 flex flex-col gap-(--space-3)">
+    <ul
+      v-else
+      class="list-none p-0 m-0 flex flex-col gap-(--space-3)"
+    >
       <li
         v-for="gp in filteredGroupPurchases"
         :key="gp.id"

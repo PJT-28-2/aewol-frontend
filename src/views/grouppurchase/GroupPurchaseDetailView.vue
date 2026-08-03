@@ -1,14 +1,37 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import AppButton from '@/components/common/AppButton.vue';
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import { MOCK_GROUP_PURCHASE_DETAIL } from '@/mocks/groupPurchase';
+import { USE_MOCK_DATA } from '@/mocks/config';
+import { groupPurchaseApi } from '@/api/groupPurchase';
 
 const route = useRoute();
 const router = useRouter();
 
-// TODO: 백엔드 API 연동 후 mock 데이터 제거하고 실제 fetch로 교체 (상세 데이터 연동은 별도 작업에서 진행)
-const groupPurchase = ref(MOCK_GROUP_PURCHASE_DETAIL);
+const groupPurchase = ref(null);
+const isLoading = ref(true);
+const isError = ref(false);
+
+async function loadDetail() {
+  isLoading.value = true;
+  isError.value = false;
+  try {
+    if (USE_MOCK_DATA) {
+      groupPurchase.value = MOCK_GROUP_PURCHASE_DETAIL;
+      return;
+    }
+    const { data } = await groupPurchaseApi.getDetail(route.params.gpId);
+    groupPurchase.value = data.result ?? null;
+  } catch {
+    isError.value = true;
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+onMounted(loadDetail);
 
 // isOwner: 상세 API 응답의 작성자 member_id와 로그인 유저 member_id 비교 결과로 교체 예정.
 // 지금은 마이페이지의 "작성" 글 카드가 붙여주는 ?owner=1 쿼리로 흉내냄 —
@@ -157,191 +180,217 @@ function goToPaymentPreview() {
         : 'pb-[calc(var(--bottom-nav-height)+var(--size-cta-bar-height))]'
     "
   >
-    <header class="mb-(--space-5)">
-      <h1
-        class="text-(length:--font-2xl) font-bold text-(color:--color-navy)"
-      >
-        {{ isOwner ? '나의 공동구매' : '공동구매 참여' }}
-      </h1>
-    </header>
-
-    <!-- 상품 정보 -->
-    <section class="flex flex-col items-start mb-(--space-6)">
-      <div
-        class="w-(--size-thumb-lg) h-(--size-thumb-lg) rounded-(--radius-xl) bg-(--color-surface) overflow-hidden mb-(--space-4)"
-      >
-        <img
-          :src="groupPurchase.image"
-          alt="groupPurchase.productName"
-          class="w-full h-full object-cover"
-        >
-      </div>
-      <h2
-        class="text-(length:--font-md) font-bold text-(color:--color-navy) mb-(--space-2)"
-      >
-        {{ groupPurchase.productName }}
-      </h2>
-      <div class="flex items-center gap-(--space-2)">
-        <p
-          class="text-(length:--font-2xl) font-bold text-(color:--color-navy)"
-        >
-          {{ groupPurchase.groupPrice.toLocaleString() }}원
-        </p>
-        <p
-          class="text-(length:--font-sm) text-(color:--color-slate-muted) line-through"
-        >
-          {{ groupPurchase.unitPrice.toLocaleString() }}원
-        </p>
-        <!-- 할인율은 저장된 값이 아니라 discountRate computed로 계산된 값 -->
-        <span
-          class="px-(--space-2) py-(--space-1) rounded-full bg-(--color-gold-surface) text-(color:--color-gold-dark) text-(length:--font-xs) font-bold"
-        >
-          {{ discountRate }}% 할인
-        </span>
-      </div>
-    </section>
-
-    <!-- 참여 현황 -->
-    <section
-      class="p-(--space-4) rounded-(--radius-xl) bg-(--color-surface) mb-(--space-6)"
-    >
-      <div
-        class="flex items-center justify-between mb-(--space-3)"
-      >
-        <p
-          class="text-(length:--font-sm) font-bold text-(color:--color-slate-dark)"
-        >
-          현재 수량
-        </p>
-        <!-- 내가 선택한 수량이 더해진 현재 수량(미리보기) -->
-        <p
-          class="text-(length:--font-sm) font-bold text-(color:--color-navy)"
-        >
-          {{ displayedCurrentQuantity }}/{{
-            groupPurchase.targetQuantity
-          }}개
-        </p>
-      </div>
-      <!-- 진행률 바도 선택 수량 반영 기준으로 실시간 갱신 -->
-      <div
-        class="h-(--size-progress-bar) rounded-full bg-(--color-border) overflow-hidden mb-(--space-2)"
-      >
-        <div
-          class="h-full rounded-full bg-(--color-gold)"
-          :style="{ width: `${progressPercent}%` }"
-        />
-      </div>
-      <div class="flex items-center justify-between">
-        <p
-          class="text-(length:--font-xs) text-(color:--color-slate-muted)"
-        >
-          마감까지 {{ deadlineLabel }}
-        </p>
-        <!-- 목표까지 남은 수량도 선택 수량 반영 기준으로 갱신 -->
-        <p
-          class="text-(length:--font-xs) font-bold text-(color:--color-gold-dark)"
-        >
-          {{ remainingForConfirm }}개 더 모이면 확정
-        </p>
-      </div>
-    </section>
-
-    <!-- 수량 선택: 작성자가 자기 글을 보는 경우엔 구매 대상이 아니므로 숨김 -->
-    <section
-      v-if="!isOwner"
-      class="mb-(--space-6)"
-    >
-      <p
-        class="text-(length:--font-sm) font-bold text-(color:--color-slate-dark) mb-(--space-3)"
-      >
-        수량 선택
-      </p>
-      <div
-        class="flex items-center justify-between h-(--size-stepper-box) px-(--space-4) rounded-(--radius-xl) bg-(--color-surface) border border-(--color-border)"
-      >
-        <p
-          class="text-(length:--font-sm) font-bold text-(color:--color-navy)"
-        >
-          {{ quantity }}개
-        </p>
-        <!-- 수량 스테퍼: -는 1개에서 비활성화, +는 목표 초과 시 alert로 차단 -->
-        <div class="flex items-center gap-(--space-3)">
-          <button
-            type="button"
-            class="size-(--size-stepper-btn) rounded-(--radius-lg) bg-(--color-white) border border-(--color-border) text-(length:--font-md) font-bold text-(color:--color-slate-dark) disabled:opacity-40"
-            :disabled="quantity <= 1 || isExpired"
-            @click="decreaseQuantity"
-          >
-            −
-          </button>
-          <p
-            class="w-(--size-stepper-value) text-center text-(length:--font-sm) font-bold text-(color:--color-navy)"
-          >
-            {{ quantity }}
-          </p>
-          <button
-            type="button"
-            class="size-(--size-stepper-btn) rounded-(--radius-lg) bg-(--color-white) border border-(--color-border) text-(length:--font-md) font-bold text-(color:--color-slate-dark) disabled:opacity-40"
-            :disabled="isExpired"
-            @click="increaseQuantity"
-          >
-            +
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <!-- 배송 안내 -->
-    <section
-      class="p-(--space-4) rounded-(--radius-xl) bg-(--color-surface) mb-(--space-6)"
-    >
-      <p
-        class="text-(length:--font-sm) font-bold text-(color:--color-navy) pb-(--space-3) mb-(--space-3) border-b border-(--color-border)"
-      >
-        {{ shippingSummaryLabel }}
-      </p>
-      <div
-        class="flex items-center justify-between mb-(--space-2)"
-      >
-        <p
-          class="text-(length:--font-xs) text-(color:--color-slate-muted)"
-        >
-          배송비
-        </p>
-        <p
-          class="text-(length:--font-xs) font-bold text-(color:--color-navy)"
-        >
-          {{ deliveryFeeLabel }}
-        </p>
-      </div>
-      <div class="flex items-center justify-between">
-        <p
-          class="text-(length:--font-xs) text-(color:--color-slate-muted)"
-        >
-          도착 예정일
-        </p>
-        <p
-          class="text-(length:--font-xs) font-bold text-(color:--color-navy)"
-        >
-          {{ arrivalDateLabel }}
-        </p>
-      </div>
-    </section>
-
-    <!-- 결제 버튼: 금액은 groupPrice * 선택 수량으로 실시간 계산. 작성자가 자기 글을 보는 경우엔 결제 대상이 아니므로 숨김 -->
+    <!-- 로딩 상태 -->
     <div
-      v-if="!isOwner"
-      class="fixed bottom-(--bottom-nav-height) inset-x-0 p-(--space-4) bg-(--color-white)"
+      v-if="isLoading"
+      class="flex justify-center py-(--space-9)"
     >
+      <LoadingSpinner />
+    </div>
+
+    <!-- 에러 상태 -->
+    <div
+      v-else-if="isError"
+      class="flex flex-col items-center justify-center gap-(--space-4) py-(--space-9) px-(--space-4) text-center"
+    >
+      <p class="text-(length:--font-sm) text-(color:--color-slate-muted)">
+        공동구매 정보를 불러오지 못했어요
+      </p>
       <AppButton
         variant="navy"
-        size="lg"
-        block
-        :disabled="isExpired"
-        @click="goToPaymentPreview"
+        @click="loadDetail"
       >
-        {{ isExpired ? '마감된 공동구매예요' : `${totalPrice.toLocaleString()}원 결제하기` }}
+        다시 시도
       </AppButton>
     </div>
+
+    <template v-else-if="groupPurchase">
+      <header class="mb-(--space-5)">
+        <h1
+          class="text-(length:--font-2xl) font-bold text-(color:--color-navy)"
+        >
+          {{ isOwner ? '나의 공동구매' : '공동구매 참여' }}
+        </h1>
+      </header>
+
+      <!-- 상품 정보 -->
+      <section class="flex flex-col items-start mb-(--space-6)">
+        <div
+          class="w-(--size-thumb-lg) h-(--size-thumb-lg) rounded-(--radius-xl) bg-(--color-surface) overflow-hidden mb-(--space-4)"
+        >
+          <img
+            :src="groupPurchase.image"
+            alt="groupPurchase.productName"
+            class="w-full h-full object-cover"
+          >
+        </div>
+        <h2
+          class="text-(length:--font-md) font-bold text-(color:--color-navy) mb-(--space-2)"
+        >
+          {{ groupPurchase.productName }}
+        </h2>
+        <div class="flex items-center gap-(--space-2)">
+          <p
+            class="text-(length:--font-2xl) font-bold text-(color:--color-navy)"
+          >
+            {{ groupPurchase.groupPrice.toLocaleString() }}원
+          </p>
+          <p
+            class="text-(length:--font-sm) text-(color:--color-slate-muted) line-through"
+          >
+            {{ groupPurchase.unitPrice.toLocaleString() }}원
+          </p>
+          <!-- 할인율은 저장된 값이 아니라 discountRate computed로 계산된 값 -->
+          <span
+            class="px-(--space-2) py-(--space-1) rounded-full bg-(--color-gold-surface) text-(color:--color-gold-dark) text-(length:--font-xs) font-bold"
+          >
+            {{ discountRate }}% 할인
+          </span>
+        </div>
+      </section>
+
+      <!-- 참여 현황 -->
+      <section
+        class="p-(--space-4) rounded-(--radius-xl) bg-(--color-surface) mb-(--space-6)"
+      >
+        <div
+          class="flex items-center justify-between mb-(--space-3)"
+        >
+          <p
+            class="text-(length:--font-sm) font-bold text-(color:--color-slate-dark)"
+          >
+            현재 수량
+          </p>
+          <!-- 내가 선택한 수량이 더해진 현재 수량(미리보기) -->
+          <p
+            class="text-(length:--font-sm) font-bold text-(color:--color-navy)"
+          >
+            {{ displayedCurrentQuantity }}/{{
+              groupPurchase.targetQuantity
+            }}개
+          </p>
+        </div>
+        <!-- 진행률 바도 선택 수량 반영 기준으로 실시간 갱신 -->
+        <div
+          class="h-(--size-progress-bar) rounded-full bg-(--color-border) overflow-hidden mb-(--space-2)"
+        >
+          <div
+            class="h-full rounded-full bg-(--color-gold)"
+            :style="{ width: `${progressPercent}%` }"
+          />
+        </div>
+        <div class="flex items-center justify-between">
+          <p
+            class="text-(length:--font-xs) text-(color:--color-slate-muted)"
+          >
+            마감까지 {{ deadlineLabel }}
+          </p>
+          <!-- 목표까지 남은 수량도 선택 수량 반영 기준으로 갱신 -->
+          <p
+            class="text-(length:--font-xs) font-bold text-(color:--color-gold-dark)"
+          >
+            {{ remainingForConfirm }}개 더 모이면 확정
+          </p>
+        </div>
+      </section>
+
+      <!-- 수량 선택: 작성자가 자기 글을 보는 경우엔 구매 대상이 아니므로 숨김 -->
+      <section
+        v-if="!isOwner"
+        class="mb-(--space-6)"
+      >
+        <p
+          class="text-(length:--font-sm) font-bold text-(color:--color-slate-dark) mb-(--space-3)"
+        >
+          수량 선택
+        </p>
+        <div
+          class="flex items-center justify-between h-(--size-stepper-box) px-(--space-4) rounded-(--radius-xl) bg-(--color-surface) border border-(--color-border)"
+        >
+          <p
+            class="text-(length:--font-sm) font-bold text-(color:--color-navy)"
+          >
+            {{ quantity }}개
+          </p>
+          <!-- 수량 스테퍼: -는 1개에서 비활성화, +는 목표 초과 시 alert로 차단 -->
+          <div class="flex items-center gap-(--space-3)">
+            <button
+              type="button"
+              class="size-(--size-stepper-btn) rounded-(--radius-lg) bg-(--color-white) border border-(--color-border) text-(length:--font-md) font-bold text-(color:--color-slate-dark) disabled:opacity-40"
+              :disabled="quantity <= 1 || isExpired"
+              @click="decreaseQuantity"
+            >
+              −
+            </button>
+            <p
+              class="w-(--size-stepper-value) text-center text-(length:--font-sm) font-bold text-(color:--color-navy)"
+            >
+              {{ quantity }}
+            </p>
+            <button
+              type="button"
+              class="size-(--size-stepper-btn) rounded-(--radius-lg) bg-(--color-white) border border-(--color-border) text-(length:--font-md) font-bold text-(color:--color-slate-dark) disabled:opacity-40"
+              :disabled="isExpired"
+              @click="increaseQuantity"
+            >
+              +
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 배송 안내 -->
+      <section
+        class="p-(--space-4) rounded-(--radius-xl) bg-(--color-surface) mb-(--space-6)"
+      >
+        <p
+          class="text-(length:--font-sm) font-bold text-(color:--color-navy) pb-(--space-3) mb-(--space-3) border-b border-(--color-border)"
+        >
+          {{ shippingSummaryLabel }}
+        </p>
+        <div
+          class="flex items-center justify-between mb-(--space-2)"
+        >
+          <p
+            class="text-(length:--font-xs) text-(color:--color-slate-muted)"
+          >
+            배송비
+          </p>
+          <p
+            class="text-(length:--font-xs) font-bold text-(color:--color-navy)"
+          >
+            {{ deliveryFeeLabel }}
+          </p>
+        </div>
+        <div class="flex items-center justify-between">
+          <p
+            class="text-(length:--font-xs) text-(color:--color-slate-muted)"
+          >
+            도착 예정일
+          </p>
+          <p
+            class="text-(length:--font-xs) font-bold text-(color:--color-navy)"
+          >
+            {{ arrivalDateLabel }}
+          </p>
+        </div>
+      </section>
+
+      <!-- 결제 버튼: 금액은 groupPrice * 선택 수량으로 실시간 계산. 작성자가 자기 글을 보는 경우엔 결제 대상이 아니므로 숨김 -->
+      <div
+        v-if="!isOwner"
+        class="fixed bottom-(--bottom-nav-height) inset-x-0 p-(--space-4) bg-(--color-white)"
+      >
+        <AppButton
+          variant="navy"
+          size="lg"
+          block
+          :disabled="isExpired"
+          @click="goToPaymentPreview"
+        >
+          {{ isExpired ? '마감된 공동구매예요' : `${totalPrice.toLocaleString()}원 결제하기` }}
+        </AppButton>
+      </div>
+    </template>
   </div>
 </template>

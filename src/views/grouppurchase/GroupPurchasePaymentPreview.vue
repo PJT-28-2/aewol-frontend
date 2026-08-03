@@ -12,6 +12,8 @@ import {
   MOCK_GROUP_PURCHASE_PAYMENT_PRODUCT,
   MOCK_GROUP_PURCHASE_PAYMENT_METHOD,
 } from '@/mocks/groupPurchase';
+import { USE_MOCK_DATA } from '@/mocks/config';
+import { groupPurchaseApi } from '@/api/groupPurchase';
 
 const route = useRoute();
 const router = useRouter();
@@ -159,10 +161,34 @@ function confirmAddress() {
   isAddressSheetOpen.value = false;
 }
 
-// TODO: POST /api/group-purchase/{gp_id}/payments 연동 예정 (비밀번호 인증 완료 후 호출)
-function handlePayment() {
-  // 결제 완료 후 이동할 상태 확인 화면 (GroupPurchaseStatusView.vue, 아직 미구현)
-  router.push(`/group-purchase/${route.params.gpId}/status`);
+const isPaying = ref(false);
+const paymentError = ref('');
+
+// 참여 신청 · 결제가 한 번에 처리됨(비밀번호 인증 완료 후 호출)
+async function handlePayment() {
+  if (USE_MOCK_DATA) {
+    router.push(`/group-purchase/${route.params.gpId}/status`);
+    return;
+  }
+
+  paymentError.value = '';
+  isPaying.value = true;
+  try {
+    // group_purchase_participant 컬럼 기준(gp_id는 URL 경로, member_id는 인증 토큰으로 서버가 채움)
+    await groupPurchaseApi.join(route.params.gpId, {
+      purchaseQuantity: product.value.purchaseQuantity,
+      recipientName: shippingAddress.value.recipientName,
+      recipientPhone: shippingAddress.value.recipientPhone,
+      zipCode: shippingAddress.value.zipCode,
+      address: shippingAddress.value.address,
+      addressDetail: shippingAddress.value.addressDetail,
+    });
+    router.push(`/group-purchase/${route.params.gpId}/status`);
+  } catch {
+    paymentError.value = '결제에 실패했어요. 다시 시도해주세요.';
+  } finally {
+    isPaying.value = false;
+  }
 }
 
 function handleCharge() {
@@ -385,6 +411,14 @@ const isPinSheetOpen = ref(false);
       공동구매는 목표 인원 달성 시 확정되며, 미달 시 전액 환불됩니다.
     </p>
 
+    <!-- 결제 실패 안내 -->
+    <p
+      v-if="paymentError"
+      class="text-(length:--font-xs) text-(color:--color-danger-strong) text-center mb-(--space-3)"
+    >
+      {{ paymentError }}
+    </p>
+
     <!-- 잔액부족: 충전하러 가기 버튼 -->
     <AppButton
       v-if="isBalanceInsufficient"
@@ -404,6 +438,7 @@ const isPinSheetOpen = ref(false);
       size="lg"
       block
       :disabled="!shippingAddress"
+      :loading="isPaying"
       class="fixed bottom-[calc(var(--bottom-nav-height)+var(--space-4))] left-(--space-4) right-(--space-4) !w-auto !h-auto !min-h-(--control-height-lg) !py-(--space-3) text-center shadow-(--shadow-md)"
       @click="isPinSheetOpen = true"
     >

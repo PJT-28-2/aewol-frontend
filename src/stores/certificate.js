@@ -1,11 +1,12 @@
 import { defineStore } from 'pinia'
 import { certificatesApi } from '@/api/certificates'
+import { petApi } from '@/api/pet'
 import { USE_MOCK_DATA } from '@/mocks/config'
 import { MOCK_PETS, MOCK_PET_DOCUMENTS, MOCK_REGISTRATION_DETAIL } from '@/mocks/pet'
 
 export const useCertificateStore = defineStore('certificate', {
   state: () => ({
-    // 상단 펫 탭 — 지금은 이 스토어에서 목데이터로 자체 관리 (추후 usePetStore 연동 예정)
+    // 상단 펫 탭 — petApi.getPets() 결과를 이 스토어에서 자체 관리 (petId 기준, usePetStore와는 별도)
     pets: [],
     selectedPetId: null,
 
@@ -58,7 +59,13 @@ export const useCertificateStore = defineStore('certificate', {
         }
         return
       }
-      // TODO: 백엔드 연동 시 GET /api/pets 결과로 교체
+      return this._withRequestState(async () => {
+        const { data } = await petApi.getPets()
+        this.pets = data.result ?? []
+        if (!this.selectedPetId) {
+          this.selectedPetId = this.pets[0]?.petId ?? null
+        }
+      })
     },
 
     async selectPet(petId) {
