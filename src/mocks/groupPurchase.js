@@ -138,7 +138,8 @@ export const MOCK_GROUP_PURCHASE_PAYMENT_PRODUCT = {
   groupPrice: 28000,
 }
 
-// 등록된 결제 수단(계좌) 목데이터 — 잔액부족 상태를 확인하기 위해 결제 금액(28,000원)보다 적은 잔액으로 설정
+// 등록된 결제 수단(계좌) 목데이터 — 정상 결제 흐름을 보여주는 기본값(다른 화면의 지갑 잔액 mock인
+// mockWalletBalance와 비슷한 규모). 잔액부족 분기를 확인하려면 balance를 결제 금액보다 낮게 바꿔서 테스트할 것
 // TODO: 백엔드 API 연동 후 제거하고 실제 결제 수단 조회 API로 교체
 export const MOCK_GROUP_PURCHASE_PAYMENT_METHOD = {
   name: '애월 통합 지갑',
