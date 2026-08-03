@@ -2,7 +2,9 @@
 import { ref, computed, onMounted } from 'vue';
 import IconUser from '@/components/common/icons/IconUser.vue';
 import IconChevronDown from '@/components/common/icons/IconChevronDown.vue';
+import IconGroupPurchase from '@/components/common/icons/IconGroupPurchase.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
+import EmptyState from '@/components/common/EmptyState.vue';
 import AppButton from '@/components/common/AppButton.vue';
 import { MOCK_GROUP_PURCHASE_LIST } from '@/mocks/groupPurchase';
 import { USE_MOCK_DATA } from '@/mocks/config';
@@ -77,6 +79,13 @@ const filteredGroupPurchases = computed(() => {
     return matchesCategory && matchesStatus && matchesKeyword;
   });
 });
+
+// 등록된 공동구매 자체가 없는 경우와, 필터/검색 조건 때문에 안 보이는 경우를 구분해서 안내
+const emptyStateMessage = computed(() =>
+  groupPurchases.value.length === 0
+    ? '등록된 공동구매가 없어요'
+    : '조건에 맞는 공동구매가 없어요',
+);
 </script>
 
 <template>
@@ -188,6 +197,13 @@ const filteredGroupPurchases = computed(() => {
         다시 시도
       </AppButton>
     </div>
+
+    <!-- 빈 상태 -->
+    <EmptyState
+      v-else-if="filteredGroupPurchases.length === 0"
+      :icon="IconGroupPurchase"
+      :message="emptyStateMessage"
+    />
 
     <!-- 공동구매 목록 -->
     <ul
