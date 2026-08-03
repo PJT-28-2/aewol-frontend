@@ -42,6 +42,16 @@ export const useCertificateStore = defineStore('certificate', {
       }
     },
 
+    // 선택된 펫이 없어질 때(펫 전체 삭제, 계정 전환 등) 호출 — fetchCertificates가 실행되지 않아
+    // 이전 펫의 문서/등록증 상태가 화면에 그대로 남는 것을 방지
+    resetCertificates() {
+      this.petId = null
+      this.documents = []
+      this.registrationDoc = null
+      this.vaccinationDocs = []
+      this.medicalDocs = []
+    },
+
     // GET /api/certificates
     // 화면 재진입마다 다시 호출되므로, mock 문서 시딩은 documents가 비어있을 때만 — 그렇지 않으면
     // 세션 중 업로드/연동/삭제로 바뀐 documents/registrationDetails가 매번 초기화됨

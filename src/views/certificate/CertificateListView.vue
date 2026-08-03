@@ -25,6 +25,9 @@ onMounted(async () => {
   await petStore.fetchPets()
   if (petStore.selectedPetId) {
     await certificateStore.fetchCertificates(petStore.selectedPetId)
+  } else {
+    // 펫이 하나도 없으면(전체 삭제 등) 이전 선택 펫의 증명서 상태가 남아있지 않도록 초기화
+    certificateStore.resetCertificates()
   }
 })
 

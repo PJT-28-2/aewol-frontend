@@ -21,17 +21,22 @@ export const usePetStore = defineStore('pet', {
         if (this.pets.length === 0) {
           this.pets = mockPets.map((pet) => ({ ...pet }))
         }
-        if (!this.selectedPetId) {
-          this.selectedPetId = this.pets[0]?.petId ?? null
-        }
+        this._syncSelectedPetId()
         return this.pets
       }
       const { data } = await petApi.getPets()
       this.pets = data.result ?? []
-      if (!this.selectedPetId) {
+      this._syncSelectedPetId()
+      return this.pets
+    },
+
+    // 새로 받아온 pets 기준으로 selectedPetId가 여전히 유효한지 확인.
+    // 펫 삭제나 계정 전환 후 이전 목록의 ID가 남아있을 수 있어, 목록에 없으면 첫 번째 펫으로 재설정(없으면 null)
+    _syncSelectedPetId() {
+      const stillExists = this.pets.some((pet) => pet.petId === this.selectedPetId)
+      if (!stillExists) {
         this.selectedPetId = this.pets[0]?.petId ?? null
       }
-      return this.pets
     },
 
     selectPet(petId) {
