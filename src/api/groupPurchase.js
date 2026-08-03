@@ -5,11 +5,17 @@ export const groupPurchaseApi = {
     return api.get('/group-purchase', { params })
   },
 
-  // 상품 이미지 파일을 포함하므로 JSON이 아니라 multipart/form-data로 전송
-  create(formData) {
-    return api.post('/group-purchase/create', formData, {
+  // create()가 요구하는 image는 파일이 아니라 URL 문자열(VARCHAR(500))이라, 사진은 먼저 이 엔드포인트로
+  // 업로드해서 URL을 받아온 뒤 그 문자열을 create()의 JSON 바디에 실어 보낸다
+  uploadImage(formData) {
+    return api.post('/group-purchase/images', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
+  },
+
+  // 백엔드가 POST /api/group-purchase에서 @RequestBody Map<String, Object>로 받음 (JSON)
+  create(data) {
+    return api.post('/group-purchase', data)
   },
 
   getDetail(id) {

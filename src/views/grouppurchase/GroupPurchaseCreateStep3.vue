@@ -88,21 +88,29 @@ async function handleSubmit() {
   submitError.value = ''
   isSubmitting.value = true
   try {
-    const formData = new FormData()
-    formData.append('image', image.value)
-    formData.append('productName', productName.value)
-    formData.append('category', category.value)
-    formData.append('unitPrice', parsePrice(unitPrice.value))
-    formData.append('groupPrice', parsePrice(groupPrice.value))
-    formData.append('targetQuantity', Number(targetQuantity.value))
-    formData.append('deadline', deadline.value)
-    formData.append('deliveryMethod', deliveryMethod.value)
-    formData.append('deliveryFee', parsePrice(deliveryFee.value))
-    // TODO: DB의 delivery_date(실제 날짜)는 deadline + deliveryEstimateDays로 백엔드에서 계산한다고 가정. 프론트는 일수만 전달
-    formData.append('deliveryEstimateDays', Number(deliveryEstimateDays.value))
-    formData.append('description', description.value)
+    // 1) 사진을 먼저 업로드해서 URL을 받고 2) 그 URL을 JSON 생성 요청의 image 필드에 실어 보낸다
+    const imageFormData = new FormData()
+    imageFormData.append('image', image.value)
+    const { data: uploadData } = await groupPurchaseApi.uploadImage(imageFormData)
+    const imageUrl = uploadData.result
 
-    await groupPurchaseApi.create(formData) // POST /group-purchase/create
+    // 백엔드가 POST /api/group-purchase에서 JSON(Map<String, Object>)으로 받음
+    const payload = {
+      image: imageUrl,
+      productName: productName.value,
+      category: category.value,
+      unitPrice: parsePrice(unitPrice.value),
+      groupPrice: parsePrice(groupPrice.value),
+      targetQuantity: Number(targetQuantity.value),
+      deadline: deadline.value,
+      deliveryMethod: deliveryMethod.value,
+      deliveryFee: parsePrice(deliveryFee.value),
+      // TODO: DB의 delivery_date(실제 날짜)는 deadline + deliveryEstimateDays로 백엔드에서 계산한다고 가정. 프론트는 일수만 전달
+      deliveryEstimateDays: Number(deliveryEstimateDays.value),
+      description: description.value,
+    }
+
+    await groupPurchaseApi.create(payload)
     groupPurchaseCreateStore.reset()
     router.push('/group-purchase/my')
   } catch {
