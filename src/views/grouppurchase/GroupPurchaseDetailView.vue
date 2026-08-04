@@ -161,6 +161,12 @@ const deadlineLabel = computed(() => {
 // 마감 여부: 마감 후에는 수량 선택/결제를 막는다
 const isExpired = computed(() => deadlineLabel.value === '마감');
 
+// 이미 목표 수량에 도달/초과한 상태(마감 처리 전에도 발생 가능)에서는 기본 선택 수량 1개만으로도
+// currentQuantity + quantity가 targetQuantity를 넘어설 수 있어, 스테퍼/CTA를 별도로 막는다
+const isQuantityOverTarget = computed(
+  () => groupPurchase.value.currentQuantity + quantity.value > groupPurchase.value.targetQuantity,
+);
+
 // 템플릿의 "마감까지 " 접두어와 결합했을 때 마감 지난 경우 "마감까지 마감"으로 겹쳐 보이지 않도록 분리
 const deadlineDisplayLabel = computed(() =>
   isExpired.value ? '마감' : `마감까지 ${deadlineLabel.value}`,
@@ -189,6 +195,8 @@ const arrivalDateLabel = computed(() => {
 });
 
 function goToPaymentPreview() {
+  // CTA는 disabled로 이미 막지만, 결제 미리보기로 넘어가기 전에도 같은 조건을 한 번 더 검증
+  if (isExpired.value || isQuantityOverTarget.value) return;
   router.push({
     path: `/group-purchase/${route.params.gpId}/payment-preview`,
     query: { quantity: quantity.value },
@@ -350,7 +358,7 @@ function goToPaymentPreview() {
             <button
               type="button"
               class="flex items-center justify-center size-(--size-stepper-btn) rounded-(--radius-lg) bg-(--color-white) border border-(--color-border) disabled:opacity-40"
-              :disabled="isExpired"
+              :disabled="isExpired || isQuantityOverTarget"
               @click="increaseQuantity"
             >
               <IconPlus
@@ -413,10 +421,16 @@ function goToPaymentPreview() {
           variant="navy"
           size="lg"
           block
-          :disabled="isExpired"
+          :disabled="isExpired || isQuantityOverTarget"
           @click="goToPaymentPreview"
         >
-          {{ isExpired ? '마감된 공동구매예요' : `${totalPrice.toLocaleString()}원 결제하기` }}
+          {{
+            isExpired
+              ? '마감된 공동구매예요'
+              : isQuantityOverTarget
+                ? '목표 수량을 초과했어요'
+                : `${totalPrice.toLocaleString()}원 결제하기`
+          }}
         </AppButton>
       </div>
     </template>
