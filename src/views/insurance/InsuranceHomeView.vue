@@ -1,15 +1,18 @@
 <script setup>
-import IconCalculator from '@/components/common/icons/IconCalculator.vue'
+import { useRouter } from 'vue-router'
 import IconClaimDraft from '@/components/common/icons/IconClaimDraft.vue'
+import AppButton from '@/components/common/AppButton.vue'
+import simulatorImage from '@/assets/images/pet-insurance-simulator.png'
+
+const router = useRouter()
+
+const simulatorMenu = {
+  to: '/insurance/simulator',
+  title: '손익분기 시뮬레이터',
+  description: '가입이 유리한지 미리 계산해보세요',
+}
 
 const menus = [
-  {
-    to: '/insurance/simulator',
-    icon: IconCalculator,
-    bg: 'var(--color-pastel-cream)',
-    title: '손익분기 시뮬레이터',
-    description: '가입이 유리한지 미리 계산해보세요',
-  },
   {
     to: '/insurance/claim',
     icon: IconClaimDraft,
@@ -31,34 +34,56 @@ const menus = [
       </p>
     </header>
 
-    <ul class="flex flex-col gap-(--space-3)">
+    <div class="mb-(--space-4) rounded-(--radius-xl) bg-(--color-white) p-(--space-5) text-center shadow-(--shadow-md)">
+      <h3 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">
+        {{ simulatorMenu.title }}
+      </h3>
+      <p class="mt-(--space-2) text-(length:--font-base) text-(color:--color-slate-muted)">
+        {{ simulatorMenu.description }}
+      </p>
+      <img
+        :src="simulatorImage"
+        alt=""
+        class="mx-auto my-(--space-5) w-[192px]"
+      >
+      <AppButton
+        variant="navy"
+        size="lg"
+        pill
+        block
+        @click="router.push(simulatorMenu.to)"
+      >
+        결과 계산하러 가기
+      </AppButton>
+    </div>
+
+    <ul class="flex flex-col gap-(--space-4)">
       <li
         v-for="menu in menus"
         :key="menu.to"
       >
         <router-link
           :to="menu.to"
-          class="flex items-center gap-(--space-4) rounded-(--radius-xl) border border-(--color-border) bg-(--color-white) p-(--space-4) no-underline"
+          class="relative flex items-center justify-between overflow-hidden rounded-(--radius-xl) bg-(--color-white) p-(--space-5) shadow-(--shadow-md) no-underline"
         >
+          <div class="flex-1 pr-(--space-3)">
+            <h3 class="text-(length:--font-lg) font-bold text-(color:--color-navy)">
+              {{ menu.title }}
+            </h3>
+            <p class="mt-(--space-2) text-(length:--font-sm) text-(color:--color-slate-muted)">
+              {{ menu.description }}
+            </p>
+          </div>
           <span
-            class="flex h-(--space-9) w-(--space-9) shrink-0 items-center justify-center rounded-(--radius-icon)"
+            class="flex h-(--space-10) w-(--space-10) shrink-0 items-center justify-center rounded-(--radius-full)"
             :style="{ backgroundColor: menu.bg }"
           >
             <component
               :is="menu.icon"
-              size="24"
+              size="32"
               color="var(--color-navy)"
             />
           </span>
-          <div class="flex-1">
-            <h3 class="text-(length:--font-base) font-semibold text-(color:--color-navy)">
-              {{ menu.title }}
-            </h3>
-            <p class="mt-(--space-1) text-(length:--font-sm) text-(color:--color-slate-muted)">
-              {{ menu.description }}
-            </p>
-          </div>
-          <span class="text-(length:--font-xl) text-(color:--color-gray-400)">&rsaquo;</span>
         </router-link>
       </li>
     </ul>
