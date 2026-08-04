@@ -1,6 +1,10 @@
 import api from './index'
 
 export const donationApi = {
+  getOverview() {
+    return api.get('/donation')
+  },
+
   getPot() {
     return api.get('/donation/pot')
   },
@@ -11,6 +15,10 @@ export const donationApi = {
 
   donate(data) {
     return api.post('/donation', data)
+  },
+
+  saveSettings(data) {
+    return api.put('/donation/settings', data)
   },
 
   getHistory(params) {

@@ -1,14 +1,14 @@
 import { defineStore } from 'pinia'
+import { donationApi } from '@/api/donation'
 import {
   donationCategories,
-  mockCampaigns,
-  mockDonationPot,
   savingUnits,
-} from '@/mocks/donation'
+} from '@/constants/donation'
 import { formatWon } from '@/utils/bankMeta'
 
 const DEFAULT_CATEGORY = donationCategories[0]
 const DEFAULT_SAVING_UNIT = savingUnits[savingUnits.length - 1]
+const unwrap = (response) => response.data?.data
 
 export const useDonationStore = defineStore('donation', {
   state: () => ({
@@ -28,10 +28,17 @@ export const useDonationStore = defineStore('donation', {
       piggyBankEnabled: true,
       savingUnit: DEFAULT_SAVING_UNIT,
     },
+    // 응답만 유실된 재시도에서 서버가 같은 기부를 두 번 처리하지 않도록
+    // (campaignId, amount) 조합에 묶인 멱등키를 성공 전까지 보관한다.
+    pendingDonationKey: null,
+    pendingDonationSignature: '',
     withdrawAmount: 0,
     withdrawError: '',
     isLoading: true,
+    isSubmitting: false,
+    isInitialized: false,
     error: '',
+    operationError: '',
   }),
 
   getters: {
@@ -61,7 +68,8 @@ export const useDonationStore = defineStore('donation', {
       })
     },
 
-    canDonate: (state) => state.amount > 0 && state.amount <= state.balance,
+    canDonate: (state) =>
+      Boolean(state.selectedCampaignId) && state.amount > 0 && state.amount <= state.balance,
 
     balanceAfterDonation: (state) => Math.max(state.balance - state.amount, 0),
 
@@ -80,36 +88,52 @@ export const useDonationStore = defineStore('donation', {
     async fetchDonationData() {
       this.isLoading = true
       this.error = ''
+      this.operationError = ''
 
       try {
-        // TODO: 백엔드 /api/donation 구현 후 donationApi 호출로 교체한다.
-        const { balance, impactMessage, monthlySaved } = mockDonationPot
-        const campaigns = mockCampaigns.map((campaign) => ({ ...campaign }))
+        const result = unwrap(await donationApi.getOverview())
+        this.balance = Number(result?.balance ?? 0)
+        this.monthlySaved = Number(result?.monthlySaved ?? 0)
+        this.impactMessage = result?.impactMessage ?? ''
+        this.campaigns = result?.campaigns ?? []
 
-        if (!campaigns.length) throw new Error('EMPTY_CAMPAIGNS')
+        const settings = result?.settings
+        this.savingUnit = Number(settings?.savingUnit ?? DEFAULT_SAVING_UNIT)
+        this.autoDonate = Boolean(settings?.autoDonate)
+        this.piggyBankEnabled = settings?.piggyBankEnabled !== false
+        this.savedSettings = {
+          autoDonate: this.autoDonate,
+          piggyBankEnabled: this.piggyBankEnabled,
+          savingUnit: this.savingUnit,
+        }
 
-        this.balance = balance
-        this.monthlySaved = monthlySaved
-        this.impactMessage = impactMessage
-        this.campaigns = campaigns
-        this.selectedCampaignId = this.currentCampaign?.id ?? ''
-      } catch {
+        const selectedExists = this.campaigns.some(
+          (campaign) => campaign.id === this.selectedCampaignId,
+        )
+        if (!selectedExists) {
+          this.selectedCampaignId =
+            settings?.autoDonateCampaignId ?? this.campaigns[0]?.id ?? ''
+        }
+        this.isInitialized = true
+      } catch (error) {
         this.campaigns = []
         this.selectedCampaignId = ''
-        this.error = '저금통 정보를 불러오지 못했어요. 다시 시도해 주세요.'
+        this.error = error.response?.data?.message || '저금통 정보를 불러오지 못했어요. 다시 시도해 주세요.'
       } finally {
         this.isLoading = false
       }
     },
 
     selectCampaign(campaignId) {
+      if (this.isSubmitting) return
       if (!this.campaigns.some((campaign) => campaign.id === campaignId)) return
-
       this.selectedCampaignId = campaignId
+      this.operationError = ''
     },
 
     setAmount(amount) {
       this.amount = amount
+      this.operationError = ''
     },
 
     setSearchKeyword(keyword) {
@@ -118,37 +142,77 @@ export const useDonationStore = defineStore('donation', {
 
     setCategory(category) {
       if (!donationCategories.includes(category)) return
-
       this.activeCategory = category
     },
 
     setSavingUnit(unit) {
+      if (this.isSubmitting) return
       if (!savingUnits.includes(unit)) return
-
       this.savingUnit = unit
     },
 
     setPiggyBankEnabled(enabled) {
+      if (this.isSubmitting) return
       this.piggyBankEnabled = enabled
     },
 
     setAutoDonate(enabled) {
+      if (this.isSubmitting) return
       this.autoDonate = enabled
     },
 
-    donate() {
-      if (!this.canDonate) return false
-
-      this.balance -= this.amount
-      return true
+    async donate() {
+      if (!this.canDonate || this.isSubmitting) return false
+      this.isSubmitting = true
+      this.operationError = ''
+      try {
+        const idempotencyKey = this.resolveDonationKey()
+        const result = unwrap(await donationApi.donate({
+          amount: this.amount,
+          campaignId: this.selectedCampaignId,
+          idempotencyKey,
+        }))
+        this.clearDonationKey()
+        this.balance = Number(result.balance)
+        const campaign = this.currentCampaign
+        if (campaign) {
+          campaign.raised += this.amount
+          campaign.participants += 1
+        }
+        return true
+      } catch (error) {
+        this.operationError = error.response?.data?.message || '기부를 완료하지 못했어요. 다시 시도해 주세요.'
+        return false
+      } finally {
+        this.isSubmitting = false
+      }
     },
 
-    /** 1원 단위 출금을 허용하므로 정수 여부만 보정하고 상한 검증은 블러 시점에 한다. */
+    /**
+     * 같은 캠페인·금액으로 다시 시도하면 이전 키를 그대로 쓴다.
+     * 캠페인이나 금액이 바뀌면 다른 기부이므로 새 키를 만든다.
+     */
+    resolveDonationKey() {
+      const signature = `${this.selectedCampaignId}:${this.amount}`
+      if (this.pendingDonationKey && this.pendingDonationSignature === signature) {
+        return this.pendingDonationKey
+      }
+      this.pendingDonationSignature = signature
+      this.pendingDonationKey = globalThis.crypto?.randomUUID?.()
+        ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`
+      return this.pendingDonationKey
+    },
+
+    clearDonationKey() {
+      this.pendingDonationKey = null
+      this.pendingDonationSignature = ''
+    },
+
     setWithdrawAmount(amount) {
       const nextAmount = Number.isFinite(amount) ? Math.floor(amount) : 0
-
       this.withdrawAmount = Math.max(nextAmount, 0)
       this.withdrawError = ''
+      this.operationError = ''
     },
 
     validateWithdrawAmount() {
@@ -156,12 +220,10 @@ export const useDonationStore = defineStore('donation', {
         this.withdrawError = '출금할 금액을 입력해주세요.'
         return false
       }
-
       if (this.withdrawAmount > this.balance) {
         this.withdrawError = `저금통 잔액 ${formatWon(this.balance)}을 초과했어요.`
         return false
       }
-
       this.withdrawError = ''
       return true
     },
@@ -169,21 +231,50 @@ export const useDonationStore = defineStore('donation', {
     resetWithdraw() {
       this.withdrawAmount = 0
       this.withdrawError = ''
+      this.operationError = ''
     },
 
-    withdraw() {
-      if (!this.validateWithdrawAmount()) return false
-
-      // TODO: 백엔드 /api/donation/pot/withdraw 구현 후 donationApi.withdrawPot 호출로 교체한다.
-      this.balance -= this.withdrawAmount
-      return true
+    async withdraw() {
+      if (!this.validateWithdrawAmount() || this.isSubmitting) return false
+      this.isSubmitting = true
+      this.operationError = ''
+      try {
+        const result = unwrap(await donationApi.withdrawPot(this.withdrawAmount))
+        this.balance = Number(result.balance)
+        return true
+      } catch (error) {
+        this.operationError = error.response?.data?.message || '출금을 완료하지 못했어요. 다시 시도해 주세요.'
+        return false
+      } finally {
+        this.isSubmitting = false
+      }
     },
 
-    saveSettings() {
-      this.savedSettings = {
-        autoDonate: this.autoDonate,
-        piggyBankEnabled: this.piggyBankEnabled,
-        savingUnit: this.savingUnit,
+    async saveSettings() {
+      if (this.isSubmitting) return false
+      this.isSubmitting = true
+      this.operationError = ''
+      try {
+        const settings = unwrap(await donationApi.saveSettings({
+          piggyBankEnabled: this.piggyBankEnabled,
+          savingUnit: this.savingUnit,
+          autoDonate: this.autoDonate,
+          campaignId: this.autoDonate ? this.currentCampaign?.id : null,
+        }))
+        this.savingUnit = Number(settings.savingUnit)
+        this.autoDonate = Boolean(settings.autoDonate)
+        this.piggyBankEnabled = Boolean(settings.piggyBankEnabled)
+        this.savedSettings = {
+          autoDonate: this.autoDonate,
+          piggyBankEnabled: this.piggyBankEnabled,
+          savingUnit: this.savingUnit,
+        }
+        return true
+      } catch (error) {
+        this.operationError = error.response?.data?.message || '저금통 설정을 저장하지 못했어요. 다시 시도해 주세요.'
+        return false
+      } finally {
+        this.isSubmitting = false
       }
     },
   },
