@@ -118,8 +118,10 @@ const deadlineDisplayLabel = computed(() =>
   deadlineLabel.value === '마감' ? '마감' : `마감 ${deadlineLabel.value}`,
 );
 
-// 마감 기한이 지난 공동구매는 참여 취소/공동구매 취소 버튼을 비활성화
-const isDeadlinePassed = computed(() => deadlineLabel.value === '마감');
+// 마감 기한이 지난 공동구매는 참여 취소/공동구매 취소 버튼을 비활성화.
+// deadlineLabel은 마감 '당일 00:00'부터 '마감'을 반환해 실제 마감 시각(예: 23:59:59) 이전까지도
+// 취소를 막아버리므로, 여기서는 deadline의 실제 시각과 현재 시각을 직접 비교한다
+const isDeadlinePassed = computed(() => new Date() > new Date(status.value.deadline));
 
 // 취소 비밀번호 인증 바텀시트 — 참여 취소/공동구매 취소 공용
 const isPinSheetOpen = ref(false);
