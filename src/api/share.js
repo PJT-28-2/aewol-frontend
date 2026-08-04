@@ -1,31 +1,47 @@
 import api from './index'
 
 export const shareApi = {
+  getPets() {
+    return api.get('/share/pets')
+  },
+
   invite(data) {
     return api.post('/share/invite', data)
   },
 
-  getMembers() {
-    return api.get('/share')
+  createLinkInvite(data) {
+    return api.post('/share/invite/link', data)
+  },
+
+  getInvite(inviteCode) {
+    return api.get(`/share/invites/${inviteCode}`)
+  },
+
+  acceptInvite(inviteCode) {
+    return api.post(`/share/invites/${inviteCode}/accept`)
+  },
+
+  getMembers(petId) {
+    return api.get(`/share/${petId}/members`)
   },
 
   respondInvite(accessId, status) {
     return api.put(`/share/${accessId}`, null, { params: { status } })
   },
 
-  updateRole(memberId, role) {
-    return api.patch(`/share/members/${memberId}/role`, { role })
+  updateRole(memberId, petId, role) {
+    return api.patch(`/share/members/${memberId}/role`, { petId, role })
   },
 
-  removeMember(memberId) {
-    return api.delete(`/share/members/${memberId}`)
+  removeMember(memberId, petId) {
+    return api.delete(`/share/members/${memberId}`, { params: { petId } })
   },
 
-  getContributions(params) {
-    return api.get('/share/contributions', { params })
+  getContributions(petId) {
+    return api.get('/share/contributions', { params: { petId } })
   },
 
-  getLogs(params) {
-    return api.get('/share/logs', { params })
+  getLogs(petId) {
+    return api.get('/share/logs', { params: { petId } })
   },
 }
