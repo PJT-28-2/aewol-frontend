@@ -8,6 +8,7 @@ import IconMinus from '@/components/common/icons/IconMinus.vue';
 import { MOCK_GROUP_PURCHASE_DETAIL } from '@/mocks/groupPurchase';
 import { USE_MOCK_DATA } from '@/mocks/config';
 import { groupPurchaseApi } from '@/api/groupPurchase';
+import { memberApi } from '@/api/member';
 
 const route = useRoute();
 const router = useRouter();
@@ -16,19 +17,37 @@ const groupPurchase = ref(null);
 const isLoading = ref(true);
 const isError = ref(false);
 
+// 목록/마이페이지는 작성자를 상세 화면 대신 상태 화면으로 바로 보내지만, 그 라우팅을 거치지 않고
+// (URL 직접 입력, 뒤로가기, 공유 링크 등) 이 화면에 온 경우까지 대비해 작성자면 여기서도
+// 참여 UI를 그리지 않고 상태 화면으로 리다이렉트한다. 상세 API 응답의 작성자 memberId와
+// 로그인 회원 memberId를 비교해서 판정
 async function loadDetail() {
   isLoading.value = true;
   isError.value = false;
   try {
     if (USE_MOCK_DATA) {
+      if (MOCK_GROUP_PURCHASE_DETAIL.isOwner) {
+        router.replace(`/group-purchase/${route.params.gpId}/status`);
+        return;
+      }
       groupPurchase.value = MOCK_GROUP_PURCHASE_DETAIL;
       return;
     }
-    const { data } = await groupPurchaseApi.getDetail(route.params.gpId);
-    groupPurchase.value = data.result ?? null;
-    if (!groupPurchase.value) {
+    const [{ data }, { data: profileData }] = await Promise.all([
+      groupPurchaseApi.getDetail(route.params.gpId),
+      memberApi.getProfile(),
+    ]);
+    const detail = data.result ?? null;
+    if (!detail) {
       isError.value = true;
+      return;
     }
+    const myMemberId = (profileData.result ?? profileData)?.memberId;
+    if (detail.memberId === myMemberId) {
+      router.replace(`/group-purchase/${route.params.gpId}/status`);
+      return;
+    }
+    groupPurchase.value = detail;
   } catch {
     isError.value = true;
   } finally {
@@ -37,11 +56,6 @@ async function loadDetail() {
 }
 
 onMounted(loadDetail);
-
-// isOwner: 상세 API 응답의 작성자 member_id와 로그인 유저 member_id 비교 결과로 교체 예정.
-// 지금은 마이페이지의 "작성" 글 카드가 붙여주는 ?owner=1 쿼리로 흉내냄 —
-// true면 마이페이지의 "작성" 글로 들어온 경우이므로 수량 선택/결제 없이 읽기 전용으로 보여줌
-const isOwner = computed(() => route.query.owner === '1');
 
 const WEEKDAY_LABELS = [
   '일',
@@ -99,11 +113,9 @@ const discountRate = computed(() =>
   ),
 );
 
-// 내가 선택한 수량을 반영했을 때의 참여 현황(미리보기). 작성자가 자기 글을 보는 경우엔 구매 미리보기가 필요 없어 현재 수량 그대로 표시
-const displayedCurrentQuantity = computed(() =>
-  isOwner.value
-    ? groupPurchase.value.currentQuantity
-    : groupPurchase.value.currentQuantity + quantity.value,
+// 내가 선택한 수량을 반영했을 때의 참여 현황(미리보기)
+const displayedCurrentQuantity = computed(
+  () => groupPurchase.value.currentQuantity + quantity.value,
 );
 
 // 목표 수량까지 남은 개수 (음수 방지)
@@ -149,6 +161,17 @@ const deadlineLabel = computed(() => {
 // 마감 여부: 마감 후에는 수량 선택/결제를 막는다
 const isExpired = computed(() => deadlineLabel.value === '마감');
 
+// 이미 목표 수량에 도달/초과한 상태(마감 처리 전에도 발생 가능)에서는 기본 선택 수량 1개만으로도
+// currentQuantity + quantity가 targetQuantity를 넘어설 수 있어, 스테퍼/CTA를 별도로 막는다
+const isQuantityOverTarget = computed(
+  () => groupPurchase.value.currentQuantity + quantity.value > groupPurchase.value.targetQuantity,
+);
+
+// 템플릿의 "마감까지 " 접두어와 결합했을 때 마감 지난 경우 "마감까지 마감"으로 겹쳐 보이지 않도록 분리
+const deadlineDisplayLabel = computed(() =>
+  isExpired.value ? '마감' : `마감까지 ${deadlineLabel.value}`,
+);
+
 // delivery_fee가 0원이면 무료로 표시
 const deliveryFeeLabel = computed(() =>
   groupPurchase.value.deliveryFee === 0
@@ -172,6 +195,8 @@ const arrivalDateLabel = computed(() => {
 });
 
 function goToPaymentPreview() {
+  // CTA는 disabled로 이미 막지만, 결제 미리보기로 넘어가기 전에도 같은 조건을 한 번 더 검증
+  if (isExpired.value || isQuantityOverTarget.value) return;
   router.push({
     path: `/group-purchase/${route.params.gpId}/payment-preview`,
     query: { quantity: quantity.value },
@@ -181,12 +206,7 @@ function goToPaymentPreview() {
 
 <template>
   <div
-    class="p-(--space-4) bg-(--color-bg) min-h-screen"
-    :class="
-      isOwner
-        ? 'pb-(--space-6)'
-        : 'pb-[calc(var(--bottom-nav-height)+var(--size-cta-bar-height))]'
-    "
+    class="p-(--space-4) bg-(--color-bg) min-h-screen pb-[calc(var(--bottom-nav-height)+var(--size-cta-bar-height))]"
   >
     <!-- 로딩 상태 -->
     <div
@@ -217,7 +237,7 @@ function goToPaymentPreview() {
         <h1
           class="text-(length:--font-2xl) font-bold text-(color:--color-navy)"
         >
-          {{ isOwner ? '나의 공동구매' : '공동구매 참여' }}
+          공동구매 참여
         </h1>
       </header>
 
@@ -291,7 +311,7 @@ function goToPaymentPreview() {
           <p
             class="text-(length:--font-xs) text-(color:--color-slate-muted)"
           >
-            마감까지 {{ deadlineLabel }}
+            {{ deadlineDisplayLabel }}
           </p>
           <!-- 목표까지 남은 수량도 선택 수량 반영 기준으로 갱신 -->
           <p
@@ -302,11 +322,8 @@ function goToPaymentPreview() {
         </div>
       </section>
 
-      <!-- 수량 선택: 작성자가 자기 글을 보는 경우엔 구매 대상이 아니므로 숨김 -->
-      <section
-        v-if="!isOwner"
-        class="mb-(--space-6)"
-      >
+      <!-- 수량 선택 -->
+      <section class="mb-(--space-6)">
         <p
           class="text-(length:--font-sm) font-bold text-(color:--color-slate-dark) mb-(--space-3)"
         >
@@ -341,7 +358,7 @@ function goToPaymentPreview() {
             <button
               type="button"
               class="flex items-center justify-center size-(--size-stepper-btn) rounded-(--radius-lg) bg-(--color-white) border border-(--color-border) disabled:opacity-40"
-              :disabled="isExpired"
+              :disabled="isExpired || isQuantityOverTarget"
               @click="increaseQuantity"
             >
               <IconPlus
@@ -396,19 +413,24 @@ function goToPaymentPreview() {
         </div>
       </section>
 
-      <!-- 결제 버튼: 금액은 groupPrice * 선택 수량으로 실시간 계산. 작성자가 자기 글을 보는 경우엔 결제 대상이 아니므로 숨김 -->
+      <!-- 결제 버튼: 금액은 groupPrice * 선택 수량으로 실시간 계산 -->
       <div
-        v-if="!isOwner"
         class="fixed bottom-(--bottom-nav-height) inset-x-0 p-(--space-4) bg-(--color-white)"
       >
         <AppButton
           variant="navy"
           size="lg"
           block
-          :disabled="isExpired"
+          :disabled="isExpired || isQuantityOverTarget"
           @click="goToPaymentPreview"
         >
-          {{ isExpired ? '마감된 공동구매예요' : `${totalPrice.toLocaleString()}원 결제하기` }}
+          {{
+            isExpired
+              ? '마감된 공동구매예요'
+              : isQuantityOverTarget
+                ? '목표 수량을 초과했어요'
+                : `${totalPrice.toLocaleString()}원 결제하기`
+          }}
         </AppButton>
       </div>
     </template>

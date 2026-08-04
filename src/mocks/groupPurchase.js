@@ -1,6 +1,8 @@
 import productImage from '@/assets/images/mock-product-dogfood.png'
 
 // 공동구매 목록 화면(GroupPurchaseListView) 목데이터
+// isOwner: 로그인 유저가 이 글의 작성자인지 여부 (진행중 글에서 '참여하기'/'확인하기' 버튼 분기에 사용).
+// 실 API에서는 item.memberId와 로그인 유저 memberId를 비교해서 판정 (GroupPurchaseMyView와 동일 방식)
 // TODO: 백엔드 API 연동 후 제거하고 groupPurchaseApi.getList()로 교체
 export const MOCK_GROUP_PURCHASE_LIST = [
   {
@@ -12,6 +14,7 @@ export const MOCK_GROUP_PURCHASE_LIST = [
     targetQuantity: 50,
     dDay: 'D-3',
     badgeText: '30% 할인',
+    isOwner: false,
   },
   {
     id: 2,
@@ -22,6 +25,7 @@ export const MOCK_GROUP_PURCHASE_LIST = [
     targetQuantity: 30,
     dDay: 'D-7',
     badgeText: '20% 할인',
+    isOwner: true,
   },
   {
     id: 3,
@@ -32,6 +36,7 @@ export const MOCK_GROUP_PURCHASE_LIST = [
     targetQuantity: 20,
     dDay: 'D-0',
     badgeText: '15% 할인',
+    isOwner: false,
   },
   {
     id: 4,
@@ -42,13 +47,18 @@ export const MOCK_GROUP_PURCHASE_LIST = [
     targetQuantity: 30,
     dDay: 'D-0',
     badgeText: '25% 할인',
+    isOwner: true,
   },
 ]
 
 // 공동구매 상세 화면(GroupPurchaseDetailView) 목데이터
 // 필드명은 group_purchase 테이블 컬럼(gp_id, delivery_method, delivery_fee, delivery_date, deadline 등) 기준
+// memberId는 작성자 member_id (실 API 응답 형태 맞춤). isOwner는 mock 전용 필드로, 작성자가 이 화면에
+// 직접 진입했을 때 상태 화면으로 리다이렉트되는지 확인용 — true로 바꾸면 리다이렉트 동작을 볼 수 있음
 // TODO: 백엔드 API 연동 후 제거하고 groupPurchaseApi.getDetail(id)로 교체 (상세 데이터 연동은 별도 작업에서 진행)
 export const MOCK_GROUP_PURCHASE_DETAIL = {
+  memberId: 1,
+  isOwner: false,
   productName: '프리미엄 사료 15kg',
   image: productImage,
   groupPrice: 28000,
@@ -64,7 +74,8 @@ export const MOCK_GROUP_PURCHASE_DETAIL = {
 // 나의 공동구매 목록(GroupPurchaseMyView) 목데이터
 // role: group_purchase_participant에 로그인 유저 member_id의 참여 row가 있으면 '참여',
 // 없이 group_purchase 작성자 member_id만 일치하면 '작성'으로 판정
-// '참여'는 GroupPurchaseStatusView(결제/취소)로, '작성'은 GroupPurchaseDetailView(읽기 전용)로 이동
+// role과 무관하게 항상 GroupPurchaseStatusView로 이동하고, 화면 안에서 역할에 따라 버튼만 달라짐
+// (참여: 참여 취소하기 / 작성: 공동구매 취소)
 // TODO: 백엔드 API 연동 후 제거하고 groupPurchaseApi.getMyList()로 교체
 export const MOCK_MY_GROUP_PURCHASES = [
   {
@@ -109,6 +120,16 @@ export const MOCK_MY_GROUP_PURCHASES = [
   },
 ]
 
+// gpId별 작성자 여부 mock — MOCK_GROUP_PURCHASE_LIST/MOCK_MY_GROUP_PURCHASES의 역할과 동일하게 맞춤
+// (1: 참여, 2: 작성, 3: 참여, 4: 작성). 실 API에서는 상태 응답의 memberId와 로그인 유저 memberId를
+// 비교해서 자연히 정해지는 값이라, gpId 무관하게 단일 객체인 mock에서만 따로 gpId로 찾아줘야 함
+export const MOCK_GROUP_PURCHASE_STATUS_OWNER_BY_GP_ID = {
+  1: false,
+  2: true,
+  3: false,
+  4: true,
+}
+
 // 공동구매 상태 조회(GroupPurchaseStatusView) 목데이터 — 응답 포맷과 동일한 구조
 // gpId는 route.params.gpId를 그대로 써야 해서 화면에서 덧붙여 사용
 // productName은 API 응답의 title 필드에 대응
@@ -118,7 +139,8 @@ export const MOCK_GROUP_PURCHASE_STATUS = {
   status: 'waiting',
   currentQuantity: 3,
   targetQuantity: 5,
-  deadline: '2026-07-30T23:59:59',
+  // 참여/작성 취소 버튼(마감 전에만 활성화)을 mock에서 확인할 수 있도록 항상 미래 시각으로 유지
+  deadline: '2026-08-10T23:59:59',
   participantInfo: {
     participantId: 10523,
     paidAmount: 28000,

@@ -227,7 +227,7 @@ watch(selectedStatus, loadMyGroupPurchases);
         :key="gp.gpId"
       >
         <router-link
-          :to="gp.role === '참여' ? `/group-purchase/${gp.gpId}/status` : `/group-purchase/${gp.gpId}?owner=1`"
+          :to="`/group-purchase/${gp.gpId}/status?from=my`"
           class="flex items-center justify-between gap-(--space-3) p-(--space-4) bg-(--color-white) rounded-(--radius-xl) shadow-(--shadow-sm) no-underline"
         >
           <div class="min-w-0">

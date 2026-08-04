@@ -9,6 +9,7 @@ import AppButton from '@/components/common/AppButton.vue';
 import { MOCK_GROUP_PURCHASE_LIST } from '@/mocks/groupPurchase';
 import { USE_MOCK_DATA } from '@/mocks/config';
 import { groupPurchaseApi } from '@/api/groupPurchase';
+import { memberApi } from '@/api/member';
 
 const groupPurchases = ref([]);
 const isLoading = ref(true);
@@ -23,8 +24,16 @@ async function loadGroupPurchases() {
       groupPurchases.value = MOCK_GROUP_PURCHASE_LIST;
       return;
     }
-    const { data } = await groupPurchaseApi.getList();
-    groupPurchases.value = data.result ?? [];
+    const [{ data }, { data: profileData }] = await Promise.all([
+      groupPurchaseApi.getList(),
+      memberApi.getProfile(),
+    ]);
+    const myMemberId = (profileData.result ?? profileData)?.memberId;
+    // 작성자 본인 글이면 진행중일 때 '참여하기' 대신 '확인하기'로 상태 화면 바로 이동
+    groupPurchases.value = (data.result ?? []).map((item) => ({
+      ...item,
+      isOwner: item.memberId === myMemberId,
+    }));
   } catch {
     isError.value = true;
   } finally {
@@ -226,12 +235,13 @@ const emptyStateMessage = computed(() =>
             {{ gp.badgeText }}
           </span>
         </div>
+        <!-- 진행중: 작성자 본인 글이면 상세 없이 상태 화면으로 바로 이동('확인하기'), 아니면 참여 플로우('참여하기') -->
         <router-link
           v-if="gp.status === '진행중'"
-          :to="`/group-purchase/${gp.id}`"
+          :to="gp.isOwner ? `/group-purchase/${gp.id}/status` : `/group-purchase/${gp.id}`"
           class="shrink-0 px-(--space-4) py-(--space-2) bg-(--color-navy) text-(color:--color-white) rounded-full text-(length:--font-sm) font-semibold no-underline whitespace-nowrap"
         >
-          참여하기
+          {{ gp.isOwner ? '확인하기' : '참여하기' }}
         </router-link>
         <!-- 마감된 게시글은 새로 참여할 수 없어 비활성화 표시만 함 -->
         <span
