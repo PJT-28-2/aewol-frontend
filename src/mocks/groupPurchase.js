@@ -53,8 +53,12 @@ export const MOCK_GROUP_PURCHASE_LIST = [
 
 // 공동구매 상세 화면(GroupPurchaseDetailView) 목데이터
 // 필드명은 group_purchase 테이블 컬럼(gp_id, delivery_method, delivery_fee, delivery_date, deadline 등) 기준
+// memberId는 작성자 member_id (실 API 응답 형태 맞춤). isOwner는 mock 전용 필드로, 작성자가 이 화면에
+// 직접 진입했을 때 상태 화면으로 리다이렉트되는지 확인용 — true로 바꾸면 리다이렉트 동작을 볼 수 있음
 // TODO: 백엔드 API 연동 후 제거하고 groupPurchaseApi.getDetail(id)로 교체 (상세 데이터 연동은 별도 작업에서 진행)
 export const MOCK_GROUP_PURCHASE_DETAIL = {
+  memberId: 1,
+  isOwner: false,
   productName: '프리미엄 사료 15kg',
   image: productImage,
   groupPrice: 28000,
