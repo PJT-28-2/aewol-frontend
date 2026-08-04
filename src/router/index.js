@@ -105,7 +105,7 @@ const authRoutes = [
     path: '/account/link/complete',
     name: 'AccountLinkComplete',
     component: () => import('@/views/account/AccountLinkComplete.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', hideHeader: true },
   },
   {
     path: '/home',
@@ -163,7 +163,7 @@ const authRoutes = [
     path: '/wallet/charge/complete',
     name: 'ChargeComplete',
     component: () => import('@/views/wallet/ChargeCompleteView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', hideHeader: true },
   },
   {
     path: '/wallet/charge/account-select',
@@ -193,7 +193,7 @@ const authRoutes = [
     path: '/wallet/transfer/complete',
     name: 'TransferComplete',
     component: () => import('@/views/wallet/TransferCompleteView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', hideHeader: true },
   },
   {
     path: '/wallet/history',
@@ -223,19 +223,19 @@ const authRoutes = [
     path: '/payment/recurring/register/complete',
     name: 'RecurringRegisterComplete',
     component: () => import('@/views/payment/RecurringRegisterCompleteView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', hideHeader: true },
   },
   {
     path: '/payment/recurring/:id/cancel',
     name: 'RecurringCancel',
     component: () => import('@/views/payment/RecurringCancelView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', hideHeader: true },
   },
   {
     path: '/payment/recurring/cancel/complete',
     name: 'RecurringCancelComplete',
     component: () => import('@/views/payment/RecurringCancelCompleteView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', hideHeader: true },
   },
   {
     path: '/dashboard',
@@ -266,7 +266,7 @@ const authRoutes = [
     name: 'ClaimPdfDraft',
     component: () =>
       import('@/views/insurance/ClaimPdfDraftView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/share',
@@ -290,7 +290,7 @@ const authRoutes = [
     path: '/share/invite',
     name: 'ShareInvite',
     component: () => import('@/views/share/ShareView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/group-purchase',
@@ -356,7 +356,7 @@ const authRoutes = [
     name: 'GroupPurchaseStatus',
     component: () =>
       import('@/views/grouppurchase/GroupPurchaseStatusView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/donation',
@@ -446,7 +446,7 @@ const authRoutes = [
     path: '/support/inquiry/complete',
     name: 'InquirySubmitted',
     component: () => import('@/views/support/InquirySubmitted.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', hideHeader: true },
   },
   {
     path: '/emergency',

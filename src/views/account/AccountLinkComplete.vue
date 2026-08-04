@@ -5,6 +5,7 @@ import { useAccountStore } from '@/stores/account';
 import AccountSummaryCard from '@/components/common/AccountSummaryCard.vue';
 import AppButton from '@/components/common/AppButton.vue';
 import petSuccess from '@/assets/images/pet-success.png';
+import petNotFound from '@/assets/images/pet-not-found.png';
 
 const router = useRouter();
 const store = useAccountStore();
@@ -25,8 +26,9 @@ function goToAccountManagement() {
 </script>
 
 <template>
-  <div class="min-h-screen max-w-(--content-max-width) mx-auto bg-(--color-bg) px-(--space-6) pt-(--space-4) flex flex-col items-center text-center">
+  <div class="min-h-screen max-w-(--content-max-width) mx-auto bg-(--color-bg) px-(--space-6) pt-[calc(var(--header-height)+var(--space-4))] flex flex-col items-center text-center">
     <template v-if="!linkedAccount">
+      <img :src="petNotFound" alt="" class="w-32 h-auto mb-(--space-4)" />
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-2)">
         연동 정보를 찾을 수 없어요
       </h1>
