@@ -12,8 +12,22 @@ if (!store.linking.verificationId) {
 }
 
 const pin = ref('');
+const pinError = ref('');
+
+// 송금·이체에 쓰이는 비밀번호라 최소한 이 정도(전부 같은 숫자, 완전 연속 숫자)는 막아요.
+function isWeakPin(value) {
+  if (/^(\d)\1{5}$/.test(value)) return true;
+  const ascending = '0123456789';
+  const descending = '9876543210';
+  return ascending.includes(value) || descending.includes(value);
+}
 
 function handleComplete(value) {
+  if (isWeakPin(value)) {
+    pinError.value = '유추하기 쉬운 숫자예요. 다른 비밀번호를 입력해주세요';
+    pin.value = '';
+    return;
+  }
   store.setPendingPassword(value);
   router.push({ name: 'AccountPasswordConfirm' });
 }
@@ -30,9 +44,15 @@ function handleComplete(value) {
       </p>
     </header>
 
-    <div class="rounded-(--radius-lg) bg-(--color-surface) p-(--space-3) mb-(--space-8) text-center">
-      <p class="text-(length:--font-sm) text-(color:--color-slate-dark)">
-        생년월일, 전화번호처럼 유추하기 쉬운 숫자는 피해주세요
+    <div
+      class="rounded-(--radius-lg) p-(--space-3) mb-(--space-8) text-center"
+      :class="pinError ? 'bg-(--color-danger-soft)' : 'bg-(--color-surface)'"
+    >
+      <p
+        class="text-(length:--font-sm)"
+        :class="pinError ? 'text-(color:--color-danger-muted)' : 'text-(color:--color-slate-dark)'"
+      >
+        {{ pinError || '생년월일, 전화번호처럼 유추하기 쉬운 숫자는 피해주세요' }}
       </p>
     </div>
 

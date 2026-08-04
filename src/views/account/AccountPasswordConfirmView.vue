@@ -13,8 +13,11 @@ if (!store.linking.password) {
 
 const pin = ref('');
 const errorMessage = ref('');
+const isSubmitting = ref(false);
 
 async function handleComplete(value) {
+  if (isSubmitting.value) return;
+  isSubmitting.value = true;
   try {
     const matched = await store.confirmSimplePassword(value);
     if (!matched) {
@@ -26,6 +29,8 @@ async function handleComplete(value) {
   } catch {
     errorMessage.value = '비밀번호 설정에 실패했어요. 다시 시도해주세요';
     pin.value = '';
+  } finally {
+    isSubmitting.value = false;
   }
 }
 </script>

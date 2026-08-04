@@ -20,7 +20,7 @@ const meta = computed(() => getBankMeta(props.bankCode, props.fallbackName));
   <img
     v-if="meta.logo"
     :src="meta.logo"
-    :alt="meta.name"
+    alt=""
     class="shrink-0 object-cover"
     :style="{ width: `${size}px`, height: `${size}px` }"
   />
