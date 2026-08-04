@@ -35,7 +35,7 @@ async function handleCancel() {
 
 <template>
   <div
-    class="min-h-screen max-w-(--content-max-width) mx-auto bg-(--color-bg) px-(--space-6) pt-(--space-4) flex flex-col items-center text-center"
+    class="min-h-screen max-w-(--content-max-width) mx-auto bg-(--color-bg) px-(--space-6) pt-[calc(var(--header-height)+var(--space-4))] flex flex-col items-center text-center"
   >
     <LoadingSpinner v-if="isLoading" />
 

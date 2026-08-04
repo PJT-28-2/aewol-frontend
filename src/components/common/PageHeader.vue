@@ -2,6 +2,7 @@
 import { useRouter } from 'vue-router'
 import { useHeaderBackHandler } from '@/composables/useHeaderBack'
 import IconArrowLeft from './icons/IconArrowLeft.vue'
+import aewolWordmark from '@/assets/images/aewol-wordmark.png'
 
 defineProps({
   title: {
@@ -37,9 +38,15 @@ function goBack() {
       >
         <IconArrowLeft size="24" />
       </button>
+      <img
+        v-else
+        :src="aewolWordmark"
+        alt="애월"
+        class="page-header__logo"
+      />
     </div>
 
-    <h1 class="page-header__title">{{ title }}</h1>
+    <h1 v-if="title" class="page-header__title">{{ title }}</h1>
 
     <div class="page-header__right">
       <slot name="right" />
@@ -59,21 +66,19 @@ function goBack() {
   height: var(--header-height);
   padding: 0 var(--space-4);
   background-color: var(--color-white);
-  border-bottom: 1px solid var(--color-gray-200);
-}
-
-.page-header__left,
-.page-header__right {
-  flex: 0 0 48px;
-  display: flex;
-  align-items: center;
 }
 
 .page-header__left {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
   justify-content: flex-start;
 }
 
 .page-header__right {
+  flex: 0 0 48px;
+  display: flex;
+  align-items: center;
   justify-content: flex-end;
 }
 
@@ -86,6 +91,12 @@ function goBack() {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.page-header__logo {
+  height: 28px;
+  width: auto;
+  object-fit: contain;
 }
 
 .page-header__back {

@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
 import { useInsuranceStore } from '@/stores/insurance'
+import { registerHeaderBack } from '@/composables/useHeaderBack'
 import AppModal from '@/components/common/AppModal.vue'
 import AppButton from '@/components/common/AppButton.vue'
 import IconWarning from '@/components/common/icons/IconWarning.vue'
@@ -87,31 +88,18 @@ const handleDownload = async () => {
 const goBack = () => {
   router.push({ path: '/insurance/claim', query: { step: '3' } })
 }
+registerHeaderBack(goBack)
 </script>
 
 <template>
   <div class="min-h-screen bg-(--color-gray-100) flex flex-col">
 
-    <!-- 상단 헤더 -->
-    <header class="print:hidden sticky top-0 z-10 flex items-center h-(--header-height) px-(--space-4) bg-(--color-white) border-b border-(--color-border)">
-      <button
-        type="button"
-        aria-label="뒤로가기"
-        class="flex items-center justify-center w-10 h-10 text-(color:--color-navy)"
-        @click="goBack"
-      >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
-      </button>
-      <h1 class="flex-1 text-center text-(length:--font-base) font-semibold text-(color:--color-navy)">
-        PDF 초안 미리보기
-      </h1>
-      <div class="w-10" />
-    </header>
-
     <!-- PDF 미리보기 영역 -->
     <div class="flex-1 p-(--space-5) px-(--space-4) pb-[calc(80px+var(--space-5))] overflow-y-auto">
+      <header class="mb-(--space-5) max-w-(--layout-max-width) mx-auto">
+        <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">PDF 초안 미리보기</h1>
+      </header>
+
       <div ref="previewRef" class="bg-(--color-white) rounded-(--radius-lg) [box-shadow:var(--shadow-md)] p-(--space-6) max-w-(--layout-max-width) mx-auto">
 
         <!-- PDF 헤더 -->
