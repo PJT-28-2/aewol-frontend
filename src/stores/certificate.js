@@ -1,11 +1,30 @@
 import { defineStore } from 'pinia'
 import { certificatesApi } from '@/api/certificates'
+import { petApi } from '@/api/pet'
 import { USE_MOCK_DATA } from '@/mocks/config'
-import { MOCK_PETS, MOCK_PET_DOCUMENTS, MOCK_REGISTRATION_DETAIL } from '@/mocks/pet'
+import { MOCK_PET_DOCUMENTS, MOCK_REGISTRATION_DETAIL } from '@/mocks/certificate'
+
+// mock 모드의 펫 탭 목록은 MOCK_REGISTRATION_DETAIL에서 뽑아 쓴다(등록증 연동 여부와 무관하게
+// 모든 펫이 하나씩 항목을 가지고 있음). 문서 상세 전용 필드(docId, rfidCd 등)는 제외한다
+function toPetSummary(detail) {
+  return {
+    petId: detail.petId,
+    memberId: detail.memberId,
+    name: detail.name,
+    species: detail.species,
+    breed: detail.breed,
+    birthDate: detail.birthDate,
+    gender: detail.gender,
+    weight: detail.weight,
+    neutered: detail.neutered,
+    regNumber: detail.regNumber,
+    medicalHistory: detail.medicalHistory,
+  }
+}
 
 export const useCertificateStore = defineStore('certificate', {
   state: () => ({
-    // 상단 펫 탭 — 지금은 이 스토어에서 목데이터로 자체 관리 (추후 usePetStore 연동 예정)
+    // 상단 펫 탭 — petId(문자열) 기준. usePetStore(id 기준)와는 별개로 이 도메인에서 자체 관리한다
     pets: [],
     selectedPetId: null,
 
@@ -25,8 +44,7 @@ export const useCertificateStore = defineStore('certificate', {
 
   getters: {
     isLoading: (state) => state.pendingRequestCount > 0,
-    selectedPet: (state) =>
-      state.pets.find((pet) => pet.petId === state.selectedPetId) ?? null,
+    selectedPet: (state) => state.pets.find((pet) => pet.petId === state.selectedPetId) ?? null,
   },
 
   actions: {
@@ -43,22 +61,43 @@ export const useCertificateStore = defineStore('certificate', {
       }
     },
 
+    // 선택된 펫이 없어질 때(펫 전체 삭제, 계정 전환 등) 호출 — 이전 펫의 문서/등록증 상태가
+    // 화면에 그대로 남는 것을 방지
+    resetCertificates() {
+      this.documents = []
+      this.registrationDoc = null
+      this.vaccinationDocs = []
+      this.medicalDocs = []
+    },
+
     // 사용자가 키우는 반려동물 전체를 상단 탭에 노출
     // 화면 재진입마다 다시 호출되므로, 목데이터 시딩은 최초 1회만 — 그렇지 않으면
     // 세션 중 업로드/연동/삭제로 바뀐 documents/registrationDetails가 매번 초기화됨
     async fetchPets() {
       if (USE_MOCK_DATA) {
         if (this.pets.length === 0) {
-          this.pets = structuredClone(MOCK_PETS)
-          this.documents = structuredClone(MOCK_PET_DOCUMENTS)
           this.registrationDetails = structuredClone(MOCK_REGISTRATION_DETAIL)
+          this.pets = Object.values(this.registrationDetails).map(toPetSummary)
+          this.documents = structuredClone(MOCK_PET_DOCUMENTS)
         }
-        if (!this.selectedPetId) {
-          this.selectedPetId = this.pets[0]?.petId ?? null
-        }
+        this._syncSelectedPetId()
         return
       }
-      // TODO: 백엔드 연동 시 GET /api/pets 결과로 교체
+      return this._withRequestState(async () => {
+        const { data } = await petApi.getPets()
+        this.pets = data.result ?? []
+        this._syncSelectedPetId()
+      })
+    },
+
+    // 새로 받아온 pets 기준으로 selectedPetId가 여전히 유효한지 확인.
+    // 펫 삭제나 계정 전환 후 이전 목록의 ID가 남아있을 수 있어, 목록에 없으면 첫 번째 펫으로 재설정(없으면 null)
+    _syncSelectedPetId() {
+      const stillExists = this.pets.some((pet) => pet.petId === this.selectedPetId)
+      if (!stillExists) {
+        this.selectedPetId = this.pets[0]?.petId ?? null
+        if (!this.selectedPetId) this.resetCertificates()
+      }
     },
 
     async selectPet(petId) {
@@ -67,8 +106,14 @@ export const useCertificateStore = defineStore('certificate', {
     },
 
     // GET /api/certificates
+    // 화면 재진입마다 다시 호출되므로, mock 문서 시딩은 documents가 비어있을 때만 — 그렇지 않으면
+    // 세션 중 업로드/연동/삭제로 바뀐 documents/registrationDetails가 매번 초기화됨
     async fetchCertificates(petId) {
       if (USE_MOCK_DATA) {
+        if (this.documents.length === 0) {
+          this.documents = structuredClone(MOCK_PET_DOCUMENTS)
+          this.registrationDetails = structuredClone(MOCK_REGISTRATION_DETAIL)
+        }
         const docs = this.documents.filter((doc) => doc.petId === petId)
         this.registrationDoc = docs.find((doc) => doc.docType === 'REGISTRATION') ?? null
         this.vaccinationDocs = docs.filter((doc) => doc.docType === 'VACCINATION')
@@ -77,7 +122,12 @@ export const useCertificateStore = defineStore('certificate', {
       }
       await this._withRequestState(async () => {
         const { data } = await certificatesApi.getList(petId)
+        // 응답을 받는 사이 다른 펫 탭으로 전환해 selectedPetId가 바뀌었으면, 이 응답은 더 이상
+        // 현재 선택된 펫의 것이 아니므로 버린다(빠른 탭 전환 시 이전 응답이 최신 상태를 덮어쓰는 것 방지)
+        if (this.selectedPetId !== petId) return
         const docs = data.result ?? []
+        // CertificateDetailView가 docId로 문서를 찾을 때 documents를 참조하므로 mock 모드와 동일하게 채워둔다
+        this.documents = docs
         this.registrationDoc = docs.find((doc) => doc.docType === 'REGISTRATION') ?? null
         this.vaccinationDocs = docs.filter((doc) => doc.docType === 'VACCINATION')
         this.medicalDocs = docs.filter((doc) => doc.docType === 'MEDICAL_CONFIRMATION')
@@ -111,7 +161,7 @@ export const useCertificateStore = defineStore('certificate', {
         // 조회 API 응답 지연 흉내
         await new Promise((resolve) => setTimeout(resolve, 800))
 
-        const today = new Date().toISOString().slice(0, 10)
+        const nowIso = new Date().toISOString().slice(0, 19)
         // 이미 연동된 동물등록증이 없는 펫들을 "신청인 명의로 조회된 동물"로 흉내냄
         const linkedPetIds = new Set(
           this.documents.filter((doc) => doc.docType === 'REGISTRATION').map((doc) => doc.petId),
@@ -126,14 +176,13 @@ export const useCertificateStore = defineStore('certificate', {
             gender: pet.gender,
             neutered: pet.neutered,
             birthDate: pet.birthDate,
-            furColor: '크림색',
-            ownerName: userName,
-            ownerPhone: phoneNo,
-            issueDate: today,
-            registerDate: today,
-            issueOrg: '국가동물보호정보시스템',
-            regState: '승인',
-            regType: '소유',
+            rfidCd: `41000001${String(Date.now()).slice(-8)}${pet.petId.slice(-1)}`,
+            rfidGubun: 'Y',
+            orgNm: '제주특별자치도 제주시',
+            officeTel: '064-728-2114',
+            aprGbnNm: '승인완료',
+            regTm: nowIso,
+            aprTm: nowIso,
           }))
 
         return candidates
@@ -165,7 +214,6 @@ export const useCertificateStore = defineStore('certificate', {
         const detail = {
           docId,
           ...candidate,
-          weight: pet?.weight ?? 0,
           lastSyncedAt: today,
         }
         this.registrationDetails = { ...this.registrationDetails, [docId]: detail }
@@ -178,7 +226,7 @@ export const useCertificateStore = defineStore('certificate', {
           docName: `${candidate.name} · 동물등록증`,
           docType: 'REGISTRATION',
           fileUrl: '',
-          issuedDate: candidate.issueDate,
+          issuedDate: today,
           createdAt: new Date().toISOString(),
         }
         this.documents = [newDoc, ...this.documents.filter((doc) => doc.docId !== docId)]
@@ -233,7 +281,7 @@ export const useCertificateStore = defineStore('certificate', {
 
       return this._withRequestState(async () => {
         await certificatesApi.deleteDocument(petId, docId)
-        if (this.selectedPetId) await this.fetchCertificates(this.selectedPetId)
+        await this.fetchCertificates(petId)
       })
     },
 
@@ -309,7 +357,7 @@ export const useCertificateStore = defineStore('certificate', {
 
       return this._withRequestState(async () => {
         await certificatesApi.deleteDocument(petId, docId)
-        if (this.selectedPetId) await this.fetchCertificates(this.selectedPetId)
+        await this.fetchCertificates(petId)
       })
     },
   },

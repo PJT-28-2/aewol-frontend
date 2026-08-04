@@ -101,7 +101,6 @@ export const useSupportStore = defineStore('support', {
         const mockResult = {
           inquiryId: Date.now(),
           inquiryNumber: `AEW-${dateStr}-${Math.floor(Math.random() * 9000 + 1000)}`,
-          submittedAt: now.toISOString(),
         };
         this.lastSubmittedInquiry = mockResult;
         this.myInquiries = [
@@ -122,8 +121,8 @@ export const useSupportStore = defineStore('support', {
       formData.append('category', category);
       formData.append('title', title);
       formData.append('content', content);
-      formData.append('email', email);
-      (images ?? []).forEach((file) => formData.append('images', file));
+      formData.append('replyEmail', email);
+      (images ?? []).forEach((file) => formData.append('attachments', file));
 
       const { data } = await submitInquiry(formData);
       this.lastSubmittedInquiry = data.result;

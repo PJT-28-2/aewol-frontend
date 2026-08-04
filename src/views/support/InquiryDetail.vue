@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useSupportStore } from '@/stores/support';
+import IconDocument from '@/components/common/icons/IconDocument.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -24,6 +25,19 @@ function statusClass(status) {
 function formatDate(dateString) {
   if (!dateString) return '';
   return dateString.slice(0, 10).replaceAll('-', '.');
+}
+
+// 첨부파일은 서버가 URL 문자열로만 내려줘서(File 객체가 아님), 확장자로 이미지/PDF를 구분해요.
+function isImageAttachment(url) {
+  return /\.(jpe?g|png)(\?.*)?$/i.test(url);
+}
+
+function attachmentFileName(url) {
+  try {
+    return decodeURIComponent(url.split('/').pop().split('?')[0]);
+  } catch {
+    return url;
+  }
 }
 
 async function loadInquiry() {
@@ -82,7 +96,12 @@ onMounted(loadInquiry);
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-2 leading-snug">
         {{ inquiry.title }}
       </h1>
-      <p class="text-(length:--font-xs) text-(color:--color-gray-500) mb-6">{{ formatDate(inquiry.createdAt) }} 문의</p>
+      <p class="text-(length:--font-xs) text-(color:--color-gray-500) mb-1">{{ formatDate(inquiry.createdAt) }} 문의</p>
+      <p v-if="inquiry.inquiryNumber || inquiry.replyEmail" class="text-(length:--font-xs) text-(color:--color-gray-500) mb-6">
+        <template v-if="inquiry.inquiryNumber">문의번호 {{ inquiry.inquiryNumber }}</template>
+        <template v-if="inquiry.inquiryNumber && inquiry.replyEmail"> · </template>
+        <template v-if="inquiry.replyEmail">{{ inquiry.replyEmail }}</template>
+      </p>
 
       <div class="h-px bg-(--color-border) mb-6" />
 
@@ -91,6 +110,24 @@ onMounted(loadInquiry);
         <p class="text-(length:--font-md) text-(color:--color-gray-700) leading-relaxed rounded-(--radius-xl) bg-(--color-surface) p-4">
           {{ inquiry.content }}
         </p>
+
+        <div v-if="inquiry.attachments?.length" class="flex gap-2 mt-3">
+          <a
+            v-for="url in inquiry.attachments"
+            :key="url"
+            :href="url"
+            :aria-label="`첨부파일 ${attachmentFileName(url)}`"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="block w-16 h-16 rounded-(--radius-lg) overflow-hidden bg-(--color-surface) shrink-0"
+          >
+            <img v-if="isImageAttachment(url)" :src="url" alt="" class="w-full h-full object-cover" />
+            <div v-else class="w-full h-full flex flex-col items-center justify-center gap-1 px-1">
+              <IconDocument :size="20" color="var(--color-gray-500)" />
+              <span class="text-(length:--font-xs) text-(color:--color-gray-600) truncate w-full text-center">{{ attachmentFileName(url) }}</span>
+            </div>
+          </a>
+        </div>
       </section>
 
       <section>
@@ -100,6 +137,9 @@ onMounted(loadInquiry);
           class="text-(length:--font-md) text-(color:--color-gray-700) leading-relaxed rounded-(--radius-xl) bg-(--color-surface) p-4"
         >
           {{ inquiry.answer }}
+        </p>
+        <p v-if="inquiry.status === 'ANSWERED' && inquiry.answeredAt" class="text-(length:--font-xs) text-(color:--color-gray-500) mt-2">
+          {{ formatDate(inquiry.answeredAt) }} 답변
         </p>
         <p v-else class="text-(length:--font-sm) text-(color:--color-gray-500) rounded-(--radius-xl) bg-(--color-surface) p-4 text-center">
           아직 답변이 등록되지 않았어요. 답변이 완료되면 알려드릴게요.

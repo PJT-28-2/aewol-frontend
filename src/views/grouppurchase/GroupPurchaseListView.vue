@@ -1,50 +1,38 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import IconUser from '@/components/common/icons/IconUser.vue';
+import IconChevronDown from '@/components/common/icons/IconChevronDown.vue';
+import IconGroupPurchase from '@/components/common/icons/IconGroupPurchase.vue';
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
+import EmptyState from '@/components/common/EmptyState.vue';
+import AppButton from '@/components/common/AppButton.vue';
+import { MOCK_GROUP_PURCHASE_LIST } from '@/mocks/groupPurchase';
+import { USE_MOCK_DATA } from '@/mocks/config';
+import { groupPurchaseApi } from '@/api/groupPurchase';
 
-// TODO: 백엔드 API 연동 후 mock 데이터 제거하고 실제 fetch로 교체
-const groupPurchases = ref([
-  {
-    id: 1,
-    productName: '프리미엄 사료 15kg',
-    category: '사료',
-    status: '진행중',
-    currentQuantity: 32,
-    targetQuantity: 50,
-    dDay: 'D-3',
-    badgeText: '30% 할인',
-  },
-  {
-    id: 2,
-    productName: '강아지 관절 영양제 3개월분',
-    category: '영양제',
-    status: '진행중',
-    currentQuantity: 8,
-    targetQuantity: 30,
-    dDay: 'D-7',
-    badgeText: '20% 할인',
-  },
-  {
-    id: 3,
-    productName: '고양이 스크래처 장난감 세트',
-    category: '장난감',
-    status: '마감(성공)',
-    currentQuantity: 20,
-    targetQuantity: 20,
-    dDay: 'D-0',
-    badgeText: '15% 할인',
-  },
-  {
-    id: 4,
-    productName: '강아지 방한 조끼',
-    category: '기타',
-    status: '마감(미달)',
-    currentQuantity: 12,
-    targetQuantity: 30,
-    dDay: 'D-0',
-    badgeText: '25% 할인',
-  },
-]);
+const groupPurchases = ref([]);
+const isLoading = ref(true);
+const isError = ref(false);
+
+// 카테고리 · 상태 · 검색어는 지금은 클라이언트에서만 필터링 (서버 필터 파라미터 규격이 정해지면 params로 교체 예정)
+async function loadGroupPurchases() {
+  isLoading.value = true;
+  isError.value = false;
+  try {
+    if (USE_MOCK_DATA) {
+      groupPurchases.value = MOCK_GROUP_PURCHASE_LIST;
+      return;
+    }
+    const { data } = await groupPurchaseApi.getList();
+    groupPurchases.value = data.result ?? [];
+  } catch {
+    isError.value = true;
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+onMounted(loadGroupPurchases);
 
 // 카테고리 필터: mock 데이터의 category 필드 기준으로 필터링 (현재는 클라이언트에서만 처리)
 const categories = ['전체', '사료', '영양제', '장난감', '기타'];
@@ -91,13 +79,19 @@ const filteredGroupPurchases = computed(() => {
     return matchesCategory && matchesStatus && matchesKeyword;
   });
 });
+
+// 등록된 공동구매 자체가 없는 경우와, 필터/검색 조건 때문에 안 보이는 경우를 구분해서 안내
+const emptyStateMessage = computed(() =>
+  groupPurchases.value.length === 0
+    ? '등록된 공동구매가 없어요'
+    : '조건에 맞는 공동구매가 없어요',
+);
 </script>
 
 <template>
   <div
     class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+88px)] bg-(--color-bg) min-h-screen"
   >
-
     <!-- 헤더 -->
     <header class="flex items-start justify-between mb-(--space-5)">
       <div>
@@ -114,7 +108,10 @@ const filteredGroupPurchases = computed(() => {
         aria-label="마이페이지"
         class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-(--color-gray-100) no-underline"
       >
-        <IconUser :size="24" color="var(--color-navy)" />
+        <IconUser
+          :size="24"
+          color="var(--color-navy)"
+        />
       </router-link>
     </header>
 
@@ -143,7 +140,7 @@ const filteredGroupPurchases = computed(() => {
         type="text"
         placeholder="상품명으로 검색해보세요"
         class="flex-1 min-w-0 px-(--space-4) py-(--space-3) bg-(--color-surface) border border-(--color-border) rounded-(--radius-md) text-(length:--font-sm) text-(color:--color-gray-700) placeholder:text-(color:--color-gray-500)"
-      />
+      >
 
       <div class="relative shrink-0">
         <button
@@ -152,13 +149,19 @@ const filteredGroupPurchases = computed(() => {
           @click="toggleStatusDropdown"
         >
           {{ statusLabel }}
-          <span class="text-(length:--font-xs) text-(color:--color-gray-500)">▾</span>
+          <IconChevronDown
+            size="14"
+            color="var(--color-gray-500)"
+          />
         </button>
         <ul
           v-if="isStatusOpen"
           class="absolute top-[calc(100%+var(--space-1))] right-0 z-10 min-w-[96px] list-none m-0 p-(--space-1) bg-(--color-white) border border-(--color-border) rounded-(--radius-md) shadow-(--shadow-md)"
         >
-          <li v-for="option in statusOptions" :key="option">
+          <li
+            v-for="option in statusOptions"
+            :key="option"
+          >
             <button
               type="button"
               class="w-full px-(--space-3) py-(--space-2) bg-transparent border-0 rounded-(--radius-sm) text-left text-(length:--font-sm) text-(color:--color-gray-700) hover:bg-(--color-gray-100)"
@@ -171,8 +174,42 @@ const filteredGroupPurchases = computed(() => {
       </div>
     </div>
 
+    <!-- 로딩 상태 -->
+    <div
+      v-if="isLoading"
+      class="flex justify-center py-(--space-9)"
+    >
+      <LoadingSpinner />
+    </div>
+
+    <!-- 에러 상태 -->
+    <div
+      v-else-if="isError"
+      class="flex flex-col items-center justify-center gap-(--space-4) py-(--space-9) px-(--space-4) text-center"
+    >
+      <p class="text-(length:--font-sm) text-(color:--color-slate-muted)">
+        공동구매 목록을 불러오지 못했어요
+      </p>
+      <AppButton
+        variant="navy"
+        @click="loadGroupPurchases"
+      >
+        다시 시도
+      </AppButton>
+    </div>
+
+    <!-- 빈 상태 -->
+    <EmptyState
+      v-else-if="filteredGroupPurchases.length === 0"
+      :icon="IconGroupPurchase"
+      :message="emptyStateMessage"
+    />
+
     <!-- 공동구매 목록 -->
-    <ul class="list-none p-0 m-0 flex flex-col gap-(--space-3)">
+    <ul
+      v-else
+      class="list-none p-0 m-0 flex flex-col gap-(--space-3)"
+    >
       <li
         v-for="gp in filteredGroupPurchases"
         :key="gp.id"
