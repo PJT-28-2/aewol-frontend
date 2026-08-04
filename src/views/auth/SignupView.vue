@@ -104,7 +104,7 @@ const handleSignup = async () => {
 
   if (!isKakaoSignup.value && !isPasswordValid.value) {
     errorMessage.value =
-      '영문·숫자·특수문자 중 2가지 조합은 10자리, 3가지 조합은 8자리 이상 입력해 주세요.'
+      '영문·숫자·특수문자 중 2가지 조합은 10자리 이상, 3가지 조합은 8자리 이상 입력해 주세요.'
     return
   }
 
