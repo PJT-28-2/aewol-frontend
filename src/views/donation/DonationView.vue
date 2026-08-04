@@ -17,7 +17,7 @@ import IconStar from '@/components/common/icons/IconStar.vue'
 import IconWarning from '@/components/common/icons/IconWarning.vue'
 import donationCompleteImage from '@/assets/images/donation-complete.png'
 import donationConfirmImage from '@/assets/images/donation-confirm.png'
-import { donationAmountPresets, donationCategories, savingUnits } from '@/mocks/donation'
+import { donationAmountPresets, donationCategories, savingUnits } from '@/constants/donation'
 import { useDonationStore } from '@/stores/donation'
 import { formatWon } from '@/utils/bankMeta'
 
@@ -55,7 +55,7 @@ function go(path) {
  * 아직 불러오지 않았을 때만 조회한다. 에러 후 재시도는 스토어를 직접 호출한다.
  */
 function loadDonationData() {
-  if (donationStore.hasCampaigns) return
+  if (donationStore.isInitialized) return
 
   donationStore.fetchDonationData()
 }
@@ -65,13 +65,12 @@ function chooseCampaign(campaignId) {
   go('/donation/give')
 }
 
-function donate() {
-  if (donationStore.donate()) go('/donation/complete')
+async function donate() {
+  if (await donationStore.donate()) go('/donation/complete')
 }
 
-function saveSettings() {
-  donationStore.saveSettings()
-  go('/donation')
+async function saveSettings() {
+  if (await donationStore.saveSettings()) go('/donation')
 }
 
 onMounted(loadDonationData)
@@ -454,6 +453,13 @@ onMounted(loadDonationData)
         >
           잔액이 부족해 기부할 수 없어요.
         </p>
+        <p
+          v-if="donationStore.operationError"
+          class="mt-[var(--space-2)] text-[length:var(--font-sm)] text-(--color-danger-strong)"
+          role="alert"
+        >
+          {{ donationStore.operationError }}
+        </p>
         <div class="flex gap-[var(--space-3)]">
           <AppButton
             block
@@ -468,7 +474,8 @@ onMounted(loadDonationData)
             block
             size="lg"
             variant="navy"
-            :disabled="!donationStore.canDonate"
+            :disabled="!donationStore.canDonate || donationStore.isSubmitting"
+            :loading="donationStore.isSubmitting"
             @click="donate"
           >
             기부하기
@@ -671,15 +678,52 @@ onMounted(loadDonationData)
         />
       </section>
 
+      <template v-if="autoDonate">
+        <h3
+          class="mb-[var(--space-3)] mt-[var(--space-5)] text-[length:var(--font-sm)] text-(--color-slate-dark)"
+        >
+          자동 기부 캠페인
+        </h3>
+        <div
+          v-if="donationStore.hasCampaigns"
+          class="flex flex-wrap gap-[var(--space-2)]"
+        >
+          <SelectableChip
+            v-for="campaign in donationStore.campaigns"
+            :key="campaign.id"
+            :selected="currentCampaign?.id === campaign.id"
+            @click="donationStore.selectCampaign(campaign.id)"
+          >
+            {{ campaign.organization }} · {{ campaign.title }}
+          </SelectableChip>
+        </div>
+        <p
+          v-else
+          class="m-0 text-[length:var(--font-sm)] text-(--color-danger-strong)"
+          role="alert"
+        >
+          자동 기부로 선택할 수 있는 진행 중 캠페인이 없어요.
+        </p>
+      </template>
+
       <AppButton
         class="mt-[var(--space-5)]"
         block
         size="lg"
         variant="primary"
+        :disabled="donationStore.isSubmitting || (autoDonate && !currentCampaign)"
+        :loading="donationStore.isSubmitting"
         @click="saveSettings"
       >
         설정 저장하기
       </AppButton>
+      <p
+        v-if="donationStore.operationError"
+        class="mt-[var(--space-3)] text-center text-[length:var(--font-sm)] text-(--color-danger-strong)"
+        role="alert"
+      >
+        {{ donationStore.operationError }}
+      </p>
     </template>
 
     <section

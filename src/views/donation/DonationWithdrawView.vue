@@ -10,7 +10,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import SelectableChip from '@/components/common/SelectableChip.vue'
 import IconInfo from '@/components/common/icons/IconInfo.vue'
 import IconSavings from '@/components/common/icons/IconSavings.vue'
-import { donationAmountPresets } from '@/mocks/donation'
+import { donationAmountPresets } from '@/constants/donation'
 import { useDonationStore } from '@/stores/donation'
 import { formatWon } from '@/utils/bankMeta'
 
@@ -53,8 +53,8 @@ function openConfirm() {
  * 화면 전체를 덮는 오버레이가 클릭을 가로챈다. 이동 시에는 닫기 토글 없이
  * 언마운트가 시트를 정리하도록 둔다.
  */
-function confirmWithdraw() {
-  if (!donationStore.withdraw()) return
+async function confirmWithdraw() {
+  if (!(await donationStore.withdraw())) return
 
   donationStore.resetWithdraw()
   router.push('/wallet')
@@ -63,7 +63,7 @@ function confirmWithdraw() {
 onMounted(() => {
   donationStore.resetWithdraw()
 
-  if (!donationStore.hasCampaigns) donationStore.fetchDonationData()
+  if (!donationStore.isInitialized) donationStore.fetchDonationData()
 })
 </script>
 
@@ -199,6 +199,13 @@ onMounted(() => {
               : '지갑으로 출금하기'
           }}
         </AppButton>
+        <p
+          v-if="donationStore.operationError"
+          class="mt-[var(--space-3)] text-center text-[length:var(--font-sm)] text-(--color-danger-strong)"
+          role="alert"
+        >
+          {{ donationStore.operationError }}
+        </p>
       </template>
 
       <EmptyState
@@ -255,6 +262,8 @@ onMounted(() => {
         block
         size="lg"
         variant="navy"
+        :disabled="donationStore.isSubmitting"
+        :loading="donationStore.isSubmitting"
         @click="confirmWithdraw"
       >
         출금하기
