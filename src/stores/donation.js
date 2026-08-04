@@ -28,6 +28,10 @@ export const useDonationStore = defineStore('donation', {
       piggyBankEnabled: true,
       savingUnit: DEFAULT_SAVING_UNIT,
     },
+    // 응답만 유실된 재시도에서 서버가 같은 기부를 두 번 처리하지 않도록
+    // (campaignId, amount) 조합에 묶인 멱등키를 성공 전까지 보관한다.
+    pendingDonationKey: null,
+    pendingDonationSignature: '',
     withdrawAmount: 0,
     withdrawError: '',
     isLoading: true,
@@ -121,6 +125,7 @@ export const useDonationStore = defineStore('donation', {
     },
 
     selectCampaign(campaignId) {
+      if (this.isSubmitting) return
       if (!this.campaigns.some((campaign) => campaign.id === campaignId)) return
       this.selectedCampaignId = campaignId
       this.operationError = ''
@@ -141,15 +146,18 @@ export const useDonationStore = defineStore('donation', {
     },
 
     setSavingUnit(unit) {
+      if (this.isSubmitting) return
       if (!savingUnits.includes(unit)) return
       this.savingUnit = unit
     },
 
     setPiggyBankEnabled(enabled) {
+      if (this.isSubmitting) return
       this.piggyBankEnabled = enabled
     },
 
     setAutoDonate(enabled) {
+      if (this.isSubmitting) return
       this.autoDonate = enabled
     },
 
@@ -158,13 +166,13 @@ export const useDonationStore = defineStore('donation', {
       this.isSubmitting = true
       this.operationError = ''
       try {
-        const idempotencyKey = globalThis.crypto?.randomUUID?.()
-          ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`
+        const idempotencyKey = this.resolveDonationKey()
         const result = unwrap(await donationApi.donate({
           amount: this.amount,
           campaignId: this.selectedCampaignId,
           idempotencyKey,
         }))
+        this.clearDonationKey()
         this.balance = Number(result.balance)
         const campaign = this.currentCampaign
         if (campaign) {
@@ -178,6 +186,26 @@ export const useDonationStore = defineStore('donation', {
       } finally {
         this.isSubmitting = false
       }
+    },
+
+    /**
+     * 같은 캠페인·금액으로 다시 시도하면 이전 키를 그대로 쓴다.
+     * 캠페인이나 금액이 바뀌면 다른 기부이므로 새 키를 만든다.
+     */
+    resolveDonationKey() {
+      const signature = `${this.selectedCampaignId}:${this.amount}`
+      if (this.pendingDonationKey && this.pendingDonationSignature === signature) {
+        return this.pendingDonationKey
+      }
+      this.pendingDonationSignature = signature
+      this.pendingDonationKey = globalThis.crypto?.randomUUID?.()
+        ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`
+      return this.pendingDonationKey
+    },
+
+    clearDonationKey() {
+      this.pendingDonationKey = null
+      this.pendingDonationSignature = ''
     },
 
     setWithdrawAmount(amount) {

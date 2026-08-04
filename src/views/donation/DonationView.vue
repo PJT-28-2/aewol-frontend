@@ -619,6 +619,7 @@ onMounted(loadDonationData)
         </div>
         <ToggleSwitch
           :model-value="piggyBankEnabled"
+          :disabled="donationStore.isSubmitting"
           label="짜투리 저금통 사용"
           @update:model-value="donationStore.setPiggyBankEnabled($event)"
         />
@@ -636,6 +637,7 @@ onMounted(loadDonationData)
           block
           shape="rounded"
           :selected="savingUnit === unit"
+          :disabled="donationStore.isSubmitting"
           @click="donationStore.setSavingUnit(unit)"
         >
           {{ formatWon(unit) }}
@@ -673,6 +675,7 @@ onMounted(loadDonationData)
         </div>
         <ToggleSwitch
           :model-value="autoDonate"
+          :disabled="donationStore.isSubmitting"
           label="매달 자동으로 기부하기"
           @update:model-value="donationStore.setAutoDonate($event)"
         />
@@ -692,6 +695,7 @@ onMounted(loadDonationData)
             v-for="campaign in donationStore.campaigns"
             :key="campaign.id"
             :selected="currentCampaign?.id === campaign.id"
+            :disabled="donationStore.isSubmitting"
             @click="donationStore.selectCampaign(campaign.id)"
           >
             {{ campaign.organization }} · {{ campaign.title }}
