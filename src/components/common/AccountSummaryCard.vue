@@ -19,23 +19,25 @@ const bankMeta = computed(() => getBankMeta(props.bankCode));
 
 <template>
   <div
-    class="flex items-start gap-(--space-3) p-(--space-4) rounded-(--radius-xl) bg-(--color-surface) text-left"
-    :class="bordered ? 'border border-(--color-border)' : ''"
+    class="flex items-center gap-(--space-3) p-(--space-4) text-left"
+    :class="
+      bordered
+        ? 'bg-(--color-white) border border-(--color-border) rounded-(--radius-icon)'
+        : 'bg-(--color-surface) rounded-(--radius-xl)'
+    "
   >
     <BankBadge :bank-code="bankCode" :size="badgeSize" />
     <div class="flex-1">
-      <div class="flex items-center justify-between">
-        <div class="flex items-baseline gap-1.5">
-          <span class="font-(--font-bold) text-(color:--color-navy) text-(length:--font-base)">{{ bankMeta.name }}</span>
-          <span v-if="accountNumberMasked" class="text-(length:--font-sm) text-(color:--color-gray-500)">
-            {{ accountNumberMasked }}
-          </span>
-        </div>
-        <slot name="action" />
+      <div class="flex items-baseline gap-1.5">
+        <span class="font-(--font-bold) text-(color:--color-navy) text-(length:--font-base)">{{ bankMeta.name }}</span>
+        <span v-if="accountNumberMasked" class="text-(length:--font-sm) text-(color:--color-gray-500)">
+          {{ accountNumberMasked }}
+        </span>
       </div>
       <p class="text-(length:--font-sm) text-(color:--color-gray-600) mt-(--space-1)">
         {{ formatWon(balance) }}<span v-if="isPrimary"> · 주계좌</span>
       </p>
     </div>
+    <slot name="action" />
   </div>
 </template>

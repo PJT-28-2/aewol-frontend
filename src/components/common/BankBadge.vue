@@ -17,8 +17,16 @@ const meta = computed(() => getBankMeta(props.bankCode, props.fallbackName));
 </script>
 
 <template>
+  <img
+    v-if="meta.logo"
+    :src="meta.logo"
+    alt=""
+    class="shrink-0 object-cover"
+    :style="{ width: `${size}px`, height: `${size}px` }"
+  />
   <div
-    class="flex items-center justify-center rounded-(--radius-md) font-(--font-bold) shrink-0"
+    v-else
+    class="flex items-center justify-center rounded-(--radius-md) font-bold shrink-0"
     :class="[meta.bg, meta.text]"
     :style="{ width: `${size}px`, height: `${size}px`, fontSize: `${size * BADGE_FONT_RATIO}px` }"
   >

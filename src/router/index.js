@@ -37,11 +37,6 @@ const publicRoutes = [
     component: () => import('@/views/auth/SignupCompleteView.vue'),
   },
   {
-    path: '/signup/verify',
-    name: 'SignupVerify',
-    component: () => import('@/views/auth/SignupVerifyView.vue'),
-  },
-  {
     path: '/password/reset',
     name: 'PasswordReset',
     component: () => import('@/views/auth/PasswordResetView.vue'),
@@ -92,6 +87,18 @@ const authRoutes = [
     path: '/account/link/verify',
     name: 'AccountAuthOneWon',
     component: () => import('@/views/account/AccountAuthOneWon.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
+  },
+  {
+    path: '/account/link/password',
+    name: 'AccountPasswordSetup',
+    component: () => import('@/views/account/AccountPasswordSetupView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
+  },
+  {
+    path: '/account/link/password/confirm',
+    name: 'AccountPasswordConfirm',
+    component: () => import('@/views/account/AccountPasswordConfirmView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
@@ -201,24 +208,6 @@ const authRoutes = [
     meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
-    path: '/accounts',
-    name: 'AccountList',
-    component: () => import('@/views/account/AccountListView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
-  },
-  {
-    path: '/accounts/connect',
-    name: 'AccountConnect',
-    component: () => import('@/views/account/AccountConnectView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
-  },
-  {
-    path: '/payment',
-    name: 'Payment',
-    component: () => import('@/views/payment/PaymentView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
-  },
-  {
     path: '/payment/recurring',
     name: 'Recurring',
     component: () => import('@/views/payment/RecurringView.vue'),
@@ -255,12 +244,6 @@ const authRoutes = [
     meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
-    path: '/dashboard/pet/:petId',
-    name: 'PetDashboard',
-    component: () => import('@/views/dashboard/PetDashboardView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
-  },
-  {
     path: '/insurance',
     name: 'InsuranceHome',
     component: () => import('@/views/insurance/InsuranceHomeView.vue'),
@@ -277,12 +260,6 @@ const authRoutes = [
     name: 'Claim',
     component: () => import('@/views/insurance/ClaimView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
-  },
-  {
-    path: '/insurance/claims',
-    name: 'ClaimList',
-    component: () => import('@/views/insurance/ClaimListView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
   },
   {
     path: '/insurance/claim/pdf-draft',

@@ -3,6 +3,7 @@ import { onMounted, computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAccountStore } from '@/stores/account';
 import { ENABLED_BANK_CODES } from '@/mocks/account';
+import AppButton from '@/components/common/AppButton.vue';
 import BankBadge from '@/components/common/BankBadge.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 
@@ -48,10 +49,10 @@ function selectBank(bankCode) {
   <div class="min-h-screen max-w-(--content-max-width) mx-auto bg-(--color-bg) px-(--space-5) pt-(--space-4) pb-(--space-8)">
 
     <header class="mb-7">
-      <h1 class="text-(length:--font-2xl) font-(--font-bold) text-(color:--color-navy)">
+      <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">
         계좌 연동하기
       </h1>
-      <p class="text-(length:--font-md) text-(color:--color-gray-600) mt-(--space-1)">
+      <p class="text-(length:--font-md) text-(color:--color-slate-muted) mt-(--space-1)">
         연동할 은행을 선택해주세요
       </p>
     </header>
@@ -70,12 +71,13 @@ function selectBank(bankCode) {
       <p class="text-(length:--font-sm) text-(color:--color-danger-strong) mb-(--space-3)">
         {{ loadError }}
       </p>
-      <button
-        class="px-(--space-5) py-(--space-2) rounded-(--radius-lg) bg-(--color-navy) text-(color:--color-white) text-(length:--font-sm) font-(--font-semibold)"
+      <AppButton
+        variant="navy"
+        size="sm"
         @click="loadBanks"
       >
         다시 시도
-      </button>
+      </AppButton>
     </div>
 
     <div
@@ -85,23 +87,26 @@ function selectBank(bankCode) {
       <button
         v-for="bank in normalizedBanks"
         :key="bank.code"
-        class="relative flex items-center gap-(--space-3) p-(--space-4) rounded-(--radius-xl) bg-(--color-surface) border border-(--color-border) text-left"
-        :class="isEnabled(bank.code) ? '' : 'opacity-50'"
+        class="relative flex items-start gap-(--space-3) py-(--space-4) pr-(--space-4) pl-(--space-5) rounded-(--radius-xl) bg-(--color-white) border border-(--color-border) text-left overflow-hidden"
+        :class="isEnabled(bank.code) ? '' : 'pointer-events-none cursor-not-allowed'"
         :disabled="!isEnabled(bank.code)"
         @click="selectBank(bank.code)"
       >
-        <BankBadge
-          :bank-code="bank.code"
-          :fallback-name="bank.name"
-          :size="36"
-        />
-        <span class="font-(--font-semibold) text-(color:--color-navy) text-(length:--font-md)">{{ bank.name }}</span>
-        <span
-          v-if="!isEnabled(bank.code)"
-          class="absolute top-2 right-2 px-(--space-2) py-0.5 rounded-(--radius-full) bg-(--color-gray-200) text-(length:--font-xs) text-(color:--color-gray-600)"
+        <div
+          class="flex items-start gap-(--space-3)"
+          :class="isEnabled(bank.code) ? '' : 'opacity-40'"
         >
-          준비중
-        </span>
+          <BankBadge
+            :bank-code="bank.code"
+            :fallback-name="bank.name"
+            :size="36"
+          />
+          <span class="self-center font-semibold text-(color:--color-navy) text-(length:--font-md)">{{ bank.name }}</span>
+        </div>
+        <div
+          v-if="!isEnabled(bank.code)"
+          class="absolute inset-0 bg-white/70"
+        />
       </button>
     </div>
 
