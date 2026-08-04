@@ -30,31 +30,38 @@ const inviteCode = computed(() => {
   }
 });
 
-async function validateInvite() {
+// 검증 요청이 대기하는 동안 입력이 바뀔 수 있어, 호출 시점의 코드를 캡처해
+// 검증·표시·수락에 같은 값만 사용하고 뒤늦게 도착한 이전 응답은 무시한다.
+async function validateInvite(code = inviteCode.value) {
   errorMessage.value = ''
   inviteDetail.value = null
-  if (!inviteCode.value) return false
+  if (!code) return false
   try {
-    inviteDetail.value = await shareStore.getInvite(inviteCode.value)
+    const detail = await shareStore.getInvite(code)
+    if (code !== inviteCode.value) return false
+    inviteDetail.value = detail
     return true
   } catch (error) {
-    errorMessage.value = error.response?.data?.message || '유효하지 않거나 만료된 초대 링크예요.'
+    if (code === inviteCode.value) {
+      errorMessage.value = error.response?.data?.message || '유효하지 않거나 만료된 초대 링크예요.'
+    }
     return false
   }
 }
 
 async function joinShare() {
   errorMessage.value = '';
+  const code = inviteCode.value
 
-  if (!inviteCode.value) {
+  if (!code) {
     errorMessage.value = '유효한 초대 링크를 입력해 주세요.'
     return
   }
 
   isJoining.value = true;
   try {
-    if (!(await validateInvite())) return
-    await shareStore.joinSharedCare(inviteCode.value)
+    if (!(await validateInvite(code))) return
+    await shareStore.joinSharedCare(code)
     await router.push('/share')
   } catch (error) {
     errorMessage.value = error.response?.data?.message || '공동육아에 참여하지 못했어요. 다시 시도해 주세요.'

@@ -19,6 +19,9 @@ const errorMessage = (error, fallback) => error.response?.data?.message || fallb
 
 export const useShareStore = defineStore('share', {
   state: () => ({
+    // 반려동물을 빠르게 바꿀 때 늦게 도착한 이전 응답이 최신 상태를 덮어쓰지 않도록
+    // 요청마다 순번을 매기고 마지막 요청만 상태를 갱신한다.
+    sharedCareRequestId: 0,
     pets: [],
     members: [],
     contributions: [],
@@ -46,6 +49,7 @@ export const useShareStore = defineStore('share', {
 
     async fetchSharedCare(petId) {
       if (!petId) return
+      const requestId = ++this.sharedCareRequestId
       this.isLoading = true
       this.error = ''
       try {
@@ -54,6 +58,7 @@ export const useShareStore = defineStore('share', {
           shareApi.getContributions(petId),
           shareApi.getLogs(petId),
         ])
+        if (requestId !== this.sharedCareRequestId) return
         this.members = (unwrap(membersResponse) ?? []).map((member, index) => ({
           ...member,
           avatarClass: MEMBER_AVATAR_CLASSES[index % MEMBER_AVATAR_CLASSES.length],
@@ -64,12 +69,13 @@ export const useShareStore = defineStore('share', {
         })
         this.activities = unwrap(logsResponse) ?? []
       } catch (error) {
+        if (requestId !== this.sharedCareRequestId) return
         this.members = []
         this.contributions = []
         this.activities = []
         this.error = errorMessage(error, '공동 육아 정보를 불러오지 못했어요. 다시 시도해 주세요.')
       } finally {
-        this.isLoading = false
+        if (requestId === this.sharedCareRequestId) this.isLoading = false
       }
     },
 
