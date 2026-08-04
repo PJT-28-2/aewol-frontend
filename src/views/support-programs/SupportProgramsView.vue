@@ -39,9 +39,19 @@ function goToList() {
   router.push({ name: 'SupportPrograms' })
 }
 
-function applyForProgram() {
+async function applyForProgram() {
   if (selectedProgram.value?.eligible) {
-    supportProgramsStore.applyForProgram(selectedProgram.value.id)
+    const applyUrl = selectedProgram.value.applyUrl
+    const applyWindow = applyUrl ? window.open('about:blank', '_blank') : null
+    if (applyWindow) applyWindow.opener = null
+    const saved = await supportProgramsStore.applyForProgram(selectedProgram.value.id)
+    if (saved && applyWindow) {
+      applyWindow.location.replace(applyUrl)
+    } else if (saved && applyUrl) {
+      window.location.assign(applyUrl)
+    } else if (applyWindow) {
+      applyWindow.close()
+    }
   }
 }
 
@@ -105,12 +115,12 @@ watch(
     <template v-else-if="!isDetail">
       <header>
         <h1 class="m-0 text-[length:var(--font-2xl)] font-bold leading-[1.3]">
-          보리 맞춤 지원사업
+          {{ supportProgramsStore.petName || '반려동물' }} 맞춤 지원사업
         </h1>
         <p
           class="mb-0 mt-[var(--space-1)] text-[length:var(--font-md)] text-(--color-slate-muted)"
         >
-          보리의 조건에 맞는 지원사업을 모아봤어요
+          {{ supportProgramsStore.petName || '반려동물' }}의 조건에 맞는 지원사업을 모아봤어요
         </p>
       </header>
 
@@ -242,7 +252,9 @@ watch(
         class="mb-0 mt-[var(--space-4)] rounded-[var(--radius-lg)] bg-(--color-olive-surface) p-[var(--space-3)] text-center text-[length:var(--font-sm)] font-bold text-(--color-olive)"
         role="status"
       >
-        신청 준비가 완료됐어요. 안내에 따라 서류를 제출해 주세요.
+        {{ selectedProgram.applyUrl
+          ? '신청 페이지를 열었어요. 안내에 따라 서류를 제출해 주세요.'
+          : '관심 정책으로 저장했어요. 주관 기관에 신청 방법을 문의해 주세요.' }}
       </p>
 
       <div class="mt-[var(--space-4)] space-y-[var(--space-3)]">
@@ -251,7 +263,8 @@ watch(
           block
           size="lg"
           variant="navy"
-          :disabled="isApplied"
+          :disabled="isApplied || supportProgramsStore.isApplying"
+          :loading="supportProgramsStore.isApplying"
           @click="applyForProgram"
         >
           {{ isApplied ? '신청 준비 완료' : '신청하기' }}
