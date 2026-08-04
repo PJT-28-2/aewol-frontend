@@ -37,7 +37,14 @@ export const useSupportProgramsStore = defineStore('supportPrograms', {
     },
 
     async applyForProgram(programId) {
-      if (!this.petId) return false
+      // 진행 중이거나 이미 신청한 건은 재요청하지 않는다
+      if (
+        !this.petId ||
+        this.isApplying ||
+        this.appliedProgramIds.includes(programId)
+      ) {
+        return false
+      }
       this.isApplying = true
       this.error = ''
       try {
