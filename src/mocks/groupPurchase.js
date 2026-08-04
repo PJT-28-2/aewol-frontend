@@ -1,6 +1,8 @@
 import productImage from '@/assets/images/mock-product-dogfood.png'
 
 // 공동구매 목록 화면(GroupPurchaseListView) 목데이터
+// isOwner: 로그인 유저가 이 글의 작성자인지 여부 (진행중 글에서 '참여하기'/'확인하기' 버튼 분기에 사용).
+// 실 API에서는 item.memberId와 로그인 유저 memberId를 비교해서 판정 (GroupPurchaseMyView와 동일 방식)
 // TODO: 백엔드 API 연동 후 제거하고 groupPurchaseApi.getList()로 교체
 export const MOCK_GROUP_PURCHASE_LIST = [
   {
@@ -12,6 +14,7 @@ export const MOCK_GROUP_PURCHASE_LIST = [
     targetQuantity: 50,
     dDay: 'D-3',
     badgeText: '30% 할인',
+    isOwner: false,
   },
   {
     id: 2,
@@ -22,6 +25,7 @@ export const MOCK_GROUP_PURCHASE_LIST = [
     targetQuantity: 30,
     dDay: 'D-7',
     badgeText: '20% 할인',
+    isOwner: true,
   },
   {
     id: 3,
@@ -32,6 +36,7 @@ export const MOCK_GROUP_PURCHASE_LIST = [
     targetQuantity: 20,
     dDay: 'D-0',
     badgeText: '15% 할인',
+    isOwner: false,
   },
   {
     id: 4,
@@ -42,6 +47,7 @@ export const MOCK_GROUP_PURCHASE_LIST = [
     targetQuantity: 30,
     dDay: 'D-0',
     badgeText: '25% 할인',
+    isOwner: true,
   },
 ]
 
@@ -64,7 +70,8 @@ export const MOCK_GROUP_PURCHASE_DETAIL = {
 // 나의 공동구매 목록(GroupPurchaseMyView) 목데이터
 // role: group_purchase_participant에 로그인 유저 member_id의 참여 row가 있으면 '참여',
 // 없이 group_purchase 작성자 member_id만 일치하면 '작성'으로 판정
-// '참여'는 GroupPurchaseStatusView(결제/취소)로, '작성'은 GroupPurchaseDetailView(읽기 전용)로 이동
+// role과 무관하게 항상 GroupPurchaseStatusView로 이동하고, 화면 안에서 역할에 따라 버튼만 달라짐
+// (참여: 참여 취소하기 / 작성: 공동구매 취소)
 // TODO: 백엔드 API 연동 후 제거하고 groupPurchaseApi.getMyList()로 교체
 export const MOCK_MY_GROUP_PURCHASES = [
   {
@@ -112,8 +119,11 @@ export const MOCK_MY_GROUP_PURCHASES = [
 // 공동구매 상태 조회(GroupPurchaseStatusView) 목데이터 — 응답 포맷과 동일한 구조
 // gpId는 route.params.gpId를 그대로 써야 해서 화면에서 덧붙여 사용
 // productName은 API 응답의 title 필드에 대응
+// isOwner: mock 모드에서 작성자/참여자 화면을 확인하기 위한 전용 필드 (true면 참여 취소 대신 공동구매 취소 버튼이 보임).
+// 실 API에서는 이 객체의 memberId와 로그인 유저 memberId를 비교해서 판정
 // TODO: 백엔드 API 연동 후 제거하고 groupPurchaseApi.getStatus(id)로 교체
 export const MOCK_GROUP_PURCHASE_STATUS = {
+  isOwner: false,
   productName: '프리미엄 사료 15kg',
   status: 'waiting',
   currentQuantity: 3,

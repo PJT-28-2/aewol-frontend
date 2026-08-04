@@ -38,11 +38,6 @@ async function loadDetail() {
 
 onMounted(loadDetail);
 
-// isOwner: 상세 API 응답의 작성자 member_id와 로그인 유저 member_id 비교 결과로 교체 예정.
-// 지금은 마이페이지의 "작성" 글 카드가 붙여주는 ?owner=1 쿼리로 흉내냄 —
-// true면 마이페이지의 "작성" 글로 들어온 경우이므로 수량 선택/결제 없이 읽기 전용으로 보여줌
-const isOwner = computed(() => route.query.owner === '1');
-
 const WEEKDAY_LABELS = [
   '일',
   '월',
@@ -99,11 +94,9 @@ const discountRate = computed(() =>
   ),
 );
 
-// 내가 선택한 수량을 반영했을 때의 참여 현황(미리보기). 작성자가 자기 글을 보는 경우엔 구매 미리보기가 필요 없어 현재 수량 그대로 표시
-const displayedCurrentQuantity = computed(() =>
-  isOwner.value
-    ? groupPurchase.value.currentQuantity
-    : groupPurchase.value.currentQuantity + quantity.value,
+// 내가 선택한 수량을 반영했을 때의 참여 현황(미리보기)
+const displayedCurrentQuantity = computed(
+  () => groupPurchase.value.currentQuantity + quantity.value,
 );
 
 // 목표 수량까지 남은 개수 (음수 방지)
@@ -149,6 +142,11 @@ const deadlineLabel = computed(() => {
 // 마감 여부: 마감 후에는 수량 선택/결제를 막는다
 const isExpired = computed(() => deadlineLabel.value === '마감');
 
+// 템플릿의 "마감까지 " 접두어와 결합했을 때 마감 지난 경우 "마감까지 마감"으로 겹쳐 보이지 않도록 분리
+const deadlineDisplayLabel = computed(() =>
+  isExpired.value ? '마감' : `마감까지 ${deadlineLabel.value}`,
+);
+
 // delivery_fee가 0원이면 무료로 표시
 const deliveryFeeLabel = computed(() =>
   groupPurchase.value.deliveryFee === 0
@@ -181,12 +179,7 @@ function goToPaymentPreview() {
 
 <template>
   <div
-    class="p-(--space-4) bg-(--color-bg) min-h-screen"
-    :class="
-      isOwner
-        ? 'pb-(--space-6)'
-        : 'pb-[calc(var(--bottom-nav-height)+var(--size-cta-bar-height))]'
-    "
+    class="p-(--space-4) bg-(--color-bg) min-h-screen pb-[calc(var(--bottom-nav-height)+var(--size-cta-bar-height))]"
   >
     <!-- 로딩 상태 -->
     <div
@@ -217,7 +210,7 @@ function goToPaymentPreview() {
         <h1
           class="text-(length:--font-2xl) font-bold text-(color:--color-navy)"
         >
-          {{ isOwner ? '나의 공동구매' : '공동구매 참여' }}
+          공동구매 참여
         </h1>
       </header>
 
@@ -291,7 +284,7 @@ function goToPaymentPreview() {
           <p
             class="text-(length:--font-xs) text-(color:--color-slate-muted)"
           >
-            마감까지 {{ deadlineLabel }}
+            {{ deadlineDisplayLabel }}
           </p>
           <!-- 목표까지 남은 수량도 선택 수량 반영 기준으로 갱신 -->
           <p
@@ -302,11 +295,8 @@ function goToPaymentPreview() {
         </div>
       </section>
 
-      <!-- 수량 선택: 작성자가 자기 글을 보는 경우엔 구매 대상이 아니므로 숨김 -->
-      <section
-        v-if="!isOwner"
-        class="mb-(--space-6)"
-      >
+      <!-- 수량 선택 -->
+      <section class="mb-(--space-6)">
         <p
           class="text-(length:--font-sm) font-bold text-(color:--color-slate-dark) mb-(--space-3)"
         >
@@ -396,9 +386,8 @@ function goToPaymentPreview() {
         </div>
       </section>
 
-      <!-- 결제 버튼: 금액은 groupPrice * 선택 수량으로 실시간 계산. 작성자가 자기 글을 보는 경우엔 결제 대상이 아니므로 숨김 -->
+      <!-- 결제 버튼: 금액은 groupPrice * 선택 수량으로 실시간 계산 -->
       <div
-        v-if="!isOwner"
         class="fixed bottom-(--bottom-nav-height) inset-x-0 p-(--space-4) bg-(--color-white)"
       >
         <AppButton
