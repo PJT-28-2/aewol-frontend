@@ -9,7 +9,10 @@ import PinAuthSheet from '@/components/common/PinAuthSheet.vue';
 import statusWaitingImage from '@/assets/images/group-purchase-waiting.png';
 import statusConfirmedImage from '@/assets/images/group-purchase-confirmed.png';
 import statusCancelledImage from '@/assets/images/group-purchase-cancelled.png';
-import { MOCK_GROUP_PURCHASE_STATUS } from '@/mocks/groupPurchase';
+import {
+  MOCK_GROUP_PURCHASE_STATUS,
+  MOCK_GROUP_PURCHASE_STATUS_OWNER_BY_GP_ID,
+} from '@/mocks/groupPurchase';
 import { USE_MOCK_DATA } from '@/mocks/config';
 import { groupPurchaseApi } from '@/api/groupPurchase';
 import { memberApi } from '@/api/member';
@@ -31,7 +34,7 @@ async function loadStatus() {
   try {
     if (USE_MOCK_DATA) {
       status.value = { gpId: route.params.gpId, ...MOCK_GROUP_PURCHASE_STATUS };
-      isOwner.value = MOCK_GROUP_PURCHASE_STATUS.isOwner ?? false;
+      isOwner.value = MOCK_GROUP_PURCHASE_STATUS_OWNER_BY_GP_ID[route.params.gpId] ?? false;
       return;
     }
     const [{ data }, { data: profileData }] = await Promise.all([
@@ -114,6 +117,9 @@ const deadlineLabel = computed(() => {
 const deadlineDisplayLabel = computed(() =>
   deadlineLabel.value === '마감' ? '마감' : `마감 ${deadlineLabel.value}`,
 );
+
+// 마감 기한이 지난 공동구매는 참여 취소/공동구매 취소 버튼을 비활성화
+const isDeadlinePassed = computed(() => deadlineLabel.value === '마감');
 
 // 취소 비밀번호 인증 바텀시트 — 참여 취소/공동구매 취소 공용
 const isPinSheetOpen = ref(false);
@@ -324,12 +330,13 @@ function confirmCancelSuccess() {
         {{ backLabel }}
       </AppButton>
 
-      <!-- 취소: 보류 중일 때만 가능. 작성자는 공동구매 취소, 참여자는 참여 취소 -->
+      <!-- 취소: 보류 중일 때만 가능. 작성자는 공동구매 취소, 참여자는 참여 취소. 마감 기한이 지났으면 비활성화 -->
       <AppButton
         v-if="status.status === 'waiting'"
         variant="danger"
         size="lg"
         block
+        :disabled="isDeadlinePassed"
         :loading="isCancelling"
         @click="isPinSheetOpen = true"
       >

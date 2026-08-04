@@ -116,14 +116,21 @@ export const MOCK_MY_GROUP_PURCHASES = [
   },
 ]
 
+// gpId별 작성자 여부 mock — MOCK_GROUP_PURCHASE_LIST/MOCK_MY_GROUP_PURCHASES의 역할과 동일하게 맞춤
+// (1: 참여, 2: 작성, 3: 참여, 4: 작성). 실 API에서는 상태 응답의 memberId와 로그인 유저 memberId를
+// 비교해서 자연히 정해지는 값이라, gpId 무관하게 단일 객체인 mock에서만 따로 gpId로 찾아줘야 함
+export const MOCK_GROUP_PURCHASE_STATUS_OWNER_BY_GP_ID = {
+  1: false,
+  2: true,
+  3: false,
+  4: true,
+}
+
 // 공동구매 상태 조회(GroupPurchaseStatusView) 목데이터 — 응답 포맷과 동일한 구조
 // gpId는 route.params.gpId를 그대로 써야 해서 화면에서 덧붙여 사용
 // productName은 API 응답의 title 필드에 대응
-// isOwner: mock 모드에서 작성자/참여자 화면을 확인하기 위한 전용 필드 (true면 참여 취소 대신 공동구매 취소 버튼이 보임).
-// 실 API에서는 이 객체의 memberId와 로그인 유저 memberId를 비교해서 판정
 // TODO: 백엔드 API 연동 후 제거하고 groupPurchaseApi.getStatus(id)로 교체
 export const MOCK_GROUP_PURCHASE_STATUS = {
-  isOwner: false,
   productName: '프리미엄 사료 15kg',
   status: 'waiting',
   currentQuantity: 3,
