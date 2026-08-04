@@ -1,54 +1,71 @@
 <script setup>
-import { computed, ref } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import AppButton from '@/components/common/AppButton.vue';
-import IconInfo from '@/components/common/icons/IconInfo.vue';
-import {
-  buildMockInviteLink,
-  MOCK_INVITE_CODE,
-} from '@/mocks/share';
-import { useShareStore } from '@/stores/share';
+import { computed, onMounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import AppButton from '@/components/common/AppButton.vue'
+import IconInfo from '@/components/common/icons/IconInfo.vue'
+import { useShareStore } from '@/stores/share'
 
-const route = useRoute();
-const router = useRouter();
-const shareStore = useShareStore();
-const inviteLink = buildMockInviteLink();
+const route = useRoute()
+const router = useRouter()
+const shareStore = useShareStore()
 const link = ref(
-  route.query.invite === MOCK_INVITE_CODE ? inviteLink : '',
-);
-const isJoining = ref(false);
-const errorMessage = ref('');
+  route.query.invite
+    ? `${window.location.origin}/share/join?invite=${route.query.invite}`
+    : '',
+)
+const isJoining = ref(false)
+const errorMessage = ref('')
+const inviteDetail = ref(null)
 
-const hasValidMockInvite = computed(() => {
-  const value = link.value.trim();
-  if (!value) return false;
+const inviteCode = computed(() => {
+  const value = link.value.trim()
+  if (!value) return ''
+  if (/^[a-zA-Z0-9-]{8,64}$/.test(value)) return value
 
   try {
-    const url = new URL(
-      /^https?:\/\//i.test(value) ? value : 'https://' + value,
-    );
-    return url.searchParams.get('invite') === MOCK_INVITE_CODE;
+    const url = new URL(/^https?:\/\//i.test(value) ? value : 'https://' + value)
+    return url.searchParams.get('invite') || ''
   } catch {
-    return false;
+    return ''
   }
 });
+
+async function validateInvite() {
+  errorMessage.value = ''
+  inviteDetail.value = null
+  if (!inviteCode.value) return false
+  try {
+    inviteDetail.value = await shareStore.getInvite(inviteCode.value)
+    return true
+  } catch (error) {
+    errorMessage.value = error.response?.data?.message || '유효하지 않거나 만료된 초대 링크예요.'
+    return false
+  }
+}
 
 async function joinShare() {
   errorMessage.value = '';
 
-  if (!hasValidMockInvite.value) {
-    errorMessage.value = '유효한 초대 링크를 입력해 주세요.';
-    return;
+  if (!inviteCode.value) {
+    errorMessage.value = '유효한 초대 링크를 입력해 주세요.'
+    return
   }
 
   isJoining.value = true;
   try {
-    shareStore.joinMockSharedCare();
-    await router.push('/share');
+    if (!(await validateInvite())) return
+    await shareStore.joinSharedCare(inviteCode.value)
+    await router.push('/share')
+  } catch (error) {
+    errorMessage.value = error.response?.data?.message || '공동육아에 참여하지 못했어요. 다시 시도해 주세요.'
   } finally {
     isJoining.value = false;
   }
 }
+
+onMounted(() => {
+  if (inviteCode.value) validateInvite()
+})
 </script>
 
 <template>
@@ -75,8 +92,8 @@ async function joinShare() {
       v-model="link"
       class="h-[var(--control-height)] w-full box-border rounded-[var(--radius-lg)] border border-(--color-border) bg-(--color-surface) px-[var(--space-4)] [font-family:var(--font-family)] text-[length:var(--font-md)] text-(--color-navy) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-gold)"
       placeholder="aewol.link/share/abc123..."
-      @input="errorMessage = ''"
-    />
+      @input="errorMessage = ''; inviteDetail = null"
+    >
     <div
       class="mt-[var(--space-4)] flex items-start gap-[var(--space-2)] rounded-[var(--radius-lg)] bg-(--color-surface) p-[var(--space-4)] text-[length:var(--font-sm)] leading-[1.45] text-(--color-slate-dark)"
     >
@@ -85,10 +102,16 @@ async function joinShare() {
         :size="16"
       />
       <span>
-        초대 링크는 이메일, 카카오톡, 문자 등으로 받을 수
-        있습니다. 링크를 복사해 입력해주세요.
+        초대 링크는 이메일, 카카오톡, 문자 등으로 전달받을 수 있습니다. 링크를 복사해 입력해주세요.
       </span>
     </div>
+    <p
+      v-if="inviteDetail"
+      class="mb-0 mt-[var(--space-4)] rounded-[var(--radius-lg)] bg-(--color-olive-surface) p-[var(--space-3)] text-[length:var(--font-sm)] text-(--color-olive)"
+      role="status"
+    >
+      {{ inviteDetail.inviterName }}님이 {{ inviteDetail.petName }}의 공동육아에 초대했어요.
+    </p>
     <p
       v-if="errorMessage"
       class="mb-0 mt-[var(--space-4)] text-[length:var(--font-sm)] text-(--color-danger-strong)"
@@ -102,7 +125,7 @@ async function joinShare() {
       block
       size="lg"
       variant="navy"
-      :disabled="!link.trim() || isJoining"
+      :disabled="!inviteCode || isJoining"
       :loading="isJoining"
       @click="joinShare"
     >

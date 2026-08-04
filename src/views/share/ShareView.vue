@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppButton from '@/components/common/AppButton.vue'
 import BottomSheet from '@/components/common/BottomSheet.vue'
@@ -17,7 +17,7 @@ import ShareInviteView from './ShareInviteView.vue'
 const route = useRoute()
 const router = useRouter()
 const shareStore = useShareStore()
-const selectedPetId = ref(shareStore.pets[0]?.id ?? '')
+const selectedPetId = ref('')
 const hasPets = computed(() => shareStore.pets.length > 0)
 const hasMembers = computed(() => shareStore.members.length > 0)
 const hasContributions = computed(() => shareStore.contributions.length > 0)
@@ -36,12 +36,22 @@ watch(
   (petId) => {
     if (petId) shareStore.fetchSharedCare(petId)
   },
-  { immediate: true },
 )
 
-function retryFetchSharedCare() {
-  shareStore.fetchSharedCare(selectedPetId.value)
+async function initializeSharedCare() {
+  const pets = await shareStore.fetchPets()
+  selectedPetId.value = pets[0]?.id ?? ''
 }
+
+async function retryFetchSharedCare() {
+  if (selectedPetId.value) {
+    await shareStore.fetchSharedCare(selectedPetId.value)
+  } else {
+    await initializeSharedCare()
+  }
+}
+
+onMounted(initializeSharedCare)
 </script>
 
 <template>
@@ -279,6 +289,6 @@ function retryFetchSharedCare() {
     size="tall"
     @update:model-value="isInviteOpen = $event"
   >
-    <ShareInviteView />
+    <ShareInviteView :pet-id="selectedPetId" />
   </BottomSheet>
 </template>
