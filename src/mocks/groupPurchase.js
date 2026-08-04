@@ -139,7 +139,8 @@ export const MOCK_GROUP_PURCHASE_STATUS = {
   status: 'waiting',
   currentQuantity: 3,
   targetQuantity: 5,
-  deadline: '2026-07-30T23:59:59',
+  // 참여/작성 취소 버튼(마감 전에만 활성화)을 mock에서 확인할 수 있도록 항상 미래 시각으로 유지
+  deadline: '2026-08-10T23:59:59',
   participantInfo: {
     participantId: 10523,
     paidAmount: 28000,
