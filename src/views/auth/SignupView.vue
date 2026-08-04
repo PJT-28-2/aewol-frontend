@@ -58,6 +58,20 @@ const isPasswordConfirmed = computed(
   () => form.passwordConfirm === form.password,
 )
 
+const isAddressComplete = computed(
+  () =>
+    Boolean(form.zipCode.trim()) &&
+    Boolean(form.address.trim()),
+)
+
+const isSignupDisabled = computed(
+  () =>
+    isLoading.value ||
+    !isAddressComplete.value ||
+    (!isKakaoSignup.value &&
+      (!isPasswordValid.value || !isPasswordConfirmed.value)),
+)
+
 const handleKakaoSignup = () => {
   isKakaoSignup.value = true
   form.name = '홍길동'
@@ -87,6 +101,22 @@ const handleAddressSelect = ({ zipCode, address }) => {
 
 const handleSignup = async () => {
   errorMessage.value = ''
+
+  if (!isKakaoSignup.value && !isPasswordValid.value) {
+    errorMessage.value =
+      '영문·숫자·특수문자 중 2가지 조합은 10자리, 3가지 조합은 8자리 이상 입력해 주세요.'
+    return
+  }
+
+  if (!isKakaoSignup.value && !isPasswordConfirmed.value) {
+    errorMessage.value = '비밀번호가 일치하지 않습니다.'
+    return
+  }
+
+  if (!isAddressComplete.value) {
+    errorMessage.value = '주소를 입력해 주세요.'
+    return
+  }
 
   if (!isDevelopmentPreview) {
     errorMessage.value = '회원가입 API 연동이 필요합니다.'
@@ -352,7 +382,6 @@ const handleSignup = async () => {
         type="text"
         autocomplete="address-line2"
         placeholder="건물, 아파트, 동/호수 입력"
-        required
       >
 
       <fieldset class="mt-8 rounded-(--radius-xl) border border-(--color-border) bg-(--color-surface) px-[18px] py-4">
@@ -443,6 +472,7 @@ const handleSignup = async () => {
         size="lg"
         block
         :loading="isLoading"
+        :disabled="isSignupDisabled"
       >
         가입하기
       </AppButton>
