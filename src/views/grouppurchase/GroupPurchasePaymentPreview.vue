@@ -614,6 +614,7 @@ const isPinSheetOpen = ref(false);
               v-model="addressForm.zipCode"
               type="text"
               placeholder="우편번호를 검색하세요"
+              readonly
               class="flex-1 min-w-0 h-[46px] px-(--space-4) bg-(--color-surface) border rounded-(--radius-md) text-(length:--font-sm) text-(color:--color-navy) placeholder:text-(color:--color-gray-500)"
               :class="
                 addressFormErrors.zipCode
