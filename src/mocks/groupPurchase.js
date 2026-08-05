@@ -173,6 +173,7 @@ export const MOCK_GROUP_PURCHASE_STATUS = {
   deadline: '2026-08-10T23:59:59',
   participantInfo: {
     participantId: 10523,
+    purchaseQuantity: 1,
     paidAmount: 28000,
     paymentStatus: 'COMPLETED',
     paidAt: '2026-07-22T14:45:00',

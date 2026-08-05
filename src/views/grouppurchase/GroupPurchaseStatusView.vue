@@ -92,6 +92,11 @@ const progressPercent = computed(() =>
   ),
 );
 
+// 참여자는 구매 수량만큼, 작성자는 단가 그대로(수량 개념 없음) 가격을 보여준다
+const purchaseQuantity = computed(() => status.value.participantInfo?.purchaseQuantity ?? 1);
+const totalGroupPrice = computed(() => status.value.groupPrice * purchaseQuantity.value);
+const totalUnitPrice = computed(() => status.value.unitPrice * purchaseQuantity.value);
+
 // deadline까지 남은 일수를 D-day 라벨로 변환
 const deadlineLabel = computed(() => {
   const now = new Date();
@@ -240,7 +245,7 @@ function confirmCancelSuccess() {
           <h2
             class="text-(length:--font-md) font-bold text-(color:--color-navy)"
           >
-            {{ status.productName }}
+            {{ status.productName }}<span v-if="status.participantInfo"> x {{ purchaseQuantity }}개</span>
           </h2>
           <p
             class="text-(length:--font-xs) text-(color:--color-slate-muted) mt-(--space-1)"
@@ -253,10 +258,10 @@ function confirmCancelSuccess() {
           class="shrink-0 flex items-center gap-(--space-2)"
         >
           <p class="text-(length:--font-md) font-bold text-(color:--color-navy)">
-            {{ status.groupPrice.toLocaleString() }}원
+            {{ totalGroupPrice.toLocaleString() }}원
           </p>
           <p class="text-(length:--font-xs) text-(color:--color-slate-muted) line-through">
-            {{ status.unitPrice.toLocaleString() }}원
+            {{ totalUnitPrice.toLocaleString() }}원
           </p>
         </div>
       </section>
