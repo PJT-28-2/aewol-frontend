@@ -1,8 +1,10 @@
 import productImage from '@/assets/images/mock-product-dogfood.png'
 
 // 공동구매 목록 화면(GroupPurchaseListView) 목데이터
-// isOwner: 로그인 유저가 이 글의 작성자인지 여부 (진행중 글에서 '참여하기'/'확인하기' 버튼 분기에 사용).
-// 실 API에서는 item.memberId와 로그인 유저 memberId를 비교해서 판정 (GroupPurchaseMyView와 동일 방식)
+// isOwner: 로그인 유저가 이 글의 작성자인지 여부. isParticipating: 로그인 유저가 이미 참여(결제 완료)한 글인지 여부.
+// 진행중 글에서 '확인하기'(작성자) / '참여중'(이미 참여) / '참여하기'(미참여) 3분기 버튼에 사용
+// 실 API에서는 item.memberId와 로그인 유저 memberId를 비교해 isOwner를 판정 (GroupPurchaseMyView와 동일 방식).
+// isParticipating은 목록 응답에 없는 값이라 백엔드에 참여 여부 플래그 추가가 필요함
 // TODO: 백엔드 API 연동 후 제거하고 groupPurchaseApi.getList()로 교체
 export const MOCK_GROUP_PURCHASE_LIST = [
   {
@@ -17,6 +19,7 @@ export const MOCK_GROUP_PURCHASE_LIST = [
     groupPrice: 28000,
     badgeText: '30% 할인',
     isOwner: false,
+    isParticipating: false,
   },
   {
     id: 2,
@@ -30,6 +33,7 @@ export const MOCK_GROUP_PURCHASE_LIST = [
     groupPrice: 24000,
     badgeText: '20% 할인',
     isOwner: true,
+    isParticipating: false,
   },
   {
     id: 3,
@@ -43,6 +47,7 @@ export const MOCK_GROUP_PURCHASE_LIST = [
     groupPrice: 17000,
     badgeText: '15% 할인',
     isOwner: false,
+    isParticipating: true,
   },
   {
     id: 4,
@@ -56,6 +61,21 @@ export const MOCK_GROUP_PURCHASE_LIST = [
     groupPrice: 30000,
     badgeText: '25% 할인',
     isOwner: true,
+    isParticipating: false,
+  },
+  {
+    id: 5,
+    productName: '강아지 유산균 6개월분',
+    category: '영양제',
+    status: '진행중',
+    currentQuantity: 14,
+    targetQuantity: 20,
+    dDay: 'D-5',
+    unitPrice: 36000,
+    groupPrice: 27000,
+    badgeText: '25% 할인',
+    isOwner: false,
+    isParticipating: true,
   },
 ]
 

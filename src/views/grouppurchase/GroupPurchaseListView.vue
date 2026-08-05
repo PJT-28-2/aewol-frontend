@@ -30,9 +30,12 @@ async function loadGroupPurchases() {
     ]);
     const myMemberId = (profileData.result ?? profileData)?.memberId;
     // 작성자 본인 글이면 진행중일 때 '참여하기' 대신 '확인하기'로 상태 화면 바로 이동
+    // isParticipating(이미 참여했는지)은 목록 응답에 없어 항상 false로 처리됨
+    // TODO: 백엔드가 목록 응답에 참여 여부 플래그를 내려주면 item.isParticipating으로 교체
     groupPurchases.value = (data.result ?? []).map((item) => ({
       ...item,
       isOwner: item.memberId === myMemberId,
+      isParticipating: item.isParticipating ?? false,
     }));
   } catch {
     isError.value = true;
@@ -243,13 +246,13 @@ const emptyStateMessage = computed(() =>
             {{ gp.badgeText }}
           </span>
         </div>
-        <!-- 진행중: 작성자 본인 글이면 상세 없이 상태 화면으로 바로 이동('확인하기'), 아니면 참여 플로우('참여하기') -->
+        <!-- 진행중: 작성자('확인하기')/이미 참여('참여중')는 상세 없이 상태 화면으로, 미참여('참여하기')는 참여 플로우로 이동 -->
         <router-link
           v-if="gp.status === '진행중'"
-          :to="gp.isOwner ? `/group-purchase/${gp.id}/status` : `/group-purchase/${gp.id}`"
+          :to="gp.isOwner || gp.isParticipating ? `/group-purchase/${gp.id}/status` : `/group-purchase/${gp.id}`"
           class="shrink-0 px-(--space-4) py-(--space-2) bg-(--color-navy) text-(color:--color-white) rounded-full text-(length:--font-sm) font-semibold no-underline whitespace-nowrap"
         >
-          {{ gp.isOwner ? '확인하기' : '참여하기' }}
+          {{ gp.isOwner ? '확인하기' : gp.isParticipating ? '참여중' : '참여하기' }}
         </router-link>
         <!-- 마감된 게시글은 새로 참여할 수 없어 비활성화 표시만 함 -->
         <span
