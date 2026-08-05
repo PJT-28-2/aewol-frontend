@@ -161,7 +161,7 @@ const deadlineDisplayLabel = computed(() =>
 const deliveryFeeLabel = computed(() =>
   groupPurchase.value.deliveryFee === 0
     ? '무료'
-    : `${groupPurchase.value.deliveryFee.toLocaleString()}원`,
+    : `${groupPurchase.value.deliveryFee?.toLocaleString()}원`,
 );
 
 // delivery_method와 배송비 유무를 합친 안내 문구
@@ -246,12 +246,12 @@ function goToPaymentPreview() {
           <p
             class="text-(length:--font-2xl) font-bold text-(color:--color-navy)"
           >
-            {{ groupPurchase.groupPrice.toLocaleString() }}원
+            {{ groupPurchase.groupPrice?.toLocaleString() }}원
           </p>
           <p
             class="text-(length:--font-sm) text-(color:--color-slate-muted) line-through"
           >
-            {{ groupPurchase.unitPrice.toLocaleString() }}원
+            {{ groupPurchase.unitPrice?.toLocaleString() }}원
           </p>
           <!-- 할인율은 저장된 값이 아니라 discountRate computed로 계산된 값 -->
           <span

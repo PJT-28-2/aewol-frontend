@@ -88,7 +88,7 @@ const filteredGroupPurchases = computed(() => {
     const matchesStatus =
       !selectedStatus.value || selectedStatus.value === '전체' || gp.status === selectedStatus.value;
     const matchesKeyword =
-      !keyword || gp.productName.toLowerCase().includes(keyword);
+      !keyword || gp.productName?.toLowerCase().includes(keyword);
 
     return matchesCategory && matchesStatus && matchesKeyword;
   });
@@ -238,10 +238,10 @@ const emptyStateMessage = computed(() =>
           </p>
           <div class="flex items-center gap-(--space-2) mb-(--space-1)">
             <p class="text-(length:--font-xs) font-bold text-(color:--color-navy)">
-              {{ gp.groupPrice.toLocaleString() }}원
+              {{ gp.groupPrice?.toLocaleString() }}원
             </p>
             <p class="text-(length:--font-xs) text-(color:--color-slate-muted) line-through">
-              {{ gp.unitPrice.toLocaleString() }}원
+              {{ gp.unitPrice?.toLocaleString() }}원
             </p>
           </div>
           <span class="text-(length:--font-xs) font-semibold text-(color:--color-gold)">
