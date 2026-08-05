@@ -12,6 +12,8 @@ import { MOCK_MY_GROUP_PURCHASES } from '@/mocks/groupPurchase';
 import { USE_MOCK_DATA } from '@/mocks/config';
 import { groupPurchaseApi } from '@/api/groupPurchase';
 import { memberApi } from '@/api/member';
+import { formatDDayLabel } from '@/utils/date';
+import { useMidnightTick } from '@/composables/useMidnightTick';
 
 const isLoading = ref(true);
 const isError = ref(false);
@@ -47,14 +49,11 @@ const STATUS_BADGE_CLASS = {
   '마감(미달)': 'bg-(--color-danger-soft) text-(color:--color-danger-strong)',
 };
 
-// 'YYYY-MM-DD...' 형태의 deadline에서 D-day 라벨 계산 (GroupPurchaseDetailView와 동일한 방식)
-function computeDDayLabel(deadline) {
-  const [year, month, day] = deadline.slice(0, 10).split('-').map(Number);
-  const deadlineDate = new Date(year, month - 1, day);
-  const now = new Date();
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const diffDays = Math.ceil((deadlineDate - startOfToday) / (1000 * 60 * 60 * 24));
-  return diffDays <= 0 ? '마감' : `D-${diffDays}`;
+// dDay는 목록 조회 시점의 문자열로 고정하지 않고 deadline 원본을 보관해뒀다가 렌더링 시점에
+// 계산한다. midnightTick을 읽어서 자정이 지나면 다시 계산되도록 한다
+const midnightTick = useMidnightTick();
+function dDayLabel(deadline) {
+  return formatDDayLabel(deadline, new Date(midnightTick.value));
 }
 
 // 상태 필터 + 최신순(createdAt desc) 정렬을 함께 적용
@@ -112,7 +111,7 @@ async function loadMyGroupPurchases() {
       status: STATUS_LABEL[item.status] ?? item.status,
       currentQuantity: item.currentQuantity,
       targetQuantity: item.targetQuantity,
-      dDay: computeDDayLabel(item.deadline),
+      deadline: item.deadline,
       createdAt: item.createdAt,
     }));
   } catch {
@@ -235,7 +234,7 @@ watch(selectedStatus, loadMyGroupPurchases);
               {{ gp.productName }}
             </h3>
             <p class="text-(length:--font-xs) text-(color:--color-gray-500) mb-(--space-2)">
-              {{ gp.role }} · {{ gp.currentQuantity }}/{{ gp.targetQuantity }}개 · {{ gp.status === '진행중' ? gp.dDay : '마감됨' }}
+              {{ gp.role }} · {{ gp.currentQuantity }}/{{ gp.targetQuantity }}개 · {{ gp.status === '진행중' ? dDayLabel(gp.deadline) : '마감됨' }}
             </p>
             <span
               class="inline-block px-(--space-2) py-(--space-1) rounded-full text-(length:--font-xs) font-semibold"

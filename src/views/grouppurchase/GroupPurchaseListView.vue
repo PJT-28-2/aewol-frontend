@@ -30,9 +30,14 @@ async function loadGroupPurchases() {
     ]);
     const myMemberId = (profileData.result ?? profileData)?.memberId;
     // 작성자 본인 글이면 진행중일 때 '참여하기' 대신 '확인하기'로 상태 화면 바로 이동
+    // isParticipating(로그인 유저의 참여 여부)은 목록 응답에 아직 없어 항상 false로 처리됨.
+    // 목록 API가 로그인 유저를 조회하지 않고 group_purchase만 반환하기 때문 —
+    // 백엔드가 item.isParticipating(boolean)을 내려주도록 계약이 바뀌면 아래 ?? false를 제거
+    // TODO: 백엔드 API 계약 변경(로그인 유저 기준 참여 여부 포함) 후 item.isParticipating으로 교체
     groupPurchases.value = (data.result ?? []).map((item) => ({
       ...item,
       isOwner: item.memberId === myMemberId,
+      isParticipating: item.isParticipating ?? false,
     }));
   } catch {
     isError.value = true;
@@ -83,7 +88,7 @@ const filteredGroupPurchases = computed(() => {
     const matchesStatus =
       !selectedStatus.value || selectedStatus.value === '전체' || gp.status === selectedStatus.value;
     const matchesKeyword =
-      !keyword || gp.productName.toLowerCase().includes(keyword);
+      !keyword || gp.productName?.toLowerCase().includes(keyword);
 
     return matchesCategory && matchesStatus && matchesKeyword;
   });
@@ -231,17 +236,25 @@ const emptyStateMessage = computed(() =>
           <p class="text-(length:--font-xs) text-(color:--color-gray-500) mb-(--space-1)">
             {{ gp.currentQuantity }}/{{ gp.targetQuantity }}개 참여 · {{ gp.status === '진행중' ? gp.dDay : gp.status }}
           </p>
+          <div class="flex items-center gap-(--space-2) mb-(--space-1)">
+            <p class="text-(length:--font-xs) font-bold text-(color:--color-navy)">
+              {{ gp.groupPrice?.toLocaleString() }}원
+            </p>
+            <p class="text-(length:--font-xs) text-(color:--color-slate-muted) line-through">
+              {{ gp.unitPrice?.toLocaleString() }}원
+            </p>
+          </div>
           <span class="text-(length:--font-xs) font-semibold text-(color:--color-gold)">
             {{ gp.badgeText }}
           </span>
         </div>
-        <!-- 진행중: 작성자 본인 글이면 상세 없이 상태 화면으로 바로 이동('확인하기'), 아니면 참여 플로우('참여하기') -->
+        <!-- 진행중: 작성자('확인하기')/이미 참여('참여중')는 상세 없이 상태 화면으로, 미참여('참여하기')는 참여 플로우로 이동 -->
         <router-link
           v-if="gp.status === '진행중'"
-          :to="gp.isOwner ? `/group-purchase/${gp.id}/status` : `/group-purchase/${gp.id}`"
+          :to="gp.isOwner || gp.isParticipating ? `/group-purchase/${gp.id}/status` : `/group-purchase/${gp.id}`"
           class="shrink-0 px-(--space-4) py-(--space-2) bg-(--color-navy) text-(color:--color-white) rounded-full text-(length:--font-sm) font-semibold no-underline whitespace-nowrap"
         >
-          {{ gp.isOwner ? '확인하기' : '참여하기' }}
+          {{ gp.isOwner ? '확인하기' : gp.isParticipating ? '참여중' : '참여하기' }}
         </router-link>
         <!-- 마감된 게시글은 새로 참여할 수 없어 비활성화 표시만 함 -->
         <span

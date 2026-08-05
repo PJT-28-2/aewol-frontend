@@ -1,8 +1,12 @@
 import productImage from '@/assets/images/mock-product-dogfood.png'
 
 // 공동구매 목록 화면(GroupPurchaseListView) 목데이터
-// isOwner: 로그인 유저가 이 글의 작성자인지 여부 (진행중 글에서 '참여하기'/'확인하기' 버튼 분기에 사용).
-// 실 API에서는 item.memberId와 로그인 유저 memberId를 비교해서 판정 (GroupPurchaseMyView와 동일 방식)
+// isOwner: 로그인 유저가 이 글의 작성자인지 여부. isParticipating: 로그인 유저가 이미 참여(결제 완료)한 글인지 여부.
+// 진행중 글에서 '확인하기'(작성자) / '참여중'(이미 참여) / '참여하기'(미참여) 3분기 버튼에 사용
+// 실 API에서는 item.memberId와 로그인 유저 memberId를 비교해 isOwner를 판정 (GroupPurchaseMyView와 동일 방식).
+// isParticipating은 GET /group-purchase 응답에 로그인 유저 기준으로 계산된 필드가 필요함
+// (요청한 회원의 memberId로 group_purchase_participant를 조회해서 참여 row가 있으면 true) —
+// 목록 API가 현재 group_purchase만 조회하고 로그인 유저를 참조하지 않아 백엔드 계약/조회 로직 변경이 선행돼야 함
 // TODO: 백엔드 API 연동 후 제거하고 groupPurchaseApi.getList()로 교체
 export const MOCK_GROUP_PURCHASE_LIST = [
   {
@@ -13,8 +17,11 @@ export const MOCK_GROUP_PURCHASE_LIST = [
     currentQuantity: 32,
     targetQuantity: 50,
     dDay: 'D-3',
+    unitPrice: 40000,
+    groupPrice: 28000,
     badgeText: '30% 할인',
     isOwner: false,
+    isParticipating: false,
   },
   {
     id: 2,
@@ -24,8 +31,11 @@ export const MOCK_GROUP_PURCHASE_LIST = [
     currentQuantity: 8,
     targetQuantity: 30,
     dDay: 'D-7',
+    unitPrice: 30000,
+    groupPrice: 24000,
     badgeText: '20% 할인',
     isOwner: true,
+    isParticipating: false,
   },
   {
     id: 3,
@@ -35,8 +45,11 @@ export const MOCK_GROUP_PURCHASE_LIST = [
     currentQuantity: 20,
     targetQuantity: 20,
     dDay: 'D-0',
+    unitPrice: 20000,
+    groupPrice: 17000,
     badgeText: '15% 할인',
     isOwner: false,
+    isParticipating: true,
   },
   {
     id: 4,
@@ -46,8 +59,25 @@ export const MOCK_GROUP_PURCHASE_LIST = [
     currentQuantity: 12,
     targetQuantity: 30,
     dDay: 'D-0',
+    unitPrice: 40000,
+    groupPrice: 30000,
     badgeText: '25% 할인',
     isOwner: true,
+    isParticipating: false,
+  },
+  {
+    id: 5,
+    productName: '강아지 유산균 6개월분',
+    category: '영양제',
+    status: '진행중',
+    currentQuantity: 14,
+    targetQuantity: 20,
+    dDay: 'D-5',
+    unitPrice: 36000,
+    groupPrice: 27000,
+    badgeText: '25% 할인',
+    isOwner: false,
+    isParticipating: true,
   },
 ]
 
@@ -76,6 +106,8 @@ export const MOCK_GROUP_PURCHASE_DETAIL = {
 // 없이 group_purchase 작성자 member_id만 일치하면 '작성'으로 판정
 // role과 무관하게 항상 GroupPurchaseStatusView로 이동하고, 화면 안에서 역할에 따라 버튼만 달라짐
 // (참여: 참여 취소하기 / 작성: 공동구매 취소)
+// dDay는 화면에서 deadline으로부터 매번 계산하므로 mock에는 deadline만 둔다. 진행중 항목은
+// mock을 볼 때 D-day가 음수로 밀리지 않도록 항상 미래 날짜로 유지할 것
 // TODO: 백엔드 API 연동 후 제거하고 groupPurchaseApi.getMyList()로 교체
 export const MOCK_MY_GROUP_PURCHASES = [
   {
@@ -85,7 +117,7 @@ export const MOCK_MY_GROUP_PURCHASES = [
     status: '진행중',
     currentQuantity: 32,
     targetQuantity: 50,
-    dDay: 'D-3',
+    deadline: '2026-08-08',
     createdAt: '2026-07-27T10:00:00',
   },
   {
@@ -95,7 +127,7 @@ export const MOCK_MY_GROUP_PURCHASES = [
     status: '진행중',
     currentQuantity: 18,
     targetQuantity: 20,
-    dDay: 'D-2',
+    deadline: '2026-08-07',
     createdAt: '2026-07-26T09:30:00',
   },
   {
@@ -105,7 +137,7 @@ export const MOCK_MY_GROUP_PURCHASES = [
     status: '마감(성공)',
     currentQuantity: 15,
     targetQuantity: 15,
-    dDay: 'D-0',
+    deadline: '2026-07-18',
     createdAt: '2026-07-18T09:30:00',
   },
   {
@@ -115,7 +147,7 @@ export const MOCK_MY_GROUP_PURCHASES = [
     status: '마감(미달)',
     currentQuantity: 8,
     targetQuantity: 10,
-    dDay: 'D-0',
+    deadline: '2026-07-15',
     createdAt: '2026-07-15T18:20:00',
   },
 ]
@@ -137,12 +169,15 @@ export const MOCK_GROUP_PURCHASE_STATUS_OWNER_BY_GP_ID = {
 export const MOCK_GROUP_PURCHASE_STATUS = {
   productName: '프리미엄 사료 15kg',
   status: 'waiting',
+  unitPrice: 40000,
+  groupPrice: 28000,
   currentQuantity: 3,
   targetQuantity: 5,
   // 참여/작성 취소 버튼(마감 전에만 활성화)을 mock에서 확인할 수 있도록 항상 미래 시각으로 유지
   deadline: '2026-08-10T23:59:59',
   participantInfo: {
     participantId: 10523,
+    purchaseQuantity: 1,
     paidAmount: 28000,
     paymentStatus: 'COMPLETED',
     paidAt: '2026-07-22T14:45:00',

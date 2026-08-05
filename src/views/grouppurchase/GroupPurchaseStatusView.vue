@@ -16,6 +16,9 @@ import {
 import { USE_MOCK_DATA } from '@/mocks/config';
 import { groupPurchaseApi } from '@/api/groupPurchase';
 import { memberApi } from '@/api/member';
+import { formatDDayLabel, getDeadlineTimestamp } from '@/utils/date';
+import { useDeadlineTimer } from '@/composables/useDeadlineTimer';
+import { useMidnightTick } from '@/composables/useMidnightTick';
 
 const route = useRoute();
 const router = useRouter();
@@ -35,19 +38,27 @@ async function loadStatus() {
     if (USE_MOCK_DATA) {
       status.value = { gpId: route.params.gpId, ...MOCK_GROUP_PURCHASE_STATUS };
       isOwner.value = MOCK_GROUP_PURCHASE_STATUS_OWNER_BY_GP_ID[route.params.gpId] ?? false;
-      return;
+    } else {
+      const [{ data }, { data: profileData }] = await Promise.all([
+        groupPurchaseApi.getStatus(route.params.gpId),
+        memberApi.getProfile(),
+      ]);
+      status.value = data.result ?? null;
+      if (!status.value) {
+        isError.value = true;
+        return;
+      }
+      const myMemberId = (profileData.result ?? profileData)?.memberId;
+      isOwner.value = status.value.memberId === myMemberId;
     }
-    const [{ data }, { data: profileData }] = await Promise.all([
-      groupPurchaseApi.getStatus(route.params.gpId),
-      memberApi.getProfile(),
-    ]);
-    status.value = data.result ?? null;
-    if (!status.value) {
+
+    // API 응답 경계에서 deadline 유효성을 검증한다. 잘못된 deadline은 getDeadlineTimestamp가
+    // NaN을 반환하는데, 이 값을 그대로 타이머에 넘기면 0ms 타이머가 계속 재예약되며
+    // 화면 응답을 저하시킬 수 있다
+    if (!Number.isFinite(getDeadlineTimestamp(status.value.deadline))) {
+      status.value = null;
       isError.value = true;
-      return;
     }
-    const myMemberId = (profileData.result ?? profileData)?.memberId;
-    isOwner.value = status.value.memberId === myMemberId;
   } catch {
     isError.value = true;
   } finally {
@@ -92,26 +103,15 @@ const progressPercent = computed(() =>
   ),
 );
 
-// deadline까지 남은 일수를 D-day 라벨로 변환
-const deadlineLabel = computed(() => {
-  const now = new Date();
-  const startOfToday = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate(),
-  );
-  const deadlineDate = new Date(status.value.deadline);
-  const startOfDeadline = new Date(
-    deadlineDate.getFullYear(),
-    deadlineDate.getMonth(),
-    deadlineDate.getDate(),
-  );
-  const diffDays = Math.ceil(
-    (startOfDeadline - startOfToday) / (1000 * 60 * 60 * 24),
-  );
+// 참여자는 구매 수량만큼, 작성자는 단가 그대로(수량 개념 없음) 가격을 보여준다
+const purchaseQuantity = computed(() => status.value.participantInfo?.purchaseQuantity ?? 1);
+const totalGroupPrice = computed(() => status.value.groupPrice * purchaseQuantity.value);
+const totalUnitPrice = computed(() => status.value.unitPrice * purchaseQuantity.value);
 
-  return diffDays <= 0 ? '마감' : `D-${diffDays}`;
-});
+// deadline까지 남은 일수를 D-day 라벨로 변환. 표시 전용이라 자정 경계마다만 갱신되면 되므로
+// midnightTick을 의존성으로 걸어둔다(초 단위 정확한 마감 여부는 isDeadlinePassed가 담당)
+const midnightTick = useMidnightTick();
+const deadlineLabel = computed(() => formatDDayLabel(status.value.deadline, new Date(midnightTick.value)));
 
 // 템플릿의 "마감 " 접두어와 결합했을 때 마감 지난 경우 "마감 마감"으로 겹쳐 보이지 않도록 분리
 const deadlineDisplayLabel = computed(() =>
@@ -121,7 +121,7 @@ const deadlineDisplayLabel = computed(() =>
 // 마감 기한이 지난 공동구매는 참여 취소/공동구매 취소 버튼을 비활성화.
 // deadlineLabel은 마감 '당일 00:00'부터 '마감'을 반환해 실제 마감 시각(예: 23:59:59) 이전까지도
 // 취소를 막아버리므로, 여기서는 deadline의 실제 시각과 현재 시각을 직접 비교한다
-const isDeadlinePassed = computed(() => new Date() > new Date(status.value.deadline));
+const isDeadlinePassed = useDeadlineTimer(() => status.value?.deadline);
 
 // 취소 비밀번호 인증 바텀시트 — 참여 취소/공동구매 취소 공용
 const isPinSheetOpen = ref(false);
@@ -240,7 +240,7 @@ function confirmCancelSuccess() {
           <h2
             class="text-(length:--font-md) font-bold text-(color:--color-navy)"
           >
-            {{ status.productName }}
+            {{ status.productName }}<span v-if="status.participantInfo"> x {{ purchaseQuantity }}개</span>
           </h2>
           <p
             class="text-(length:--font-xs) text-(color:--color-slate-muted) mt-(--space-1)"
@@ -248,12 +248,17 @@ function confirmCancelSuccess() {
             공동구매가 적용
           </p>
         </div>
-        <p
-          v-if="!isOwner && status.participantInfo"
-          class="shrink-0 text-(length:--font-md) font-bold text-(color:--color-navy)"
+        <div
+          v-if="status.groupPrice != null"
+          class="shrink-0 flex items-center gap-(--space-2)"
         >
-          {{ status.participantInfo.paidAmount.toLocaleString() }}원
-        </p>
+          <p class="text-(length:--font-md) font-bold text-(color:--color-navy)">
+            {{ totalGroupPrice.toLocaleString() }}원
+          </p>
+          <p class="text-(length:--font-xs) text-(color:--color-slate-muted) line-through">
+            {{ totalUnitPrice.toLocaleString() }}원
+          </p>
+        </div>
       </section>
 
       <!-- 참여 현황 -->
@@ -332,13 +337,13 @@ function confirmCancelSuccess() {
         {{ backLabel }}
       </AppButton>
 
-      <!-- 취소: 보류 중일 때만 가능. 작성자는 공동구매 취소, 참여자는 참여 취소. 마감 기한이 지났으면 비활성화 -->
+      <!-- 취소: 버튼은 항상 노출하고, 보류 중이 아니거나(이미 마감) 마감 기한이 지났으면 비활성화만 처리.
+           작성자는 공동구매 취소, 참여자는 참여 취소 -->
       <AppButton
-        v-if="status.status === 'waiting'"
         variant="danger"
         size="lg"
         block
-        :disabled="isDeadlinePassed"
+        :disabled="status.status !== 'waiting' || isDeadlinePassed"
         :loading="isCancelling"
         @click="isPinSheetOpen = true"
       >
