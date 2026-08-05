@@ -84,7 +84,7 @@ async function handleSubmit() {
     router.push('/group-purchase/create/step1')
     return
   }
-  if (!groupPurchaseCreateStore.isStep2Complete) {
+  if (!groupPurchaseCreateStore.isStep2Complete()) {
     router.push('/group-purchase/create/step2')
     return
   }

@@ -334,7 +334,7 @@ const authRoutes = [
     beforeEnter: () => {
       const store = useGroupPurchaseCreateStore();
       if (!store.isStep1Complete) return '/group-purchase/create/step1';
-      if (!store.isStep2Complete) return '/group-purchase/create/step2';
+      if (!store.isStep2Complete()) return '/group-purchase/create/step2';
     },
   },
   {
