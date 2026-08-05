@@ -2,8 +2,8 @@
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCertificateStore } from '@/stores/certificate'
+import { useMemberStore } from '@/stores/member'
 import { formatBirthDateInput, formatDateDot } from '@/utils/date'
-import { formatPhoneNumber } from '@/utils/phone'
 import AppButton from '@/components/common/AppButton.vue'
 import AppModal from '@/components/common/AppModal.vue'
 import AppInput from '@/components/common/AppInput.vue'
@@ -18,6 +18,7 @@ import IconChevronRight from '@/components/common/icons/IconChevronRight.vue'
 
 const router = useRouter()
 const certificateStore = useCertificateStore()
+const memberStore = useMemberStore()
 
 onMounted(async () => {
   await certificateStore.fetchPets()
@@ -36,15 +37,15 @@ function goToDocDetail(doc) {
   router.push(`/certificates/${doc.petId}/${doc.docId}`)
 }
 
-// 동물등록증 연동 — 신원확인 1회로 신청인 명의의 동물이 (여러 마리면 배열로) 조회됨.
-// 흐름: 신원확인 입력 → 조회 → 조회된 동물 중 연동할 항목 선택 → 저장
+// 동물등록증 연동 — 동물등록번호 + 신청인(보호자) 이름/생년월일로 조회.
+// 흐름: 정보 입력(회원정보로 기본값) → 조회 → 조회된 동물 중 연동할 항목 선택 → 저장
 const BIRTH_DATE_PATTERN = /^\d{4}\.\d{2}\.\d{2}$/
-const PHONE_PATTERN = /^01[0-9]-?\d{3,4}-?\d{4}$/
+const REG_NUMBER_PATTERN = /^(\d{12}|\d{15})$/
 
 const showAuthModal = ref(false)
 const showMatchModal = ref(false)
 
-const authForm = ref({ userName: '', birthDate: '', phoneNo: '' })
+const authForm = ref({ regNumber: '', userName: '', birthDate: '' })
 const authError = ref('')
 const isSubmittingAuth = ref(false)
 
@@ -53,9 +54,25 @@ const selectedCandidatePetIds = ref([])
 const isConfirming = ref(false)
 const matchError = ref('')
 
-function openLinkFlow() {
-  authForm.value = { userName: '', birthDate: '', phoneNo: '' }
+async function openLinkFlow() {
+  authForm.value = {
+    regNumber: certificateStore.selectedPet?.regNumber ?? '',
+    userName: '',
+    birthDate: '',
+  }
   authError.value = ''
+
+  // 회원정보(이름, 생년월일)를 기본값으로 채운다. 모두 이후 직접 수정 가능
+  try {
+    if (!memberStore.profile) await memberStore.fetchProfile()
+    authForm.value.userName = memberStore.profile?.name ?? ''
+    authForm.value.birthDate = memberStore.profile?.birthDate
+      ? formatDateDot(memberStore.profile.birthDate)
+      : ''
+  } catch {
+    // 회원정보 조회 실패 시에도 조회 자체는 계속 진행할 수 있도록 빈 값으로 둔다
+  }
+
   showAuthModal.value = true
 }
 
@@ -63,21 +80,18 @@ function handleBirthDateInput(value) {
   authForm.value.birthDate = formatBirthDateInput(value)
 }
 
-function handlePhoneNoInput(value) {
-  authForm.value.phoneNo = formatPhoneNumber(value)
-}
-
 async function submitAuth() {
-  if (!authForm.value.userName.trim()) {
-    authError.value = '이름을 입력해주세요.'
+  if (!REG_NUMBER_PATTERN.test(authForm.value.regNumber)) {
+    authError.value = '동물등록번호를 12자리 또는 15자리 숫자로 입력해주세요.'
     return
   }
-  if (!BIRTH_DATE_PATTERN.test(authForm.value.birthDate)) {
+  const hasBirthDate = BIRTH_DATE_PATTERN.test(authForm.value.birthDate)
+  if (authForm.value.birthDate && !hasBirthDate) {
     authError.value = '생년월일을 1990.01.01 형식으로 입력해주세요.'
     return
   }
-  if (!PHONE_PATTERN.test(authForm.value.phoneNo)) {
-    authError.value = '전화번호를 010-1234-5678 형식으로 입력해주세요.'
+  if (!authForm.value.userName.trim() && !hasBirthDate) {
+    authError.value = '이름 또는 생년월일 중 하나 이상 입력해주세요.'
     return
   }
 
@@ -411,6 +425,13 @@ async function handleMedicalSelect(event) {
       </p>
       <div class="flex flex-col gap-(--space-3)">
         <AppInput
+          v-model="authForm.regNumber"
+          label="동물등록번호"
+          placeholder="12자리 또는 15자리 숫자 입력"
+          inputmode="numeric"
+          maxlength="15"
+        />
+        <AppInput
           v-model="authForm.userName"
           label="이름"
           placeholder="홍길동"
@@ -421,13 +442,6 @@ async function handleMedicalSelect(event) {
           placeholder="1990.01.01"
           inputmode="numeric"
           @update:model-value="handleBirthDateInput"
-        />
-        <AppInput
-          :model-value="authForm.phoneNo"
-          label="전화번호"
-          placeholder="010-1234-5678"
-          inputmode="tel"
-          @update:model-value="handlePhoneNoInput"
         />
       </div>
       <p
