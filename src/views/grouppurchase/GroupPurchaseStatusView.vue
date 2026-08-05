@@ -342,13 +342,13 @@ function confirmCancelSuccess() {
         {{ backLabel }}
       </AppButton>
 
-      <!-- 취소: 보류 중일 때만 가능. 작성자는 공동구매 취소, 참여자는 참여 취소. 마감 기한이 지났으면 비활성화 -->
+      <!-- 취소: 버튼은 항상 노출하고, 보류 중이 아니거나(이미 마감) 마감 기한이 지났으면 비활성화만 처리.
+           작성자는 공동구매 취소, 참여자는 참여 취소 -->
       <AppButton
-        v-if="status.status === 'waiting'"
         variant="danger"
         size="lg"
         block
-        :disabled="isDeadlinePassed"
+        :disabled="status.status !== 'waiting' || isDeadlinePassed"
         :loading="isCancelling"
         @click="isPinSheetOpen = true"
       >
