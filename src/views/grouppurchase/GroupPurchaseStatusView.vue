@@ -36,19 +36,27 @@ async function loadStatus() {
     if (USE_MOCK_DATA) {
       status.value = { gpId: route.params.gpId, ...MOCK_GROUP_PURCHASE_STATUS };
       isOwner.value = MOCK_GROUP_PURCHASE_STATUS_OWNER_BY_GP_ID[route.params.gpId] ?? false;
-      return;
+    } else {
+      const [{ data }, { data: profileData }] = await Promise.all([
+        groupPurchaseApi.getStatus(route.params.gpId),
+        memberApi.getProfile(),
+      ]);
+      status.value = data.result ?? null;
+      if (!status.value) {
+        isError.value = true;
+        return;
+      }
+      const myMemberId = (profileData.result ?? profileData)?.memberId;
+      isOwner.value = status.value.memberId === myMemberId;
     }
-    const [{ data }, { data: profileData }] = await Promise.all([
-      groupPurchaseApi.getStatus(route.params.gpId),
-      memberApi.getProfile(),
-    ]);
-    status.value = data.result ?? null;
-    if (!status.value) {
+
+    // API 응답 경계에서 deadline 유효성을 검증한다. 잘못된 deadline은 getTime()이 NaN을
+    // 반환하는데, 이 값을 그대로 타이머에 넘기면 scheduleDeadlineTimer의 delay <= 0 검사를
+    // 통과해버려 0ms 타이머가 계속 재예약되며 화면 응답을 저하시킬 수 있다
+    if (!Number.isFinite(new Date(status.value.deadline).getTime())) {
+      status.value = null;
       isError.value = true;
-      return;
     }
-    const myMemberId = (profileData.result ?? profileData)?.memberId;
-    isOwner.value = status.value.memberId === myMemberId;
   } catch {
     isError.value = true;
   } finally {
@@ -130,7 +138,9 @@ function scheduleDeadlineTimer() {
   if (!status.value?.deadline) return;
 
   const delay = new Date(status.value.deadline).getTime() - Date.now();
-  if (delay <= 0) return; // 이미 마감된 경우 타이머 없이도 계산식이 바로 true를 반환
+  // NaN(잘못된 deadline)은 <= 0 비교를 통과하지 못해 아래에서 걸러지지만, loadStatus에서
+  // 이미 검증하고 있으므로 여기서는 방어적으로만 한 번 더 막는다
+  if (!Number.isFinite(delay) || delay <= 0) return; // 이미 마감된 경우 타이머 없이도 계산식이 바로 true를 반환
 
   deadlineTimerId = setTimeout(() => {
     nowTimestamp.value = Date.now();
@@ -142,7 +152,7 @@ watch(() => status.value?.deadline, scheduleDeadlineTimer, { immediate: true });
 onUnmounted(clearDeadlineTimer);
 
 const isDeadlinePassed = computed(
-  () => Boolean(status.value) && nowTimestamp.value > new Date(status.value.deadline).getTime(),
+  () => Boolean(status.value) && nowTimestamp.value >= new Date(status.value.deadline).getTime(),
 );
 
 // 취소 비밀번호 인증 바텀시트 — 참여 취소/공동구매 취소 공용
