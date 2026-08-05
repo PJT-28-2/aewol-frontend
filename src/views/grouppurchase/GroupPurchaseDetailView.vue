@@ -9,6 +9,7 @@ import { MOCK_GROUP_PURCHASE_DETAIL } from '@/mocks/groupPurchase';
 import { USE_MOCK_DATA } from '@/mocks/config';
 import { groupPurchaseApi } from '@/api/groupPurchase';
 import { memberApi } from '@/api/member';
+import { formatDDayLabel } from '@/utils/date';
 
 const route = useRoute();
 const router = useRouter();
@@ -73,15 +74,6 @@ function toLocalDate(dateString) {
   return new Date(year, month - 1, day);
 }
 
-function startOfToday() {
-  const now = new Date();
-  return new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate(),
-  );
-}
-
 const quantity = ref(1);
 const quantityError = ref('');
 
@@ -143,20 +135,7 @@ const totalPrice = computed(
 );
 
 // raw deadline 값에서 남은 일수를 D-day 라벨로 변환
-const deadlineLabel = computed(() => {
-  const diffDays = Math.ceil(
-    (toLocalDate(groupPurchase.value.deadline) -
-      startOfToday()) /
-      (1000 * 60 * 60 * 24),
-  );
-
-  // 남은 일수가 0일 이하인 경우 "마감" 반환
-  if (diffDays <= 0) {
-    return '마감';
-  }
-
-  return `D-${diffDays}`;
-});
+const deadlineLabel = computed(() => formatDDayLabel(groupPurchase.value.deadline));
 
 // 마감 여부: 마감 후에는 수량 선택/결제를 막는다
 const isExpired = computed(() => deadlineLabel.value === '마감');

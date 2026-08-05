@@ -8,6 +8,7 @@ import IconInfo from '@/components/common/icons/IconInfo.vue'
 import { groupPurchaseApi } from '@/api/groupPurchase'
 import { USE_MOCK_DATA } from '@/mocks/config'
 import { useGroupPurchaseCreateStore } from '@/stores/groupPurchase'
+import { getDaysUntil } from '@/utils/date'
 
 // 1~2단계에서 입력한 데이터를 그대로 가져와 확인 화면을 채움
 const groupPurchaseCreateStore = useGroupPurchaseCreateStore()
@@ -60,11 +61,7 @@ const deliveryFeeText = computed(() => {
 const deadlineDisplayText = computed(() => {
   if (!deadline.value) return ''
   const [year, month, day] = deadline.value.split('-').map(Number)
-  const deadlineDate = new Date(year, month - 1, day)
-  const today = new Date()
-  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate())
-  const diffDays = Math.round((deadlineDate - todayStart) / 86400000)
-  return `${year}년 ${month}월 ${day}일 (D-${diffDays})`
+  return `${year}년 ${month}월 ${day}일 (D-${getDaysUntil(deadline.value)})`
 })
 
 // 신규 등록 게시글이라 참여 진행률은 0%에서 시작

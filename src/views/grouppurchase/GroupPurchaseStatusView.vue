@@ -16,6 +16,7 @@ import {
 import { USE_MOCK_DATA } from '@/mocks/config';
 import { groupPurchaseApi } from '@/api/groupPurchase';
 import { memberApi } from '@/api/member';
+import { formatDDayLabel } from '@/utils/date';
 
 const route = useRoute();
 const router = useRouter();
@@ -98,25 +99,7 @@ const totalGroupPrice = computed(() => status.value.groupPrice * purchaseQuantit
 const totalUnitPrice = computed(() => status.value.unitPrice * purchaseQuantity.value);
 
 // deadline까지 남은 일수를 D-day 라벨로 변환
-const deadlineLabel = computed(() => {
-  const now = new Date();
-  const startOfToday = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate(),
-  );
-  const deadlineDate = new Date(status.value.deadline);
-  const startOfDeadline = new Date(
-    deadlineDate.getFullYear(),
-    deadlineDate.getMonth(),
-    deadlineDate.getDate(),
-  );
-  const diffDays = Math.ceil(
-    (startOfDeadline - startOfToday) / (1000 * 60 * 60 * 24),
-  );
-
-  return diffDays <= 0 ? '마감' : `D-${diffDays}`;
-});
+const deadlineLabel = computed(() => formatDDayLabel(status.value.deadline));
 
 // 템플릿의 "마감 " 접두어와 결합했을 때 마감 지난 경우 "마감 마감"으로 겹쳐 보이지 않도록 분리
 const deadlineDisplayLabel = computed(() =>

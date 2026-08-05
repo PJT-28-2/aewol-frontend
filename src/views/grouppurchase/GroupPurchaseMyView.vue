@@ -12,6 +12,7 @@ import { MOCK_MY_GROUP_PURCHASES } from '@/mocks/groupPurchase';
 import { USE_MOCK_DATA } from '@/mocks/config';
 import { groupPurchaseApi } from '@/api/groupPurchase';
 import { memberApi } from '@/api/member';
+import { formatDDayLabel } from '@/utils/date';
 
 const isLoading = ref(true);
 const isError = ref(false);
@@ -46,16 +47,6 @@ const STATUS_BADGE_CLASS = {
   '마감(성공)': 'bg-(--color-gray-200) text-(color:--color-gray-600)',
   '마감(미달)': 'bg-(--color-danger-soft) text-(color:--color-danger-strong)',
 };
-
-// 'YYYY-MM-DD...' 형태의 deadline에서 D-day 라벨 계산 (GroupPurchaseDetailView와 동일한 방식)
-function computeDDayLabel(deadline) {
-  const [year, month, day] = deadline.slice(0, 10).split('-').map(Number);
-  const deadlineDate = new Date(year, month - 1, day);
-  const now = new Date();
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const diffDays = Math.ceil((deadlineDate - startOfToday) / (1000 * 60 * 60 * 24));
-  return diffDays <= 0 ? '마감' : `D-${diffDays}`;
-}
 
 // 상태 필터 + 최신순(createdAt desc) 정렬을 함께 적용
 const filteredGroupPurchases = computed(() => {
@@ -112,7 +103,7 @@ async function loadMyGroupPurchases() {
       status: STATUS_LABEL[item.status] ?? item.status,
       currentQuantity: item.currentQuantity,
       targetQuantity: item.targetQuantity,
-      dDay: computeDDayLabel(item.deadline),
+      dDay: formatDDayLabel(item.deadline),
       createdAt: item.createdAt,
     }));
   } catch {
