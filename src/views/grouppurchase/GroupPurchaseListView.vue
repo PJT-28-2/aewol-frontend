@@ -231,6 +231,14 @@ const emptyStateMessage = computed(() =>
           <p class="text-(length:--font-xs) text-(color:--color-gray-500) mb-(--space-1)">
             {{ gp.currentQuantity }}/{{ gp.targetQuantity }}개 참여 · {{ gp.status === '진행중' ? gp.dDay : gp.status }}
           </p>
+          <div class="flex items-center gap-(--space-2) mb-(--space-1)">
+            <p class="text-(length:--font-xs) font-bold text-(color:--color-navy)">
+              {{ gp.groupPrice.toLocaleString() }}원
+            </p>
+            <p class="text-(length:--font-xs) text-(color:--color-slate-muted) line-through">
+              {{ gp.unitPrice.toLocaleString() }}원
+            </p>
+          </div>
           <span class="text-(length:--font-xs) font-semibold text-(color:--color-gold)">
             {{ gp.badgeText }}
           </span>
