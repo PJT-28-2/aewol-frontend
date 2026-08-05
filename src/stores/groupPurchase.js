@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { getDeadlineTimestamp } from '@/utils/date'
 
 // 상품등록 1~3단계가 공유하는 임시 작성 데이터 (등록 완료/이탈 시 reset)
 export const useGroupPurchaseCreateStore = defineStore('groupPurchaseCreate', {
@@ -32,10 +33,13 @@ export const useGroupPurchaseCreateStore = defineStore('groupPurchaseCreate', {
         group <= original
       )
     },
-    // 2단계(구매 조건) 필수 입력이 모두 채워졌는지 - step3 라우터 가드에서 사용
+    // 2단계(구매 조건) 필수 입력이 모두 채워졌는지 - step3 라우터 가드와 제출 직전 재검사에서 사용.
+    // deadline이 비어있지 않은지만 보면 달력에서 고른 날짜가 지난 뒤(작성 중 방치, 재진입 등)에도
+    // 완료로 판정돼 D-0/D--1 표시와 제출을 허용하게 되므로, 아직 마감 전인지도 함께 확인한다
     isStep2Complete: (state) =>
       Number(state.targetQuantity) >= 1 &&
       state.deadline !== '' &&
+      Date.now() < getDeadlineTimestamp(state.deadline) &&
       state.deliveryFee !== '' &&
       Number(state.deliveryEstimateDays) >= 1,
   },

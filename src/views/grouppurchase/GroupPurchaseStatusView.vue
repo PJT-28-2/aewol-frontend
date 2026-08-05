@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import AppButton from '@/components/common/AppButton.vue';
 import IconCheck from '@/components/common/icons/IconCheck.vue';
@@ -16,7 +16,9 @@ import {
 import { USE_MOCK_DATA } from '@/mocks/config';
 import { groupPurchaseApi } from '@/api/groupPurchase';
 import { memberApi } from '@/api/member';
-import { formatDDayLabel } from '@/utils/date';
+import { formatDDayLabel, getDeadlineTimestamp } from '@/utils/date';
+import { useDeadlineTimer } from '@/composables/useDeadlineTimer';
+import { useMidnightTick } from '@/composables/useMidnightTick';
 
 const route = useRoute();
 const router = useRouter();
@@ -50,10 +52,10 @@ async function loadStatus() {
       isOwner.value = status.value.memberId === myMemberId;
     }
 
-    // API 응답 경계에서 deadline 유효성을 검증한다. 잘못된 deadline은 getTime()이 NaN을
-    // 반환하는데, 이 값을 그대로 타이머에 넘기면 scheduleDeadlineTimer의 delay <= 0 검사를
-    // 통과해버려 0ms 타이머가 계속 재예약되며 화면 응답을 저하시킬 수 있다
-    if (!Number.isFinite(new Date(status.value.deadline).getTime())) {
+    // API 응답 경계에서 deadline 유효성을 검증한다. 잘못된 deadline은 getDeadlineTimestamp가
+    // NaN을 반환하는데, 이 값을 그대로 타이머에 넘기면 0ms 타이머가 계속 재예약되며
+    // 화면 응답을 저하시킬 수 있다
+    if (!Number.isFinite(getDeadlineTimestamp(status.value.deadline))) {
       status.value = null;
       isError.value = true;
     }
@@ -106,8 +108,10 @@ const purchaseQuantity = computed(() => status.value.participantInfo?.purchaseQu
 const totalGroupPrice = computed(() => status.value.groupPrice * purchaseQuantity.value);
 const totalUnitPrice = computed(() => status.value.unitPrice * purchaseQuantity.value);
 
-// deadline까지 남은 일수를 D-day 라벨로 변환
-const deadlineLabel = computed(() => formatDDayLabel(status.value.deadline));
+// deadline까지 남은 일수를 D-day 라벨로 변환. 표시 전용이라 자정 경계마다만 갱신되면 되므로
+// midnightTick을 의존성으로 걸어둔다(초 단위 정확한 마감 여부는 isDeadlinePassed가 담당)
+const midnightTick = useMidnightTick();
+const deadlineLabel = computed(() => formatDDayLabel(status.value.deadline, new Date(midnightTick.value)));
 
 // 템플릿의 "마감 " 접두어와 결합했을 때 마감 지난 경우 "마감 마감"으로 겹쳐 보이지 않도록 분리
 const deadlineDisplayLabel = computed(() =>
@@ -116,44 +120,8 @@ const deadlineDisplayLabel = computed(() =>
 
 // 마감 기한이 지난 공동구매는 참여 취소/공동구매 취소 버튼을 비활성화.
 // deadlineLabel은 마감 '당일 00:00'부터 '마감'을 반환해 실제 마감 시각(예: 23:59:59) 이전까지도
-// 취소를 막아버리므로, 여기서는 deadline의 실제 시각과 현재 시각을 직접 비교한다.
-// Date.now()는 반응형이 아니라서 deadline만 의존성으로 두면 화면을 마감 전에 열어둔 채
-// 마감 시각이 지나도 값이 갱신되지 않음 — nowTimestamp를 마감 시각에 맞춰 직접 갱신해서 해결한다
-const nowTimestamp = ref(Date.now());
-let deadlineTimerId = null;
-
-function clearDeadlineTimer() {
-  if (deadlineTimerId !== null) {
-    clearTimeout(deadlineTimerId);
-    deadlineTimerId = null;
-  }
-}
-
-// setTimeout의 지연 시간은 32비트 정수 범위(약 24.8일)를 넘으면 즉시 실행돼버려서,
-// 그보다 먼 마감은 여러 타이머로 나눠 재귀적으로 예약한다
-const MAX_TIMEOUT_DELAY = 2147483647;
-
-function scheduleDeadlineTimer() {
-  clearDeadlineTimer();
-  if (!status.value?.deadline) return;
-
-  const delay = new Date(status.value.deadline).getTime() - Date.now();
-  // NaN(잘못된 deadline)은 <= 0 비교를 통과하지 못해 아래에서 걸러지지만, loadStatus에서
-  // 이미 검증하고 있으므로 여기서는 방어적으로만 한 번 더 막는다
-  if (!Number.isFinite(delay) || delay <= 0) return; // 이미 마감된 경우 타이머 없이도 계산식이 바로 true를 반환
-
-  deadlineTimerId = setTimeout(() => {
-    nowTimestamp.value = Date.now();
-    scheduleDeadlineTimer();
-  }, Math.min(delay, MAX_TIMEOUT_DELAY));
-}
-
-watch(() => status.value?.deadline, scheduleDeadlineTimer, { immediate: true });
-onUnmounted(clearDeadlineTimer);
-
-const isDeadlinePassed = computed(
-  () => Boolean(status.value) && nowTimestamp.value >= new Date(status.value.deadline).getTime(),
-);
+// 취소를 막아버리므로, 여기서는 deadline의 실제 시각과 현재 시각을 직접 비교한다
+const isDeadlinePassed = useDeadlineTimer(() => status.value?.deadline);
 
 // 취소 비밀번호 인증 바텀시트 — 참여 취소/공동구매 취소 공용
 const isPinSheetOpen = ref(false);

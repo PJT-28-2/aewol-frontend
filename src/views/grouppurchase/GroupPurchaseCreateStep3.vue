@@ -8,7 +8,7 @@ import IconInfo from '@/components/common/icons/IconInfo.vue'
 import { groupPurchaseApi } from '@/api/groupPurchase'
 import { USE_MOCK_DATA } from '@/mocks/config'
 import { useGroupPurchaseCreateStore } from '@/stores/groupPurchase'
-import { getDaysUntil } from '@/utils/date'
+import { formatDDayLabel } from '@/utils/date'
 
 // 1~2단계에서 입력한 데이터를 그대로 가져와 확인 화면을 채움
 const groupPurchaseCreateStore = useGroupPurchaseCreateStore()
@@ -57,11 +57,13 @@ const deliveryFeeText = computed(() => {
   return fee > 0 ? `${fee.toLocaleString()}원` : '무료배송'
 })
 
-// 'YYYY-MM-DD' -> "2026년 7월 31일 (D-3)"
+// 'YYYY-MM-DD' -> "2026년 7월 31일 (D-3)". 선택한 날짜가 지난 뒤 다시 이 화면에 들어오는
+// 경우(작성 중 방치 등)에도 D-0/D--1 같은 값 대신 "마감"으로 보이도록 formatDDayLabel을 사용한다.
+// 실제 제출 차단은 store의 isStep2Complete(handleSubmit에서 재검사)가 담당
 const deadlineDisplayText = computed(() => {
   if (!deadline.value) return ''
   const [year, month, day] = deadline.value.split('-').map(Number)
-  return `${year}년 ${month}월 ${day}일 (D-${getDaysUntil(deadline.value)})`
+  return `${year}년 ${month}월 ${day}일 (${formatDDayLabel(deadline.value)})`
 })
 
 // 신규 등록 게시글이라 참여 진행률은 0%에서 시작

@@ -106,6 +106,8 @@ export const MOCK_GROUP_PURCHASE_DETAIL = {
 // 없이 group_purchase 작성자 member_id만 일치하면 '작성'으로 판정
 // role과 무관하게 항상 GroupPurchaseStatusView로 이동하고, 화면 안에서 역할에 따라 버튼만 달라짐
 // (참여: 참여 취소하기 / 작성: 공동구매 취소)
+// dDay는 화면에서 deadline으로부터 매번 계산하므로 mock에는 deadline만 둔다. 진행중 항목은
+// mock을 볼 때 D-day가 음수로 밀리지 않도록 항상 미래 날짜로 유지할 것
 // TODO: 백엔드 API 연동 후 제거하고 groupPurchaseApi.getMyList()로 교체
 export const MOCK_MY_GROUP_PURCHASES = [
   {
@@ -115,7 +117,7 @@ export const MOCK_MY_GROUP_PURCHASES = [
     status: '진행중',
     currentQuantity: 32,
     targetQuantity: 50,
-    dDay: 'D-3',
+    deadline: '2026-08-08',
     createdAt: '2026-07-27T10:00:00',
   },
   {
@@ -125,7 +127,7 @@ export const MOCK_MY_GROUP_PURCHASES = [
     status: '진행중',
     currentQuantity: 18,
     targetQuantity: 20,
-    dDay: 'D-2',
+    deadline: '2026-08-07',
     createdAt: '2026-07-26T09:30:00',
   },
   {
@@ -135,7 +137,7 @@ export const MOCK_MY_GROUP_PURCHASES = [
     status: '마감(성공)',
     currentQuantity: 15,
     targetQuantity: 15,
-    dDay: 'D-0',
+    deadline: '2026-07-18',
     createdAt: '2026-07-18T09:30:00',
   },
   {
@@ -145,7 +147,7 @@ export const MOCK_MY_GROUP_PURCHASES = [
     status: '마감(미달)',
     currentQuantity: 8,
     targetQuantity: 10,
-    dDay: 'D-0',
+    deadline: '2026-07-15',
     createdAt: '2026-07-15T18:20:00',
   },
 ]

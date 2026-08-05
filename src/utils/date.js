@@ -22,29 +22,52 @@ export function formatYearMonth(year, month) {
 }
 
 /**
- * 오늘부터 대상 날짜까지 남은 일수를 계산한다. "YYYY-MM-DD"로 시작하는 문자열만 사용하며
- * (시간 정보는 무시), UTC 파싱으로 인한 날짜 밀림 없이 로컬 자정 기준으로 비교한다.
+ * 오늘부터 대상 날짜까지 남은 "달력 날짜" 수를 계산한다. "YYYY-MM-DD"로 시작하는 문자열만
+ * 사용하며(시간 정보는 무시), UTC 파싱으로 인한 날짜 밀림 없이 로컬 연/월/일 기준으로 비교한다.
+ * 로컬 자정 Date로 뺄셈하면 서머타임 전환일에 하루가 23시간/25시간이 되어 결과가 하루씩
+ * 밀릴 수 있어(예: DST 종료일 다음 날짜가 diff 2로 계산됨), 항상 정확히 24시간인
+ * Date.UTC 기준으로 변환한 뒤 계산한다.
  *
  * @param {string} targetDate `YYYY-MM-DD`로 시작하는 날짜(시간) 문자열
+ * @param {Date} [now] 기준 시각(테스트/반응형 갱신용, 기본값은 호출 시점의 현재 시각)
  * @returns {number} 오늘부터 대상 날짜까지 남은 일수(지났으면 0 이하)
  */
-export function getDaysUntil(targetDate) {
+export function getDaysUntil(targetDate, now = new Date()) {
   const [year, month, day] = targetDate.slice(0, 10).split('-').map(Number)
-  const target = new Date(year, month - 1, day)
-  const now = new Date()
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-  return Math.ceil((target - startOfToday) / (1000 * 60 * 60 * 24))
+  const targetUTC = Date.UTC(year, month - 1, day)
+  const todayUTC = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate())
+  return Math.round((targetUTC - todayUTC) / (1000 * 60 * 60 * 24))
 }
 
 /**
  * 마감일까지 남은 일수를 "D-N" 라벨로, 마감 당일이거나 지났으면 "마감"으로 변환한다.
+ * 표시(display) 전용이며 날짜 단위로만 비교하므로, 실제 마감 시각과의 정확한 선후 비교(버튼
+ * 활성화 등)에는 getDeadlineTimestamp를 사용해야 한다.
  *
  * @param {string} deadline `YYYY-MM-DD`로 시작하는 날짜(시간) 문자열
+ * @param {Date} [now] 기준 시각(테스트/반응형 갱신용, 기본값은 호출 시점의 현재 시각)
  * @returns {string} `D-N` 또는 `마감`
  */
-export function formatDDayLabel(deadline) {
-  const diffDays = getDaysUntil(deadline)
+export function formatDDayLabel(deadline, now = new Date()) {
+  const diffDays = getDaysUntil(deadline, now)
   return diffDays <= 0 ? '마감' : `D-${diffDays}`
+}
+
+/**
+ * 마감 문자열을 실제 만료 시각(epoch ms)으로 변환한다. 시간 정보가 있으면(`T` 포함) 그대로
+ * 로컬 시각으로 해석하고, 날짜만 있으면(캘린더에서 날짜만 선택하는 마감일 등) 그날
+ * 23:59:59.999까지 유효한 것으로 해석한다.
+ *
+ * @param {string | null | undefined} deadline `YYYY-MM-DD` 또는 `YYYY-MM-DDTHH:mm:ss` 형식의 마감 문자열
+ * @returns {number} 마감 시각의 epoch 밀리초 (값이 없거나 유효하지 않으면 NaN)
+ */
+export function getDeadlineTimestamp(deadline) {
+  if (!deadline) return NaN
+  if (deadline.includes('T')) {
+    return new Date(deadline).getTime()
+  }
+  const [year, month, day] = deadline.slice(0, 10).split('-').map(Number)
+  return new Date(year, month - 1, day, 23, 59, 59, 999).getTime()
 }
 
 /**

@@ -10,6 +10,8 @@ import { USE_MOCK_DATA } from '@/mocks/config';
 import { groupPurchaseApi } from '@/api/groupPurchase';
 import { memberApi } from '@/api/member';
 import { formatDDayLabel } from '@/utils/date';
+import { useDeadlineTimer } from '@/composables/useDeadlineTimer';
+import { useMidnightTick } from '@/composables/useMidnightTick';
 
 const route = useRoute();
 const router = useRouter();
@@ -134,11 +136,15 @@ const totalPrice = computed(
   () => groupPurchase.value.groupPrice * quantity.value,
 );
 
-// raw deadline 값에서 남은 일수를 D-day 라벨로 변환
-const deadlineLabel = computed(() => formatDDayLabel(groupPurchase.value.deadline));
+// raw deadline 값에서 남은 일수를 D-day 라벨로 변환. 표시 전용이라 자정 경계마다만 갱신되면
+// 되므로 midnightTick을 의존성으로 걸어둔다(초 단위 정확한 마감 여부는 isExpired가 담당)
+const midnightTick = useMidnightTick();
+const deadlineLabel = computed(() => formatDDayLabel(groupPurchase.value.deadline, new Date(midnightTick.value)));
 
-// 마감 여부: 마감 후에는 수량 선택/결제를 막는다
-const isExpired = computed(() => deadlineLabel.value === '마감');
+// 마감 여부: 마감 후에는 수량 선택/결제를 막는다.
+// deadline은 DATETIME이라 날짜만 비교하는 deadlineLabel(자정부터 '마감') 대신, 실제 마감
+// 시각과 현재 시각을 비교하는 useDeadlineTimer를 사용한다(GroupPurchaseStatusView.vue와 동일 계약)
+const isExpired = useDeadlineTimer(() => groupPurchase.value?.deadline);
 
 // 이미 목표 수량에 도달/초과한 상태(마감 처리 전에도 발생 가능)에서는 기본 선택 수량 1개만으로도
 // currentQuantity + quantity가 targetQuantity를 넘어설 수 있어, 스테퍼/CTA를 별도로 막는다
@@ -148,7 +154,7 @@ const isQuantityOverTarget = computed(
 
 // 템플릿의 "마감까지 " 접두어와 결합했을 때 마감 지난 경우 "마감까지 마감"으로 겹쳐 보이지 않도록 분리
 const deadlineDisplayLabel = computed(() =>
-  isExpired.value ? '마감' : `마감까지 ${deadlineLabel.value}`,
+  deadlineLabel.value === '마감' ? '마감' : `마감까지 ${deadlineLabel.value}`,
 );
 
 // delivery_fee가 0원이면 무료로 표시
