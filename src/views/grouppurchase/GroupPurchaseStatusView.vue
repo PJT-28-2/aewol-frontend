@@ -248,12 +248,17 @@ function confirmCancelSuccess() {
             공동구매가 적용
           </p>
         </div>
-        <p
-          v-if="!isOwner && status.participantInfo"
-          class="shrink-0 text-(length:--font-md) font-bold text-(color:--color-navy)"
+        <div
+          v-if="status.groupPrice != null"
+          class="shrink-0 flex items-center gap-(--space-2)"
         >
-          {{ status.participantInfo.paidAmount.toLocaleString() }}원
-        </p>
+          <p class="text-(length:--font-md) font-bold text-(color:--color-navy)">
+            {{ status.groupPrice.toLocaleString() }}원
+          </p>
+          <p class="text-(length:--font-xs) text-(color:--color-slate-muted) line-through">
+            {{ status.unitPrice.toLocaleString() }}원
+          </p>
+        </div>
       </section>
 
       <!-- 참여 현황 -->

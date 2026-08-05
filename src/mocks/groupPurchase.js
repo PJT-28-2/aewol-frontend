@@ -165,6 +165,8 @@ export const MOCK_GROUP_PURCHASE_STATUS_OWNER_BY_GP_ID = {
 export const MOCK_GROUP_PURCHASE_STATUS = {
   productName: '프리미엄 사료 15kg',
   status: 'waiting',
+  unitPrice: 40000,
+  groupPrice: 28000,
   currentQuantity: 3,
   targetQuantity: 5,
   // 참여/작성 취소 버튼(마감 전에만 활성화)을 mock에서 확인할 수 있도록 항상 미래 시각으로 유지
