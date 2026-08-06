@@ -270,6 +270,7 @@ registerHeaderBack(goBack);
           type="text"
           inputmode="numeric"
           autocomplete="off"
+          :aria-label="`입금자명 인증 코드 ${depositorNameLength}자리 입력`"
           class="absolute inset-0 z-10 w-full h-full appearance-none border-0 p-0 m-0 opacity-0 cursor-text"
           @input="onDepositorInput"
           @focus="isFocused = true"
