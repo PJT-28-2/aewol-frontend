@@ -31,7 +31,7 @@ const shippingAddress = ref(null);
 // loadPaymentMethod에서 groupPurchaseApi.getDetail()로 채움 (mock 모드에서는 mock 데이터 사용)
 const product = ref(null);
 
-// 지갑 잔액 — 결제수단(계좌) 자체는 아직 여러 개를 고를 수 없어 "애월 통합 지갑" 고정, 잔액만 walletApi로 조회
+// 지갑 잔액 — 결제수단(계좌) 자체는 아직 여러 개를 고를 수 없어 "애월지갑" 고정, 잔액만 walletApi로 조회
 const paymentMethod = ref(null);
 const isLoading = ref(true);
 const isError = ref(false);
@@ -62,7 +62,7 @@ async function loadPaymentMethod() {
 
     const wallet = await walletStore.fetchWallet();
     paymentMethod.value = {
-      name: '애월 통합 지갑',
+      name: '애월지갑',
       balance: wallet.totalBalance,
     };
 

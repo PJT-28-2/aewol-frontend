@@ -54,7 +54,7 @@ function confirmComplete() {
       <p
         class="text-(length:--font-md) text-(color:--color-gray-600) mb-(--space-8)"
       >
-        펫지갑에서 송금을 다시 시도해주세요
+        애월지갑에서 송금을 다시 시도해주세요
       </p>
       <AppButton
         variant="navy"
@@ -62,7 +62,7 @@ function confirmComplete() {
         block
         @click="confirmComplete"
       >
-        펫지갑으로 이동
+        애월지갑으로 이동
       </AppButton>
     </template>
 

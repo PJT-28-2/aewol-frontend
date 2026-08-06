@@ -25,7 +25,7 @@ function isActive(path) {
 
 <template>
   <nav
-    class="fixed bottom-0 left-0 right-0 z-100 flex items-center justify-around h-(--bottom-nav-height) bg-white border-t border-(--color-border) pb-[env(safe-area-inset-bottom,0)]"
+    class="fixed bottom-0 left-0 right-0 z-100 flex items-center justify-around h-(--bottom-nav-height) bg-white border-t border-(--color-border) shadow-[0_-2px_8px_rgba(0,0,0,0.04)] pb-[env(safe-area-inset-bottom,0)]"
   >
     <router-link
       v-for="tab in tabs"
@@ -41,7 +41,10 @@ function isActive(path) {
         :size="22"
       />
 
-      <span class="text-(length:--font-sm) font-medium">{{ tab.label }}</span>
+      <span
+        class="text-(length:--font-sm)"
+        :class="isActive(tab.path) ? 'font-semibold' : 'font-medium'"
+      >{{ tab.label }}</span>
     </router-link>
   </nav>
 </template>

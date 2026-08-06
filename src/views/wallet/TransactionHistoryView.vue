@@ -5,11 +5,11 @@ import BottomSheet from '@/components/common/BottomSheet.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import TransactionList from '@/components/common/TransactionList.vue';
 import { formatYearMonth } from '@/utils/date';
-import IconCat from '@/components/common/icons/IconCat.vue';
 import IconCheck from '@/components/common/icons/IconCheck.vue';
 import IconChevronDown from '@/components/common/icons/IconChevronDown.vue';
 import IconClose from '@/components/common/icons/IconClose.vue';
-import IconDog from '@/components/common/icons/IconDog.vue';
+import iconCat3d from '@/assets/images/icons-3d/cat_face_3d.png';
+import iconDog3d from '@/assets/images/icons-3d/dog_face_3d.png';
 import { CATEGORY_LABELS } from '@/mocks/transaction';
 import { usePetStore } from '@/stores/pet';
 import { useTransactionStore } from '@/stores/transaction';
@@ -60,7 +60,7 @@ watch(
 );
 
 function petIcon(species) {
-  return species === 'CAT' ? IconCat : IconDog;
+  return species === 'CAT' ? iconCat3d : iconDog3d;
 }
 
 // 반려동물 선택 바텀시트 (반려동물이 2마리 이상일 때만 필터가 의미 있다)
@@ -366,9 +366,10 @@ onMounted(() => {
             @click="selectPetFilter(pet.id)"
           >
             <span class="flex items-center gap-(--space-2)">
-              <component
-                :is="petIcon(pet.species)"
-                :size="18"
+              <img
+                :src="petIcon(pet.species)"
+                :alt="pet.species === 'CAT' ? '고양이' : '강아지'"
+                class="w-[22px] h-[22px] object-contain saturate-[0.8] brightness-[1.03] contrast-[0.95]"
               />
               {{ pet.name }}
             </span>

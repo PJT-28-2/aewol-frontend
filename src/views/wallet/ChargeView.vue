@@ -83,7 +83,7 @@ function handleCharge() {
       <p
         class="text-(length:--font-md) text-(color:--color-slate-muted) mt-(--space-1)"
       >
-        펫지갑에 충전할 금액을 입력해주세요
+        애월지갑에 충전할 금액을 입력해주세요
       </p>
     </header>
 

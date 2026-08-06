@@ -11,6 +11,10 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
+  size: {
+    type: String,
+    default: 'var(--dashboard-chart-size)',
+  },
 });
 
 const chartElement = ref(null);
@@ -31,7 +35,7 @@ function renderChart() {
       series: [
         {
           type: 'pie',
-          radius: [70, '100%'],
+          radius: ['64%', '100%'],
           avoidLabelOverlap: true,
           silent: true,
           itemStyle: {
@@ -87,7 +91,7 @@ onBeforeUnmount(() => {
 <template>
   <div
     ref="chartElement"
-    class="size-(--dashboard-chart-size)"
+    :style="{ width: size, height: size }"
     role="img"
     aria-label="이번 달 지출 비율"
   />

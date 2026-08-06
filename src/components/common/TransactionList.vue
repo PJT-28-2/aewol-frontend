@@ -53,7 +53,7 @@ function formatAmount(amount) {
           class="text-(length:--font-base) font-semibold"
           :class="
             tx.amount > 0
-              ? 'text-(color:--color-olive)'
+              ? 'text-(color:--color-gold-dark)'
               : 'text-(color:--color-navy)'
           "
         >
