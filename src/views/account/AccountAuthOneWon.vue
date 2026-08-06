@@ -18,12 +18,12 @@ if (!store.linking.bankCode) {
 const bankMeta = computed(() => getBankMeta(store.linking.bankCode));
 
 // step 1: 계좌번호 입력 (Figma 목업에 없는 보완 단계)
-// step 2: 1원 인증 - 입금자명 4자리 입력 (RF-CM 목업 그대로)
+// step 2: 1원 인증 - 입금자명(4자리 숫자) 입력 (RF-CM 목업 그대로)
 const step = ref('accountNumber');
+// verify-deposit 응답의 depositorNameLength를 그대로 신뢰해요(항상 4). 아직 응답을
+// 받기 전(컴포넌트 초기 렌더 시점)엔 store 기본값 4를 써요.
+const depositorNameLength = computed(() => store.linking.depositorNameLength || 4);
 const accountNumber = ref('');
-// 명세서(POST /api/accounts/verify-deposit)가 accountHolder를 요구해서 추가한 입력값.
-// TODO: Figma에 이 입력 필드가 없어서 임시로 추가함 — 디자인 확정되면 화면 구성 다시 확인 필요.
-const accountHolder = ref('');
 const isRequesting = ref(false);
 const requestError = ref('');
 
@@ -43,35 +43,20 @@ const isAccountNumberValid = computed(
     accountNumber.value.length <= ACCOUNT_NUMBER_MAX_LENGTH,
 );
 
-const isAccountHolderValid = computed(() => accountHolder.value.trim().length >= 2);
-
-// 이 화면은 개인 계좌 연동만 대상으로 해서 예금주명은 한글/영어만 허용해요(사업자/법인
-// 계좌명에 들어가는 숫자·괄호 등은 지원 대상이 아니에요). 백엔드는 문자 제한이 없지만,
-// 이전엔 허용 안 된 문자를 아무 안내 없이 조용히 지워서 사용자가 눈치채기 어려웠어요 —
-// 이제는 걸러내면서 왜 지워졌는지 에러 메시지로 같이 보여줘요.
-const accountHolderError = ref('');
-
-function onAccountHolderInput(event) {
-  const raw = event.target.value;
-  const filtered = raw.replace(/[^가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z\s]/g, '');
-  accountHolderError.value = filtered !== raw ? '한글, 영문만 입력할 수 있어요' : '';
-  accountHolder.value = filtered;
-  event.target.value = filtered;
-}
+// 예금주명 입력 필드는 제거함(2026-08-06) — CODEF에 예금주명을 넘겨서 실제로
+// 대조하는 게 아니라 사용자가 입력한 값을 그대로 저장만 하고 있어서 검증 효과가
+// 없었어요. 화면 어디에도 표시되지 않는 값이라 입력 자체를 없앴어요
+// (백엔드 DepositVerificationRequest.accountHolder 및 DB 컬럼도 함께 제거).
 
 async function submitAccountNumber() {
   if (!isAccountNumberValid.value) {
     requestError.value = `계좌번호는 숫자 ${ACCOUNT_NUMBER_MIN_LENGTH}~${ACCOUNT_NUMBER_MAX_LENGTH}자리로 입력해주세요`;
     return;
   }
-  if (!isAccountHolderValid.value) {
-    requestError.value = '예금주명을 입력해주세요';
-    return;
-  }
   isRequesting.value = true;
   requestError.value = '';
   try {
-    await store.requestDepositAuth(accountNumber.value, accountHolder.value.trim());
+    await store.requestDepositAuth(accountNumber.value);
     step.value = 'depositorName';
     startTimer();
     await nextTick();
@@ -83,57 +68,37 @@ async function submitAccountNumber() {
   }
 }
 
-// 입금자명 4자리 입력 + 카운트다운
-// 박스 4개를 각각 input으로 만들면 한글 조합 도중 포커스가 다음 칸으로 넘어가면서
-// 조합이 끊기는 문제가 있어서, 실제 입력은 hidden input 하나로만 받고
-// 4개 박스는 그 문자열을 나눠서 보여주기만 하는 방식으로 처리해요.
-const depositorInput = ref(''); // 확정된 값 (한글만, 최대 4자)
-const composingPreview = ref(''); // 아직 조합 중인, 확정 전 글자의 실시간 미리보기
+// 입금자명 입력(4자리 숫자, CODEF inPrintType=0) + 카운트다운
+// 박스 4개를 각각 input으로 만들면 포커스 이동 처리가 번거로워서, 실제 입력은 hidden
+// input 하나로만 받고 박스들은 그 문자열을 나눠서 보여주기만 하는 방식으로 처리해요.
+// (한글 랜덤 단어(inPrintType=1)를 쓰던 이전 버전엔 한글 조합 처리가 필요했지만,
+// 숫자 입력으로 바뀌면서 조합 이슈 자체가 없어져 관련 로직은 제거했어요.)
+const depositorInput = ref(''); // 확정된 값 (숫자만, 최대 depositorNameLength자)
 const hiddenInputRef = ref(null);
-const isComposing = ref(false);
 const isFocused = ref(false);
 const remainingSeconds = ref(0);
 let timerId = null;
 
-// 확정된 글자 + (있다면) 조합 중인 미리보기 글자까지 합쳐서 화면에 보여줘요.
 const digits = computed(() => {
   const chars = depositorInput.value.split('');
-  if (composingPreview.value && chars.length < 4) {
-    chars.push(composingPreview.value);
-  }
-  return [0, 1, 2, 3].map((i) => chars[i] ?? '');
+  return Array.from({ length: depositorNameLength.value }, (_, i) => chars[i] ?? '');
 });
 
-// 다음 글자가 들어갈(또는 지금 조합 중인) 박스 인덱스
-const activeIndex = computed(() => Math.min(depositorInput.value.length, 3));
+// 다음 글자가 들어갈 박스 인덱스
+const activeIndex = computed(() =>
+  Math.min(depositorInput.value.length, depositorNameLength.value - 1),
+);
 
 function focusHiddenInput() {
   hiddenInputRef.value?.focus();
 }
 
-function filterHangul(value) {
-  return value.replace(/[^가-힣]/g, '').slice(0, 4);
-}
-
-function onCompositionStart() {
-  isComposing.value = true;
-}
-
-function onCompositionEnd(event) {
-  isComposing.value = false;
-  composingPreview.value = '';
-  const filtered = filterHangul(event.target.value);
-  depositorInput.value = filtered;
-  event.target.value = filtered;
+function filterDigits(value) {
+  return value.replace(/[^0-9]/g, '').slice(0, depositorNameLength.value);
 }
 
 function onDepositorInput(event) {
-  if (isComposing.value) {
-    // 아직 조합 중 — 확정하지 않고, 지금 조합 중인 글자만 실시간으로 미리 보여줘요.
-    composingPreview.value = event.target.value.slice(depositorInput.value.length).slice(-1);
-    return;
-  }
-  const filtered = filterHangul(event.target.value);
+  const filtered = filterDigits(event.target.value);
   depositorInput.value = filtered;
   event.target.value = filtered;
 }
@@ -159,7 +124,7 @@ const timerLabel = computed(() => {
 });
 
 const isVerifyEnabled = computed(
-  () => depositorInput.value.length === 4 && remainingSeconds.value > 0,
+  () => depositorInput.value.length === depositorNameLength.value && remainingSeconds.value > 0,
 );
 
 const isVerifying = ref(false);
@@ -171,9 +136,8 @@ async function resendDeposit() {
   isResending.value = true;
   resendError.value = '';
   try {
-    await store.requestDepositAuth(accountNumber.value, accountHolder.value.trim());
+    await store.requestDepositAuth(accountNumber.value);
     depositorInput.value = '';
-    composingPreview.value = '';
     verifyError.value = '';
     startTimer();
     await nextTick();
@@ -213,7 +177,6 @@ function goBack() {
   if (step.value === 'depositorName') {
     clearInterval(timerId);
     depositorInput.value = '';
-    composingPreview.value = '';
     isFocused.value = false;
     verifyError.value = '';
     step.value = 'accountNumber';
@@ -251,15 +214,6 @@ registerHeaderBack(goBack);
         @input="onAccountNumberInput"
       />
 
-      <input
-        :value="accountHolder"
-        type="text"
-        autocomplete="off"
-        placeholder="예금주명을 입력해주세요"
-        class="w-full p-(--space-4) rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) text-(length:--font-base) text-(color:--color-navy) mb-(--space-2) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
-        @input="onAccountHolderInput"
-      />
-      <p v-if="accountHolderError" class="text-(length:--font-sm) text-(color:--color-danger-strong) mb-(--space-2)">{{ accountHolderError }}</p>
       <p v-if="requestError" class="text-(length:--font-sm) text-(color:--color-danger-strong) mb-(--space-4)">{{ requestError }}</p>
 
       <AppButton
@@ -267,7 +221,7 @@ registerHeaderBack(goBack);
         size="lg"
         block
         class="mt-(--space-4)"
-        :disabled="!isAccountNumberValid || !isAccountHolderValid || isRequesting"
+        :disabled="!isAccountNumberValid || isRequesting"
         @click="submitAccountNumber"
       >
         {{ isRequesting ? '1원 보내는 중…' : '1원 인증 시작하기' }}
@@ -278,7 +232,7 @@ registerHeaderBack(goBack);
     <template v-else>
       <header class="mb-(--space-6)">
         <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) leading-snug">
-          입금된 1원의 4자리<br />입금자명을 입력해주세요
+          입금된 1원의 {{ depositorNameLength }}자리<br />입금자명을 입력해주세요
         </h1>
       </header>
 
@@ -296,7 +250,7 @@ registerHeaderBack(goBack);
       </div>
 
       <div class="flex items-center justify-between mb-(--space-4)">
-        <span class="text-(length:--font-base) font-semibold text-(color:--color-navy)">입금자명 4자리</span>
+        <span class="text-(length:--font-base) font-semibold text-(color:--color-navy)">입금자명 {{ depositorNameLength }}자리</span>
         <span v-if="remainingSeconds > 0" class="text-(length:--font-sm) font-semibold text-(color:--color-danger-strong)">{{ timerLabel }}</span>
         <button
           v-else
@@ -310,15 +264,14 @@ registerHeaderBack(goBack);
       </div>
       <p v-if="resendError" class="text-(length:--font-sm) text-(color:--color-danger-strong) mb-(--space-2)">{{ resendError }}</p>
 
-      <div class="relative flex justify-center gap-(--space-3) mb-(--space-4)" @click="focusHiddenInput">
+      <div class="relative flex flex-wrap justify-center gap-(--space-3) mb-(--space-4)" @click="focusHiddenInput">
         <input
           ref="hiddenInputRef"
           type="text"
+          inputmode="numeric"
           autocomplete="off"
           class="absolute inset-0 z-10 w-full h-full appearance-none border-0 p-0 m-0 opacity-0 cursor-text"
           @input="onDepositorInput"
-          @compositionstart="onCompositionStart"
-          @compositionend="onCompositionEnd"
           @focus="isFocused = true"
           @blur="isFocused = false"
         />
@@ -337,7 +290,7 @@ registerHeaderBack(goBack);
       </div>
 
       <p class="text-(length:--font-sm) text-(color:--color-gray-500) leading-relaxed mb-(--space-2)">
-        은행 앱 알림이나 입출금 문자에서<br />입금자명(예: 푸른애월)의 앞 4글자를 확인할 수 있어요
+        은행 앱 알림이나 입출금 문자에서<br />입금자명(예: 5673) {{ depositorNameLength }}자리를 확인할 수 있어요
       </p>
       <p v-if="verifyError" class="text-(length:--font-sm) text-(color:--color-danger-strong) mb-(--space-2)">{{ verifyError }}</p>
 

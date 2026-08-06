@@ -57,7 +57,6 @@ function goToAccountManagement() {
 
       <AccountSummaryCard
         :bank-code="linkedAccount.bankCode"
-        :balance="linkedAccount.balance"
         :badge-size="36"
         class="w-full mb-(--space-8)"
       />

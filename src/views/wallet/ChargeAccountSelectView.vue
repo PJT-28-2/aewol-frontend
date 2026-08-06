@@ -5,7 +5,7 @@ import AppButton from '@/components/common/AppButton.vue';
 import BankBadge from '@/components/common/BankBadge.vue';
 import IconCheck from '@/components/common/icons/IconCheck.vue';
 import { useAccountStore } from '@/stores/account';
-import { formatWon, getBankMeta } from '@/utils/bankMeta';
+import { getBankMeta } from '@/utils/bankMeta';
 import { MOCK_ACCOUNTS } from '@/mocks/account';
 
 const route = useRoute();
@@ -112,7 +112,7 @@ function confirmChange() {
             <p
               class="text-(length:--font-sm) text-(color:--color-slate-muted) mt-(--space-1)"
             >
-              {{ formatWon(account.balance) }}<span v-if="account.isPrimary"> · 주계좌</span>
+              연동됨<span v-if="account.isPrimary"> · 주계좌</span>
             </p>
           </div>
           <IconCheck
