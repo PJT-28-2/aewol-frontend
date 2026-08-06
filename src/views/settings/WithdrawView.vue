@@ -83,7 +83,7 @@ const handleWithdraw = async () => {
     >
       <li class="flex items-center gap-[9px]">
         <span class="size-[5px] shrink-0 rounded-full bg-(--color-danger-strong)" />
-        <span>펫지갑 잔액, SOS포켓, 저금통 전체</span>
+        <span>애월지갑 잔액, SOS포켓, 저금통 전체</span>
       </li>
       <li class="flex items-center gap-[9px]">
         <span class="size-[5px] shrink-0 rounded-full bg-(--color-danger-strong)" />

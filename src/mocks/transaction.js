@@ -19,7 +19,7 @@ export const mockTransactions = [
     type: 'withdraw',
     category: 'MEDICAL',
     petId: 1,
-    paymentMethod: '애월 통합 지갑',
+    paymentMethod: '애월지갑',
     autoTagged: true,
   },
   {
@@ -32,7 +32,7 @@ export const mockTransactions = [
     type: 'withdraw',
     category: 'FOOD',
     petId: null,
-    paymentMethod: '애월 통합 지갑',
+    paymentMethod: '애월지갑',
     autoTagged: true,
   },
   {
@@ -40,7 +40,7 @@ export const mockTransactions = [
     date: '2026-08-17',
     time: '09:05',
     title: '엄마 · 충전',
-    subtitle: '펫지갑에 100,000원 충전',
+    subtitle: '애월지갑에 100,000원 충전',
     amount: 100000,
     type: 'charge',
     chargeMethod: '계좌이체',
@@ -55,7 +55,7 @@ export const mockTransactions = [
     type: 'withdraw',
     category: 'GROOMING',
     petId: 2,
-    paymentMethod: '애월 통합 지갑',
+    paymentMethod: '애월지갑',
     autoTagged: true,
   },
   {
@@ -68,7 +68,7 @@ export const mockTransactions = [
     type: 'withdraw',
     category: 'MEDICAL',
     petId: null,
-    paymentMethod: '애월 통합 지갑',
+    paymentMethod: '애월지갑',
     autoTagged: false,
   },
   {
@@ -81,7 +81,7 @@ export const mockTransactions = [
     type: 'withdraw',
     category: 'SUPPLIES',
     petId: null,
-    paymentMethod: '애월 통합 지갑',
+    paymentMethod: '애월지갑',
     autoTagged: true,
   },
   {
@@ -94,7 +94,7 @@ export const mockTransactions = [
     type: 'withdraw',
     category: 'MEDICAL',
     petId: 2,
-    paymentMethod: '애월 통합 지갑',
+    paymentMethod: '애월지갑',
     autoTagged: true,
   },
   {
@@ -102,7 +102,7 @@ export const mockTransactions = [
     date: '2026-07-05',
     time: '20:15',
     title: '아빠 · 충전',
-    subtitle: '펫지갑에 50,000원 충전',
+    subtitle: '애월지갑에 50,000원 충전',
     amount: 50000,
     type: 'charge',
     chargeMethod: '카드결제',
@@ -117,7 +117,7 @@ export const mockTransactions = [
     type: 'withdraw',
     category: 'MEDICAL',
     petId: 2,
-    paymentMethod: '애월 통합 지갑',
+    paymentMethod: '애월지갑',
     autoTagged: true,
   },
   {
@@ -130,7 +130,7 @@ export const mockTransactions = [
     type: 'withdraw',
     category: 'ETC',
     petId: null,
-    paymentMethod: '애월 통합 지갑',
+    paymentMethod: '애월지갑',
     autoTagged: false,
   },
 ]

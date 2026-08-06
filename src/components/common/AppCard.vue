@@ -27,6 +27,7 @@ defineProps({
 .app-card {
   background-color: var(--color-white);
   border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
   overflow: hidden;
 }
 
@@ -35,6 +36,6 @@ defineProps({
 }
 
 .app-card--shadow {
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-sm);
 }
 </style>

@@ -229,7 +229,7 @@ async function handleSubmit() {
         <p
           class="text-(length:--font-md) font-semibold text-(color:--color-navy)"
         >
-          애월 통합 지갑
+          애월지갑
         </p>
         <p
           class="text-(length:--font-sm) text-(color:--color-slate-muted) mt-(--space-1)"

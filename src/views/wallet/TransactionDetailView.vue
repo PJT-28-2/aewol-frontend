@@ -2,14 +2,14 @@
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import AppButton from '@/components/common/AppButton.vue';
-import IconBarberShop from '@/components/common/icons/IconBarberShop.vue';
-import IconCat from '@/components/common/icons/IconCat.vue';
-import IconDog from '@/components/common/icons/IconDog.vue';
-import IconDogBowl from '@/components/common/icons/IconDogBowl.vue';
-import IconEtc from '@/components/common/icons/IconEtc.vue';
-import IconHospital from '@/components/common/icons/IconHospital.vue';
-import IconShowerGel from '@/components/common/icons/IconShowerGel.vue';
-import IconWallet from '@/components/common/icons/IconWallet.vue';
+import iconCat3d from '@/assets/images/icons-3d/cat_face_3d.png';
+import iconDog3d from '@/assets/images/icons-3d/dog_face_3d.png';
+import iconHospital3d from '@/assets/images/icons-3d/hospital_3d.png';
+import iconBowl3d from '@/assets/images/icons-3d/bowl_with_spoon_3d.png';
+import iconLotion3d from '@/assets/images/icons-3d/lotion_bottle_3d.png';
+import iconPackage3d from '@/assets/images/icons-3d/package_3d.png';
+import iconEtc3d from '@/assets/images/icons-3d/card_file_box_3d.png';
+import iconWallet3d from '@/assets/images/icons-3d/credit_card_3d.png';
 import { CATEGORY_LABELS } from '@/mocks/transaction';
 import { usePetStore } from '@/stores/pet';
 import { useTransactionStore } from '@/stores/transaction';
@@ -29,7 +29,7 @@ const isWithdraw = computed(() => transaction.value?.type === 'withdraw');
 const pets = computed(() =>
   petStore.pets.map((pet) => ({
     ...pet,
-    icon: pet.species === 'CAT' ? IconCat : IconDog,
+    icon: pet.species === 'CAT' ? iconCat3d : iconDog3d,
   })),
 );
 
@@ -38,31 +38,31 @@ const categories = [
   {
     key: 'MEDICAL',
     label: CATEGORY_LABELS.MEDICAL,
-    icon: IconHospital,
-    bg: 'var(--color-pastel-blue)',
+    icon: iconHospital3d,
+    bg: 'var(--color-pastel-violet)',
   },
   {
     key: 'GROOMING',
     label: CATEGORY_LABELS.GROOMING,
-    icon: IconBarberShop,
-    bg: 'var(--color-pastel-lilac)',
+    icon: iconLotion3d,
+    bg: 'var(--color-pastel-coral)',
   },
   {
     key: 'FOOD',
     label: CATEGORY_LABELS.FOOD,
-    icon: IconDogBowl,
-    bg: 'var(--color-pastel-peach)',
+    icon: iconBowl3d,
+    bg: 'var(--color-pastel-blue)',
   },
   {
     key: 'SUPPLIES',
     label: CATEGORY_LABELS.SUPPLIES,
-    icon: IconShowerGel,
-    bg: 'var(--color-pastel-mint)',
+    icon: iconPackage3d,
+    bg: 'var(--color-pastel-peach)',
   },
   {
     key: 'ETC',
     label: CATEGORY_LABELS.ETC,
-    icon: IconEtc,
+    icon: iconEtc3d,
     bg: 'var(--color-pastel-beige)',
   },
 ];
@@ -86,18 +86,18 @@ const selectedCategoryOption = computed(() =>
 );
 
 const headerIcon = computed(() => {
-  if (!isWithdraw.value) return IconWallet;
-  return selectedCategoryOption.value?.icon ?? IconHospital;
+  if (!isWithdraw.value) return iconWallet3d;
+  return selectedCategoryOption.value?.icon ?? iconHospital3d;
 });
 
 const headerBg = computed(() => {
-  if (!isWithdraw.value) return 'var(--color-pastel-green)';
-  return selectedCategoryOption.value?.bg ?? 'var(--color-pastel-blue)';
+  if (!isWithdraw.value) return 'var(--color-pastel-sky)';
+  return selectedCategoryOption.value?.bg ?? 'var(--color-pastel-violet)';
 });
 
 const amountColorClass = computed(() =>
   transaction.value?.amount > 0
-    ? 'text-(color:--color-olive)'
+    ? 'text-(color:--color-gold-dark)'
     : 'text-(color:--color-navy)',
 );
 
@@ -144,7 +144,7 @@ function handleSave() {
 
 <template>
   <div
-    class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))] bg-(--color-bg) min-h-screen"
+    class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))] bg-(--color-gray-100) min-h-screen"
   >
 
     <div
@@ -160,10 +160,10 @@ function handleSave() {
           class="flex items-center justify-center w-(--icon-badge-size) h-(--icon-badge-size) rounded-(--radius-xl) mb-(--space-4)"
           :style="{ backgroundColor: headerBg }"
         >
-          <component
-            :is="headerIcon"
-            size="30"
-            color="var(--color-navy)"
+          <img
+            :src="headerIcon"
+            alt=""
+            class="w-[36px] h-[36px] object-contain saturate-[0.8] brightness-[1.03] contrast-[0.95]"
           />
         </span>
         <p
@@ -191,95 +191,96 @@ function handleSave() {
       </div>
 
       <template v-if="isWithdraw">
-        <div class="mb-(--space-6)">
-          <div class="flex items-center justify-between mb-(--space-2)">
-            <p
-              class="text-(length:--font-sm) font-medium text-(color:--color-slate-dark)"
-            >
-              카테고리
-            </p>
-            <p
-              v-if="transaction.autoTagged"
-              class="text-(length:--font-xs) text-(color:--color-slate-muted)"
-            >
-              자동 분류됨
-            </p>
-          </div>
-          <div class="flex flex-wrap gap-(--space-2)">
-            <button
-              v-for="category in categories"
-              :key="category.key"
-              type="button"
-              :aria-pressed="selectedCategory === category.key"
-              class="inline-flex items-center gap-(--space-2) h-(--control-height-sm) px-(--space-4) rounded-(--radius-full) border text-(length:--font-sm) font-medium"
-              :class="
-                selectedCategory === category.key
-                  ? 'bg-(--color-navy) border-(--color-navy) text-(color:--color-white)'
-                  : 'bg-(--color-white) border-(--color-border) text-(color:--color-slate-dark)'
-              "
-              @click="selectCategory(category.key)"
-            >
-              <component
-                :is="category.icon"
-                size="16"
-              />
-              {{ category.label }}
-            </button>
-          </div>
-        </div>
-
-        <div class="mb-(--space-6)">
-          <p
-            class="text-(length:--font-sm) font-medium text-(color:--color-slate-dark) mb-(--space-2)"
-          >
-            반려동물
-          </p>
-          <div class="flex flex-wrap gap-(--space-2)">
-            <button
-              v-for="pet in pets"
-              :key="pet.id"
-              type="button"
-              :aria-pressed="selectedPetId === pet.id"
-              class="inline-flex items-center gap-(--space-2) h-(--control-height-sm) px-(--space-4) rounded-(--radius-full) border text-(length:--font-sm) font-medium"
-              :class="
-                selectedPetId === pet.id
-                  ? 'bg-(--color-navy) border-(--color-navy) text-(color:--color-white)'
-                  : 'bg-(--color-white) border-(--color-border) text-(color:--color-slate-dark)'
-              "
-              @click="selectPet(pet.id)"
-            >
-              <component
-                :is="pet.icon"
-                size="16"
-                :color="
-                  selectedPetId === pet.id
-                    ? 'var(--color-white)'
-                    : 'var(--color-slate-dark)'
-                "
-              />
-              {{ pet.name }}
-            </button>
-          </div>
-        </div>
-
         <div
-          class="flex items-center justify-between py-(--space-4) border-t border-(--color-border) mb-(--space-6)"
+          class="bg-(--color-white) rounded-(--radius-lg) shadow-(--shadow-sm) p-(--space-4) mb-(--space-6)"
         >
-          <p
-            class="text-(length:--font-sm) text-(color:--color-slate-muted)"
+          <div class="mb-(--space-5)">
+            <div class="flex items-center justify-between mb-(--space-2)">
+              <p
+                class="text-(length:--font-sm) font-medium text-(color:--color-slate-dark)"
+              >
+                카테고리
+              </p>
+              <p
+                v-if="transaction.autoTagged"
+                class="text-(length:--font-xs) text-(color:--color-slate-muted)"
+              >
+                자동 분류됨
+              </p>
+            </div>
+            <div class="flex flex-wrap gap-(--space-2)">
+              <button
+                v-for="category in categories"
+                :key="category.key"
+                type="button"
+                :aria-pressed="selectedCategory === category.key"
+                class="inline-flex items-center gap-(--space-2) h-(--control-height-sm) px-(--space-4) rounded-(--radius-full) border text-(length:--font-sm) font-medium"
+                :class="
+                  selectedCategory === category.key
+                    ? 'bg-(--color-gray-900) border-(--color-gray-900) text-(color:--color-white)'
+                    : 'bg-(--color-white) border-(--color-border) text-(color:--color-slate-dark)'
+                "
+                @click="selectCategory(category.key)"
+              >
+                <img
+                  :src="category.icon"
+                  alt=""
+                  class="w-[18px] h-[18px] object-contain saturate-[0.8] brightness-[1.03] contrast-[0.95]"
+                />
+                {{ category.label }}
+              </button>
+            </div>
+          </div>
+
+          <div class="mb-(--space-5)">
+            <p
+              class="text-(length:--font-sm) font-medium text-(color:--color-slate-dark) mb-(--space-2)"
+            >
+              반려동물
+            </p>
+            <div class="flex flex-wrap gap-(--space-2)">
+              <button
+                v-for="pet in pets"
+                :key="pet.id"
+                type="button"
+                :aria-pressed="selectedPetId === pet.id"
+                class="inline-flex items-center gap-(--space-2) h-(--control-height-sm) px-(--space-4) rounded-(--radius-full) border text-(length:--font-sm) font-medium"
+                :class="
+                  selectedPetId === pet.id
+                    ? 'bg-(--color-gray-900) border-(--color-gray-900) text-(color:--color-white)'
+                    : 'bg-(--color-white) border-(--color-border) text-(color:--color-slate-dark)'
+                "
+                @click="selectPet(pet.id)"
+              >
+                <img
+                  :src="pet.icon"
+                  alt=""
+                  class="w-[18px] h-[18px] object-contain saturate-[0.8] brightness-[1.03] contrast-[0.95]"
+                />
+                {{ pet.name }}
+              </button>
+            </div>
+          </div>
+
+          <div
+            class="flex items-center justify-between pt-(--space-4) border-t border-(--color-border)"
           >
-            결제 수단
-          </p>
-          <p
-            class="text-(length:--font-sm) font-medium text-(color:--color-navy)"
-          >
-            {{ transaction.paymentMethod }}
-          </p>
+            <p
+              class="text-(length:--font-sm) text-(color:--color-slate-muted)"
+            >
+              결제 수단
+            </p>
+            <p
+              class="text-(length:--font-sm) font-medium text-(color:--color-gray-900)"
+            >
+              {{ transaction.paymentMethod }}
+            </p>
+          </div>
         </div>
 
         <AppButton
           type="button"
-          variant="navy"
+          variant="primary"
           size="lg"
           block
           :disabled="!selectedCategory"
@@ -292,7 +293,7 @@ function handleSave() {
 
       <template v-else>
         <div
-          class="flex items-center justify-between py-(--space-4) border-t border-(--color-border) mb-(--space-6)"
+          class="flex items-center justify-between bg-(--color-white) rounded-(--radius-lg) shadow-(--shadow-sm) p-(--space-4) mb-(--space-6)"
         >
           <p
             class="text-(length:--font-sm) text-(color:--color-slate-muted)"
@@ -300,7 +301,7 @@ function handleSave() {
             충전 수단
           </p>
           <p
-            class="text-(length:--font-sm) font-medium text-(color:--color-navy)"
+            class="text-(length:--font-sm) font-medium text-(color:--color-gray-900)"
           >
             {{ transaction.chargeMethod }}
           </p>
@@ -308,7 +309,7 @@ function handleSave() {
 
         <AppButton
           type="button"
-          variant="navy"
+          variant="primary"
           size="lg"
           block
           @click="goBack"

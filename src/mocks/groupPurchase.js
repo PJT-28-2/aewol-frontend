@@ -199,7 +199,7 @@ export const MOCK_GROUP_PURCHASE_PAYMENT_PRODUCT = {
 // mockWalletBalance와 비슷한 규모). 잔액부족 분기를 확인하려면 balance를 결제 금액보다 낮게 바꿔서 테스트할 것
 // TODO: 백엔드 API 연동 후 제거하고 실제 결제 수단 조회 API로 교체
 export const MOCK_GROUP_PURCHASE_PAYMENT_METHOD = {
-  name: '애월 통합 지갑',
+  name: '애월지갑',
   balance: 415000,
 }
 

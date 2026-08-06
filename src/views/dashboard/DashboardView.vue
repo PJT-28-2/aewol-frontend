@@ -4,8 +4,8 @@ import { useRoute, useRouter } from 'vue-router';
 import ExpenseDonutChart from '@/components/dashboard/ExpenseDonutChart.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
-import IconCat from '@/components/common/icons/IconCat.vue';
-import IconDog from '@/components/common/icons/IconDog.vue';
+import iconCat3d from '@/assets/images/icons-3d/cat_face_3d.png';
+import iconDog3d from '@/assets/images/icons-3d/dog_face_3d.png';
 import IconStats from '@/components/common/icons/IconStats.vue';
 import { usePetStore } from '@/stores/pet';
 import { useTransactionStore } from '@/stores/transaction';
@@ -22,11 +22,11 @@ registerHeaderBack(() => router.push('/home'));
 const pets = computed(() => petStore.pets);
 
 const CATEGORY_COLOR_TOKENS = {
-  MEDICAL: '--color-navy',
+  MEDICAL: '--color-chart-blue',
   FOOD: '--color-olive',
   GROOMING: '--color-gold',
-  SUPPLIES: '--color-gold-dark',
-  ETC: '--color-danger-dark',
+  SUPPLIES: '--color-chart-purple',
+  ETC: '--color-danger',
 };
 
 // 이번 달 출금 내역을 category별로 합산한 값 (useTransactionStore가 단일 소스)
@@ -113,14 +113,14 @@ function withPercentages(list) {
   return items;
 }
 
-// HomeView.vue와 동일한 팔레트
+// 선명하고 다양한 팔레트
 const petColors = [
-  '--color-navy',
+  '--color-gold',
   '--color-olive',
   '--color-chart-blue',
   '--color-chart-purple',
-  '--color-gold-dark',
-  '--color-danger-dark',
+  '--color-info',
+  '--color-danger',
 ];
 
 const categoryItems = computed(() =>
@@ -166,7 +166,7 @@ const totalExpense = computed(() =>
 );
 
 function petIcon(species) {
-  return species === 'CAT' ? IconCat : IconDog;
+  return species === 'CAT' ? iconCat3d : iconDog3d;
 }
 
 function goToCategoryHistory(categoryKey) {
@@ -190,12 +190,12 @@ onMounted(() => {
 
 <template>
   <div
-    class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))] bg-(--color-bg) min-h-screen"
+    class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))] bg-(--color-gray-100) min-h-screen"
   >
 
     <header class="mb-(--space-6)">
       <h1
-        class="text-(length:--font-2xl) font-bold text-(color:--color-navy)"
+        class="text-(length:--font-2xl) font-bold text-(color:--color-gray-900)"
       >
         이번 달 지출
       </h1>
@@ -221,8 +221,8 @@ onMounted(() => {
           class="h-(--control-height-sm) px-(--space-4) rounded-(--radius-full) text-(length:--font-sm) font-semibold"
           :class="
             activeTab === 'category'
-              ? 'bg-(--color-navy) text-(color:--color-white)'
-              : 'bg-(--color-surface) text-(color:--color-slate-muted)'
+              ? 'bg-(--color-gray-900) text-(color:--color-white)'
+              : 'bg-(--color-white) text-(color:--color-slate-muted) shadow-(--shadow-sm)'
           "
           @click="selectTab('category')"
         >
@@ -235,8 +235,8 @@ onMounted(() => {
           class="h-(--control-height-sm) px-(--space-4) rounded-(--radius-full) text-(length:--font-sm) font-semibold"
           :class="
             activeTab === 'pet'
-              ? 'bg-(--color-navy) text-(color:--color-white)'
-              : 'bg-(--color-surface) text-(color:--color-slate-muted)'
+              ? 'bg-(--color-gray-900) text-(color:--color-white)'
+              : 'bg-(--color-white) text-(color:--color-slate-muted) shadow-(--shadow-sm)'
           "
           @click="selectTab('pet')"
         >
@@ -259,7 +259,7 @@ onMounted(() => {
             class="pointer-events-none absolute z-10 flex flex-col items-center text-center px-(--space-3)"
           >
             <p
-              class="text-(length:--font-2xl) font-bold text-(color:--color-navy)"
+              class="text-(length:--font-2xl) font-bold text-(color:--color-gray-900)"
             >
               {{ totalExpense.toLocaleString() }}원
             </p>
@@ -278,7 +278,7 @@ onMounted(() => {
           >
             <button
               type="button"
-              class="w-full flex items-center gap-(--space-3) bg-(--color-surface) rounded-(--radius-xl) p-(--space-4) text-left"
+              class="w-full flex items-center gap-(--space-3) bg-(--color-white) shadow-(--shadow-sm) rounded-(--radius-lg) p-(--space-4) text-left"
               @click="
                 isPetTabActive
                   ? goToPetHistory(item.id)
@@ -297,18 +297,18 @@ onMounted(() => {
                   class="flex items-center justify-between gap-(--space-2)"
                 >
                   <p
-                    class="flex items-center gap-(--space-1) text-(length:--font-base) font-semibold text-(color:--color-navy)"
+                    class="flex items-center gap-(--space-1) text-(length:--font-base) font-semibold text-(color:--color-gray-900)"
                   >
-                    <component
-                      :is="petIcon(item.species)"
+                    <img
                       v-if="isPetTabActive"
-                      size="16"
-                      color="var(--color-navy)"
+                      :src="petIcon(item.species)"
+                      :alt="item.species === 'CAT' ? '고양이' : '강아지'"
+                      class="w-[20px] h-[20px] object-contain saturate-[0.8] brightness-[1.03] contrast-[0.95]"
                     />
                     {{ item.label }}
                   </p>
                   <p
-                    class="text-(length:--font-base) font-bold text-(color:--color-navy) shrink-0"
+                    class="text-(length:--font-base) font-bold text-(color:--color-gray-900) shrink-0"
                   >
                     {{ item.percentage }}%
                   </p>

@@ -97,7 +97,7 @@ function goToWallet() {
       <p
         class="text-(length:--font-md) text-(color:--color-gray-600) mb-(--space-8)"
       >
-        펫지갑에서 충전을 다시 시도해주세요
+        애월지갑에서 충전을 다시 시도해주세요
       </p>
       <AppButton
         variant="navy"
@@ -105,7 +105,7 @@ function goToWallet() {
         block
         @click="goToWallet"
       >
-        펫지갑으로 이동
+        애월지갑으로 이동
       </AppButton>
     </template>
 
