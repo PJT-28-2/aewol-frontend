@@ -219,7 +219,7 @@ onMounted(async () => {
       >
         <img
           :src="menu.icon"
-          :alt="menu.label"
+          alt=""
           class="w-[26px] h-[26px] object-contain saturate-[0.8] brightness-[1.03] contrast-[0.95]"
         />
         {{ menu.label }}

@@ -39,13 +39,13 @@ function goBack() {
 
 <template>
   <header
-    class="page-header"
-    :class="{ 'page-header--muted': isMutedHeader }"
+    class="fixed top-0 left-0 right-0 z-100 flex items-center justify-between h-(--header-height) px-(--space-4)"
+    :class="isMutedHeader ? 'bg-(--color-gray-100)' : 'bg-(--color-white)'"
   >
-    <div class="page-header__left">
+    <div class="flex-none flex items-center justify-start">
       <button
         v-if="showBack"
-        class="page-header__back"
+        class="flex items-center justify-center w-[40px] h-[40px] rounded-(--radius-full) text-(color:--color-gray-900) transition-colors hover:bg-(--color-gray-100)"
         aria-label="뒤로 가기"
         @click="goBack"
       >
@@ -55,17 +55,22 @@ function goBack() {
         v-else
         :src="aewolWordmark"
         alt="애월"
-        class="page-header__logo"
+        class="h-[28px] w-auto object-contain"
       />
     </div>
 
-    <h1 v-if="title" class="page-header__title">{{ title }}</h1>
+    <h1
+      v-if="title"
+      class="flex-1 text-center text-(length:--font-lg) font-semibold text-(color:--color-gray-900) overflow-hidden text-ellipsis whitespace-nowrap"
+    >
+      {{ title }}
+    </h1>
 
-    <div class="page-header__right">
+    <div class="flex-[0_0_48px] flex items-center justify-end">
       <router-link
         v-if="isHome"
         to="/settings/notifications"
-        class="page-header__bell"
+        class="relative flex items-center justify-center w-[40px] h-[40px] rounded-(--radius-full) text-(color:--color-navy) active:bg-(--color-gray-100)"
         aria-label="알림"
       >
         <IconNotificationBell
@@ -74,7 +79,7 @@ function goBack() {
         />
         <span
           v-if="notificationStore.unreadCount > 0"
-          class="page-header__bell-badge"
+          class="absolute top-[9px] right-[10px] w-[7px] h-[7px] rounded-(--radius-full) bg-(--color-danger) border-[1.5px] border-(--color-white)"
         />
       </router-link>
       <slot
@@ -84,95 +89,3 @@ function goBack() {
     </div>
   </header>
 </template>
-
-<style scoped>
-.page-header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: var(--header-height);
-  padding: 0 var(--space-4);
-  background-color: var(--color-white);
-}
-
-.page-header--muted {
-  background-color: var(--color-gray-100);
-}
-
-.page-header__bell {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-full);
-  color: var(--color-navy);
-}
-
-.page-header__bell:active {
-  background-color: var(--color-gray-100);
-}
-
-.page-header__bell-badge {
-  position: absolute;
-  top: 9px;
-  right: 10px;
-  width: 7px;
-  height: 7px;
-  border-radius: var(--radius-full);
-  background-color: var(--color-danger);
-  border: 1.5px solid var(--color-white);
-}
-
-.page-header__left {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-}
-
-.page-header__right {
-  flex: 0 0 48px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-}
-
-.page-header__title {
-  flex: 1;
-  text-align: center;
-  font-size: var(--font-lg);
-  font-weight: var(--font-semibold);
-  color: var(--color-gray-900);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.page-header__logo {
-  height: 28px;
-  width: auto;
-  object-fit: contain;
-}
-
-.page-header__back {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-full);
-  color: var(--color-gray-900);
-  transition: background-color 0.2s;
-}
-
-.page-header__back:hover {
-  background-color: var(--color-gray-100);
-}
-</style>
