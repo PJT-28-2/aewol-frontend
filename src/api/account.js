@@ -44,9 +44,11 @@ export function confirmDepositVerification(payload) {
 /**
  * 계좌 등록 — 1원 인증 완료 후 실제 계좌 연동 확정
  * POST /api/accounts
- * body: { transactionId, bankLoginId?, bankLoginPassword? }
- * result: { accountId, bankCode, bankName, accountNumber, isPrimary, balance }
- * bankLoginId/bankLoginPassword는 선택 — 있으면 CODEF 보유계좌 API로 실시간 잔액을 가져와요.
+ * body: { transactionId, isPrimary? }
+ * result: { accountId, bankCode, bankName, accountNumber, isPrimary, status }
+ * 실시간 잔액 조회(CODEF Connected ID)는 지원하지 않아요 — 사용자의 인터넷뱅킹
+ * 아이디/비밀번호를 제3자에 넘겨야 해서 신뢰 문제가 있고, 앱 핵심 기능은 어차피
+ * 내부 지갑 잔액만 쓰기 때문에 기능 자체를 제거했어요(2026-08-06).
  */
 export function registerAccount(payload) {
   return api.post('/accounts', payload);
