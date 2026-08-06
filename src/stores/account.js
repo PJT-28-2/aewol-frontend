@@ -35,10 +35,12 @@ export const useAccountStore = defineStore('account', {
     linking: {
       bankCode: null,
       accountNumber: '',
-      accountHolder: '',
       verificationId: null,
       maskedAccountNumber: '',
       expiresInSeconds: 0,
+      // CODEF inPrintType=0(4자리 랜덤 숫자)이라 항상 4예요. 목데이터 모드나 응답이
+      // 없는 경우를 대비해 기본값으로 둬요.
+      depositorNameLength: 4,
       // 비밀번호 설정 화면에서 입력한 값을 확인 화면으로 넘길 때까지만 메모리에 잠깐 보관
       password: '',
     },
@@ -103,9 +105,8 @@ export const useAccountStore = defineStore('account', {
     // POST /api/accounts/verify-deposit — 목데이터 모드에선 아무 계좌번호나 넣어도 바로 통과
     // ⚠️ 실제 API는 transactionId만 내려주고 maskedAccountNumber/expiresInSeconds는
     // 안 내려주기 때문에, 두 값 다 클라이언트에서 직접 계산해서 채워요.
-    async requestDepositAuth(accountNumber, accountHolder) {
+    async requestDepositAuth(accountNumber) {
       this.linking.accountNumber = accountNumber;
-      this.linking.accountHolder = accountHolder;
 
       const masked =
         accountNumber.length > 4
@@ -117,27 +118,31 @@ export const useAccountStore = defineStore('account', {
         this.linking.verificationId = `mock-${Date.now()}`;
         this.linking.maskedAccountNumber = masked;
         this.linking.expiresInSeconds = DEPOSIT_AUTH_TIMEOUT_SECONDS;
+        this.linking.depositorNameLength = 4;
         return { verificationId: this.linking.verificationId };
       }
 
       return this._withRequestState(async () => {
+        // 예금주명(accountHolder)은 더 이상 안 보내요(2026-08-06) — CODEF와 대조하지
+        // 않고 저장만 하던 값이라 검증 효과가 없었어요.
         const { data } = await requestDepositVerification({
           bankCode: this.linking.bankCode,
           accountNumber,
-          accountHolder,
         });
         this.linking.verificationId = data.result.transactionId;
         this.linking.maskedAccountNumber = masked;
         this.linking.expiresInSeconds = DEPOSIT_AUTH_TIMEOUT_SECONDS;
+        // CODEF가 만든 입금자명 실제 길이 — 4자가 아닐 수 있어서 항상 이 값을 신뢰해요.
+        this.linking.depositorNameLength = data.result.depositorNameLength || 4;
         return { verificationId: this.linking.verificationId };
       });
     },
 
-    // POST /api/accounts/verify-deposit/confirm — 목데이터 모드에선 4자리만 채우면 통과
-    // verificationCode: 입금자명에 찍히는 랜덤 한글 4자 (예: 파란애월)
+    // POST /api/accounts/verify-deposit/confirm — 목데이터 모드에선 depositorNameLength만큼만 채우면 통과
+    // verificationCode: 입금자명에 찍히는 4자리 랜덤 숫자 (예: 5673)
     async confirmDepositAuth(verificationCode) {
       if (USE_MOCK_DATA) {
-        return verificationCode.length === 4;
+        return verificationCode.length === this.linking.depositorNameLength;
       }
       return this._withRequestState(async () => {
         const { data } = await confirmDepositVerification({
@@ -156,7 +161,6 @@ export const useAccountStore = defineStore('account', {
           accountId: Date.now(),
           bankCode: this.linking.bankCode,
           accountNumberMasked: this.linking.maskedAccountNumber || bankMeta.name,
-          balance: 100000,
           isPrimary: this.accounts.length === 0,
         };
         this.accounts.push(mockAccount);
@@ -169,28 +173,13 @@ export const useAccountStore = defineStore('account', {
         const { data } = await registerAccount({
           transactionId: this.linking.verificationId,
         });
-        // 등록(POST) 자체는 여기서 이미 성공이 확정돼요. 아래 목록 재조회가
-        // 실패하더라도 이 성공을 실패로 되돌리면 안 돼요 — 재시도 시 이미 쓴
-        // transactionId로 다시 요청하거나 계좌가 중복 등록될 수 있어요.
+        // 등록 응답(AccountResponse)에 목록 화면이 필요로 하는 값(bankName 포함)이
+        // 이미 다 들어있어서(balance 제거 후 GET과 필드가 동일해짐), GET /api/accounts로
+        // 다시 조회할 필요 없이 이 응답을 그대로 목록에 반영해요.
         this.lastLinkedAccountId = data.result.accountId;
+        this.accounts = [...this.accounts, data.result];
 
-        try {
-          // 백엔드의 POST /api/accounts 응답(AccountResponse)엔 balance가 없어서
-          // 등록 응답을 그대로 쓰면 완료 화면 잔액이 비어요.
-          // GET /api/accounts로 다시 조회해서 balance가 포함된 완전한 데이터로 채워요.
-          const { data: listData } = await getAccounts();
-          this.accounts = listData.result ?? [];
-        } catch (refreshErr) {
-          // 목록 재조회 실패는 등록 성공과 별개의 문제예요. 등록된 계좌를
-          // 등록 응답만으로라도 목록에 반영해두고(잔액은 다음 조회 때 채워짐),
-          // 에러는 별도로 기록만 해서 흐름을 막지 않아요.
-          if (!this.accounts.some((a) => a.accountId === this.lastLinkedAccountId)) {
-            this.accounts = [...this.accounts, data.result];
-          }
-          this.error = refreshErr;
-        }
-
-        return this.accounts.find((a) => a.accountId === this.lastLinkedAccountId) ?? data.result;
+        return data.result;
       });
     },
 
@@ -198,10 +187,10 @@ export const useAccountStore = defineStore('account', {
       this.linking = {
         bankCode: null,
         accountNumber: '',
-        accountHolder: '',
         verificationId: null,
         maskedAccountNumber: '',
         expiresInSeconds: 0,
+        depositorNameLength: 4,
         password: '',
       };
       this.lastLinkedAccountId = null;

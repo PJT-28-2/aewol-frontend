@@ -51,13 +51,8 @@ function goToAccountManagement() {
         <template v-if="store.justSetSimplePassword">계좌 연동과<br />비밀번호 설정까지 완료됐어요</template>
         <template v-else>계좌 연동이 완료됐어요</template>
       </h1>
-      <p class="text-(length:--font-md) text-(color:--color-gray-600) mb-(--space-8)">
-        {{ store.justSetSimplePassword ? '실시간 잔액 확인부터 송금까지 바로 이용할 수 있어요' : '실시간 잔액을 지금 바로 확인할 수 있어요' }}
-      </p>
-
       <AccountSummaryCard
         :bank-code="linkedAccount.bankCode"
-        :balance="linkedAccount.balance"
         :badge-size="36"
         class="w-full mb-(--space-8)"
       />

@@ -134,7 +134,6 @@ function goToLink() {
             <AccountSummaryCard
               :bank-code="account.bankCode"
               :account-number-masked="account.accountNumberMasked"
-              :balance="account.balance"
               :is-primary="account.isPrimary"
               bordered
             >
@@ -181,7 +180,6 @@ function goToLink() {
 
         <AccountSummaryCard
           :bank-code="pendingAccount.bankCode"
-          :balance="pendingAccount.balance"
           :is-primary="pendingAccount.isPrimary"
           class="w-full mb-(--space-4)"
         />

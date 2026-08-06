@@ -22,7 +22,7 @@ export function getAccounts() {
 /**
  * 1원 인증 요청 — 선택한 은행 계좌로 1원을 송금
  * POST /api/accounts/verify-deposit
- * body: { bankCode, accountNumber, accountHolder }
+ * body: { bankCode, accountNumber }
  * result: { transactionId }
  * ⚠️ maskedAccountNumber/expiresInSeconds는 서버가 안 내려줘요.
  * store(requestDepositAuth)에서 클라이언트가 직접 계산해서 채워요.
@@ -32,7 +32,7 @@ export function requestDepositVerification(payload) {
 }
 
 /**
- * 1원 인증 확인 — 입금자명에 찍힌 랜덤 한글 4자(예: 파란애월) 검증
+ * 1원 인증 확인 — 입금자명에 찍힌 4자리 랜덤 숫자(예: 5673) 검증
  * POST /api/accounts/verify-deposit/confirm
  * body: { transactionId, verificationCode }
  * result: { verified: boolean }
@@ -44,10 +44,11 @@ export function confirmDepositVerification(payload) {
 /**
  * 계좌 등록 — 1원 인증 완료 후 실제 계좌 연동 확정
  * POST /api/accounts
- * body: { transactionId }
- * result: { accountId, bankCode, bankName, accountNumber, isPrimary }
- * ⚠️ 실제 백엔드 응답엔 balance가 없어요.
- * 등록 후 잔액이 필요하면 store에서 GET /api/accounts로 다시 조회해 채워요.
+ * body: { transactionId, isPrimary? }
+ * result: { accountId, bankCode, bankName, accountNumber, isPrimary, status }
+ * 실시간 잔액 조회(CODEF Connected ID)는 지원하지 않아요 — 사용자의 인터넷뱅킹
+ * 아이디/비밀번호를 제3자에 넘겨야 해서 신뢰 문제가 있고, 앱 핵심 기능은 어차피
+ * 내부 지갑 잔액만 쓰기 때문에 기능 자체를 제거했어요(2026-08-06).
  */
 export function registerAccount(payload) {
   return api.post('/accounts', payload);
