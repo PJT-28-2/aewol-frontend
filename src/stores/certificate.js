@@ -148,13 +148,12 @@ export const useCertificateStore = defineStore('certificate', {
       })
     },
 
-    // 동물등록증 조회 — 신원 정보로 국가동물보호정보시스템(APMS)에서 신청인 명의 동물을 조회.
-    // 외부 조회 API 연동(공공데이터포털 등)은 백엔드가 대신 처리하는 단건 요청/응답이라
-    // 프론트는 결과 후보 목록만 그대로 받는다. 등록번호는 요청값이 아니라 응답값이라,
-    // 조회만 하면 신청인 명의의 동물이 (여러 마리면 배열로) 돌아온다.
-    async requestApmsSimpleAuth({ userName, birthDate, phoneNo }) {
-      if (!userName?.trim() || !birthDate?.trim() || !phoneNo?.trim()) {
-        throw new Error('이름, 생년월일, 전화번호를 모두 입력해주세요.')
+    // 동물등록증 조회 — 동물등록번호 + 신청인(보호자) 이름/생년월일로 국가동물보호정보시스템(APMS)에서
+    // 조회. 외부 조회 API 연동(공공데이터포털 등)은 백엔드가 대신 처리하고, 프론트는 결과 후보
+    // 목록만 그대로 받는다. 이름/생년월일 중 하나만 있어도 조회 가능하다는 전제.
+    async requestApmsSimpleAuth({ regNumber, userName, birthDate }) {
+      if (!regNumber?.trim() || (!userName?.trim() && !birthDate?.trim())) {
+        throw new Error('동물등록번호와 이름 또는 생년월일을 입력해주세요.')
       }
 
       if (USE_MOCK_DATA) {
@@ -189,7 +188,7 @@ export const useCertificateStore = defineStore('certificate', {
       }
 
       return this._withRequestState(async () => {
-        const { data } = await certificatesApi.syncRegistration({ userName, birthDate, phoneNo })
+        const { data } = await certificatesApi.syncRegistration({ regNumber, userName, birthDate })
         return data.result ?? []
       })
     },
