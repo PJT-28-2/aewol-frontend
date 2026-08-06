@@ -22,12 +22,19 @@ const isLoading = ref(true);
 const isLoadingMore = ref(false);
 const isError = ref(false);
 
-// 로그인 유저 memberId는 페이지마다 다시 조회할 필요가 없어 최초 1회만 받아 캐시해둔다
+// 로그인 유저 memberId는 페이지마다 다시 조회할 필요가 없어 최초 1회만 받아 캐시해둔다.
+// isOwner 계산에만 쓰이는 부가 정보라, 조회 실패(비로그인, 프로필 API 일시 장애 등)로 목록 자체가
+// 안 보이면 안 되므로 여기서 예외를 삼킨다 — 실패하면 myMemberId가 null로 남아 이번 페이지의
+// isOwner는 전부 false 처리되고, 다음 페이지 로드 때 다시 시도된다
 const myMemberId = ref(null);
 async function ensureProfile() {
   if (myMemberId.value !== null) return;
-  const { data: profileData } = await memberApi.getProfile();
-  myMemberId.value = (profileData.result ?? profileData)?.memberId;
+  try {
+    const { data: profileData } = await memberApi.getProfile();
+    myMemberId.value = (profileData.result ?? profileData)?.memberId;
+  } catch {
+    // 무시 — isOwner가 false로 처리될 뿐, 목록 조회 자체는 계속 진행된다
+  }
 }
 
 // 카테고리 · 상태 · 검색어를 쿼리 파라미터로 함께 보내 서버가 필터링 + 페이지네이션을 함께 처리하도록 한다.
