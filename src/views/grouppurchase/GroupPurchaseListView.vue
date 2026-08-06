@@ -98,6 +98,7 @@ async function resetAndLoad() {
   hasNext.value = false;
   groupPurchases.value = [];
   isLoading.value = true;
+  isLoadingMore.value = false;
   isError.value = false;
   try {
     const { items, hasNext: next } = await fetchPage(0);
@@ -126,7 +127,9 @@ async function loadMore() {
   } catch {
     // 다음 페이지 로드 실패는 전체 화면 에러로 덮지 않고, 다시 스크롤하면 자동으로 재시도된다
   } finally {
-    if (generation === requestGeneration) isLoadingMore.value = false;
+    // isLoadingMore는 세대와 무관한 UI 플래그라 항상 해제한다 — generation으로 가드하면, 로딩 도중
+    // 필터가 바뀌어 세대가 넘어간 경우 이 값이 true로 고정되어 이후 모든 추가 로드가 막힌다
+    isLoadingMore.value = false;
   }
 }
 
