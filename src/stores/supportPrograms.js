@@ -1,7 +1,8 @@
 import { defineStore } from 'pinia'
 import { supportProgramsApi } from '@/api/supportPrograms'
 
-const unwrap = (response) => response.data?.data
+// 백엔드 공통 응답은 { status, message, result } 래퍼라 실제 페이로드는 data.result에 있다
+const unwrap = (response) => response.data?.result
 
 export const useSupportProgramsStore = defineStore('supportPrograms', {
   state: () => ({
