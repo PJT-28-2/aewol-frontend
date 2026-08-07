@@ -16,7 +16,8 @@ function isAbortError(err) {
 export const useEmergencyStore = defineStore('emergency', {
   state: () => ({
     hospitals: [],
-    isLoading: false,
+    // 앱이 화면에 뜬 직후(geolocation 대기 중 포함) ~ 첫 조회가 끝나기 전까지는 로딩 중으로 본다
+    isLoading: true,
     error: null,
   }),
 
@@ -31,6 +32,8 @@ export const useEmergencyStore = defineStore('emergency', {
 
       if (USE_MOCK_DATA) {
         this.hospitals = mockHospitals
+        this.error = null
+        if (requestId === latestRequestId) this.isLoading = false
         return this.hospitals
       }
 

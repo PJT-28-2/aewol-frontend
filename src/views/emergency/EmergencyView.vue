@@ -11,9 +11,8 @@ import IconWarning from '@/components/common/icons/IconWarning.vue';
 import { useEmergencyStore } from '@/stores/emergency';
 
 const emergencyStore = useEmergencyStore();
-const { hospitals } = storeToRefs(emergencyStore);
+const { hospitals, isLoading, error } = storeToRefs(emergencyStore);
 
-const isLoading = ref(true);
 const mapContainer = ref(null);
 const mapError = ref(null);
 const is24hOnly = ref(false);
@@ -44,12 +43,16 @@ function handleNavigation(hospital) {
 }
 
 async function loadHospitals() {
-  await emergencyStore.fetchHospitals({
-    latitude: userLat.value,
-    longitude: userLng.value,
-    radiusKm: 5,
-    is24h: is24hOnly.value,
-  });
+  try {
+    await emergencyStore.fetchHospitals({
+      latitude: userLat.value,
+      longitude: userLng.value,
+      radiusKm: 5,
+      is24h: is24hOnly.value,
+    });
+  } catch {
+    // 실패 상태는 store의 error에 이미 반영됨 — 화면에서 별도로 표시하므로 여기서는 무시
+  }
 }
 
 async function initKakaoMap(lat, lng) {
@@ -112,12 +115,8 @@ onMounted(async () => {
     // 위치 권한 거부 또는 미지원 시 기본 좌표(서울시청)로 조회
   }
 
-  try {
-    await loadHospitals();
-    await initKakaoMap(userLat.value, userLng.value);
-  } finally {
-    isLoading.value = false;
-  }
+  await loadHospitals();
+  await initKakaoMap(userLat.value, userLng.value);
 });
 </script>
 
@@ -204,6 +203,26 @@ onMounted(async () => {
               label="24시간 운영 병원만 보기"
             />
           </div>
+        </div>
+
+        <div
+          v-if="error"
+          class="flex items-center gap-(--space-2) rounded-(--radius-lg) bg-(--color-gray-100) p-(--space-3) mb-(--space-3)"
+        >
+          <IconWarning
+            :size="18"
+            color="var(--color-slate-muted)"
+          />
+          <p class="flex-1 text-(length:--font-sm) text-(color:--color-slate-muted)">
+            병원 목록을 불러오지 못했습니다.
+          </p>
+          <AppButton
+            variant="ghost"
+            size="sm"
+            @click="loadHospitals"
+          >
+            다시 시도
+          </AppButton>
         </div>
 
         <div
