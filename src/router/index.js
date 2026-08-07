@@ -117,7 +117,7 @@ const authRoutes = [
     path: '/pets',
     name: 'PetList',
     component: () => import('@/views/pet/PetListView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
+    meta: { requiresAuth: true, layout: 'DefaultLayout' },
     // 등록된 반려동물이 없으면 관리 화면 대신 반려동물 등록/가족 참여 안내 화면으로 보낸다.
     beforeEnter: () => {
       if (usePetStore().pets.length === 0) return '/share/start';
@@ -485,6 +485,12 @@ const authRoutes = [
     name: 'Withdraw',
     component: () => import('@/views/settings/WithdrawView.vue'),
     meta: { requiresAuth: true },
+  },
+  {
+    path: '/settings/pet-photo',
+    name: 'PetProfilePhoto',
+    component: () => import('@/views/settings/PetProfilePhotoView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
 ];
 

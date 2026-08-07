@@ -2,18 +2,27 @@
 defineProps({
   size: { type: [String, Number], default: 24 },
   color: { type: String, default: 'currentColor' },
+  filled: { type: Boolean, default: false },
 });
 </script>
 
 <template>
-  <svg
-    :width="size"
-    :height="size"
-    viewBox="0 0 24 24"
-    :fill="color"
-  >
+  <svg :width="size" :height="size" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
     <path
-      d="M20.5,6H5.5c-.789,0-1.53-.376-2-.999,.457-.607,1.184-1.001,2-1.001H22.5c1.972-.034,1.971-2.967,0-3H5.5C2.468,1,0,3.467,0,6.5v11c0,3.033,2.468,5.5,5.5,5.5h15c1.93,0,3.5-1.57,3.5-3.5V9.5c0-1.93-1.57-3.5-3.5-3.5Zm.5,13.5c0,.276-.225,.5-.5,.5H5.5c-1.379,0-2.5-1.122-2.5-2.5V8.396c.763,.39,1.618,.604,2.5,.604h15c.275,0,.5,.224,.5,.5v10Zm-2-5c-.034,1.972-2.967,1.971-3,0,.034-1.972,2.967-1.971,3,0Z"
+      v-if="filled"
+      :fill="color"
+      fill-rule="evenodd"
+      d="M5 3h13a2 2 0 0 1 2 2v2h.25A2.75 2.75 0 0 1 23 9.75v8.5A2.75 2.75 0 0 1 20.25 21H5a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4Zm12.5 8a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Z"
     />
+    <path
+      v-else
+      d="M5 4h13a2 2 0 0 1 2 2v1H5a3 3 0 0 1 0-6h11M5 7h15.25A2.75 2.75 0 0 1 23 9.75v8.5A2.75 2.75 0 0 1 20.25 21H5a4 4 0 0 1-4-4V5"
+      fill="none"
+      :stroke="color"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+    <circle v-if="!filled" cx="17.5" cy="12.5" r="1.25" :fill="color" />
   </svg>
 </template>

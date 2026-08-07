@@ -8,7 +8,7 @@ import { registerHeaderBack } from '@/composables/useHeaderBack'
 import AppModal from '@/components/common/AppModal.vue'
 import AppButton from '@/components/common/AppButton.vue'
 import IconWarning from '@/components/common/icons/IconWarning.vue'
-import aewolMark from '@/assets/images/aewol-mark.png'
+import pageSaved3d from '@/assets/images/icons-3d/page_facing_up_3d.png'
 
 const router = useRouter()
 const insuranceStore = useInsuranceStore()
@@ -89,28 +89,28 @@ const goBack = () => {
   router.push({ path: '/insurance/claim', query: { step: '3' } })
 }
 registerHeaderBack(goBack)
+
+const goToInsuranceHome = () => {
+  showSuccessModal.value = false
+  router.replace('/insurance')
+}
 </script>
 
 <template>
   <div class="min-h-screen bg-(--color-gray-100) flex flex-col">
 
     <!-- PDF 미리보기 영역 -->
-    <div class="flex-1 p-(--space-5) px-(--space-4) pb-[calc(80px+var(--space-5))] overflow-y-auto">
+    <div class="flex-1 p-(--space-5) px-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-5))] overflow-y-auto">
       <header class="mb-(--space-5) max-w-(--layout-max-width) mx-auto">
         <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">PDF 초안 미리보기</h1>
       </header>
 
       <div ref="previewRef" class="bg-(--color-white) rounded-(--radius-lg) [box-shadow:var(--shadow-md)] p-(--space-6) max-w-(--layout-max-width) mx-auto">
 
-        <!-- PDF 헤더 -->
-        <div class="flex items-center gap-(--space-4) mb-(--space-5)">
-          <div class="flex items-center gap-(--space-2)">
-            <img
-              :src="aewolMark"
-              alt=""
-              class="w-10 h-10 object-contain"
-            >
-            <span class="text-(length:--font-lg) font-bold text-(color:--color-navy)">애월</span>
+          <!-- PDF 헤더 -->
+          <div class="flex items-center gap-(--space-4) mb-(--space-5)">
+          <div class="flex items-end text-(length:--font-xl) leading-none font-bold tracking-[-0.045em] text-(color:--color-gray-900)">
+            AEWOL
           </div>
           <div class="ml-auto text-right">
             <p class="text-(length:--font-lg) font-bold text-(color:--color-navy)">보험금 청구서</p>
@@ -140,7 +140,7 @@ registerHeaderBack(goBack)
             <span
               class="flex-1 min-w-0 text-right font-semibold [overflow-wrap:anywhere]"
               :class="row.extra === 'amount'
-                ? 'text-(length:--font-base) text-(color:--color-navy)'
+                ? 'text-(length:--font-sm) text-(color:--color-navy)'
                 : row.extra === 'biz' && !row.value
                   ? 'text-(length:--font-sm) text-(color:--color-danger-strong) font-medium'
                   : 'text-(length:--font-sm) text-(color:--color-gray-900)'"
@@ -171,36 +171,51 @@ registerHeaderBack(goBack)
           </p>
         </div>
       </div>
-    </div>
 
-    <!-- 하단 다운로드 버튼 -->
-    <div class="print:hidden fixed bottom-(--bottom-nav-height) left-0 right-0 px-(--space-4) pt-(--space-3) pb-(--space-4) bg-(--color-white) border-t border-(--color-border)">
-      <!-- 필수값 누락 안내 -->
-      <p v-if="missingFields.length > 0" class="text-(length:--font-xs) text-(color:--color-danger-strong) text-center mb-(--space-2)">
-        누락된 항목이 있어요: {{ missingFields.join(', ') }}<br>이전 화면으로 돌아가서 채워주세요
-      </p>
-      <AppButton
-        type="button"
-        variant="navy"
-        size="lg"
-        block
-        :loading="isGenerating"
-        :disabled="!canDownload"
-        @click="handleDownload"
-      >
-        PDF 저장
-      </AppButton>
+      <!-- PDF 다운로드 버튼 -->
+      <div class="print:hidden max-w-(--layout-max-width) mx-auto mt-(--space-5)">
+        <!-- 필수값 누락 안내 -->
+        <p v-if="missingFields.length > 0" class="text-(length:--font-xs) text-(color:--color-danger-strong) text-center mb-(--space-2)">
+          누락된 항목이 있어요: {{ missingFields.join(', ') }}<br>이전 화면으로 돌아가서 채워주세요
+        </p>
+        <AppButton
+          type="button"
+          variant="primary"
+          size="lg"
+          block
+          :loading="isGenerating"
+          :disabled="!canDownload"
+          @click="handleDownload"
+        >
+          PDF 저장
+        </AppButton>
+      </div>
     </div>
   </div>
 
   <!-- 저장 완료 모달 -->
-  <AppModal v-model="showSuccessModal" title="PDF 저장 완료" :show-close="false">
-    <p class="text-(length:--font-md) text-(color:--color-gray-600)">
-      보험금 청구서 PDF가 저장되었어요.<br />
-      보험사에 제출 전 내용을 다시 한번 확인해 주세요.
-    </p>
+  <AppModal v-model="showSuccessModal" title="PDF 저장 완료" :show-close="false" :divider="false">
+    <div class="flex flex-col items-center text-center">
+      <img
+        :src="pageSaved3d"
+        alt=""
+        class="w-16 h-16 object-contain mb-(--space-3)"
+      >
+      <p class="text-(length:--font-md) text-(color:--color-gray-600) leading-relaxed">
+        보험금 청구서 PDF가 저장되었어요.<br />
+        보험사에 제출 전 내용을 다시 한번 확인해 주세요.
+      </p>
+    </div>
     <template #footer>
-      <AppButton @click="showSuccessModal = false">확인</AppButton>
+      <AppButton
+        variant="primary"
+        size="lg"
+        block
+        class="!rounded-(--radius-lg)"
+        @click="goToInsuranceHome"
+      >
+        확인
+      </AppButton>
     </template>
   </AppModal>
 </template>

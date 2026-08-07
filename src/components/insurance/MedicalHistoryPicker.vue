@@ -3,6 +3,7 @@ import { ref, computed } from 'vue';
 import IconChevronDown from '@/components/common/icons/IconChevronDown.vue';
 import IconCheck from '@/components/common/icons/IconCheck.vue';
 import BottomSheet from '@/components/common/BottomSheet.vue';
+import AppButton from '@/components/common/AppButton.vue';
 
 const props = defineProps({
   modelValue: {
@@ -23,7 +24,7 @@ const medicalOptions = [
   { code: 'OTHER', label: '기타' },
 ];
 
-const pendingCode = ref(medicalOptions[0].code);
+const pendingCode = ref(null);
 const pendingOtherText = ref('');
 const tagFeedback = ref('');
 let nextTagId = 0;
@@ -32,7 +33,7 @@ const isMedicalSheetOpen = ref(false);
 const pendingLabel = computed(
   () =>
     medicalOptions.find((opt) => opt.code === pendingCode.value)
-      ?.label ?? '',
+      ?.label ?? '병력을 선택해주세요',
 );
 
 function selectPendingCode(code) {
@@ -42,6 +43,11 @@ function selectPendingCode(code) {
 
 function addMedicalTag() {
   tagFeedback.value = '';
+
+  if (!pendingCode.value) {
+    tagFeedback.value = '병력을 선택해주세요.';
+    return;
+  }
 
   const isOther = pendingCode.value === 'OTHER';
   const label = isOther
@@ -118,7 +124,8 @@ function removeMedicalTag(id) {
     <div class="flex gap-(--space-2)">
       <button
         type="button"
-        class="flex-1 min-w-0 flex items-center justify-between gap-(--space-2) py-(--space-3) px-(--space-4) border border-(--color-gray-300) rounded-(--radius-lg) text-(length:--font-base) bg-(--color-white) text-(color:--color-gray-800)"
+        class="flex-1 min-w-0 flex items-center justify-between gap-(--space-2) h-(--control-height-md) px-(--space-4) border border-(--color-gray-300) rounded-(--radius-lg) text-(length:--font-base) bg-(--color-white)"
+        :class="pendingCode ? 'text-(color:--color-gray-800)' : 'text-(color:--color-slate-muted)'"
         aria-haspopup="dialog"
         :aria-expanded="isMedicalSheetOpen"
         aria-labelledby="medical-label"
@@ -136,15 +143,17 @@ function removeMedicalTag(id) {
         type="text"
         placeholder="병력을 입력해주세요"
         aria-label="기타 병력 직접 입력"
-        class="flex-1 min-w-0 py-(--space-3) px-(--space-4) border border-(--color-gray-300) rounded-(--radius-lg) text-(length:--font-base)"
+        class="flex-1 min-w-0 h-(--control-height-md) px-(--space-4) border border-(--color-gray-300) rounded-(--radius-lg) text-(length:--font-base)"
       />
-      <button
+      <AppButton
         type="button"
-        class="flex-none px-(--space-4) bg-(--color-navy) text-(color:--color-white) rounded-(--radius-lg) text-(length:--font-sm) font-semibold"
+        variant="navy"
+        size="md"
+        class="flex-none !h-(--control-height-md)"
         @click="addMedicalTag"
       >
         추가
-      </button>
+      </AppButton>
     </div>
 
     <p

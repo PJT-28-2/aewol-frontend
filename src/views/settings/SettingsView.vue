@@ -1,19 +1,26 @@
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useMemberStore } from '@/stores/member'
+import { usePetStore } from '@/stores/pet'
 import AppButton from '@/components/common/AppButton.vue'
 import AppModal from '@/components/common/AppModal.vue'
 import PasswordInput from '@/components/common/PasswordInput.vue'
-import IconAccountCard from '@/components/common/icons/IconAccountCard.vue'
-import IconDiscussion from '@/components/common/icons/IconDiscussion.vue'
-import IconNotificationBell from '@/components/common/icons/IconNotificationBell.vue'
-import IconPetProfile from '@/components/common/icons/IconPetProfile.vue'
-import IconProfileEdit from '@/components/common/icons/IconProfileEdit.vue'
-import IconRecurring from '@/components/common/icons/IconRecurring.vue'
+import IconChevronRight from '@/components/common/icons/IconChevronRight.vue'
+import IconImage from '@/components/common/icons/IconImage.vue'
+import iconPetProfile3d from '@/assets/images/icons-3d/dog_face_3d.png'
+import iconCatProfile3d from '@/assets/images/icons-3d/cat_face_3d.png'
+import iconNotification3d from '@/assets/images/icons-3d/bell_3d.png'
+import iconAccountCard3d from '@/assets/images/icons-3d/credit_card_3d.png'
+import iconRecurring3d from '@/assets/images/icons-3d/calendar_3d.png'
+import iconDiscussion3d from '@/assets/images/icons-3d/speech_balloon_3d.png'
+import iconFamily3d from '@/assets/images/icons-3d/people_hugging_3d.png'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const memberStore = useMemberStore()
+const petStore = usePetStore()
 const showPasswordModal = ref(false)
 const showLogoutModal = ref(false)
 const profilePassword = ref('')
@@ -22,42 +29,52 @@ const isVerifying = ref(false)
 const PROFILE_VERIFIED_KEY = 'profileEditPasswordVerified'
 import { MOCK_CURRENT_PASSWORD } from '@/mocks/settings'
 
-const menuItems = [
+const profilePetIcon = computed(() =>
+  petStore.pets[0]?.species === 'CAT'
+    ? iconCatProfile3d
+    : iconPetProfile3d,
+)
+
+const menuSections = [
   {
-    title: '반려동물 관리',
-    description: '반려동물 프로필 등록 및 수정',
-    path: '/pets',
-    icon: IconPetProfile,
+    title: '서비스 관리',
+    items: [
+      {
+        title: '함께 돌보기',
+        description: '가족 초대 및 공동양육 관리',
+        path: '/share',
+        icon: iconFamily3d,
+      },
+      {
+        title: '계좌 관리',
+        description: '연동된 계좌 확인 및 등록',
+        path: '/account',
+        icon: iconAccountCard3d,
+      },
+      {
+        title: '정기 결제 관리',
+        description: '구독형 결제 내역 확인',
+        path: '/payment/recurring',
+        icon: iconRecurring3d,
+      },
+    ],
   },
   {
-    title: '프로필 수정',
-    description: '이름 · 전화번호 · 비밀번호 변경 · 회원탈퇴',
-    action: 'verifyProfile',
-    icon: IconProfileEdit,
-  },
-  {
-    title: '알림 설정',
-    description: '푸시 알림 켜기 / 끄기',
-    path: '/settings/notifications',
-    icon: IconNotificationBell,
-  },
-  {
-    title: '계좌 관리',
-    description: '연동된 계좌 확인 및 등록',
-    path: '/account',
-    icon: IconAccountCard,
-  },
-  {
-    title: '정기 결제 관리',
-    description: '구독형 결제 내역 확인',
-    path: '/payment/recurring',
-    icon: IconRecurring,
-  },
-  {
-    title: '고객센터',
-    description: '자주 묻는 질문 및 문의',
-    path: '/support',
-    icon: IconDiscussion,
+    title: '설정 · 지원',
+    items: [
+      {
+        title: '알림 설정',
+        description: '푸시 알림 켜기 / 끄기',
+        path: '/settings/notifications',
+        icon: iconNotification3d,
+      },
+      {
+        title: '고객센터',
+        description: '자주 묻는 질문 및 문의',
+        path: '/support',
+        icon: iconDiscussion3d,
+      },
+    ],
   },
 ]
 
@@ -112,83 +129,120 @@ const confirmLogout = () => {
 
 <template>
   <section
-    class="min-h-[calc(100svh-var(--header-height)-var(--bottom-nav-height))] w-full bg-(--color-white) p-(--space-4) pb-[27px]"
+    class="min-h-screen w-full bg-(--color-app-bg) px-(--space-4) pt-(--space-3) pb-[calc(var(--bottom-nav-height)+var(--space-7))]"
     aria-labelledby="mypage-title"
   >
-    <header class="flex items-start justify-between">
-      <div>
-        <h1
-          id="mypage-title"
-          class="text-(length:--font-2xl) leading-[1.3] font-(--font-bold) text-(color:--color-navy)"
-        >
-          마이페이지
-        </h1>
-        <p class="mt-[5px] text-(length:--font-md) leading-[1.3] text-(color:--color-slate-muted)">
-          계정과 반려동물 정보를 관리해요
-        </p>
-      </div>
-      <button
-        class="text-[11.5px] leading-[1.3] font-(--font-bold) text-(color:--color-slate-muted) focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--color-navy)"
-        type="button"
-        @click="handleLogout"
+    <header class="mb-(--space-4)">
+      <h1
+        id="mypage-title"
+        class="text-(length:--font-2xl) font-bold text-(color:--color-navy)"
       >
-        로그아웃
-      </button>
+        마이페이지
+      </h1>
     </header>
 
     <article
-      class="mt-[25px] flex h-[94px] items-center gap-[14px] rounded-[18px] bg-(--color-surface) px-4"
+      class="flex items-center gap-(--space-3) rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-(--space-4) shadow-(--shadow-card)"
       aria-label="회원 정보"
     >
-      <div
-        class="flex size-[60px] shrink-0 items-center justify-center rounded-full bg-(--color-navy) text-[20px] font-(--font-bold) text-(color:--color-white)"
-        aria-hidden="true"
-      >
-        애
+      <div class="relative shrink-0">
+        <img
+          v-if="memberStore.petProfilePhotoUrl"
+          :src="memberStore.petProfilePhotoUrl"
+          alt=""
+          class="size-[52px] rounded-[16px] object-cover"
+        >
+        <div
+          v-else
+          class="flex size-[52px] items-center justify-center rounded-[16px] border border-(--color-card-border) bg-(--color-white)"
+          aria-hidden="true"
+        >
+          <img
+            :src="profilePetIcon"
+            :alt="petStore.pets[0]?.species === 'CAT' ? '고양이 프로필' : '강아지 프로필'"
+            class="size-[40px] object-contain saturate-[0.85] brightness-[1.03] contrast-[0.96]"
+          >
+        </div>
+        <router-link
+          to="/settings/pet-photo"
+          class="absolute -right-[4px] -bottom-[4px] flex size-[22px] items-center justify-center rounded-full bg-(--color-white) border border-(--color-gray-200) shadow-(--shadow-sm)"
+          aria-label="프로필 사진 만들기"
+        >
+          <IconImage
+            size="12"
+            color="var(--color-navy)"
+          />
+        </router-link>
       </div>
-      <div class="min-w-0">
+      <div class="min-w-0 flex-1">
         <p class="truncate text-[15px] leading-[1.3] font-(--font-bold) text-(color:--color-navy)">
-          김애월
+          김애월님
         </p>
         <p class="mt-[5px] truncate text-[12px] leading-[1.3] text-(color:--color-slate-muted)">
           example@aewol.com
         </p>
       </div>
+      <button
+        type="button"
+        class="shrink-0 rounded-(--radius-full) bg-(--color-leaf-surface) px-(--space-3) py-[7px] text-(length:--font-xs) font-semibold text-(--color-leaf-dark) active:bg-(--color-leaf)"
+        @click="handleMenuClick({ action: 'verifyProfile' })"
+      >
+        프로필 수정
+      </button>
     </article>
 
-    <nav
-      class="mt-6 flex flex-col gap-[11px]"
-      aria-label="마이페이지 메뉴"
+    <section
+      v-for="section in menuSections"
+      :key="section.title"
+      class="mt-(--space-6)"
     >
-      <button
-        v-for="item in menuItems"
-        :key="item.title"
-        class="flex w-full items-center gap-(--space-4) rounded-(--radius-xl) border border-(--color-border) bg-(--color-white) p-(--space-4) text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-navy)"
-        :class="
-          item.path || item.action
-            ? 'cursor-pointer hover:bg-(--color-surface)'
-            : 'cursor-default'
-        "
-        type="button"
-        :aria-disabled="item.path || item.action ? undefined : 'true'"
-        @click="handleMenuClick(item)"
+      <h2 class="mb-(--space-2) px-(--space-1) text-(length:--font-sm) font-semibold text-(--color-slate-dark)">
+        {{ section.title }}
+      </h2>
+      <nav
+        class="flex flex-col overflow-hidden rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white)"
+        :aria-label="section.title"
       >
-        <component
-          :is="item.icon"
-          class="shrink-0 text-(color:--color-navy)"
-          :size="24"
-        />
-        <div class="min-w-0 flex-1">
-          <strong class="block truncate text-(length:--font-base) font-semibold text-(color:--color-navy)">
-            {{ item.title }}
-          </strong>
-          <p class="mt-(--space-1) truncate text-(length:--font-sm) text-(color:--color-slate-muted)">
-            {{ item.description }}
-          </p>
-        </div>
-        <span class="shrink-0 text-(length:--font-xl) text-(color:--color-gray-400)">&rsaquo;</span>
-      </button>
-    </nav>
+        <button
+          v-for="item in section.items"
+          :key="item.title"
+          class="flex w-full cursor-pointer items-center gap-(--space-3) border-b border-(--color-card-border) px-(--space-4) py-(--space-3) text-left transition-colors last:border-b-0 active:bg-(--color-gray-100) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-navy)"
+          type="button"
+          @click="handleMenuClick(item)"
+        >
+          <span
+            class="flex size-[40px] shrink-0 items-center justify-center rounded-[13px] bg-(--color-gray-100)"
+          >
+            <img
+              :src="item.icon"
+              alt=""
+              class="size-[27px] object-contain saturate-[0.8] brightness-[1.03] contrast-[0.95]"
+            >
+          </span>
+          <div class="min-w-0 flex-1">
+            <strong class="block truncate text-(length:--font-md) font-semibold text-(color:--color-navy)">
+              {{ item.title }}
+            </strong>
+            <p class="mt-[3px] truncate text-(length:--font-xs) text-(color:--color-slate-muted)">
+              {{ item.description }}
+            </p>
+          </div>
+          <IconChevronRight
+            size="18"
+            color="var(--color-gray-400)"
+            class="shrink-0"
+          />
+        </button>
+      </nav>
+    </section>
+
+    <button
+      type="button"
+      class="mt-(--space-6) mb-(--space-2) flex w-full items-center justify-center gap-(--space-1) py-(--space-3) text-(length:--font-sm) font-semibold text-(color:--color-danger-strong) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-navy)"
+      @click="handleLogout"
+    >
+      로그아웃
+    </button>
 
     <AppModal
       v-model="showPasswordModal"
@@ -231,26 +285,27 @@ const confirmLogout = () => {
 
     <AppModal
       v-model="showLogoutModal"
-      title="로그아웃"
+      title="정말 로그아웃 하시겠어요?"
       :show-close="false"
+      :divider="false"
+      :center-title="true"
     >
-      <p class="text-center text-[14px] leading-[1.5] text-(color:--color-navy)">
-        로그아웃 하시겠습니까?
-      </p>
-
       <template #footer>
         <div class="flex w-full gap-(--space-3)">
           <AppButton
             type="button"
             variant="secondary"
-            class="flex-1 border-(--color-border)!"
+            size="lg"
+            class="flex-1 !rounded-(--radius-lg) border-(--color-border)!"
             @click="showLogoutModal = false"
           >
             취소
           </AppButton>
           <AppButton
             type="button"
-            class="flex-1"
+            variant="primary"
+            size="lg"
+            class="flex-1 !rounded-(--radius-lg)"
             @click="confirmLogout"
           >
             로그아웃

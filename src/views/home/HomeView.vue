@@ -1,21 +1,19 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import ExpenseDonutChart from '@/components/dashboard/ExpenseDonutChart.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
-import IconChevronRight from '@/components/common/icons/IconChevronRight.vue';
-import iconCat3d from '@/assets/images/icons-3d/cat_face_3d.png';
-import iconDog3d from '@/assets/images/icons-3d/dog_face_3d.png';
 import iconCertificate3d from '@/assets/images/icons-3d/identification_card_3d.png';
 import iconSos3d from '@/assets/images/icons-3d/ambulance_3d.png';
 import iconSavings3d from '@/assets/images/icons-3d/money_bag_3d.png';
 import iconFamily3d from '@/assets/images/icons-3d/people_hugging_3d.png';
 import iconSupportProgram3d from '@/assets/images/icons-3d/classical_building_3d.png';
 import iconGroupPurchase3d from '@/assets/images/icons-3d/basket_3d.png';
+import { groupPurchaseApi } from '@/api/groupPurchase';
+import { MOCK_GROUP_PURCHASE_LIST } from '@/mocks/groupPurchase';
+import { USE_MOCK_DATA } from '@/mocks/config';
 import { mockWalletBalance } from '@/mocks/transaction';
 import { usePetStore } from '@/stores/pet';
 import { useTransactionStore } from '@/stores/transaction';
-
-const memberName = ref('애월');
 
 const petStore = usePetStore();
 const transactionStore = useTransactionStore();
@@ -24,16 +22,6 @@ const transactionStore = useTransactionStore();
 const walletBalance = ref(mockWalletBalance);
 
 const today = new Date();
-
-// 시간대별 인사말
-const greetingText = computed(() => {
-  const hour = today.getHours();
-  if (hour < 5) return '포근한 밤 되세요';
-  if (hour < 11) return '좋은 아침이에요';
-  if (hour < 17) return '활기찬 오후예요';
-  if (hour < 21) return '편안한 저녁이에요';
-  return '포근한 밤 되세요';
-});
 
 const monthlyExpense = computed(() => ({
   total: transactionStore.monthlyExpenseTotal(
@@ -55,16 +43,57 @@ const pets = computed(() =>
 );
 
 const isLoading = ref(true);
+const popularGroupPurchases = ref([]);
+const activeBannerIndex = ref(0);
+let bannerTimer;
+
+const bannerSlides = computed(() =>
+  popularGroupPurchases.value.slice(0, 3).map((item) => ({
+    id: item.id ?? item.gpId,
+    item,
+  })),
+);
+
+function viewCountOf(item) {
+  return Number(item.viewCount ?? item.views ?? item.hitCount ?? 0);
+}
+
+async function loadPopularGroupPurchases() {
+  try {
+    const items = USE_MOCK_DATA
+      ? MOCK_GROUP_PURCHASE_LIST
+      : (await groupPurchaseApi.getList()).data.result ?? [];
+    popularGroupPurchases.value = [...items]
+      .filter((item) => item.status === '진행중')
+      .sort((a, b) => viewCountOf(b) - viewCountOf(a))
+      .slice(0, 3);
+  } catch {
+    popularGroupPurchases.value = [];
+  }
+}
+
+function selectBanner(index) {
+  activeBannerIndex.value = index;
+}
+
+function startBannerRotation() {
+  bannerTimer = window.setInterval(() => {
+    if (bannerSlides.value.length > 1) {
+      activeBannerIndex.value =
+        (activeBannerIndex.value + 1) % bannerSlides.value.length;
+    }
+  }, 4500);
+}
 
 // 펫별 지출 도넛 차트 색상 팔레트 (연한 파스텔 배경 톤은 차트에서 너무 흐려서,
 // 채도를 살짝 높인 더스티 파스텔 톤으로 구성)
 const petColorTokens = [
-  '--color-gold-dark',
-  '--color-olive-muted',
-  '--color-chart-blue',
-  '--color-danger-muted',
-  '--color-chart-purple',
+  '--color-leaf-dark',
+  '--color-leaf',
   '--color-olive-dark',
+  '--color-olive-muted',
+  '--color-gold-dark',
+  '--color-pastel-mint',
 ];
 
 // 펫별 지출 비율 계산
@@ -108,16 +137,6 @@ const donutBreakdownText = computed(() =>
     .join(' · '),
 );
 
-// 펫별 지출 카드: 홈 화면은 최대 4마리까지만 카드로 보여주고,
-// 그 이상은 "+N마리" 카드로 요약해 화면이 무한정 길어지지 않게 한다
-const PET_CARD_LIMIT = 4;
-const visiblePetCards = computed(() =>
-  petBreakdown.value.slice(0, PET_CARD_LIMIT),
-);
-const hiddenPetCount = computed(() =>
-  Math.max(petBreakdown.value.length - PET_CARD_LIMIT, 0),
-);
-
 // 반려동물이 1마리 이하이거나 태깅된 지출이 없으면 이번 달 지출 화면에 "반려동물별" 탭이
 // 안 뜨므로, 그럴 땐 "카테고리별"로 진입시킨다
 const dashboardDetailTarget = computed(() => {
@@ -136,55 +155,48 @@ const quickActions = [
     label: '공동구매',
     to: '/group-purchase',
     icon: iconGroupPurchase3d,
-    tapBg: 'var(--color-pastel-peach)',
   },
   {
     label: '함께 돌보기',
     to: '/share',
     icon: iconFamily3d,
-    tapBg: 'var(--color-pastel-violet)',
   },
   {
     label: '짜투리 저금통',
     to: '/donation',
     icon: iconSavings3d,
-    tapBg: 'var(--color-pastel-cream)',
   },
   {
     label: '증명서 관리',
     to: '/certificates',
     icon: iconCertificate3d,
-    tapBg: 'var(--color-pastel-blue)',
   },
   {
     label: '응급 SOS',
     to: '/emergency',
     icon: iconSos3d,
-    tapBg: 'var(--color-pastel-coral)',
   },
   {
     label: '지원사업',
     to: '/support-programs',
     icon: iconSupportProgram3d,
-    tapBg: 'var(--color-pastel-mist)',
   },
 ];
-
-// 펫 종에 따라 강아지/고양이 아이콘 선택
-function petIcon(species) {
-  return species === 'CAT' ? iconCat3d : iconDog3d;
-}
 
 onMounted(async () => {
   // TODO: fetch wallet balance, monthly expense summary, and pet expense
   // breakdown from wallet/dashboard/pet stores
+  await loadPopularGroupPurchases();
+  startBannerRotation();
   isLoading.value = false;
 });
+
+onBeforeUnmount(() => window.clearInterval(bannerTimer));
 </script>
 
 <template>
   <div
-    class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))] bg-(--color-gray-100) min-h-screen"
+    class="min-h-screen bg-(--color-app-bg) px-(--space-4) pt-(--space-3) pb-[calc(var(--bottom-nav-height)+var(--space-7))]"
   >
     <!-- 로딩 상태 -->
     <div
@@ -195,103 +207,133 @@ onMounted(async () => {
     </div>
 
     <template v-else>
-      <!-- 총 잔액 카드 -->
-      <router-link
-        to="/wallet"
-        class="block bg-(--color-navy) rounded-(--radius-lg) shadow-(--shadow-md) px-(--space-5) py-(--space-4) mb-(--space-4) no-underline text-inherit"
+      <!-- 조회수 상위 공동구매 광고 캐러셀 -->
+      <section
+        v-if="bannerSlides.length"
+        class="relative mb-(--space-4) min-h-[104px] overflow-hidden rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-leaf-soft)"
       >
-        <p
-          class="text-(length:--font-sm) font-medium text-(color:--color-slate-light)"
+        <div
+          class="flex transition-transform duration-500 ease-out"
+          :style="{ transform: `translateX(-${activeBannerIndex * 100}%)` }"
         >
-          {{ memberName }}님, {{ greetingText }}
-        </p>
-        <div class="mt-(--space-2)">
-          <span
-            class="flex items-baseline gap-(--space-2)"
+          <router-link
+            v-for="slide in bannerSlides"
+            :key="slide.id"
+            :to="`/group-purchase/${slide.id}`"
+            class="flex min-h-[104px] w-full shrink-0 items-center justify-between px-(--space-5) pb-(--space-5) pt-(--space-4) text-inherit no-underline"
           >
-            <span
-              class="text-(length:--font-sm) text-(color:--color-slate-light)"
-            >
-              총 잔액
-            </span>
-            <span
-              class="text-(length:--font-2xl) font-bold text-(color:--color-white)"
+            <div class="min-w-0 pr-(--space-3)">
+              <p class="text-[11px] font-semibold text-(color:--color-leaf-dark)">
+                인기 공동구매
+              </p>
+              <p class="mt-(--space-1) line-clamp-1 text-(length:--font-base) font-bold text-(color:--color-gray-900)">
+                {{ slide.item.productName }}
+              </p>
+              <p class="mt-[3px] text-(length:--font-sm) text-(color:--color-slate-dark)">
+                {{ slide.item.badgeText || `${slide.item.groupPrice?.toLocaleString()}원` }}
+              </p>
+            </div>
+            <div class="flex size-[58px] shrink-0 items-center justify-center rounded-[18px] bg-(--color-white)">
+              <img
+                :src="iconGroupPurchase3d"
+                alt="공동구매"
+                class="size-[48px] rounded-[14px] object-contain"
+              >
+            </div>
+          </router-link>
+        </div>
+        <div
+          v-if="bannerSlides.length > 1"
+          class="absolute bottom-[9px] left-0 right-0 flex justify-center gap-[5px]"
+        >
+          <button
+            v-for="(_, index) in bannerSlides"
+            :key="index"
+            type="button"
+            class="size-[5px] rounded-(--radius-full) transition-colors"
+            :class="index === activeBannerIndex ? 'bg-(--color-gray-800)' : 'bg-(--color-gray-400)'"
+            :aria-label="`${index + 1}번째 배너 보기`"
+            @click="selectBanner(index)"
+          />
+        </div>
+      </section>
+
+      <!-- 잔액과 주요 기능을 묶은 지갑 카드 -->
+      <section class="mb-(--space-4) overflow-hidden rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-(--space-5) shadow-(--shadow-card)">
+        <div>
+          <div class="min-w-0 flex-1">
+            <p class="text-(length:--font-base) font-semibold text-(color:--color-slate-dark)">
+              김애월님
+            </p>
+            <router-link
+              to="/wallet"
+              class="mt-[2px] block text-[27px] font-bold tracking-[-0.02em] text-(color:--color-gray-900) no-underline"
             >
               {{ walletBalance.toLocaleString() }}원
-            </span>
-            <IconChevronRight
-              :size="18"
-              color="var(--color-slate-light)"
-            />
-          </span>
-        </div>
-      </router-link>
-
-      <!-- 펫별 지출 카드 -->
-      <div
-        class="grid gap-(--space-3) mb-(--space-4)"
-        :class="visiblePetCards.length === 1 ? 'grid-cols-1' : 'grid-cols-2'"
-      >
-        <router-link
-          v-for="pet in visiblePetCards"
-          :key="pet.id"
-          :to="{ path: '/wallet/history', query: { petId: pet.id } }"
-          class="flex flex-col justify-between bg-(--color-white) rounded-(--radius-lg) shadow-(--shadow-md) p-(--space-4) no-underline text-inherit"
-        >
-          <p
-            class="text-(length:--font-sm) text-(color:--color-slate-dark)"
-          >
-            {{ pet.name }} 지출
-          </p>
-          <div class="flex items-end justify-between mt-(--space-3)">
-            <p
-              class="text-(length:--font-lg) font-bold text-(color:--color-gray-900)"
-            >
-              {{ pet.expenseAmount.toLocaleString() }}원
-            </p>
-            <img
-              :src="petIcon(pet.species)"
-              :alt="pet.species === 'CAT' ? '고양이' : '강아지'"
-              class="w-[40px] h-[40px] object-contain shrink-0 saturate-[0.8] brightness-[1.03] contrast-[0.95]"
-            />
+            </router-link>
           </div>
-        </router-link>
-        <router-link
-          v-if="hiddenPetCount > 0"
-          :to="dashboardDetailTarget"
-          class="flex flex-col items-center justify-center gap-(--space-1) bg-(--color-white) rounded-(--radius-lg) shadow-(--shadow-sm) p-(--space-4) no-underline text-(color:--color-slate-dark)"
-        >
-          <span
-            class="text-(length:--font-base) font-bold text-(color:--color-gray-900)"
+          <div class="mt-(--space-2) flex justify-end gap-(--space-2)">
+            <router-link
+              to="/wallet/charge"
+              class="rounded-(--radius-full) border border-(--color-card-border) bg-(--color-white) px-(--space-4) py-[9px] text-(length:--font-sm) font-semibold text-(color:--color-gray-900) no-underline"
+            >
+              충전
+            </router-link>
+            <router-link
+              to="/wallet/transfer"
+              class="rounded-(--radius-full) bg-(--color-leaf) px-(--space-4) py-[9px] text-(length:--font-sm) font-bold text-(color:--color-gray-900) no-underline"
+            >
+              송금
+            </router-link>
+          </div>
+        </div>
+
+        <div class="mt-(--space-5) grid grid-cols-3 gap-x-(--space-2) gap-y-(--space-5) border-t border-(--color-gray-100) pt-(--space-5)">
+          <router-link
+            v-for="item in quickActions"
+            :key="item.label"
+            :to="item.to"
+            class="flex min-w-0 flex-col items-center gap-(--space-2) text-center text-inherit no-underline"
           >
-            +{{ hiddenPetCount }}마리
-          </span>
-          <span class="text-(length:--font-xs)">전체 보기</span>
-        </router-link>
-      </div>
+            <span
+              class="flex size-[44px] items-center justify-center rounded-[14px] bg-(--color-gray-100)"
+            >
+              <img
+                :src="item.icon"
+                :alt="item.label"
+                class="size-[34px] object-contain"
+              >
+            </span>
+            <span class="text-[12px] font-medium leading-tight text-(color:--color-slate-dark)">
+              {{ item.label }}
+            </span>
+          </router-link>
+        </div>
+      </section>
 
       <!-- 이번 달 지출 요약 + 반려동물별 도넛 차트 -->
       <router-link
         :to="dashboardDetailTarget"
-        class="flex items-center gap-(--space-4) bg-(--color-white) rounded-(--radius-lg) shadow-(--shadow-md) p-(--space-4) mb-(--space-4) no-underline text-inherit"
+        class="flex items-center gap-(--space-4) rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-(--space-5) no-underline text-inherit"
       >
-        <ExpenseDonutChart
-          :items="donutChartItems"
-          size="72px"
-          class="shrink-0"
-        />
+        <div class="flex size-[72px] shrink-0 items-center justify-center rounded-[18px] bg-(--color-leaf-soft)">
+          <ExpenseDonutChart
+            :items="donutChartItems"
+            size="56px"
+          />
+        </div>
         <div class="flex-1">
           <p
-            class="flex items-center gap-(--space-2) text-(length:--font-base) font-semibold text-(color:--color-gray-900)"
+            class="flex flex-wrap items-center gap-x-(--space-2) gap-y-(--space-1) text-(length:--font-base) font-semibold text-(color:--color-gray-900)"
           >
-            이번 달 총지출
+            이번 달 지출
             <span
               class="text-(length:--font-xs) font-bold"
               :class="
                 monthlyExpense.changeRate > 0
                   ? 'text-(color:--color-danger)'
                   : monthlyExpense.changeRate < 0
-                    ? 'text-(color:--color-chart-blue)'
+                    ? 'text-(color:--color-leaf-dark)'
                     : 'text-(color:--color-slate-muted)'
               "
             >
@@ -313,32 +355,6 @@ onMounted(async () => {
         </div>
       </router-link>
 
-      <!-- 바로가기 메뉴 그리드 -->
-      <section class="mt-(--space-7)">
-        <h2
-          class="text-(length:--font-lg) font-bold text-(color:--color-gray-900) mb-(--space-4)"
-        >
-          바로가기
-        </h2>
-        <div class="grid grid-cols-3 gap-(--space-3)">
-          <component
-            :is="item.to ? 'router-link' : 'div'"
-            v-for="item in quickActions"
-            :key="item.label"
-            v-bind="item.to ? { to: item.to } : {}"
-            :style="{ '--tap-bg': item.tapBg }"
-            class="flex aspect-square flex-col justify-between bg-(--color-white) active:bg-(--tap-bg) transition-colors rounded-(--radius-lg) shadow-(--shadow-md) p-(--space-3) no-underline text-(color:--color-gray-900) text-(length:--font-md) font-semibold"
-            :class="{ 'cursor-not-allowed': !item.to }"
-          >
-            <span class="leading-tight">{{ item.label }}</span>
-            <img
-              :src="item.icon"
-              :alt="item.label"
-              class="w-[38px] h-[38px] self-end object-contain saturate-[0.8] brightness-[1.03] contrast-[0.95]"
-            />
-          </component>
-        </div>
-      </section>
     </template>
   </div>
 </template>

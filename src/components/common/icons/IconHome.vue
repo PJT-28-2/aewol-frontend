@@ -2,18 +2,26 @@
 defineProps({
   size: { type: [String, Number], default: 24 },
   color: { type: String, default: 'currentColor' },
+  filled: { type: Boolean, default: false },
 });
 </script>
 
 <template>
-  <svg
-    :width="size"
-    :height="size"
-    viewBox="0 0 24 24"
-    :fill="color"
-  >
+  <svg :width="size" :height="size" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
     <path
-      d="M13.768,1.147a2.5,2.5,0,0,0-3.536,0L0,11.38V21a3,3,0,0,0,3,3H21a3,3,0,0,0,3-3V11.38ZM21,21H16V17.818A3.818,3.818,0,0,0,12.182,14h-.364A3.818,3.818,0,0,0,8,17.818V21H3V12.622l9-9,9,9Z"
+      v-if="filled"
+      :fill="color"
+      fill-rule="evenodd"
+      d="M10.66 2.55a2 2 0 0 1 2.68 0l7 6.33A2 2 0 0 1 21 10.36V20a2 2 0 0 1-2 2h-4.5v-5.25a2.5 2.5 0 0 0-5 0V22H5a2 2 0 0 1-2-2v-9.64a2 2 0 0 1 .66-1.48l7-6.33Z"
+    />
+    <path
+      v-else
+      d="m3.75 9.65 7-6.33a1.88 1.88 0 0 1 2.5 0l7 6.33c.48.43.75 1.04.75 1.69V20a2 2 0 0 1-2 2h-4.5v-5.25a2.5 2.5 0 0 0-5 0V22H5a2 2 0 0 1-2-2v-8.66c0-.65.27-1.26.75-1.69Z"
+      fill="none"
+      :stroke="color"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
     />
   </svg>
 </template>

@@ -6,6 +6,8 @@ import { MOCK_MEMBER_PROFILE } from '@/mocks/member'
 export const useMemberStore = defineStore('member', {
   state: () => ({
     profile: null,
+    // TODO(backend): AI 프로필 사진 변환 API 연동 전이라 로컬 상태로만 관리
+    petProfilePhotoUrl: null,
   }),
 
   actions: {
@@ -23,6 +25,10 @@ export const useMemberStore = defineStore('member', {
       const { data } = await memberApi.updateProfile(profileData)
       this.profile = data
       return data
+    },
+
+    setPetProfilePhoto(url) {
+      this.petProfilePhotoUrl = url
     },
   },
 })
