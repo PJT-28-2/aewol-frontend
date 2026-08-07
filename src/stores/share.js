@@ -14,7 +14,8 @@ const CONTRIBUTION_TONES = [
   ['bg-(--color-slate)', '--color-slate'],
 ]
 
-const unwrap = (response) => response.data?.data
+// 백엔드 공통 응답은 { status, message, result } 래퍼라 실제 페이로드는 data.result에 있다
+const unwrap = (response) => response.data?.result
 const errorMessage = (error, fallback) => error.response?.data?.message || fallback
 
 export const useShareStore = defineStore('share', {
