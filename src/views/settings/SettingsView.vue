@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useMemberStore } from '@/stores/member'
@@ -34,6 +34,19 @@ const profilePetIcon = computed(() =>
     ? iconCatProfile3d
     : iconPetProfile3d,
 )
+
+const memberName = computed(() => memberStore.profile?.name ?? '')
+const memberEmail = computed(() => memberStore.profile?.email ?? '')
+
+onMounted(async () => {
+  if (!memberStore.profile) {
+    try {
+      await memberStore.fetchProfile()
+    } catch {
+      // 프로필 조회 실패 시 이름/이메일은 빈 상태로 유지한다.
+    }
+  }
+})
 
 const menuSections = [
   {
@@ -176,10 +189,10 @@ const confirmLogout = () => {
       </div>
       <div class="min-w-0 flex-1">
         <p class="truncate text-[15px] leading-[1.3] font-(--font-bold) text-(color:--color-navy)">
-          김애월님
+          {{ memberName ? `${memberName}님` : '회원님' }}
         </p>
         <p class="mt-[5px] truncate text-[12px] leading-[1.3] text-(color:--color-slate-muted)">
-          example@aewol.com
+          {{ memberEmail || '이메일 정보가 없습니다' }}
         </p>
       </div>
       <button
