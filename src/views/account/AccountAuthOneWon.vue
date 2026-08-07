@@ -1,8 +1,9 @@
 <script setup>
-import { ref, computed, onBeforeUnmount, nextTick } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAccountStore } from '@/stores/account';
 import { getBankMeta } from '@/utils/bankMeta';
+import { formatCountdown } from '@/utils/date';
 import { registerHeaderBack } from '@/composables/useHeaderBack';
 import AppButton from '@/components/common/AppButton.vue';
 import BankBadge from '@/components/common/BankBadge.vue';
@@ -59,11 +60,15 @@ async function submitAccountNumber() {
   try {
     await store.requestDepositAuth(accountNumber.value);
     step.value = 'depositorName';
-    startTimer();
+    startTicking();
     await nextTick();
     focusHiddenInput();
-  } catch {
-    requestError.value = '계좌 확인에 실패했어요. 계좌번호를 다시 확인해주세요';
+  } catch (err) {
+    // 3분 내 5회 요청 제한(2026-08-07) — 백엔드가 429로 내려주는 전용 메시지를 그대로 보여줘요.
+    requestError.value =
+      err?.response?.status === 429
+        ? '1원 인증 요청이 너무 많아요. 잠시 후 다시 시도해주세요'
+        : '계좌 확인에 실패했어요. 계좌번호를 다시 확인해주세요';
   } finally {
     isRequesting.value = false;
   }
@@ -78,8 +83,24 @@ const composingPreview = ref(''); // 아직 조합 중인, 확정 전 글자의 
 const hiddenInputRef = ref(null);
 const isComposing = ref(false);
 const isFocused = ref(false);
-const remainingSeconds = ref(0);
-let timerId = null;
+// 남은 시간은 store.linking.depositAuthExpiresAt(절대 만료 시각)를 기준으로 계산해요.
+// setInterval로 세는 숫자를 직접 들고 있으면 화면을 나갔다 들어왔을 때(컴포넌트 재마운트)
+// 그 사이 흐른 시간이 반영 안 돼서 부정확해져요(2026-08-07) — now만 1초마다 갱신하고
+// 남은 시간은 항상 다시 계산해요.
+const now = ref(Date.now());
+let tickId = null;
+
+function startTicking() {
+  clearInterval(tickId);
+  now.value = Date.now();
+  tickId = setInterval(() => {
+    now.value = Date.now();
+  }, 1000);
+}
+
+const remainingSeconds = computed(() =>
+  Math.max(0, Math.round((store.linking.depositAuthExpiresAt - now.value) / 1000)),
+);
 
 // 확정된 글자 + (있다면) 조합 중인 미리보기 글자까지 합쳐서 화면에 보여줘요.
 const digits = computed(() => {
@@ -126,28 +147,25 @@ function onDepositorInput(event) {
   event.target.value = filtered;
 }
 
-function startTimer() {
-  remainingSeconds.value = store.linking.expiresInSeconds || 180;
-  clearInterval(timerId);
-  timerId = setInterval(() => {
-    if (remainingSeconds.value > 0) {
-      remainingSeconds.value -= 1;
-    } else {
-      clearInterval(timerId);
-    }
-  }, 1000);
-}
-
-onBeforeUnmount(() => clearInterval(timerId));
-
-const timerLabel = computed(() => {
-  const m = Math.floor(remainingSeconds.value / 60);
-  const s = remainingSeconds.value % 60;
-  return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+onMounted(() => {
+  // 나갔다 들어왔을 때(컴포넌트 재마운트) 아직 유효한 인증이 진행 중이면(만료 전)
+  // Step 1로 되돌리지 않고 Step 2부터 이어서 보여줘요 — 잠금 상태(store.linking.isConfirmLocked)도
+  // store에 있어서 그대로 유지돼요(2026-08-07).
+  if (store.linking.verificationId && store.linking.depositAuthExpiresAt > Date.now()) {
+    step.value = 'depositorName';
+    startTicking();
+  }
 });
 
+onBeforeUnmount(() => clearInterval(tickId));
+
+const timerLabel = computed(() => formatCountdown(remainingSeconds.value));
+
 const isVerifyEnabled = computed(
-  () => depositorInput.value.length === depositorNameLength.value && remainingSeconds.value > 0,
+  () =>
+    depositorInput.value.length === depositorNameLength.value &&
+    remainingSeconds.value > 0 &&
+    !store.linking.isConfirmLocked,
 );
 
 const isVerifying = ref(false);
@@ -165,11 +183,15 @@ async function resendDeposit() {
     isComposing.value = false;
     if (hiddenInputRef.value) hiddenInputRef.value.value = '';
     verifyError.value = '';
-    startTimer();
+    startTicking();
     await nextTick();
     focusHiddenInput();
-  } catch {
-    resendError.value = '1원 재전송에 실패했어요. 다시 시도해주세요';
+  } catch (err) {
+    // 3분 내 5회 요청 제한(2026-08-07) — 최초 요청과 동일한 카운터를 공유해요.
+    resendError.value =
+      err?.response?.status === 429
+        ? '1원 인증 요청이 너무 많아요. 잠시 후 다시 시도해주세요'
+        : '1원 재전송에 실패했어요. 다시 시도해주세요';
   } finally {
     isResending.value = false;
   }
@@ -179,9 +201,17 @@ async function submitVerification() {
   isVerifying.value = true;
   verifyError.value = '';
   try {
-    const verified = await store.confirmDepositAuth(depositorInput.value);
+    const { verified, reason } = await store.confirmDepositAuth(depositorInput.value);
     if (!verified) {
-      verifyError.value = '입금자명이 일치하지 않아요. 다시 확인해주세요';
+      // 오답을 5번 넘게 넣으면 백엔드가 그 이후엔 정답을 넣어도 통과시키지 않아요
+      // (2026-08-07) — 이 경우 "다시 확인해주세요"라고 하면 계속 틀렸다고 오해할
+      // 수 있어서, 재전송이 필요하다는 걸 명확히 안내하고 입력 자체를 막아요.
+      if (reason === 'TOO_MANY_ATTEMPTS') {
+        // store.confirmDepositAuth 안에서 store.linking.isConfirmLocked = true로 이미 세팅됨
+        verifyError.value = '인증 횟수를 초과했어요. 위 재전송 버튼으로 1원 인증을 다시 요청해주세요';
+      } else {
+        verifyError.value = '입금자명이 일치하지 않아요. 다시 확인해주세요';
+      }
       return;
     }
     await store.completeAccountLink();
@@ -201,7 +231,7 @@ async function submitVerification() {
 
 function goBack() {
   if (step.value === 'depositorName') {
-    clearInterval(timerId);
+    clearInterval(tickId);
     depositorInput.value = '';
     composingPreview.value = '';
     isComposing.value = false;
@@ -280,7 +310,7 @@ registerHeaderBack(goBack);
 
       <div class="flex items-center justify-between mb-(--space-4)">
         <span class="text-(length:--font-base) font-semibold text-(color:--color-navy)">입금자명 {{ depositorNameLength }}글자</span>
-        <span v-if="remainingSeconds > 0" class="text-(length:--font-sm) font-semibold text-(color:--color-danger-strong)">{{ timerLabel }}</span>
+        <span v-if="remainingSeconds > 0 && !store.linking.isConfirmLocked" class="text-(length:--font-sm) font-semibold text-(color:--color-danger-strong)">{{ timerLabel }}</span>
         <button
           v-else
           type="button"
@@ -288,18 +318,23 @@ registerHeaderBack(goBack);
           :disabled="isResending"
           @click="resendDeposit"
         >
-          {{ isResending ? '다시 보내는 중…' : '1원 다시 보내기' }}
+          {{ isResending ? '다시 보내는 중…' : '다시 보내기' }}
         </button>
       </div>
       <p v-if="resendError" class="text-(length:--font-sm) text-(color:--color-danger-strong) mb-(--space-2)">{{ resendError }}</p>
 
-      <div class="relative flex flex-wrap justify-center gap-(--space-3) mb-(--space-4)" @click="focusHiddenInput">
+      <div
+        class="relative flex flex-wrap justify-center gap-(--space-3) mb-(--space-4)"
+        :class="{ 'opacity-50': store.linking.isConfirmLocked }"
+        @click="!store.linking.isConfirmLocked && focusHiddenInput()"
+      >
         <input
           ref="hiddenInputRef"
           type="text"
           autocomplete="off"
+          :disabled="store.linking.isConfirmLocked"
           :aria-label="`입금자명 인증 코드 ${depositorNameLength}글자 입력`"
-          class="absolute inset-0 z-10 w-full h-full appearance-none border-0 p-0 m-0 opacity-0 cursor-text"
+          class="absolute inset-0 z-10 w-full h-full appearance-none border-0 p-0 m-0 opacity-0 cursor-text disabled:cursor-not-allowed"
           @input="onDepositorInput"
           @compositionstart="onCompositionStart"
           @compositionend="onCompositionEnd"

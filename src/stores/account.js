@@ -38,6 +38,13 @@ export const useAccountStore = defineStore('account', {
       verificationId: null,
       maskedAccountNumber: '',
       expiresInSeconds: 0,
+      // 남은 시간 계산용 절대 만료 시각(epoch ms). setInterval로 세는 숫자 대신 이걸 기준으로
+      // 계산해야 화면을 나갔다 들어와도(컴포넌트 재마운트) 실제 경과 시간이 정확히 반영돼요.
+      depositAuthExpiresAt: 0,
+      // 오답 5회 초과(TOO_MANY_ATTEMPTS) 잠금 여부. store에 둬서 나갔다 들어와도 유지돼요
+      // (2026-08-07) — 화면 로컬 상태였을 땐 재마운트하면 풀린 것처럼 보였지만, 서버 쪽
+      // 제한은 그대로라 사용자만 혼란스러웠어요.
+      isConfirmLocked: false,
       // CODEF inPrintType=1(랜덤 한글 단어)이라 4~6자로 들쭉날쭉해요. 목데이터 모드나
       // 응답이 없는 경우를 대비해 기본값 4를 둬요.
       depositorNameLength: 4,
@@ -118,6 +125,8 @@ export const useAccountStore = defineStore('account', {
         this.linking.verificationId = `mock-${Date.now()}`;
         this.linking.maskedAccountNumber = masked;
         this.linking.expiresInSeconds = DEPOSIT_AUTH_TIMEOUT_SECONDS;
+        this.linking.depositAuthExpiresAt = Date.now() + DEPOSIT_AUTH_TIMEOUT_SECONDS * 1000;
+        this.linking.isConfirmLocked = false;
         this.linking.depositorNameLength = 4;
         return { verificationId: this.linking.verificationId };
       }
@@ -132,6 +141,8 @@ export const useAccountStore = defineStore('account', {
         this.linking.verificationId = data.result.transactionId;
         this.linking.maskedAccountNumber = masked;
         this.linking.expiresInSeconds = DEPOSIT_AUTH_TIMEOUT_SECONDS;
+        this.linking.depositAuthExpiresAt = Date.now() + DEPOSIT_AUTH_TIMEOUT_SECONDS * 1000;
+        this.linking.isConfirmLocked = false;
         // CODEF가 만든 입금자명 실제 길이 — 4자가 아닐 수 있어서 항상 이 값을 신뢰해요.
         this.linking.depositorNameLength = data.result.depositorNameLength || 4;
         return { verificationId: this.linking.verificationId };
@@ -140,16 +151,24 @@ export const useAccountStore = defineStore('account', {
 
     // POST /api/accounts/verify-deposit/confirm — 목데이터 모드에선 depositorNameLength만큼만 채우면 통과
     // verificationCode: 입금자명에 찍히는 랜덤 한글 단어 (예: 푸른애월)
+    // { verified, reason } 형태로 반환해요 — 백엔드가 오답 5회 초과 시 verified=false에
+    // reason="TOO_MANY_ATTEMPTS"를 내려주기 시작해서(2026-08-07), 단순 오타(MISMATCH)와
+    // 구분해서 다른 안내 문구를 보여줄 수 있게 reason도 그대로 넘겨요.
     async confirmDepositAuth(verificationCode) {
       if (USE_MOCK_DATA) {
-        return verificationCode.length === this.linking.depositorNameLength;
+        const verified = verificationCode.length === this.linking.depositorNameLength;
+        return { verified, reason: verified ? null : 'MISMATCH' };
       }
       return this._withRequestState(async () => {
         const { data } = await confirmDepositVerification({
           transactionId: this.linking.verificationId,
           verificationCode,
         });
-        return data.result.verified;
+        const reason = data.result.reason ?? null;
+        if (reason === 'TOO_MANY_ATTEMPTS') {
+          this.linking.isConfirmLocked = true;
+        }
+        return { verified: data.result.verified, reason };
       });
     },
 
@@ -190,6 +209,8 @@ export const useAccountStore = defineStore('account', {
         verificationId: null,
         maskedAccountNumber: '',
         expiresInSeconds: 0,
+        depositAuthExpiresAt: 0,
+        isConfirmLocked: false,
         depositorNameLength: 4,
         password: '',
       };
