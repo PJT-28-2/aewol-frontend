@@ -1,31 +1,20 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import EmptyState from '@/components/common/EmptyState.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
-import IconCat from '@/components/common/icons/IconCat.vue';
-import IconDog from '@/components/common/icons/IconDog.vue';
 import IconPaw from '@/components/common/icons/IconPaw.vue';
+import IconChevronRight from '@/components/common/icons/IconChevronRight.vue';
+import iconCat3d from '@/assets/images/icons-3d/cat_face_3d.png';
+import iconDog3d from '@/assets/images/icons-3d/dog_face_3d.png';
 import { usePetStore } from '@/stores/pet';
 
 const { pets } = storeToRefs(usePetStore());
 
 const isLoading = ref(true);
 
-const petNamesText = computed(() =>
-  pets.value.length
-    ? pets.value.map((pet) => pet.name).join(' · ')
-    : '반려동물',
-);
-
 function petIcon(species) {
-  return species === 'CAT' ? IconCat : IconDog;
-}
-
-function petIconBg(species) {
-  return species === 'CAT'
-    ? 'var(--color-pastel-green)'
-    : 'var(--color-pastel-blue)';
+  return species === 'CAT' ? iconCat3d : iconDog3d;
 }
 
 function getAge(birthDate) {
@@ -49,19 +38,14 @@ onMounted(async () => {
 
 <template>
   <div
-    class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))] bg-(--color-bg) min-h-screen"
+    class="min-h-screen bg-(--color-app-bg) px-(--space-4) pt-(--space-3) pb-[calc(var(--bottom-nav-height)+var(--space-7))]"
   >
-    <header class="mb-(--space-6)">
+    <header class="mb-(--space-4)">
       <h1
         class="text-(length:--font-2xl) font-bold text-(color:--color-navy)"
       >
-        반려동물 관리
+        반려동물
       </h1>
-      <p
-        class="text-(length:--font-md) text-(color:--color-slate-muted) mt-(--space-1)"
-      >
-        {{ petNamesText }} 프로필을 관리해요
-      </p>
     </header>
 
     <div
@@ -79,7 +63,7 @@ onMounted(async () => {
 
     <ul
       v-else
-      class="flex flex-col gap-(--space-3) mb-(--space-5)"
+      class="mb-(--space-4) flex flex-col overflow-hidden rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) shadow-(--shadow-card)"
     >
       <li
         v-for="pet in pets"
@@ -87,17 +71,16 @@ onMounted(async () => {
       >
         <router-link
           :to="`/pets/${pet.id}/edit`"
-          class="flex items-center gap-(--space-4) bg-(--color-white) border border-(--color-border) rounded-(--radius-xl) p-(--space-4) no-underline"
+          class="flex items-center gap-(--space-3) border-b border-(--color-card-border) p-(--space-4) text-inherit no-underline transition-colors last:border-b-0 active:bg-(--color-gray-100)"
         >
           <span
-            class="flex items-center justify-center shrink-0 w-(--space-9) h-(--space-9) rounded-(--radius-icon)"
-            :style="{ backgroundColor: petIconBg(pet.species) }"
+            class="flex size-[44px] shrink-0 items-center justify-center rounded-[14px] bg-(--color-gray-100)"
           >
-            <component
-              :is="petIcon(pet.species)"
-              size="24"
-              color="var(--color-navy)"
-            />
+            <img
+              :src="petIcon(pet.species)"
+              :alt="pet.species === 'CAT' ? '고양이' : '강아지'"
+              class="size-[34px] object-contain"
+            >
           </span>
           <div class="flex-1">
             <h3
@@ -112,16 +95,14 @@ onMounted(async () => {
               중성화 {{ pet.neutered ? '완료' : '미완료' }}
             </p>
           </div>
-          <span
-            class="text-(length:--font-xl) text-(color:--color-gray-400)"
-          >&rsaquo;</span>
+          <IconChevronRight size="18" color="var(--color-gray-400)" />
         </router-link>
       </li>
     </ul>
 
     <router-link
       to="/pets/register"
-      class="flex items-center justify-center h-[52px] rounded-(--radius-xl) bg-(--color-navy) text-(color:--color-white) text-(length:--font-base) font-semibold no-underline"
+      class="flex h-[48px] items-center justify-center rounded-(--radius-xl) bg-(--color-leaf) text-(length:--font-base) font-semibold text-(color:--color-gray-900) no-underline"
     >
       + 반려동물 추가
     </router-link>

@@ -35,13 +35,13 @@ function renderChart() {
       series: [
         {
           type: 'pie',
-          radius: ['64%', '100%'],
+          radius: ['70%', '96%'],
           avoidLabelOverlap: true,
           silent: true,
           itemStyle: {
             borderColor: getColor('--color-white'),
-            borderWidth: 3,
-            borderRadius: 2,
+            borderWidth: 2,
+            borderRadius: 6,
           },
           label: {
             show: false,

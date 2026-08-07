@@ -10,10 +10,22 @@ defineProps({
     :width="size"
     :height="size"
     viewBox="0 0 24 24"
-    :fill="color"
+    fill="none"
     aria-hidden="true"
+    focusable="false"
   >
-    <path d="M4.068,18H19.724a3,3,0,0,0,2.821-4.021L19.693,6.094A8.323,8.323,0,0,0,11.675,0h0A8.321,8.321,0,0,0,3.552,6.516l-2.35,7.6A3,3,0,0,0,4.068,18Z" />
-    <path d="M7.1,20a5,5,0,0,0,9.8,0Z" />
+    <path
+      d="M5.2 9.5a6.8 6.8 0 0 1 13.6 0v3.2l1.7 3.1a1.4 1.4 0 0 1-1.23 2.07H4.73A1.4 1.4 0 0 1 3.5 15.8l1.7-3.1V9.5Z"
+      :stroke="color"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+    <path
+      d="M9.2 20.1a3.2 3.2 0 0 0 5.6 0"
+      :stroke="color"
+      stroke-width="2"
+      stroke-linecap="round"
+    />
   </svg>
 </template>

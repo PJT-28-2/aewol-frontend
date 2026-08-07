@@ -5,7 +5,6 @@ import { useAuthStore } from '@/stores/auth'
 import { usePetStore } from '@/stores/pet'
 import PasswordInput from '@/components/common/PasswordInput.vue'
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
-import aewolLogo from '@/assets/images/aewol-logo.png'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -173,13 +172,14 @@ const handleKakaoLogin = () => {
           애월 로그인
         </h1>
 
-        <img
-          class="absolute top-[93px] left-1/2 h-[250px] w-[250px] -translate-x-1/2 object-contain max-h-[700px]:top-[52px]"
-          :src="aewolLogo"
-          alt="애월"
+        <div
+          class="absolute top-[190px] left-1/2 flex -translate-x-1/2 items-end text-[38px] leading-none font-bold tracking-[-0.055em] text-(color:--color-gray-900) max-h-[700px]:top-[155px]"
+          aria-hidden="true"
         >
+          AEWOL
+        </div>
         <p
-          class="absolute top-[348px] w-full text-center text-(length:--auth-font-sm) leading-[1.3] text-(color:--color-slate-dark) max-h-[700px]:top-[307px]"
+          class="absolute top-[250px] w-full text-center text-(length:--auth-font-sm) leading-[1.3] text-(color:--color-slate-dark) max-h-[700px]:top-[214px]"
         >
           반려동물을 위한, 전자 지갑
         </p>

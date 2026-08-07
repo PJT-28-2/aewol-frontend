@@ -28,12 +28,11 @@ const appendUnit = (field) => {
       <li
         v-for="field in props.fields"
         :key="field.label"
-        class="border-b border-(--color-border) last:border-0"
       >
         <!-- 직접 입력 가능한 필드 -->
         <div v-if="field.editable" class="py-(--space-3)">
           <div class="flex items-center justify-between mb-(--space-2)">
-            <span class="text-(length:--font-sm) text-(color:--color-gray-600)">{{ field.label }}</span>
+            <span class="text-(length:--font-md) text-(color:--color-gray-600)">{{ field.label }}</span>
             <span
               class="text-(length:--font-xs) font-semibold px-(--space-2) py-[3px] rounded-(--radius-full)"
               :class="{

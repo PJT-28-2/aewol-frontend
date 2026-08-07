@@ -12,6 +12,14 @@ defineProps({
     type: Boolean,
     default: true,
   },
+  divider: {
+    type: Boolean,
+    default: true,
+  },
+  centerTitle: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -36,7 +44,13 @@ function onOverlayClick(event) {
         @click="onOverlayClick"
       >
         <div class="modal-content">
-          <div class="modal-header">
+          <div
+            class="modal-header"
+            :class="{
+              'modal-header--no-divider': !divider,
+              'modal-header--center': centerTitle,
+            }"
+          >
             <h2 class="modal-header__title">
               {{ title }}
             </h2>
@@ -72,13 +86,17 @@ function onOverlayClick(event) {
             </button>
           </div>
 
-          <div class="modal-body">
+          <div
+            v-if="$slots.default"
+            class="modal-body"
+          >
             <slot />
           </div>
 
           <div
             v-if="$slots.footer"
             class="modal-footer"
+            :class="{ 'modal-footer--no-divider': !divider }"
           >
             <slot name="footer" />
           </div>
@@ -118,6 +136,16 @@ function onOverlayClick(event) {
   border-bottom: 1px solid var(--color-gray-200);
 }
 
+.modal-header--center {
+  justify-content: center;
+  text-align: center;
+  padding: var(--space-7) var(--space-5);
+}
+
+.modal-header--no-divider {
+  border-bottom: none;
+}
+
 .modal-header__title {
   font-size: var(--font-lg);
   font-weight: var(--font-semibold);
@@ -151,6 +179,11 @@ function onOverlayClick(event) {
   gap: var(--space-3);
   padding: var(--space-4) var(--space-5);
   border-top: 1px solid var(--color-gray-200);
+}
+
+.modal-footer--no-divider {
+  border-top: none;
+  padding-bottom: var(--space-6);
 }
 
 /* Transition */

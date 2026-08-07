@@ -32,9 +32,9 @@ const isLoading = ref(true);
 const subMenus = [
   { label: '지출리포트', to: '/dashboard', icon: iconStats3d },
   {
-    label: '짜투리 저금통',
-    to: '/donation',
-    icon: iconSavings3d,
+    label: '전체내역',
+    to: '/wallet/history',
+    icon: iconSearch3d,
   },
   {
     label: '정기결제',
@@ -42,9 +42,9 @@ const subMenus = [
     icon: iconRecurring3d,
   },
   {
-    label: '전체내역',
-    to: '/wallet/history',
-    icon: iconSearch3d,
+    label: '저금통',
+    to: '/donation',
+    icon: iconSavings3d,
   },
 ];
 
@@ -175,33 +175,39 @@ onMounted(async () => {
 
 <template>
   <div
-    class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))] bg-(--color-gray-100) min-h-screen"
+    class="min-h-screen bg-(--color-app-bg) px-(--space-4) pt-(--space-3) pb-[calc(var(--bottom-nav-height)+var(--space-7))]"
   >
+    <header class="mb-(--space-4)">
+      <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">
+        지갑
+      </h1>
+    </header>
+
     <!-- 잔액 + 충전/송금 카드 -->
     <div
-      class="bg-(--color-white) rounded-(--radius-lg) shadow-(--shadow-md) px-(--space-5) py-(--space-5) mb-(--space-4)"
+      class="relative mb-(--space-4) overflow-hidden rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) px-(--space-5) py-(--space-5) shadow-(--shadow-card)"
     >
       <p
         class="text-(length:--font-sm) text-(color:--color-slate-muted)"
       >
-        애월지갑 잔액
+        김애월님
       </p>
       <p
-        class="text-(length:--font-3xl) font-bold text-(color:--color-gray-900) mt-(--space-1)"
+        class="relative z-1 mt-[2px] text-[27px] font-bold tracking-[-0.02em] text-(color:--color-gray-900)"
       >
         {{ walletBalance.toLocaleString() }}원
       </p>
-      <div class="flex gap-(--space-2) mt-(--space-2)">
+      <div class="relative z-1 mt-(--space-2) flex justify-end gap-(--space-2)">
         <button
           type="button"
-          class="flex-1 h-[38px] rounded-(--radius-md) bg-(--color-pastel-frost) text-(color:--color-navy) text-(length:--font-base) font-semibold"
+          class="rounded-(--radius-full) border border-(--color-card-border) bg-(--color-white) px-(--space-4) py-[9px] text-(length:--font-sm) font-semibold text-(color:--color-gray-900)"
           @click="handleCharge"
         >
           충전
         </button>
         <button
           type="button"
-          class="flex-1 h-[38px] rounded-(--radius-md) bg-(--color-pastel-frost) text-(color:--color-navy) text-(length:--font-base) font-semibold"
+          class="rounded-(--radius-full) bg-(--color-leaf) px-(--space-4) py-[9px] text-(length:--font-sm) font-bold text-(color:--color-gray-900)"
           @click="handleTransfer"
         >
           송금
@@ -209,31 +215,39 @@ onMounted(async () => {
       </div>
     </div>
 
-    <!-- 서브 메뉴 3종 -->
-    <div class="grid grid-cols-4 gap-(--space-2) mb-(--space-4)">
+    <!-- 지갑 빠른 메뉴 -->
+    <nav
+      class="mb-(--space-5) grid grid-cols-4 overflow-hidden rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) px-(--space-2)"
+      aria-label="지갑 빠른 메뉴"
+    >
       <router-link
         v-for="menu in subMenus"
         :key="menu.label"
         :to="menu.to"
-        class="flex flex-col items-center justify-center gap-(--space-2) bg-(--color-white) rounded-(--radius-lg) shadow-(--shadow-md) px-(--space-1) py-(--space-3) no-underline text-(color:--color-gray-900) text-(length:--font-xs) font-medium text-center leading-tight"
+        class="flex min-w-0 flex-col items-center justify-center gap-(--space-2) px-(--space-1) py-(--space-4) text-center text-[11px] leading-tight font-medium text-(color:--color-gray-700) no-underline transition-colors active:bg-(--color-gray-100)"
       >
-        <img
-          :src="menu.icon"
-          alt=""
-          class="w-[26px] h-[26px] object-contain saturate-[0.8] brightness-[1.03] contrast-[0.95]"
-        />
-        {{ menu.label }}
+        <span class="flex size-[40px] items-center justify-center rounded-[13px] bg-(--color-gray-100)">
+          <img
+            :src="menu.icon"
+            alt=""
+            class="size-[25px] object-contain saturate-[0.8] brightness-[1.03] contrast-[0.95]"
+          >
+        </span>
+        <span class="truncate">{{ menu.label }}</span>
       </router-link>
-    </div>
+    </nav>
 
     <div v-if="isLoading" class="py-(--space-8)">
       <LoadingSpinner />
     </div>
 
     <template v-else>
+      <h2 class="mb-(--space-3) px-(--space-1) text-(length:--font-lg) font-bold text-(color:--color-gray-900)">
+        최근 거래
+      </h2>
       <!-- 거래 리스트 카드 -->
       <div
-        class="bg-(--color-white) rounded-(--radius-lg) shadow-(--shadow-sm) px-(--space-4) py-(--space-3)"
+        class="rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) px-(--space-4) py-(--space-4)"
       >
         <!-- 거래 필터 탭 -->
         <div class="flex items-center justify-between">

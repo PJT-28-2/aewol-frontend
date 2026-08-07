@@ -44,11 +44,9 @@ const finishEdit = () => {
       </span>
     </div>
 
-    <div class="h-px bg-(--color-border) mb-(--space-4)" />
-
     <!-- 추출 항목 헤더 -->
     <div class="flex justify-between items-center mb-(--space-3)">
-      <span class="text-(length:--font-sm) font-semibold text-(color:--color-gray-700)">추출된 항목</span>
+      <span class="text-(length:--font-sm) font-semibold text-(color:--color-gray-600)">추출된 항목</span>
       <span class="text-(length:--font-sm) text-(color:--color-gray-500)">탭해서 수정</span>
     </div>
 
@@ -57,7 +55,7 @@ const finishEdit = () => {
       <li
         v-for="item in props.items"
         :key="item.key"
-        class="flex items-center justify-between py-(--space-3) border-b border-(--color-border) last:border-0 gap-(--space-3) cursor-pointer"
+        class="flex items-center justify-between py-(--space-3) gap-(--space-3) cursor-pointer"
         tabindex="0"
         role="button"
         :aria-label="`${item.label} 수정`"

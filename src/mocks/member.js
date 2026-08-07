@@ -2,6 +2,7 @@
 // ProfileEditView의 하드코딩 값과 동일 인물로 맞춰둔다.
 export const MOCK_MEMBER_PROFILE = {
   name: '김애월',
+  email: 'example@aewol.com',
   birthDate: '1990-01-01',
   phone: '010-1234-5678',
 }

@@ -7,7 +7,7 @@ const route = useRoute()
 </script>
 
 <template>
-  <div class="flex min-h-svh flex-col">
+  <div class="flex min-h-svh flex-col bg-(--color-app-bg)">
     <PageHeader
       v-if="!route.meta.hideHeader"
       :title="route.meta.title || ''"
@@ -15,7 +15,7 @@ const route = useRoute()
     />
 
     <main
-      class="flex-1 pb-(--bottom-nav-height)"
+      class="flex-1 bg-(--color-app-bg) pb-[calc(var(--bottom-nav-height)+var(--space-6)+env(safe-area-inset-bottom,0px))]"
       :class="route.meta.hideHeader ? '' : 'pt-(--header-height)'"
     >
       <router-view />

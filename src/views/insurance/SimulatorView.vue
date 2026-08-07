@@ -1,9 +1,9 @@
 <script setup>
 import { ref, computed } from 'vue'
-import IconDog from '@/components/common/icons/IconDog.vue'
-import IconCat from '@/components/common/icons/IconCat.vue'
 import IconPaw from '@/components/common/icons/IconPaw.vue'
 import AppButton from '@/components/common/AppButton.vue'
+import iconCat3d from '@/assets/images/icons-3d/cat_face_3d.png'
+import iconDog3d from '@/assets/images/icons-3d/dog_face_3d.png'
 import EmptyState from '@/components/common/EmptyState.vue'
 import MedicalHistoryPicker from '@/components/insurance/MedicalHistoryPicker.vue'
 import { mockSimulatorPets, mockSimulateResult } from '@/mocks/insurance'
@@ -16,6 +16,10 @@ const selectedPet = computed(
 )
 
 const medicalTags = ref([])
+
+function petIcon(species) {
+  return species === 'CAT' ? iconCat3d : iconDog3d
+}
 
 const result = ref(null)
 const isLoading = ref(false)
@@ -77,14 +81,14 @@ function mockSimulate() {
 
 <template>
   <div
-    class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))] bg-(--color-bg) min-h-[calc(100vh-var(--header-height)-var(--bottom-nav-height))]"
+    class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))] bg-(--color-gray-100) min-h-screen"
   >
 
     <header class="mb-(--space-5)">
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">
-        펫보험 손익분기 시뮬레이터
+        손익분기 시뮬레이터
       </h1>
-      <p class="text-(length:--font-md) text-(color:--color-slate-muted) mt-(--space-2)">
+      <p class="text-(length:--font-md) text-(color:--color-slate-muted) mt-(--space-1)">
         가입이 유리한지 미리 계산해보세요
       </p>
     </header>
@@ -103,66 +107,68 @@ function mockSimulate() {
         class="flex flex-col gap-(--space-5)"
         @submit.prevent="handleSimulate"
       >
-        <div v-if="pets.length > 1">
-          <label
-            id="pet-select-label"
-            class="block text-(length:--font-sm) font-medium text-(color:--color-gray-700) mb-(--space-2)"
-          >
-            반려동물 선택
-          </label>
-          <div
-            class="flex flex-wrap gap-(--space-2)"
-            role="group"
-            aria-labelledby="pet-select-label"
-          >
-            <button
-              v-for="pet in pets"
-              :key="pet.id"
-              type="button"
-              class="inline-flex items-center gap-(--space-1) py-(--space-2) px-(--space-3) border rounded-(--radius-full) text-(length:--font-sm)"
-              :class="
-                pet.id === selectedPetId
-                  ? 'border-(--color-navy) bg-(--color-navy) text-(color:--color-white)'
-                  : 'border-(--color-gray-300) bg-(--color-white) text-(color:--color-gray-700)'
-              "
-              :aria-pressed="pet.id === selectedPetId"
-              @click="selectedPetId = pet.id"
+        <div class="flex flex-col gap-(--space-5) rounded-(--radius-xl) bg-(--color-white) p-(--space-5) shadow-(--shadow-md)">
+          <div v-if="pets.length > 1">
+            <label
+              id="pet-select-label"
+              class="block text-(length:--font-sm) font-medium text-(color:--color-gray-700) mb-(--space-2)"
             >
-              <component
-                :is="pet.species === 'CAT' ? IconCat : IconDog"
-                :size="16"
-                :color="pet.id === selectedPetId ? 'var(--color-white)' : 'var(--color-navy)'"
-              />
-              {{ pet.name }}
-            </button>
+              반려동물 선택
+            </label>
+            <div
+              class="flex flex-wrap gap-(--space-2)"
+              role="group"
+              aria-labelledby="pet-select-label"
+            >
+              <button
+                v-for="pet in pets"
+                :key="pet.id"
+                type="button"
+                class="inline-flex items-center gap-(--space-1) py-(--space-2) px-(--space-3) border rounded-(--radius-full) text-(length:--font-sm)"
+                :class="
+                  pet.id === selectedPetId
+                    ? 'border-(--color-navy) bg-(--color-navy) text-(color:--color-white)'
+                    : 'border-(--color-border) bg-(--color-surface) text-(color:--color-gray-700)'
+                "
+                :aria-pressed="pet.id === selectedPetId"
+                @click="selectedPetId = pet.id"
+              >
+                <img
+                  :src="petIcon(pet.species)"
+                  alt=""
+                  class="w-[18px] h-[18px] object-contain saturate-[0.8] brightness-[1.03] contrast-[0.95]"
+                >
+                {{ pet.name }}
+              </button>
+            </div>
           </div>
-        </div>
 
-        <div>
-          <label class="block text-(length:--font-sm) font-medium text-(color:--color-gray-700) mb-(--space-2)">
-            견종
-          </label>
-          <input
-            class="h-(--control-height-md) w-full cursor-default rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none"
-            type="text"
-            :value="selectedPet?.breed"
-            readonly
-          >
-        </div>
+          <div>
+            <label class="block text-(length:--font-sm) font-medium text-(color:--color-gray-700) mb-(--space-2)">
+              견종
+            </label>
+            <input
+              class="h-(--control-height-md) w-full cursor-default rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none"
+              type="text"
+              :value="selectedPet?.breed"
+              readonly
+            >
+          </div>
 
-        <div>
-          <label class="block text-(length:--font-sm) font-medium text-(color:--color-gray-700) mb-(--space-2)">
-            나이
-          </label>
-          <input
-            class="h-(--control-height-md) w-full cursor-default rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none"
-            type="text"
-            :value="selectedPet ? `${selectedPet.age}세` : ''"
-            readonly
-          >
-        </div>
+          <div>
+            <label class="block text-(length:--font-sm) font-medium text-(color:--color-gray-700) mb-(--space-2)">
+              나이
+            </label>
+            <input
+              class="h-(--control-height-md) w-full cursor-default rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none"
+              type="text"
+              :value="selectedPet ? `${selectedPet.age}세` : ''"
+              readonly
+            >
+          </div>
 
-        <MedicalHistoryPicker v-model="medicalTags" />
+          <MedicalHistoryPicker v-model="medicalTags" />
+        </div>
 
         <p
           v-if="errorMessage"
@@ -186,7 +192,7 @@ function mockSimulate() {
         v-else
         class="flex flex-col gap-(--space-5)"
       >
-        <div class="bg-(--color-navy) text-(color:--color-white) rounded-(--radius-lg) p-(--space-5)">
+        <div class="bg-(--color-navy) text-(color:--color-white) rounded-(--radius-xl) p-(--space-5) shadow-(--shadow-md)">
           <span
             class="inline-block py-(--space-1) px-(--space-3) rounded-(--radius-full) text-(length:--font-xs) font-semibold bg-white/15"
             :class="verdictColorClasses[result.insuranceAdvice.verdict]"
@@ -240,7 +246,7 @@ function mockSimulate() {
             <li
               v-for="product in result.recommendedProducts"
               :key="product.productId"
-              class="bg-(--color-white) border border-(--color-gray-200) rounded-(--radius-lg) p-(--space-4) shadow-(--shadow-sm)"
+              class="bg-(--color-white) rounded-(--radius-lg) p-(--space-4) shadow-(--shadow-md)"
             >
               <span class="inline-block py-(--space-1) px-(--space-2) bg-(--color-gray-100) text-(color:--color-gray-600) rounded-(--radius-sm) text-(length:--font-xs) font-medium">
                 {{ product.badge }}

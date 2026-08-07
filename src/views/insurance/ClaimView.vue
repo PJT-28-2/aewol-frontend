@@ -9,6 +9,7 @@ import OcrResultCard from '@/components/insurance/OcrResultCard.vue'
 import ClaimDraftCard from '@/components/insurance/ClaimDraftCard.vue'
 import ClaimChecklist from '@/components/insurance/ClaimChecklist.vue'
 import { mockOcrItems } from '@/mocks/insurance'
+import memoIcon3d from '@/assets/images/icons-3d/memo_3d.png'
 
 const router = useRouter()
 const route = useRoute()
@@ -138,10 +139,10 @@ const docChecklist = [
   <!-- Step 1: 보험금 청구 서류 작성 -->
   <div
     v-if="step === 1"
-    class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))]"
+    class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))] bg-(--color-gray-100) min-h-screen"
   >
     <header class="mb-(--space-6)">
-      <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-2)">
+      <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-1)">
         보험금 청구 서류 작성
       </h1>
       <p class="text-(length:--font-md) text-(color:--color-slate-muted) leading-relaxed">
@@ -150,7 +151,7 @@ const docChecklist = [
       </p>
     </header>
 
-    <section class="bg-(--color-gray-100) rounded-(--radius-xl) p-(--space-5)">
+    <section class="bg-(--color-white) rounded-(--radius-xl) p-(--space-5) shadow-(--shadow-md)">
       <p class="text-(length:--font-base) font-bold text-(color:--color-navy) mb-(--space-2)">진료 영수증 업로드</p>
       <p class="text-(length:--font-sm) text-(color:--color-slate-muted) leading-relaxed mb-(--space-4)">
         AI가 항목을 자동으로 인식해 서류 초안을 만들어드려요
@@ -158,7 +159,7 @@ const docChecklist = [
 
       <label
         for="receipt-input"
-        class="flex items-center justify-center w-full py-(--space-4) bg-(--color-white) border-2 border-dashed border-(--color-gray-300) rounded-(--radius-lg) cursor-pointer"
+        class="flex items-center justify-center w-full py-(--space-4) bg-(--color-surface) border-2 border-dashed border-(--color-gray-300) rounded-(--radius-lg) cursor-pointer"
       >
         <input
           id="receipt-input"
@@ -177,10 +178,10 @@ const docChecklist = [
   <!-- Step 2: 보험금 청구 서류 확인 -->
   <div
     v-else-if="step === 2"
-    class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))]"
+    class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))] bg-(--color-gray-100) min-h-screen"
   >
     <header class="mb-(--space-6)">
-      <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-2)">
+      <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-1)">
         보험금 청구 서류 확인
       </h1>
       <p class="text-(length:--font-md) text-(color:--color-slate-muted)">
@@ -196,10 +197,10 @@ const docChecklist = [
   <!-- Step 3: 보험금 청구 서류 초안 -->
   <div
     v-else
-    class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))]"
+    class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))] bg-(--color-gray-100) min-h-screen"
   >
     <header class="mb-(--space-5)">
-      <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-2)">
+      <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-1)">
         보험금 청구 서류 초안
       </h1>
       <p class="text-(length:--font-md) text-(color:--color-slate-muted) leading-relaxed">
@@ -209,11 +210,11 @@ const docChecklist = [
 
     <!-- 요약 통계 -->
     <div class="grid grid-cols-2 gap-(--space-3) mb-(--space-5)">
-      <div class="bg-(--color-surface) rounded-(--radius-lg) p-(--space-5) shadow-(--shadow-sm)">
+      <div class="bg-(--color-white) rounded-(--radius-lg) p-(--space-5) shadow-(--shadow-md)">
         <p class="text-(length:--font-sm) text-(color:--color-slate-dark)">자동 완성</p>
         <p class="text-(length:--font-xl) font-bold text-(color:--color-olive) mt-(--space-2)">{{ autoCount }}건</p>
       </div>
-      <div class="bg-(--color-surface) rounded-(--radius-lg) p-(--space-5) shadow-(--shadow-sm)">
+      <div class="bg-(--color-white) rounded-(--radius-lg) p-(--space-5) shadow-(--shadow-md)">
         <p class="text-(length:--font-sm) text-(color:--color-slate-dark)">직접 확인 필요</p>
         <p class="text-(length:--font-xl) font-bold text-(color:--color-danger-strong) mt-(--space-2)">{{ requiredCount }}건</p>
       </div>
@@ -229,22 +230,36 @@ const docChecklist = [
   </div>
 
   <!-- 필수값 누락 모달 -->
-  <AppModal v-model="showValidationModal" title="입력이 필요한 항목이 있어요">
-    <p class="text-(length:--font-md) text-(color:--color-gray-600) mb-(--space-4)">
-      PDF 초안을 만들기 전에 아래 항목을 채워주세요.
-    </p>
-    <ul class="flex flex-col gap-(--space-2)">
+  <AppModal v-model="showValidationModal" title="입력이 필요한 항목이 있어요" :divider="false">
+    <div class="flex flex-col items-center text-center">
+      <img
+        :src="memoIcon3d"
+        alt=""
+        class="w-16 h-16 object-contain mb-(--space-3)"
+      >
+      <p class="text-(length:--font-md) text-(color:--color-gray-600) mb-(--space-4)">
+        PDF 초안을 만들기 전에 아래 항목을 채워주세요.
+      </p>
+    </div>
+    <ul class="flex flex-wrap justify-center gap-(--space-2)">
       <li
         v-for="label in missingLabels"
         :key="label"
-        class="flex items-center gap-(--space-2) text-(length:--font-md) text-(color:--color-gray-900)"
+        class="inline-flex items-center py-(--space-1) px-(--space-3) rounded-(--radius-full) bg-(--color-danger-soft) text-(length:--font-sm) font-medium text-(color:--color-danger-strong)"
       >
-        <span class="w-1.5 h-1.5 rounded-full bg-(--color-danger-strong) shrink-0" />
         {{ label }}
       </li>
     </ul>
     <template #footer>
-      <AppButton @click="showValidationModal = false">확인</AppButton>
+      <AppButton
+        variant="primary"
+        size="lg"
+        block
+        class="!rounded-(--radius-lg)"
+        @click="showValidationModal = false"
+      >
+        확인
+      </AppButton>
     </template>
   </AppModal>
 </template>
