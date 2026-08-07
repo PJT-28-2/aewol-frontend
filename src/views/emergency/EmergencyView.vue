@@ -1,21 +1,37 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
+import { storeToRefs } from 'pinia';
 import AppButton from '@/components/common/AppButton.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
+import ToggleSwitch from '@/components/common/ToggleSwitch.vue';
 import IconHospital from '@/components/common/icons/IconHospital.vue';
 import IconPhone from '@/components/common/icons/IconPhone.vue';
 import IconWarning from '@/components/common/icons/IconWarning.vue';
-import { mockHospitals } from '@/mocks/emergency';
+import { useEmergencyStore } from '@/stores/emergency';
 
-const hospitals = ref([]);
+const emergencyStore = useEmergencyStore();
+const { hospitals } = storeToRefs(emergencyStore);
+
 const isLoading = ref(true);
 const mapContainer = ref(null);
 const mapError = ref(null);
+const is24hOnly = ref(false);
 
-function formatDistance(meters) {
-  if (meters < 1000) return `${meters}m`;
-  return `${(meters / 1000).toFixed(1)}km`;
+// 서울 시청 기본 좌표 (위치 권한 거부 시 fallback — 애월은 지역 한정 서비스가 아니므로 유지)
+const DEFAULT_LAT = 37.5665;
+const DEFAULT_LNG = 126.978;
+const userLat = ref(DEFAULT_LAT);
+const userLng = ref(DEFAULT_LNG);
+
+function hospitalKey(hospital) {
+  return `${hospital.name}-${hospital.latitude}-${hospital.longitude}`;
+}
+
+function formatDistance(distanceKm) {
+  const km = Number(distanceKm) || 0;
+  if (km < 1) return `${Math.round(km * 1000)}m`;
+  return `${km.toFixed(1)}km`;
 }
 
 function handleCall(phone) {
@@ -23,8 +39,17 @@ function handleCall(phone) {
 }
 
 function handleNavigation(hospital) {
-  const url = `https://map.kakao.com/link/to/${encodeURIComponent(hospital.name)},${hospital.lat},${hospital.lng}`;
+  const url = `https://map.kakao.com/link/to/${encodeURIComponent(hospital.name)},${hospital.latitude},${hospital.longitude}`;
   window.open(url, '_blank', 'noopener,noreferrer');
+}
+
+async function loadHospitals() {
+  await emergencyStore.fetchHospitals({
+    latitude: userLat.value,
+    longitude: userLng.value,
+    radiusKm: 5,
+    is24h: is24hOnly.value,
+  });
 }
 
 async function initKakaoMap(lat, lng) {
@@ -63,25 +88,17 @@ async function initKakaoMap(lat, lng) {
     hospitals.value.forEach((h) => {
       new window.kakao.maps.Marker({
         map,
-        position: new window.kakao.maps.LatLng(h.lat, h.lng),
+        position: new window.kakao.maps.LatLng(h.latitude, h.longitude),
       });
     });
   });
 }
 
-// 서울 시청 기본 좌표 (위치 권한 거부 시 fallback)
-const DEFAULT_LAT = 37.5665;
-const DEFAULT_LNG = 126.978;
+watch(is24hOnly, async () => {
+  await loadHospitals();
+});
 
 onMounted(async () => {
-  // TODO: 백엔드 API 연동 시 mock 제거 후 아래로 교체
-  // const res = await emergencyApi.searchHospitals({ lat, lng })
-  // hospitals.value = res.data
-  hospitals.value = mockHospitals;
-
-  let lat = DEFAULT_LAT;
-  let lng = DEFAULT_LNG;
-
   try {
     const pos = await new Promise((resolve, reject) => {
       if (!navigator.geolocation) return reject(new Error('not supported'));
@@ -89,15 +106,18 @@ onMounted(async () => {
         timeout: 5000,
       });
     });
-    lat = pos.coords.latitude;
-    lng = pos.coords.longitude;
+    userLat.value = pos.coords.latitude;
+    userLng.value = pos.coords.longitude;
   } catch {
-    // 위치 권한 거부 또는 미지원 시 기본 좌표로 지도 표시
+    // 위치 권한 거부 또는 미지원 시 기본 좌표(서울시청)로 조회
+  }
+
+  try {
+    await loadHospitals();
+    await initKakaoMap(userLat.value, userLng.value);
   } finally {
     isLoading.value = false;
   }
-
-  await initKakaoMap(lat, lng);
 });
 </script>
 
@@ -135,7 +155,10 @@ onMounted(async () => {
             v-if="mapError"
             class="absolute inset-0 flex flex-col items-center justify-center gap-(--space-2) bg-(--color-gray-100)"
           >
-            <IconWarning :size="24" color="var(--color-slate-muted)" />
+            <IconWarning
+              :size="24"
+              color="var(--color-slate-muted)"
+            />
             <p class="text-(length:--font-sm) text-(color:--color-slate-muted)">
               {{ mapError }}
             </p>
@@ -148,7 +171,7 @@ onMounted(async () => {
             <span
               class="text-(length:--font-sm) font-semibold text-(color:--color-navy)"
             >
-              {{ formatDistance(hospitals[0].distance) }}
+              {{ formatDistance(hospitals[0].distanceKm) }}
             </span>
           </div>
           <div
@@ -166,13 +189,27 @@ onMounted(async () => {
 
       <!-- 병원 목록 -->
       <section>
-        <h2
-          class="text-(length:--font-base) font-semibold text-(color:--color-navy) mb-(--space-3)"
-        >
-          가까운 24시 응급병원
-        </h2>
+        <div class="flex items-center justify-between mb-(--space-3)">
+          <h2
+            class="text-(length:--font-base) font-semibold text-(color:--color-navy)"
+          >
+            {{ is24hOnly ? '가까운 24시 응급병원' : '가까운 응급병원' }}
+          </h2>
+          <div class="flex items-center gap-(--space-2)">
+            <span class="text-(length:--font-sm) text-(color:--color-slate-muted)">
+              24시간만
+            </span>
+            <ToggleSwitch
+              v-model="is24hOnly"
+              label="24시간 운영 병원만 보기"
+            />
+          </div>
+        </div>
 
-        <div v-if="isLoading" class="flex justify-center py-(--space-8)">
+        <div
+          v-if="isLoading"
+          class="flex justify-center py-(--space-8)"
+        >
           <LoadingSpinner />
         </div>
 
@@ -182,16 +219,22 @@ onMounted(async () => {
           message="주변에 응급 동물병원이 없습니다."
         />
 
-        <ul v-else class="flex flex-col gap-(--space-3)">
+        <ul
+          v-else
+          class="flex flex-col gap-(--space-3)"
+        >
           <li
             v-for="hospital in hospitals"
-            :key="hospital.id"
+            :key="hospitalKey(hospital)"
             class="flex items-center gap-(--space-3) bg-(--color-white) rounded-(--radius-lg) p-(--space-4) shadow-(--shadow-sm)"
           >
             <div
               class="flex items-center justify-center w-(--space-9) h-(--space-9) rounded-(--radius-icon) bg-(--color-gray-100) shrink-0"
             >
-              <IconHospital :size="24" color="var(--color-navy)" />
+              <IconHospital
+                :size="24"
+                color="var(--color-navy)"
+              />
             </div>
 
             <div class="flex-1 min-w-0">
@@ -201,10 +244,14 @@ onMounted(async () => {
                 {{ hospital.name }}
               </p>
               <p
+                class="text-(length:--font-sm) text-(color:--color-slate-muted) mt-(--space-1) truncate"
+              >
+                {{ hospital.address }}
+              </p>
+              <p
                 class="text-(length:--font-sm) text-(color:--color-slate-muted) mt-(--space-1)"
               >
-                {{ formatDistance(hospital.distance) }} ·
-                {{ hospital.travelMode }} {{ hospital.travelTime }}분
+                {{ formatDistance(hospital.distanceKm) }} · 차량 이동
               </p>
               <div class="flex gap-(--space-2) mt-(--space-2)">
                 <AppButton

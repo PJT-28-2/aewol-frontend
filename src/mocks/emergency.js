@@ -1,33 +1,31 @@
-// TODO: 백엔드 API 연동 후 제거
+// TODO: 백엔드 API 연동 후 제거 (VITE_USE_MOCK_DATA=true일 때만 사용)
+// 필드는 실제 백엔드 HospitalResponse(name, address, phone, latitude, longitude, distanceKm)와 동일한 형태로 맞춰요.
 export const mockHospitals = [
   {
     id: 1,
     name: '24시 제주동물의료센터',
-    distance: 620,
-    travelTime: 8,
-    travelMode: '도보',
+    address: '제주특별자치도 제주시 첨단동길 8',
+    distanceKm: 0.62,
     phone: '064-123-4567',
-    lat: 33.4996,
-    lng: 126.5312,
+    latitude: 33.4996,
+    longitude: 126.5312,
   },
   {
     id: 2,
     name: '애월 24시 동물병원',
-    distance: 1100,
-    travelTime: 15,
-    travelMode: '도보',
+    address: '제주특별자치도 제주시 애월읍 애월로 12',
+    distanceKm: 1.1,
     phone: '064-234-5678',
-    lat: 33.5024,
-    lng: 126.5278,
+    latitude: 33.5024,
+    longitude: 126.5278,
   },
   {
     id: 3,
     name: '한라 응급동물병원',
-    distance: 2400,
-    travelTime: 6,
-    travelMode: '차량',
+    address: '제주특별자치도 제주시 한라대학로 6',
+    distanceKm: 2.4,
     phone: '064-345-6789',
-    lat: 33.4953,
-    lng: 126.5358,
+    latitude: 33.4953,
+    longitude: 126.5358,
   },
 ]
