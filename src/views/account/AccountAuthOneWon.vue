@@ -162,6 +162,8 @@ async function resendDeposit() {
     await store.requestDepositAuth(accountNumber.value);
     depositorInput.value = '';
     composingPreview.value = '';
+    isComposing.value = false;
+    if (hiddenInputRef.value) hiddenInputRef.value.value = '';
     verifyError.value = '';
     startTimer();
     await nextTick();
@@ -202,6 +204,8 @@ function goBack() {
     clearInterval(timerId);
     depositorInput.value = '';
     composingPreview.value = '';
+    isComposing.value = false;
+    if (hiddenInputRef.value) hiddenInputRef.value.value = '';
     isFocused.value = false;
     verifyError.value = '';
     step.value = 'accountNumber';
