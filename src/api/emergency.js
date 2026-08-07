@@ -1,8 +1,8 @@
 import api from './index'
 
 export const emergencyApi = {
-  searchHospitals(params) {
-    return api.get('/emergency/hospitals', { params })
+  searchHospitals(params, config) {
+    return api.get('/emergency/hospitals', { params, ...config })
   },
 
   getHospital(id) {
