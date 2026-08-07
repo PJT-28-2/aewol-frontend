@@ -18,9 +18,10 @@ if (!store.linking.bankCode) {
 const bankMeta = computed(() => getBankMeta(store.linking.bankCode));
 
 // step 1: 계좌번호 입력 (Figma 목업에 없는 보완 단계)
-// step 2: 1원 인증 - 입금자명(4자리 숫자) 입력 (RF-CM 목업 그대로)
+// step 2: 1원 인증 - 입금자명(한글, CODEF inPrintType=1) 입력 (RF-CM 목업 그대로)
 const step = ref('accountNumber');
-// verify-deposit 응답의 depositorNameLength를 그대로 신뢰해요(항상 4). 아직 응답을
+// CODEF가 랜덤으로 만드는 한글 단어라 길이가 4~6자로 들쭉날쭉해요(2026-08-06 확인).
+// verify-deposit 응답의 depositorNameLength를 그대로 신뢰해요. 아직 응답을
 // 받기 전(컴포넌트 초기 렌더 시점)엔 store 기본값 4를 써요.
 const depositorNameLength = computed(() => store.linking.depositorNameLength || 4);
 const accountNumber = ref('');
@@ -68,23 +69,28 @@ async function submitAccountNumber() {
   }
 }
 
-// 입금자명 입력(4자리 숫자, CODEF inPrintType=0) + 카운트다운
-// 박스 4개를 각각 input으로 만들면 포커스 이동 처리가 번거로워서, 실제 입력은 hidden
-// input 하나로만 받고 박스들은 그 문자열을 나눠서 보여주기만 하는 방식으로 처리해요.
-// (한글 랜덤 단어(inPrintType=1)를 쓰던 이전 버전엔 한글 조합 처리가 필요했지만,
-// 숫자 입력으로 바뀌면서 조합 이슈 자체가 없어져 관련 로직은 제거했어요.)
-const depositorInput = ref(''); // 확정된 값 (숫자만, 최대 depositorNameLength자)
+// 입금자명 입력(한글, CODEF inPrintType=1) + 카운트다운
+// 박스를 글자 수만큼 각각 input으로 만들면 한글 조합 도중 포커스가 다음 칸으로
+// 넘어가면서 조합이 끊기는 문제가 있어서, 실제 입력은 hidden input 하나로만 받고
+// 박스들은 그 문자열을 나눠서 보여주기만 하는 방식으로 처리해요.
+const depositorInput = ref(''); // 확정된 값 (한글만, 최대 depositorNameLength자)
+const composingPreview = ref(''); // 아직 조합 중인, 확정 전 글자의 실시간 미리보기
 const hiddenInputRef = ref(null);
+const isComposing = ref(false);
 const isFocused = ref(false);
 const remainingSeconds = ref(0);
 let timerId = null;
 
+// 확정된 글자 + (있다면) 조합 중인 미리보기 글자까지 합쳐서 화면에 보여줘요.
 const digits = computed(() => {
   const chars = depositorInput.value.split('');
+  if (composingPreview.value && chars.length < depositorNameLength.value) {
+    chars.push(composingPreview.value);
+  }
   return Array.from({ length: depositorNameLength.value }, (_, i) => chars[i] ?? '');
 });
 
-// 다음 글자가 들어갈 박스 인덱스
+// 다음 글자가 들어갈(또는 지금 조합 중인) 박스 인덱스
 const activeIndex = computed(() =>
   Math.min(depositorInput.value.length, depositorNameLength.value - 1),
 );
@@ -93,12 +99,29 @@ function focusHiddenInput() {
   hiddenInputRef.value?.focus();
 }
 
-function filterDigits(value) {
-  return value.replace(/[^0-9]/g, '').slice(0, depositorNameLength.value);
+function filterHangul(value) {
+  return value.replace(/[^가-힣]/g, '').slice(0, depositorNameLength.value);
+}
+
+function onCompositionStart() {
+  isComposing.value = true;
+}
+
+function onCompositionEnd(event) {
+  isComposing.value = false;
+  composingPreview.value = '';
+  const filtered = filterHangul(event.target.value);
+  depositorInput.value = filtered;
+  event.target.value = filtered;
 }
 
 function onDepositorInput(event) {
-  const filtered = filterDigits(event.target.value);
+  if (isComposing.value) {
+    // 아직 조합 중 — 확정하지 않고, 지금 조합 중인 글자만 실시간으로 미리 보여줘요.
+    composingPreview.value = event.target.value.slice(depositorInput.value.length).slice(-1);
+    return;
+  }
+  const filtered = filterHangul(event.target.value);
   depositorInput.value = filtered;
   event.target.value = filtered;
 }
@@ -138,6 +161,7 @@ async function resendDeposit() {
   try {
     await store.requestDepositAuth(accountNumber.value);
     depositorInput.value = '';
+    composingPreview.value = '';
     verifyError.value = '';
     startTimer();
     await nextTick();
@@ -177,6 +201,7 @@ function goBack() {
   if (step.value === 'depositorName') {
     clearInterval(timerId);
     depositorInput.value = '';
+    composingPreview.value = '';
     isFocused.value = false;
     verifyError.value = '';
     step.value = 'accountNumber';
@@ -232,7 +257,7 @@ registerHeaderBack(goBack);
     <template v-else>
       <header class="mb-(--space-6)">
         <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) leading-snug">
-          입금된 1원의 {{ depositorNameLength }}자리<br />입금자명을 입력해주세요
+          입금된 1원의 {{ depositorNameLength }}글자<br />입금자명을 입력해주세요
         </h1>
       </header>
 
@@ -250,7 +275,7 @@ registerHeaderBack(goBack);
       </div>
 
       <div class="flex items-center justify-between mb-(--space-4)">
-        <span class="text-(length:--font-base) font-semibold text-(color:--color-navy)">입금자명 {{ depositorNameLength }}자리</span>
+        <span class="text-(length:--font-base) font-semibold text-(color:--color-navy)">입금자명 {{ depositorNameLength }}글자</span>
         <span v-if="remainingSeconds > 0" class="text-(length:--font-sm) font-semibold text-(color:--color-danger-strong)">{{ timerLabel }}</span>
         <button
           v-else
@@ -268,11 +293,12 @@ registerHeaderBack(goBack);
         <input
           ref="hiddenInputRef"
           type="text"
-          inputmode="numeric"
           autocomplete="off"
-          :aria-label="`입금자명 인증 코드 ${depositorNameLength}자리 입력`"
+          :aria-label="`입금자명 인증 코드 ${depositorNameLength}글자 입력`"
           class="absolute inset-0 z-10 w-full h-full appearance-none border-0 p-0 m-0 opacity-0 cursor-text"
           @input="onDepositorInput"
+          @compositionstart="onCompositionStart"
+          @compositionend="onCompositionEnd"
           @focus="isFocused = true"
           @blur="isFocused = false"
         />
@@ -291,7 +317,7 @@ registerHeaderBack(goBack);
       </div>
 
       <p class="text-(length:--font-sm) text-(color:--color-gray-500) leading-relaxed mb-(--space-2)">
-        은행 앱 알림이나 입출금 문자에서<br />입금자명(예: 5673) {{ depositorNameLength }}자리를 확인할 수 있어요
+        은행 앱 알림이나 입출금 문자에서<br />입금자명(예: 푸른애월)의 앞 {{ depositorNameLength }}글자를 확인할 수 있어요
       </p>
       <p v-if="verifyError" class="text-(length:--font-sm) text-(color:--color-danger-strong) mb-(--space-2)">{{ verifyError }}</p>
 

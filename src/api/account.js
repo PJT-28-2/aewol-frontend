@@ -32,7 +32,7 @@ export function requestDepositVerification(payload) {
 }
 
 /**
- * 1원 인증 확인 — 입금자명에 찍힌 4자리 랜덤 숫자(예: 5673) 검증
+ * 1원 인증 확인 — 입금자명에 찍힌 랜덤 한글 단어(예: 푸른애월) 검증
  * POST /api/accounts/verify-deposit/confirm
  * body: { transactionId, verificationCode }
  * result: { verified: boolean }

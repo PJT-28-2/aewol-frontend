@@ -38,8 +38,8 @@ export const useAccountStore = defineStore('account', {
       verificationId: null,
       maskedAccountNumber: '',
       expiresInSeconds: 0,
-      // CODEF inPrintType=0(4자리 랜덤 숫자)이라 항상 4예요. 목데이터 모드나 응답이
-      // 없는 경우를 대비해 기본값으로 둬요.
+      // CODEF inPrintType=1(랜덤 한글 단어)이라 4~6자로 들쭉날쭉해요. 목데이터 모드나
+      // 응답이 없는 경우를 대비해 기본값 4를 둬요.
       depositorNameLength: 4,
       // 비밀번호 설정 화면에서 입력한 값을 확인 화면으로 넘길 때까지만 메모리에 잠깐 보관
       password: '',
@@ -139,7 +139,7 @@ export const useAccountStore = defineStore('account', {
     },
 
     // POST /api/accounts/verify-deposit/confirm — 목데이터 모드에선 depositorNameLength만큼만 채우면 통과
-    // verificationCode: 입금자명에 찍히는 4자리 랜덤 숫자 (예: 5673)
+    // verificationCode: 입금자명에 찍히는 랜덤 한글 단어 (예: 푸른애월)
     async confirmDepositAuth(verificationCode) {
       if (USE_MOCK_DATA) {
         return verificationCode.length === this.linking.depositorNameLength;
