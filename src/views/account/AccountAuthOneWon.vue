@@ -177,7 +177,10 @@ async function resendDeposit() {
   isResending.value = true;
   resendError.value = '';
   try {
-    await store.requestDepositAuth(accountNumber.value);
+    // 재마운트(나갔다 들어옴) 후에는 로컬 accountNumber가 빈 문자열로 초기화돼있어요.
+    // store.linking.accountNumber는 requestDepositAuth 때 저장돼서 재마운트 후에도
+    // 남아있으니 재전송은 항상 이 값을 써요(CodeRabbit 지적, 2026-08-07).
+    await store.requestDepositAuth(store.linking.accountNumber);
     depositorInput.value = '';
     composingPreview.value = '';
     isComposing.value = false;
