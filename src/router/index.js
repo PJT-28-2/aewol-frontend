@@ -119,21 +119,27 @@ const authRoutes = [
     component: () => import('@/views/pet/PetListView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout' },
     // 등록된 반려동물이 없으면 관리 화면 대신 반려동물 등록/가족 참여 안내 화면으로 보낸다.
-    beforeEnter: () => {
-      if (usePetStore().pets.length === 0) return '/share/start';
+    beforeEnter: async () => {
+      const petStore = usePetStore();
+      try {
+        await petStore.fetchPets();
+      } catch {
+        return;
+      }
+      if (petStore.pets.length === 0) return '/share/start';
     },
   },
   {
     path: '/pets/register',
     name: 'PetRegister',
     component: () => import('@/views/pet/PetRegisterView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true, title: '프로필 등록' },
   },
   {
     path: '/pets/:petId/edit',
     name: 'PetEdit',
     component: () => import('@/views/pet/PetEditView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true, title: '프로필 수정' },
   },
   {
     path: '/certificates',

@@ -17,8 +17,8 @@ export const useMemberStore = defineStore('member', {
         return this.profile
       }
       const { data } = await memberApi.getProfile()
-      this.profile = data
-      return data
+      this.profile = data.result ?? data
+      return this.profile
     },
 
     async updateProfile(profileData) {

@@ -10,6 +10,7 @@ const props = defineProps({
       [
         'primary',
         'secondary',
+        'neutral',
         'danger',
         'ghost',
         'navy',
@@ -54,6 +55,8 @@ const variantClasses = {
   primary: 'bg-(--color-leaf) text-(color:--color-navy) hover:opacity-90',
   secondary:
     'bg-(--color-white) text-(color:--color-navy) border border-(--color-navy) hover:opacity-90',
+  neutral:
+    'bg-(--color-app-bg) text-(color:--color-slate-dark) border border-(--color-card-border) hover:opacity-90',
   danger: 'bg-(--color-danger-strong) text-(color:--color-white) hover:opacity-90',
   ghost: 'bg-transparent text-(color:--color-navy) hover:bg-(--color-gray-100)',
   navy: 'bg-(--color-navy) text-(color:--color-white) hover:opacity-90',
@@ -81,7 +84,7 @@ const radiusClass = computed(() =>
   props.pill ? 'rounded-(--radius-full)' : radiusClasses[props.size],
 )
 
-const spinnerColor = ['secondary', 'ghost', 'primary', 'white'].includes(props.variant)
+const spinnerColor = ['secondary', 'neutral', 'ghost', 'primary', 'white'].includes(props.variant)
   ? 'navy'
   : props.variant === 'olive-outline'
     ? 'olive'

@@ -2,6 +2,8 @@ import { defineStore } from 'pinia'
 import { authApi } from '@/api/auth'
 import router from '@/router'
 
+const unwrapResult = (data) => data.result ?? data
+
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     accessToken: localStorage.getItem('accessToken') || null,
@@ -22,24 +24,26 @@ export const useAuthStore = defineStore('auth', {
 
     async login(email, password) {
       const { data } = await authApi.login(email, password)
-      this.accessToken = data.accessToken
-      this.user = data.user ?? null
-      localStorage.setItem('accessToken', data.accessToken)
-      if (data.refreshToken) {
-        localStorage.setItem('refreshToken', data.refreshToken)
+      const result = unwrapResult(data)
+      this.accessToken = result.accessToken
+      this.user = result.user ?? null
+      localStorage.setItem('accessToken', result.accessToken)
+      if (result.refreshToken) {
+        localStorage.setItem('refreshToken', result.refreshToken)
       }
-      return data
+      return result
     },
 
     async kakaoLogin(code) {
       const { data } = await authApi.kakaoLogin(code)
-      this.accessToken = data.accessToken
-      this.user = data.user ?? null
-      localStorage.setItem('accessToken', data.accessToken)
-      if (data.refreshToken) {
-        localStorage.setItem('refreshToken', data.refreshToken)
+      const result = unwrapResult(data)
+      this.accessToken = result.accessToken
+      this.user = result.user ?? null
+      localStorage.setItem('accessToken', result.accessToken)
+      if (result.refreshToken) {
+        localStorage.setItem('refreshToken', result.refreshToken)
       }
-      return data
+      return result
     },
 
     async signup(signupData) {
@@ -57,12 +61,13 @@ export const useAuthStore = defineStore('auth', {
       if (!refreshToken) throw new Error('No refresh token')
 
       const { data } = await authApi.refresh(refreshToken)
-      this.accessToken = data.accessToken
-      localStorage.setItem('accessToken', data.accessToken)
-      if (data.refreshToken) {
-        localStorage.setItem('refreshToken', data.refreshToken)
+      const result = unwrapResult(data)
+      this.accessToken = result.accessToken
+      localStorage.setItem('accessToken', result.accessToken)
+      if (result.refreshToken) {
+        localStorage.setItem('refreshToken', result.refreshToken)
       }
-      return data
+      return result
     },
 
     logout() {

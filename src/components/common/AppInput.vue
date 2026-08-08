@@ -1,10 +1,10 @@
 <script setup>
-import { useId } from 'vue'
+import { computed, useId } from 'vue'
 
 const inputId = useId()
 const errorId = useId()
 
-defineProps({
+const props = defineProps({
   modelValue: {
     type: [String, Number],
     default: '',
@@ -37,6 +37,24 @@ defineProps({
     type: String,
     default: null,
   },
+  variant: {
+    type: String,
+    default: 'default',
+    validator: (value) => ['default', 'soft'].includes(value),
+  },
+})
+
+const inputClasses = computed(() => {
+  const stateClass = props.error
+    ? 'border-(--color-danger-strong) focus:border-(--color-danger-strong)'
+    : 'border-(--color-card-border) focus:border-(--color-leaf-dark)'
+
+  return [
+    stateClass,
+    props.variant === 'soft'
+      ? 'h-(--control-height-lg) rounded-(--radius-xl) bg-(--color-app-bg) px-(--space-4) focus:bg-(--color-white) focus:ring-2 focus:ring-(--color-leaf-soft)'
+      : 'h-(--control-height-md) rounded-(--radius-lg) bg-(--color-surface) px-(--space-3)',
+  ]
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -62,8 +80,8 @@ function onInput(event) {
 
     <input
       :id="inputId"
-      class="w-full h-(--control-height-md) px-(--space-3) text-(length:--font-md) text-(color:--color-gray-900) bg-(--color-surface) border rounded-(--radius-lg) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
-      :class="error ? 'border-(--color-danger-strong)' : 'border-(--color-border)'"
+      class="w-full border text-(length:--font-md) text-(color:--color-gray-900) outline-none transition-[border-color,background-color,box-shadow] placeholder:text-(color:--color-slate-muted)"
+      :class="inputClasses"
       :type="type"
       :value="modelValue"
       :placeholder="placeholder"

@@ -73,10 +73,11 @@ export function getDeadlineTimestamp(deadline) {
 /**
  * "YYYY-MM-DD" 형식의 날짜 문자열을 "YYYY.MM.DD" 형식으로 변환한다.
  *
- * @param {string} isoDate `YYYY-MM-DD` 형식의 날짜 문자열
+ * @param {string | null | undefined} isoDate `YYYY-MM-DD` 형식의 날짜 문자열
  * @returns {string} `YYYY.MM.DD` 형식의 문자열
  */
 export function formatDateDot(isoDate) {
+  if (!isoDate) return ''
   return isoDate.replaceAll('-', '.')
 }
 
@@ -103,4 +104,26 @@ export function formatBirthDateInput(value) {
   if (digits.length < 5) return digits
   if (digits.length < 7) return `${digits.slice(0, 4)}.${digits.slice(4)}`
   return `${digits.slice(0, 4)}.${digits.slice(4, 6)}.${digits.slice(6)}`
+}
+
+/**
+ * YYYY.MM.DD 또는 YYYY-MM-DD 문자열이 실제 달력에 존재하는 날짜인지 확인한다.
+ * Date의 월/일 자동 보정(예: 5월 96일이 8월 날짜로 변환됨)을 허용하지 않는다.
+ *
+ * @param {string} value 확인할 날짜 문자열
+ * @returns {boolean} 유효한 달력 날짜인지 여부
+ */
+export function isValidCalendarDate(value) {
+  const match = /^(\d{4})[.-](\d{2})[.-](\d{2})$/.exec(value)
+  if (!match) return false
+
+  const [, yearText, monthText, dayText] = match
+  const year = Number(yearText)
+  const month = Number(monthText)
+  const day = Number(dayText)
+  const date = new Date(Date.UTC(year, month - 1, day))
+
+  return date.getUTCFullYear() === year
+    && date.getUTCMonth() === month - 1
+    && date.getUTCDate() === day
 }

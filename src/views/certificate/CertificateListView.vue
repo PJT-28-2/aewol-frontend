@@ -153,8 +153,18 @@ async function handleVaccinationSelect(event) {
   }
   try {
     await certificateStore.uploadVaccination(certificateStore.selectedPetId, file)
-  } catch {
-    alert('업로드에 실패했어요. 다시 시도해주세요.')
+  } catch (error) {
+    const serverMessage = error.response?.data?.message
+    const fallbackMessages = {
+      400: '파일 또는 발급일을 확인해주세요.',
+      403: '접종증명서를 업로드할 권한이 없어요.',
+      404: '반려동물 정보를 찾을 수 없어요.',
+    }
+    alert(
+      serverMessage ||
+        fallbackMessages[error.response?.status] ||
+        '업로드에 실패했어요. 다시 시도해주세요.',
+    )
   }
 }
 
@@ -312,7 +322,7 @@ async function handleMedicalSelect(event) {
                 {{ doc.docName }}
               </p>
               <p class="text-(length:--font-xs) text-(color:--color-gray-500) mt-(--space-1)">
-                {{ formatDateDot(doc.issuedDate) }} 업로드
+                {{ doc.issuedDate ? `${formatDateDot(doc.issuedDate)} 발급` : '발급일 미입력' }}
               </p>
             </div>
             <button

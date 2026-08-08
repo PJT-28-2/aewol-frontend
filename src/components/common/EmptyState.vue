@@ -37,7 +37,7 @@ function handleAction() {
       class="empty-state__icon"
       :size="48"
     />
-    <p class="empty-state__message">
+    <p class="empty-state__message whitespace-pre-line">
       {{ message }}
     </p>
     <button

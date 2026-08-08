@@ -284,8 +284,8 @@ export const useCertificateStore = defineStore('certificate', {
       })
     },
 
-    // POST /api/pets/{petId}/documents (docType=VACCINATION)
-    async uploadVaccination(petId, file) {
+    // POST /api/pets/{petId}/documents — file 필수, issuedDate 선택
+    async uploadVaccination(petId, file, issuedDate) {
       if (USE_MOCK_DATA) {
         const newDoc = {
           docId: `doc-vac-${Date.now()}`,
@@ -295,7 +295,7 @@ export const useCertificateStore = defineStore('certificate', {
           // 실제 백엔드가 없어서 서버 파일 URL 대신, 방금 고른 파일을 그 자리에서
           // 미리보기할 수 있도록 브라우저 로컬 objectURL을 사용함(새로고침하면 사라짐)
           fileUrl: URL.createObjectURL(file),
-          issuedDate: new Date().toISOString().slice(0, 10),
+          issuedDate: issuedDate || new Date().toISOString().slice(0, 10),
           createdAt: new Date().toISOString(),
         }
         this.documents = [newDoc, ...this.documents]
@@ -303,12 +303,19 @@ export const useCertificateStore = defineStore('certificate', {
         return newDoc
       }
       return this._withRequestState(async () => {
-        const formData = new FormData()
-        formData.append('file', file)
-        formData.append('docType', 'VACCINATION')
-        const { data } = await certificatesApi.uploadDocument(petId, formData)
-        await this.fetchCertificates(petId)
-        return data.result
+        const { data } = await certificatesApi.uploadVaccination(petId, file, issuedDate)
+        const uploaded = {
+          ...data.result,
+          docName: data.result?.docName || file.name,
+        }
+        const isUploadedDocument = (doc) =>
+          doc.docId === uploaded.docId || (doc.petId === petId && doc.docType === 'VACCINATION')
+        this.documents = [uploaded, ...this.documents.filter((doc) => !isUploadedDocument(doc))]
+        this.vaccinationDocs = [
+          uploaded,
+          ...this.vaccinationDocs.filter((doc) => !isUploadedDocument(doc)),
+        ]
+        return uploaded
       })
     },
 
