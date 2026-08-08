@@ -37,6 +37,10 @@ const props = defineProps({
     type: String,
     default: null,
   },
+  readonly: {
+    type: Boolean,
+    default: false,
+  },
   variant: {
     type: String,
     default: 'default',
@@ -88,6 +92,7 @@ function onInput(event) {
       :required="required"
       :maxlength="maxlength"
       :inputmode="inputmode"
+      :readonly="readonly"
       :aria-invalid="error ? 'true' : undefined"
       :aria-describedby="error ? errorId : undefined"
       @input="onInput"

@@ -74,7 +74,7 @@ onMounted(async () => {
             반려동물 프로필은 저장됐어요
           </p>
           <p class="mt-(--space-1) text-(length:--font-sm) leading-relaxed text-(color:--color-slate-dark)">
-            동물등록번호는 확인되지 않았어요. 프로필 수정에서 다시 입력해 주세요.
+            동물등록번호는 확인되지 않았어요. 등록증에 기재된 소유자 정보를 확인한 뒤 프로필 수정에서 다시 입력해 주세요.
           </p>
           <router-link
             v-if="unverifiedPetId"

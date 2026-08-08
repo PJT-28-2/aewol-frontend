@@ -46,6 +46,9 @@ const errorMessage = ref('');
 const isDeleteModalOpen = ref(false);
 const isDocumentDeleteModalOpen = ref(false);
 const isDocumentMarkedForDeletion = ref(false);
+const registrationOwnerType = ref('SELF');
+const registrationOwnerName = ref('');
+const memberName = ref('');
 
 const BIRTH_DATE_PATTERN = /^\d{4}\.\d{2}\.\d{2}$/;
 const REG_NUMBER_PATTERN = /^(\d{12}|\d{15})$/;
@@ -74,6 +77,13 @@ onMounted(async () => {
   if (USE_MOCK_DATA) return;
   isSaving.value = true;
   try {
+    try {
+      const profile = memberStore.profile ?? await memberStore.fetchProfile();
+      memberName.value = profile?.name ?? '';
+      registrationOwnerName.value = memberName.value;
+    } catch {
+      // 회원 정보 자동 입력에 실패해도 사용자가 직접 소유자 이름을 입력할 수 있다.
+    }
     const { data } = await petApi.getPet(petId.value);
     pet.value = data.result ?? data;
     try {
@@ -108,6 +118,9 @@ function validateForm() {
   if (form.value.regNumber && !REG_NUMBER_PATTERN.test(form.value.regNumber)) {
     return '동물등록번호는 12자리(인식표) 또는 15자리(무선전자인식장치) 숫자로 입력해주세요.';
   }
+  if (shouldVerifyRegistration.value && !registrationOwnerName.value.trim()) {
+    return '동물등록증에 기재된 소유자 이름을 입력해주세요.';
+  }
   if (pet.value?.regNumber && !form.value.regNumber) {
     return '검증된 동물등록번호는 비워둘 수 없습니다.';
   }
@@ -140,6 +153,12 @@ const breedLabel = computed(() => (form.value.species === 'CAT' ? '묘종' : '�
 const breedPlaceholder = computed(() =>
   form.value.species === 'CAT' ? '예: 코리안 숏헤어' : '예: 포메라니안',
 );
+const shouldVerifyRegistration = computed(() =>
+  Boolean(form.value.regNumber) && (
+    form.value.regNumber !== (pet.value?.regNumber ?? '') ||
+    registrationOwnerType.value === 'OTHER'
+  ),
+);
 
 function selectSpecies(species) {
   form.value.species = species;
@@ -147,6 +166,11 @@ function selectSpecies(species) {
 
 function selectNeutered(neutered) {
   form.value.neutered = neutered;
+}
+
+function selectRegistrationOwner(type) {
+  registrationOwnerType.value = type;
+  registrationOwnerName.value = type === 'SELF' ? memberName.value : '';
 }
 
 function onFileChange(event) {
@@ -176,9 +200,7 @@ async function handleSave() {
   errorMessage.value = '';
   isSaving.value = true;
   try {
-    const registrationChanged =
-      Boolean(form.value.regNumber) &&
-      form.value.regNumber !== (pet.value?.regNumber ?? '');
+    let registrationVerificationFailed = false;
     const petForm = { ...form.value };
     delete petForm.regNumber;
     await petApi.updatePet(petId.value, {
@@ -186,13 +208,16 @@ async function handleSave() {
       birthDate: form.value.birthDate.replaceAll('.', '-'),
       neutered: form.value.neutered == null ? null : form.value.neutered ? 'Y' : 'N',
     });
-    if (registrationChanged) {
-      const profile = memberStore.profile ?? await memberStore.fetchProfile();
-      await petApi.verifyRegistration(petId.value, {
-        regNumber: form.value.regNumber,
-        userName: profile?.name || undefined,
-        birthDate: profile?.birthDate?.replaceAll('-', '') || undefined,
-      });
+    if (shouldVerifyRegistration.value) {
+      try {
+        await petApi.verifyRegistration(petId.value, {
+          regNumber: form.value.regNumber,
+          userName: registrationOwnerName.value.trim(),
+          birthDate: '',
+        });
+      } catch {
+        registrationVerificationFailed = true;
+      }
     }
     if (
       isDocumentMarkedForDeletion.value &&
@@ -206,7 +231,12 @@ async function handleSave() {
     if (vaccinationFile.value) {
       await petApi.uploadDocument(petId.value, vaccinationFile.value);
     }
-    await router.push('/pets');
+    await router.push({
+      path: '/pets',
+      query: registrationVerificationFailed
+        ? { registration: 'unverified', petId: petId.value }
+        : undefined,
+    });
   } catch (error) {
     const messages = {
       400: '입력 내용과 접종증명서 파일을 확인해주세요.',
@@ -343,6 +373,50 @@ function handleDocumentDelete() {
           >
             국가동물보호정보시스템(APMS)에 등록된 번호예요. 나중에
             추가하셔도 돼요.
+          </p>
+        </div>
+
+        <div v-if="form.regNumber">
+          <div class="mb-(--space-2) flex items-center justify-between gap-(--space-2)">
+            <p class="text-(length:--font-sm) font-medium text-(color:--color-slate-dark)">
+              등록증에 기재된 소유자
+            </p>
+            <span
+              class="rounded-(--radius-full) px-(--space-2) py-[2px] text-(length:--font-xs) font-semibold"
+              :class="!shouldVerifyRegistration ? 'bg-(--color-leaf-soft) text-(color:--color-leaf-dark)' : 'bg-(--color-gray-100) text-(color:--color-slate-muted)'"
+            >
+              {{ !shouldVerifyRegistration ? '검증 완료' : '미검증' }}
+            </span>
+          </div>
+          <div class="mb-(--space-3) grid grid-cols-2 gap-(--space-2) rounded-(--radius-xl) bg-(--color-app-bg) p-[4px]">
+            <button
+              type="button"
+              :aria-pressed="registrationOwnerType === 'SELF'"
+              class="inline-flex h-[44px] items-center justify-center rounded-(--radius-lg) text-(length:--font-sm) font-semibold"
+              :class="registrationOwnerType === 'SELF' ? 'bg-(--color-white) text-(color:--color-navy) shadow-(--shadow-card)' : 'text-(color:--color-slate-muted)'"
+              @click="selectRegistrationOwner('SELF')"
+            >
+              본인
+            </button>
+            <button
+              type="button"
+              :aria-pressed="registrationOwnerType === 'OTHER'"
+              class="inline-flex h-[44px] items-center justify-center rounded-(--radius-lg) text-(length:--font-sm) font-semibold"
+              :class="registrationOwnerType === 'OTHER' ? 'bg-(--color-white) text-(color:--color-navy) shadow-(--shadow-card)' : 'text-(color:--color-slate-muted)'"
+              @click="selectRegistrationOwner('OTHER')"
+            >
+              다른 사람
+            </button>
+          </div>
+          <AppInput
+            v-model="registrationOwnerName"
+            variant="soft"
+            label="검증용 소유자 이름"
+            placeholder="등록증에 기재된 이름"
+            :readonly="registrationOwnerType === 'SELF'"
+          />
+          <p class="mt-(--space-1) text-(length:--font-xs) leading-relaxed text-(color:--color-slate-muted)">
+            서비스 가입자가 아닌 동물등록증에 기재된 이름을 입력해 주세요. 이 값은 등록번호 검증에만 사용됩니다.
           </p>
         </div>
 
