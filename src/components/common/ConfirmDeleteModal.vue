@@ -1,5 +1,5 @@
 <script setup>
-import petDeleteWarning from '@/assets/images/pet-delete-warning.png'
+import warning3d from '@/assets/images/icons-3d/warning_3d.png'
 import AppButton from './AppButton.vue'
 import BottomSheet from './BottomSheet.vue'
 
@@ -51,45 +51,47 @@ function onConfirm() {
     size="tall"
     @update:model-value="emit('update:modelValue', $event)"
   >
-    <div class="flex flex-col items-center text-center">
+    <div class="flex flex-col items-center pt-(--space-3) text-center">
       <img
-        :src="petDeleteWarning"
+        :src="warning3d"
         alt=""
-        class="w-[139px] h-[139px] mb-(--space-4)"
+        class="mb-(--space-4) h-[76px] w-auto object-contain"
       >
 
-      <h2 class="text-(length:--font-lg) font-bold text-(color:--color-navy) mb-(--space-2)">
+      <h2 class="mb-(--space-2) text-(length:--font-xl) font-bold text-(color:--color-navy)">
         {{ title }}
       </h2>
       <p
         v-if="description"
-        class="text-(length:--font-sm) text-(color:--color-slate-muted) mb-(--space-4) whitespace-pre-line"
+        class="mb-(--space-5) max-w-[300px] whitespace-pre-line text-(length:--font-sm) leading-relaxed text-(color:--color-slate-muted)"
       >
         {{ description }}
       </p>
 
       <ul
         v-if="items.length"
-        class="w-full bg-(--color-danger-soft) rounded-(--radius-lg) p-(--space-4) flex flex-col gap-(--space-2) mb-(--space-5) text-left"
+        class="mb-(--space-5) flex w-full flex-col gap-(--space-3) rounded-(--radius-xl) border border-(--color-danger-surface) bg-(--color-danger-soft) p-(--space-4) text-left"
       >
         <li
           v-for="item in items"
           :key="item"
-          class="flex items-center gap-(--space-2) text-(length:--font-sm) text-(color:--color-danger-muted)"
+          class="flex items-start gap-(--space-2) text-(length:--font-sm) leading-relaxed text-(color:--color-danger-muted)"
         >
-          <span class="w-[6px] h-[6px] rounded-full bg-(--color-danger-strong) shrink-0" />
+          <span class="mt-[7px] size-[6px] shrink-0 rounded-full bg-(--color-danger-strong)" />
           {{ item }}
         </li>
       </ul>
 
-      <div class="grid grid-cols-2 gap-(--space-3) w-full">
-        <button
+      <div class="grid w-full grid-cols-2 gap-(--space-3)">
+        <AppButton
           type="button"
-          class="w-full h-[52px] rounded-(--radius-lg) border border-(--color-border) bg-(--color-white) text-(color:--color-slate-dark) text-(length:--font-base) font-semibold"
+          variant="neutral"
+          size="lg"
+          class="w-full"
           @click="close"
         >
           {{ cancelLabel }}
-        </button>
+        </AppButton>
         <AppButton
           type="button"
           variant="danger"

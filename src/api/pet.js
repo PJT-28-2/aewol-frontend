@@ -25,13 +25,18 @@ export const petApi = {
     return api.post(`/pets/${id}/verify`, data)
   },
 
-  uploadDocument(id, formData) {
-    return api.post(`/pets/${id}/documents`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
+  uploadDocument(id, file, issuedDate) {
+    const formData = new FormData()
+    formData.append('file', file)
+    if (issuedDate) formData.append('issuedDate', issuedDate)
+    return api.post(`/pets/${id}/documents`, formData)
   },
 
   getDocuments(id) {
     return api.get(`/pets/${id}/documents`)
+  },
+
+  deleteDocument(id, docId) {
+    return api.delete(`/pets/${id}/documents/${docId}`)
   },
 }

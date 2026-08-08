@@ -1,17 +1,29 @@
 <script setup>
 import { onMounted, ref } from 'vue';
 import { storeToRefs } from 'pinia';
+import { useRoute, useRouter } from 'vue-router';
 import EmptyState from '@/components/common/EmptyState.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
-import IconPaw from '@/components/common/icons/IconPaw.vue';
+import IconPetFace from '@/components/common/icons/IconPetFace.vue';
 import IconChevronRight from '@/components/common/icons/IconChevronRight.vue';
+import IconClose from '@/components/common/icons/IconClose.vue';
 import iconCat3d from '@/assets/images/icons-3d/cat_face_3d.png';
 import iconDog3d from '@/assets/images/icons-3d/dog_face_3d.png';
 import { usePetStore } from '@/stores/pet';
 
-const { pets } = storeToRefs(usePetStore());
+const petStore = usePetStore();
+const { pets } = storeToRefs(petStore);
+const route = useRoute();
+const router = useRouter();
 
 const isLoading = ref(true);
+const showRegistrationNotice = ref(route.query.registration === 'unverified');
+const unverifiedPetId = ref(route.query.petId);
+
+function dismissRegistrationNotice() {
+  showRegistrationNotice.value = false;
+  router.replace({ path: route.path });
+}
 
 function petIcon(species) {
   return species === 'CAT' ? iconCat3d : iconDog3d;
@@ -31,8 +43,11 @@ function getAge(birthDate) {
 }
 
 onMounted(async () => {
-  // TODO: usePetStore().fetchPets()가 실제 백엔드 연동으로 교체되면 여기서 호출
-  isLoading.value = false;
+  try {
+    await petStore.fetchPets();
+  } finally {
+    isLoading.value = false;
+  }
 });
 </script>
 
@@ -44,9 +59,44 @@ onMounted(async () => {
       <h1
         class="text-(length:--font-2xl) font-bold text-(color:--color-navy)"
       >
-        반려동물
+        반려동물 관리
       </h1>
     </header>
+
+    <div
+      v-if="showRegistrationNotice"
+      class="mb-(--space-4) rounded-(--radius-xl) border border-(--color-gold) bg-[color-mix(in_srgb,var(--color-gold)_12%,transparent)] p-(--space-4)"
+      role="status"
+    >
+      <div class="flex items-start gap-(--space-3)">
+        <div class="min-w-0 flex-1">
+          <p class="text-(length:--font-sm) font-semibold text-(color:--color-navy)">
+            반려동물 프로필은 저장됐어요
+          </p>
+          <p class="mt-(--space-1) text-(length:--font-sm) leading-relaxed text-(color:--color-slate-dark)">
+            동물등록번호는 확인되지 않았어요. 등록증에 기재된 소유자 정보를 확인한 뒤 프로필 수정에서 다시 입력해 주세요.
+          </p>
+          <router-link
+            v-if="unverifiedPetId"
+            :to="`/pets/${unverifiedPetId}/edit`"
+            class="mt-(--space-2) inline-flex text-(length:--font-sm) font-semibold text-(color:--color-navy) underline underline-offset-2"
+          >
+            프로필 수정하기
+          </router-link>
+        </div>
+        <button
+          type="button"
+          class="shrink-0 text-(color:--color-slate-muted)"
+          aria-label="안내 닫기"
+          @click="dismissRegistrationNotice"
+        >
+          <IconClose
+            size="18"
+            color="currentColor"
+          />
+        </button>
+      </div>
+    </div>
 
     <div
       v-if="isLoading"
@@ -57,8 +107,8 @@ onMounted(async () => {
 
     <EmptyState
       v-else-if="pets.length === 0"
-      :icon="IconPaw"
-      message="아직 등록된 반려동물이 없어요. 반려동물을 등록하고 관리를 시작하세요!"
+      :icon="IconPetFace"
+      :message="'아직 등록된 반려동물이 없어요.\n반려동물을 등록하고 관리를 시작하세요!'"
     />
 
     <ul
@@ -95,7 +145,10 @@ onMounted(async () => {
               중성화 {{ pet.neutered ? '완료' : '미완료' }}
             </p>
           </div>
-          <IconChevronRight size="18" color="var(--color-gray-400)" />
+          <IconChevronRight
+            size="18"
+            color="var(--color-gray-400)"
+          />
         </router-link>
       </li>
     </ul>

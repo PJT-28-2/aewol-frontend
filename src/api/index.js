@@ -2,9 +2,6 @@ import axios from 'axios'
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
 })
 
 // Request interceptor — attach Bearer token
@@ -59,10 +56,11 @@ api.interceptors.response.use(
           { refreshToken },
         )
 
-        const newAccessToken = data.accessToken
+        const result = data.result ?? data
+        const newAccessToken = result.accessToken
         localStorage.setItem('accessToken', newAccessToken)
-        if (data.refreshToken) {
-          localStorage.setItem('refreshToken', data.refreshToken)
+        if (result.refreshToken) {
+          localStorage.setItem('refreshToken', result.refreshToken)
         }
 
         api.defaults.headers.common.Authorization = `Bearer ${newAccessToken}`

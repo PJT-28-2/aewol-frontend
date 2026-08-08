@@ -11,12 +11,18 @@ export const certificatesApi = {
     return api.get(`/pets/${petId}/documents/${docId}`)
   },
 
-  // 접종증명서·진료확인서 공용 업로드. 문서 종류는 multipart 필드
-  // docType('VACCINATION' | 'MEDICAL_CONFIRMATION')으로 구분
+  uploadVaccination(petId, file, issuedDate) {
+    const formData = new FormData()
+    formData.append('file', file)
+    if (issuedDate) formData.append('issuedDate', issuedDate)
+
+    // Content-Type은 직접 지정하지 않아야 브라우저가 multipart boundary를 함께 설정한다.
+    return api.post(`/pets/${petId}/documents`, formData)
+  },
+
+  // 진료확인서 공용 업로드는 기존 백엔드 규격을 유지한다.
   uploadDocument(petId, formData) {
-    return api.post(`/pets/${petId}/documents`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
+    return api.post(`/pets/${petId}/documents`, formData)
   },
 
   // 동물등록증 해제 · 접종증명서/진료확인서 삭제 공용 — 전부 같은 pet_document 삭제

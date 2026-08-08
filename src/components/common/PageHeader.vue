@@ -31,6 +31,8 @@ const mutedBgRoutes = [
   'TransactionDetail',
   'InsuranceHome',
   'PetList',
+  'PetRegister',
+  'PetEdit',
   'Simulator',
   'Claim',
   'ClaimPdfDraft',
