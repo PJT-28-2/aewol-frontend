@@ -106,6 +106,20 @@ export const useAccountStore = defineStore('account', {
     },
 
     selectBankToLink(bankCode) {
+      // 은행을 바꿀 때 이전 은행에서 진행 중이던 1원 인증 상태를 그대로 두면,
+      // AccountAuthOneWon.vue의 onMounted 복원 로직이 새 은행 화면에서도
+      // 이전 verificationId(=transactionId)를 그대로 이어써서, 인증에 성공하면
+      // 화면에 보이는 은행이 아니라 이전에 선택했던 은행 계좌가 연결될 수 있다
+      // (리뷰 지적, 2026-08-08). 은행이 바뀌면 이전 인증 관련 상태를 초기화한다.
+      if (this.linking.bankCode !== bankCode) {
+        this.linking.accountNumber = '';
+        this.linking.verificationId = null;
+        this.linking.maskedAccountNumber = '';
+        this.linking.expiresInSeconds = 0;
+        this.linking.depositAuthExpiresAt = 0;
+        this.linking.isConfirmLocked = false;
+        this.linking.depositorNameLength = 4;
+      }
       this.linking.bankCode = bankCode;
     },
 
