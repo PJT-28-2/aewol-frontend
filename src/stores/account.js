@@ -13,6 +13,14 @@ import { getBankMeta } from '@/utils/bankMeta';
 import { MOCK_BANKS, MOCK_ACCOUNTS } from '@/mocks/account';
 import { USE_MOCK_DATA } from '@/mocks/config';
 
+// 계좌 연동 진행 상태(linking)에 대한 요청 세대 토큰. Pinia reactive state에 넣지 않고
+// emergency.js의 latestRequestId/AbortController와 같은 방식으로 스토어 밖(모듈 스코프)에
+// 둔다 — selectBankToLink/resetLinkingState가 필드를 초기화해도, 그 전에 이미 날아간
+// requestDepositAuth/confirmDepositAuth의 응답이 늦게 도착하면 오래된 값으로 state를
+// 다시 채워버릴 수 있다(CodeRabbit 지적, 2026-08-08). 초기화할 때마다 세대를 올리고,
+// 응답을 반영하기 직전에 같은 세대인지 확인해서 오래된 응답은 무시한다.
+let linkingRequestGeneration = 0;
+
 export const useAccountStore = defineStore('account', {
   state: () => ({
     banks: [],
@@ -112,6 +120,7 @@ export const useAccountStore = defineStore('account', {
       // 화면에 보이는 은행이 아니라 이전에 선택했던 은행 계좌가 연결될 수 있다
       // (리뷰 지적, 2026-08-08). 은행이 바뀌면 이전 인증 관련 상태를 초기화한다.
       if (this.linking.bankCode !== bankCode) {
+        linkingRequestGeneration += 1;
         this.linking.accountNumber = '';
         this.linking.verificationId = null;
         this.linking.maskedAccountNumber = '';
@@ -128,6 +137,7 @@ export const useAccountStore = defineStore('account', {
     // 안 내려주기 때문에, 두 값 다 클라이언트에서 직접 계산해서 채워요.
     async requestDepositAuth(accountNumber) {
       this.linking.accountNumber = accountNumber;
+      const requestGeneration = linkingRequestGeneration;
 
       const masked =
         accountNumber.length > 4
@@ -152,6 +162,11 @@ export const useAccountStore = defineStore('account', {
           bankCode: this.linking.bankCode,
           accountNumber,
         });
+        if (requestGeneration !== linkingRequestGeneration) {
+          // 응답이 오는 사이 은행이 바뀌었거나 상태가 초기화됨 — 이전 시도의 응답이므로
+          // 현재 linking state에 반영하지 않는다.
+          return { verificationId: data.result.transactionId };
+        }
         this.linking.verificationId = data.result.transactionId;
         this.linking.maskedAccountNumber = masked;
         this.linking.expiresInSeconds = DEPOSIT_AUTH_TIMEOUT_SECONDS;
@@ -169,6 +184,7 @@ export const useAccountStore = defineStore('account', {
     // reason="TOO_MANY_ATTEMPTS"를 내려주기 시작해서(2026-08-07), 단순 오타(MISMATCH)와
     // 구분해서 다른 안내 문구를 보여줄 수 있게 reason도 그대로 넘겨요.
     async confirmDepositAuth(verificationCode) {
+      const requestGeneration = linkingRequestGeneration;
       if (USE_MOCK_DATA) {
         const verified = verificationCode.length === this.linking.depositorNameLength;
         return { verified, reason: verified ? null : 'MISMATCH' };
@@ -178,6 +194,12 @@ export const useAccountStore = defineStore('account', {
           transactionId: this.linking.verificationId,
           verificationCode,
         });
+        if (requestGeneration !== linkingRequestGeneration) {
+          // 응답이 오는 사이 은행이 바뀌었거나 상태가 초기화됨 — 이전 시도의 응답이라
+          // isConfirmLocked 등 state를 건드리지 않고, 계좌 연동도 진행되지 않게
+          // 실패로 처리한다(완료 화면에서 이전 은행의 transactionId를 쓰는 것 방지).
+          return { verified: false, reason: 'STALE_REQUEST' };
+        }
         const reason = data.result.reason ?? null;
         if (reason === 'TOO_MANY_ATTEMPTS') {
           this.linking.isConfirmLocked = true;
@@ -217,6 +239,7 @@ export const useAccountStore = defineStore('account', {
     },
 
     resetLinkingState() {
+      linkingRequestGeneration += 1;
       this.linking = {
         bankCode: null,
         accountNumber: '',
