@@ -13,6 +13,14 @@ import { getBankMeta } from '@/utils/bankMeta';
 import { MOCK_BANKS, MOCK_ACCOUNTS } from '@/mocks/account';
 import { USE_MOCK_DATA } from '@/mocks/config';
 
+// 계좌 연동 진행 상태(linking)에 대한 요청 세대 토큰. Pinia reactive state에 넣지 않고
+// emergency.js의 latestRequestId/AbortController와 같은 방식으로 스토어 밖(모듈 스코프)에
+// 둔다 — selectBankToLink/resetLinkingState가 필드를 초기화해도, 그 전에 이미 날아간
+// requestDepositAuth/confirmDepositAuth의 응답이 늦게 도착하면 오래된 값으로 state를
+// 다시 채워버릴 수 있다(CodeRabbit 지적, 2026-08-08). 초기화할 때마다 세대를 올리고,
+// 응답을 반영하기 직전에 같은 세대인지 확인해서 오래된 응답은 무시한다.
+let linkingRequestGeneration = 0;
+
 export const useAccountStore = defineStore('account', {
   state: () => ({
     banks: [],
@@ -38,8 +46,15 @@ export const useAccountStore = defineStore('account', {
       verificationId: null,
       maskedAccountNumber: '',
       expiresInSeconds: 0,
-      // CODEF inPrintType=0(4자리 랜덤 숫자)이라 항상 4예요. 목데이터 모드나 응답이
-      // 없는 경우를 대비해 기본값으로 둬요.
+      // 남은 시간 계산용 절대 만료 시각(epoch ms). setInterval로 세는 숫자 대신 이걸 기준으로
+      // 계산해야 화면을 나갔다 들어와도(컴포넌트 재마운트) 실제 경과 시간이 정확히 반영돼요.
+      depositAuthExpiresAt: 0,
+      // 오답 5회 초과(TOO_MANY_ATTEMPTS) 잠금 여부. store에 둬서 나갔다 들어와도 유지돼요
+      // (2026-08-07) — 화면 로컬 상태였을 땐 재마운트하면 풀린 것처럼 보였지만, 서버 쪽
+      // 제한은 그대로라 사용자만 혼란스러웠어요.
+      isConfirmLocked: false,
+      // CODEF inPrintType=1(랜덤 한글 단어)이라 4~6자로 들쭉날쭉해요. 목데이터 모드나
+      // 응답이 없는 경우를 대비해 기본값 4를 둬요.
       depositorNameLength: 4,
       // 비밀번호 설정 화면에서 입력한 값을 확인 화면으로 넘길 때까지만 메모리에 잠깐 보관
       password: '',
@@ -99,6 +114,21 @@ export const useAccountStore = defineStore('account', {
     },
 
     selectBankToLink(bankCode) {
+      // 은행을 바꿀 때 이전 은행에서 진행 중이던 1원 인증 상태를 그대로 두면,
+      // AccountAuthOneWon.vue의 onMounted 복원 로직이 새 은행 화면에서도
+      // 이전 verificationId(=transactionId)를 그대로 이어써서, 인증에 성공하면
+      // 화면에 보이는 은행이 아니라 이전에 선택했던 은행 계좌가 연결될 수 있다
+      // (리뷰 지적, 2026-08-08). 은행이 바뀌면 이전 인증 관련 상태를 초기화한다.
+      if (this.linking.bankCode !== bankCode) {
+        linkingRequestGeneration += 1;
+        this.linking.accountNumber = '';
+        this.linking.verificationId = null;
+        this.linking.maskedAccountNumber = '';
+        this.linking.expiresInSeconds = 0;
+        this.linking.depositAuthExpiresAt = 0;
+        this.linking.isConfirmLocked = false;
+        this.linking.depositorNameLength = 4;
+      }
       this.linking.bankCode = bankCode;
     },
 
@@ -107,6 +137,7 @@ export const useAccountStore = defineStore('account', {
     // 안 내려주기 때문에, 두 값 다 클라이언트에서 직접 계산해서 채워요.
     async requestDepositAuth(accountNumber) {
       this.linking.accountNumber = accountNumber;
+      const requestGeneration = linkingRequestGeneration;
 
       const masked =
         accountNumber.length > 4
@@ -118,6 +149,8 @@ export const useAccountStore = defineStore('account', {
         this.linking.verificationId = `mock-${Date.now()}`;
         this.linking.maskedAccountNumber = masked;
         this.linking.expiresInSeconds = DEPOSIT_AUTH_TIMEOUT_SECONDS;
+        this.linking.depositAuthExpiresAt = Date.now() + DEPOSIT_AUTH_TIMEOUT_SECONDS * 1000;
+        this.linking.isConfirmLocked = false;
         this.linking.depositorNameLength = 4;
         return { verificationId: this.linking.verificationId };
       }
@@ -129,9 +162,16 @@ export const useAccountStore = defineStore('account', {
           bankCode: this.linking.bankCode,
           accountNumber,
         });
+        if (requestGeneration !== linkingRequestGeneration) {
+          // 응답이 오는 사이 은행이 바뀌었거나 상태가 초기화됨 — 이전 시도의 응답이므로
+          // 현재 linking state에 반영하지 않는다.
+          return { verificationId: data.result.transactionId };
+        }
         this.linking.verificationId = data.result.transactionId;
         this.linking.maskedAccountNumber = masked;
         this.linking.expiresInSeconds = DEPOSIT_AUTH_TIMEOUT_SECONDS;
+        this.linking.depositAuthExpiresAt = Date.now() + DEPOSIT_AUTH_TIMEOUT_SECONDS * 1000;
+        this.linking.isConfirmLocked = false;
         // CODEF가 만든 입금자명 실제 길이 — 4자가 아닐 수 있어서 항상 이 값을 신뢰해요.
         this.linking.depositorNameLength = data.result.depositorNameLength || 4;
         return { verificationId: this.linking.verificationId };
@@ -139,17 +179,32 @@ export const useAccountStore = defineStore('account', {
     },
 
     // POST /api/accounts/verify-deposit/confirm — 목데이터 모드에선 depositorNameLength만큼만 채우면 통과
-    // verificationCode: 입금자명에 찍히는 4자리 랜덤 숫자 (예: 5673)
+    // verificationCode: 입금자명에 찍히는 랜덤 한글 단어 (예: 푸른애월)
+    // { verified, reason } 형태로 반환해요 — 백엔드가 오답 5회 초과 시 verified=false에
+    // reason="TOO_MANY_ATTEMPTS"를 내려주기 시작해서(2026-08-07), 단순 오타(MISMATCH)와
+    // 구분해서 다른 안내 문구를 보여줄 수 있게 reason도 그대로 넘겨요.
     async confirmDepositAuth(verificationCode) {
+      const requestGeneration = linkingRequestGeneration;
       if (USE_MOCK_DATA) {
-        return verificationCode.length === this.linking.depositorNameLength;
+        const verified = verificationCode.length === this.linking.depositorNameLength;
+        return { verified, reason: verified ? null : 'MISMATCH' };
       }
       return this._withRequestState(async () => {
         const { data } = await confirmDepositVerification({
           transactionId: this.linking.verificationId,
           verificationCode,
         });
-        return data.result.verified;
+        if (requestGeneration !== linkingRequestGeneration) {
+          // 응답이 오는 사이 은행이 바뀌었거나 상태가 초기화됨 — 이전 시도의 응답이라
+          // isConfirmLocked 등 state를 건드리지 않고, 계좌 연동도 진행되지 않게
+          // 실패로 처리한다(완료 화면에서 이전 은행의 transactionId를 쓰는 것 방지).
+          return { verified: false, reason: 'STALE_REQUEST' };
+        }
+        const reason = data.result.reason ?? null;
+        if (reason === 'TOO_MANY_ATTEMPTS') {
+          this.linking.isConfirmLocked = true;
+        }
+        return { verified: data.result.verified, reason };
       });
     },
 
@@ -184,12 +239,15 @@ export const useAccountStore = defineStore('account', {
     },
 
     resetLinkingState() {
+      linkingRequestGeneration += 1;
       this.linking = {
         bankCode: null,
         accountNumber: '',
         verificationId: null,
         maskedAccountNumber: '',
         expiresInSeconds: 0,
+        depositAuthExpiresAt: 0,
+        isConfirmLocked: false,
         depositorNameLength: 4,
         password: '',
       };
