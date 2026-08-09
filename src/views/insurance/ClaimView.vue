@@ -38,7 +38,8 @@ onMounted(async () => {
   try {
     await petStore.fetchPets()
     if (pets.value.length === 1) selectedPetId.value = pets.value[0].id
-  } catch {
+  } catch (e) {
+    console.error('[ClaimView] 반려동물 로딩 실패', e)
     petLoadError.value = '반려동물 정보를 불러오지 못했어요.'
   }
 })
@@ -64,7 +65,7 @@ function parseExtractedData(extracted) {
   return [
     { key: 'hospital', label: '병원명',    value: data.hospital_name ?? '',                           unit: '' },
     { key: 'date',     label: '진료일',    value: data.treatment_date ?? '',                          unit: '' },
-    { key: 'treatment',label: '진료 항목', value: data.items?.[0]?.name ?? '',                        unit: '' },
+    { key: 'treatment',label: '진료 항목', value: data.items?.map(i => i.name).filter(Boolean).join(', ') ?? '', unit: '' },
     { key: 'fee',      label: '진료비',    value: data.total_amount != null ? String(data.total_amount) : '', unit: '원' },
   ]
 }
@@ -95,7 +96,8 @@ const handleFileSelect = async (event) => {
     currentClaimId.value = claim.claimId
     ocrItems.value = parseExtractedData(claim.extractedData)
     step.value = 2
-  } catch {
+  } catch (e) {
+    console.error('[ClaimView] 영수증 업로드 실패', e)
     uploadError.value = '영수증 업로드에 실패했어요. 다시 시도해주세요.'
     receiptFileName.value = ''
   } finally {
@@ -212,11 +214,11 @@ const docChecklist = [
 
     <!-- 반려동물 선택 -->
     <section
-      v-if="pets.length > 0"
+      v-if="!petLoadError"
       class="bg-(--color-white) rounded-(--radius-xl) p-(--space-5) shadow-(--shadow-md) mb-(--space-4)"
     >
       <p class="text-(length:--font-base) font-bold text-(color:--color-navy) mb-(--space-3)">반려동물 선택</p>
-      <div class="flex gap-(--space-3) overflow-x-auto pb-(--space-1)">
+      <div v-if="pets.length > 0" class="flex gap-(--space-3) overflow-x-auto pb-(--space-1)">
         <button
           v-for="pet in pets"
           :key="pet.id"
@@ -231,6 +233,9 @@ const docChecklist = [
           <span class="text-(length:--font-sm) font-medium text-(color:--color-navy)">{{ pet.name }}</span>
         </button>
       </div>
+      <p v-else class="text-(length:--font-sm) text-(color:--color-slate-muted) text-center py-(--space-3)">
+        등록된 반려동물이 없어요. 먼저 반려동물을 등록해주세요.
+      </p>
     </section>
 
     <!-- 영수증 업로드 -->
@@ -247,14 +252,14 @@ const docChecklist = [
       <label
         for="receipt-input"
         class="flex items-center justify-center w-full py-(--space-4) bg-(--color-surface) border-2 border-dashed border-(--color-gray-300) rounded-(--radius-lg)"
-        :class="isUploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'"
+        :class="(isUploading || !!petLoadError || pets.length === 0) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'"
       >
         <input
           id="receipt-input"
           type="file"
           accept="image/*"
           class="sr-only"
-          :disabled="isUploading"
+          :disabled="isUploading || !!petLoadError || pets.length === 0"
           @change="handleFileSelect"
         />
         <span class="text-(length:--font-base) font-medium text-(color:--color-gray-500)">
