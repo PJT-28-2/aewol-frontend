@@ -100,5 +100,6 @@ const claimMenu = {
         <span>청구서 초안 완성</span>
       </div>
     </section>
+
   </div>
 </template>
