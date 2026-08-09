@@ -3,6 +3,7 @@ import { insuranceApi } from '@/api/insurance'
 
 export const useInsuranceStore = defineStore('insurance', {
   state: () => ({
+    products: [],
     simulations: [],
     claims: [],
     currentClaim: null,
@@ -10,22 +11,34 @@ export const useInsuranceStore = defineStore('insurance', {
   }),
 
   actions: {
-    async simulate(data) {
-      const { data: result } = await insuranceApi.simulate(data)
-      this.simulations.push(result)
-      return result
+    async fetchProducts(params) {
+      const { data } = await insuranceApi.getProducts(params)
+      this.products = data.result
+      return this.products
+    },
+
+    async simulate(payload) {
+      const { data } = await insuranceApi.simulate(payload)
+      this.simulations.push(data.result)
+      return data.result
     },
 
     async fetchClaims(params) {
       const { data } = await insuranceApi.getClaims(params)
-      this.claims = data
-      return data
+      this.claims = data.result
+      return this.claims
     },
 
-    async submitClaim(claimData) {
-      const { data } = await insuranceApi.submitClaim(claimData)
-      this.claims.unshift(data)
-      return data
+    async fetchClaim(id) {
+      const { data } = await insuranceApi.getClaim(id)
+      this.currentClaim = data.result
+      return this.currentClaim
+    },
+
+    async submitClaim(petId, receiptFile) {
+      const { data } = await insuranceApi.submitClaim(petId, receiptFile)
+      this.claims.unshift(data.result)
+      return data.result
     },
 
     setClaimDraft(draft) {
@@ -36,12 +49,13 @@ export const useInsuranceStore = defineStore('insurance', {
       this.claimDraft = null
     },
 
-    async confirmClaim(id) {
-      const { data } = await insuranceApi.confirmClaim(id)
-      const index = this.claims.findIndex((c) => c.id === id)
-      if (index !== -1) this.claims[index] = data
-      if (this.currentClaim?.id === id) this.currentClaim = data
-      return data
+    async confirmClaim(id, correctedData) {
+      const { data } = await insuranceApi.confirmClaim(id, correctedData)
+      const updated = data.result
+      const index = this.claims.findIndex((c) => c.claimId === id)
+      if (index !== -1) this.claims[index] = updated
+      if (this.currentClaim?.claimId === id) this.currentClaim = updated
+      return updated
     },
   },
 })

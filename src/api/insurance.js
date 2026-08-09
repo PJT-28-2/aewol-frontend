@@ -1,22 +1,35 @@
 import api from './index'
 
 export const insuranceApi = {
-  // data: { petId, species, breed, age, medicalHistoryCodes: string[] }
-  // response.data: {
-  //   expectedAnnualMedicalCost, annualPremium, breakEvenNote,
-  //   insuranceAdvice: { verdict: 'FAVORABLE' | 'NEUTRAL' | 'UNFAVORABLE', message },
-  //   recommendedProducts: [{ productId, companyName, productName, premium, ... }]
-  // }
+  // request: { petId, species, breed, age, medicalHistoryCodes: string[] }
+  // response.data: ApiResponse<SimulationResponse>
+  //   result: {
+  //     assumptions: { annualClaimCount, annualExpectedVetCostKrw, assumptionSource },
+  //     preExistingConditionWarning,
+  //     insuranceAdvice: { verdict: 'FAVORABLE'|'NEUTRAL'|'UNFAVORABLE', message },
+  //     recommendedProducts: [{
+  //       productId, companyName, productName, monthlyPremiumKrw,
+  //       reimbursementStructure, reimbursementRatePct, reimbursementConfidence,
+  //       regulatoryCapWarning, breakEvenAvailable,
+  //       breakEvenScenarios: [{ years, cumulativePremiumKrw, expectedReimbursementKrw, isFavorable, differenceKrw }]
+  //     }]
+  //   }
   simulate(data) {
-    return api.post('/insurance/simulate', data)
+    return api.post('/insurance/simulations', data)
   },
 
-  getSimulations(params) {
-    return api.get('/insurance/simulations', { params })
+  // params: { petType: 'DOG'|'CAT', age?: number, sort?: string }
+  // response.data: ApiResponse<ProductResponse[]>
+  getProducts(params) {
+    return api.get('/insurance/products', { params })
   },
 
-  submitClaim(data) {
-    return api.post('/insurance/claims', data)
+  // petId: string (query param), receiptFile: File (multipart)
+  // response.data: ApiResponse<ClaimResponse>
+  submitClaim(petId, receiptFile) {
+    const form = new FormData()
+    form.append('receipt', receiptFile)
+    return api.post('/insurance/claims', form, { params: { petId } })
   },
 
   getClaims(params) {
@@ -27,7 +40,7 @@ export const insuranceApi = {
     return api.get(`/insurance/claims/${id}`)
   },
 
-  confirmClaim(id) {
-    return api.post(`/insurance/claims/${id}/confirm`)
+  confirmClaim(id, correctedData) {
+    return api.post(`/insurance/claims/${id}/confirm`, correctedData ?? null)
   },
 }
