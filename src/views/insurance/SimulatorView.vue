@@ -61,7 +61,7 @@ async function handleSimulate() {
       species: selectedPet.value.species,
       breed: selectedPet.value.breed,
       age: selectedPet.value.age,
-      medicalHistoryCodes: medicalTags.value,
+      medicalHistoryCodes: medicalTags.value.map((tag) => tag.code),
     })
   } catch {
     errorMessage.value = '시뮬레이션에 실패했어요. 잠시 후 다시 시도해주세요.'
