@@ -9,6 +9,7 @@ import EmptyState from '@/components/common/EmptyState.vue'
 import MedicalHistoryPicker from '@/components/insurance/MedicalHistoryPicker.vue'
 import { usePetStore } from '@/stores/pet'
 import { useInsuranceStore } from '@/stores/insurance'
+import { calcAgeFromBirthDate } from '@/utils/date'
 
 const petStore = usePetStore()
 const insuranceStore = useInsuranceStore()
@@ -65,8 +66,10 @@ async function handleSimulate() {
       petId: selectedPet.value.id,
       species: selectedPet.value.species,
       breed: selectedPet.value.breed,
-      age: selectedPet.value.age,
-      medicalHistoryCodes: medicalTags.value.map((tag) => tag.code),
+      age: calcAgeFromBirthDate(selectedPet.value.birthDate),
+      medicalHistoryCodes: medicalTags.value.length > 0
+        ? medicalTags.value.map((tag) => tag.code)
+        : ['NONE'],
     })
   } catch {
     errorMessage.value = '시뮬레이션에 실패했어요. 잠시 후 다시 시도해주세요.'
@@ -170,7 +173,7 @@ function handleReset() {
             <input
               class="h-(--control-height-md) w-full cursor-default rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none"
               type="text"
-              :value="selectedPet ? `${selectedPet.age}세` : ''"
+              :value="selectedPet ? `${calcAgeFromBirthDate(selectedPet.birthDate)}세` : ''"
               readonly
             >
           </div>
