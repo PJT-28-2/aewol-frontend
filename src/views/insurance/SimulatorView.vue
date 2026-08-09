@@ -15,8 +15,12 @@ const insuranceStore = useInsuranceStore()
 const { pets } = storeToRefs(petStore)
 
 onMounted(async () => {
-  await petStore.fetchPets()
-  if (pets.value.length === 1) selectedPetId.value = pets.value[0].id
+  try {
+    await petStore.fetchPets()
+    if (pets.value.length === 1) selectedPetId.value = pets.value[0].id
+  } catch {
+    petLoadError.value = '반려동물 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요.'
+  }
 })
 
 const selectedPetId = ref(null)
@@ -33,6 +37,7 @@ function petIcon(species) {
 const result = ref(null)
 const isLoading = ref(false)
 const errorMessage = ref('')
+const petLoadError = ref('')
 
 const verdictLabels = {
   FAVORABLE: '가입 유리',
@@ -90,8 +95,14 @@ function handleReset() {
       </p>
     </header>
 
+    <p
+      v-if="petLoadError"
+      class="text-(color:--color-danger-strong) text-(length:--font-sm)"
+    >
+      {{ petLoadError }}
+    </p>
     <EmptyState
-      v-if="pets.length === 0"
+      v-else-if="pets.length === 0"
       :icon="IconPaw"
       message="등록된 반려동물이 없어요."
       action-text="반려동물 등록하러 가기"

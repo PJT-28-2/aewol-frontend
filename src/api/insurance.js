@@ -41,6 +41,6 @@ export const insuranceApi = {
   },
 
   confirmClaim(id, correctedData) {
-    return api.post(`/insurance/claims/${id}/confirm`, correctedData ?? null)
+    return api.post(`/insurance/claims/${id}/confirm`, correctedData)
   },
 }
