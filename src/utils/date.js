@@ -93,6 +93,24 @@ export function formatDateTimeDot(isoDateTime) {
 }
 
 /**
+ * 생년월일 문자열로 만 나이를 계산한다. 올해 생일이 아직 지나지 않았으면 1을 뺀다.
+ *
+ * @param {string | null | undefined} birthDate `YYYY-MM-DD` 형식의 생년월일
+ * @returns {number | null} 만 나이 (값이 없거나 유효하지 않으면 null)
+ */
+export function calcAgeFromBirthDate(birthDate) {
+  if (!birthDate) return null
+  const [year, month, day] = birthDate.slice(0, 10).split('-').map(Number)
+  const today = new Date()
+  let age = today.getFullYear() - year
+  const hasHadBirthday =
+    today.getMonth() + 1 > month ||
+    (today.getMonth() + 1 === month && today.getDate() >= day)
+  if (!hasHadBirthday) age -= 1
+  return age
+}
+
+/**
  * 숫자만 남긴 뒤 "YYYY.MM.DD" 형식으로 자릿수에 맞춰 마침표를 채워 넣는다.
  *
  * @param {string} value 사용자가 입력 중인 생년월일 문자열
