@@ -173,6 +173,7 @@ const goToPdfDraft = () => {
   }
 
   insuranceStore.setClaimDraft({
+    claimId:        currentClaimId.value,
     hospitalName:   f[0].value,
     visitDate:      f[1].value,
     claimAmount:    f[2].value,

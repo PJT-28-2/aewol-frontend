@@ -79,6 +79,23 @@ const handleDownload = async () => {
       pdf.addImage(slice.toDataURL('image/png'), 'PNG', margin, margin, contentWidth, sliceHeight)
     }
     pdf.save(`보험금청구서_${claimData.value.hospitalName}_${claimData.value.visitDate}.pdf`)
+
+    // 청구 확인 및 제출 (claimId가 있을 때만, 실패해도 PDF 저장 성공 모달은 표시)
+    if (draft.claimId) {
+      const totalAmountRaw = claimData.value.claimAmount
+        ? parseInt(String(claimData.value.claimAmount).replace(/[^0-9]/g, ''), 10) || null
+        : null
+      try {
+        await insuranceStore.confirmClaim(draft.claimId, {
+          hospitalName:  claimData.value.hospitalName || null,
+          treatmentDate: claimData.value.visitDate    || null,
+          totalAmount:   totalAmountRaw,
+        })
+      } catch (e) {
+        console.error('[ClaimPdfDraft] 청구 확인 API 실패', e)
+      }
+    }
+
     showSuccessModal.value = true
   } finally {
     isGenerating.value = false
