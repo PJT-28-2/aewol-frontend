@@ -4,29 +4,25 @@ import { useRoute, useRouter } from 'vue-router';
 import ExpenseDonutChart from '@/components/dashboard/ExpenseDonutChart.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
-import iconCat3d from '@/assets/images/icons-3d/cat_face_3d.png';
-import iconDog3d from '@/assets/images/icons-3d/dog_face_3d.png';
+import IconCat from '@/components/common/icons/IconCat.vue';
+import IconDog from '@/components/common/icons/IconDog.vue';
 import IconStats from '@/components/common/icons/IconStats.vue';
 import { usePetStore } from '@/stores/pet';
 import { useTransactionStore } from '@/stores/transaction';
-import { registerHeaderBack } from '@/composables/useHeaderBack';
 
 const router = useRouter();
 const route = useRoute();
 const petStore = usePetStore();
 const transactionStore = useTransactionStore();
 
-// /dashboard로 직접 진입하면 히스토리가 없을 수 있어, 뒤로가기를 항상 홈으로 고정한다.
-registerHeaderBack(() => router.push('/home'));
-
 const pets = computed(() => petStore.pets);
 
 const CATEGORY_COLOR_TOKENS = {
-  MEDICAL: '--color-chart-blue',
-  FOOD: '--color-olive',
-  GROOMING: '--color-gold',
-  SUPPLIES: '--color-chart-purple',
-  ETC: '--color-danger',
+  MEDICAL: '--color-chart-leaf',
+  FOOD: '--color-chart-sage',
+  GROOMING: '--color-chart-amber',
+  SUPPLIES: '--color-chart-teal',
+  ETC: '--color-chart-lilac',
 };
 
 // 이번 달 출금 내역을 category별로 합산한 값 (useTransactionStore가 단일 소스)
@@ -55,16 +51,10 @@ function categoryDetail(category) {
     .join(' · ');
 }
 
-function hasTaggedPetData() {
-  return pets.value.some((pet) => petAmount(pet.id) > 0);
-}
-
 const isLoading = ref(true);
 
-// 반려동물이 2마리 이상이고, 태깅된 지출이 하나라도 있을 때만 "반려동물별" 탭을 보여준다
-const showPetTab = computed(
-  () => pets.value.length >= 2 && hasTaggedPetData(),
-);
+// 한 마리만 등록되어 있어도 반려동물별 지출을 확인할 수 있다.
+const showPetTab = computed(() => pets.value.length > 0);
 
 // 홈 화면 "자세히 보기"에서 반려동물별 탭으로 들어오려 했지만
 // 탭 자체가 안 보이는 상황(반려동물 1마리 이하/태깅 데이터 없음)이면 카테고리별로 진입한다
@@ -115,12 +105,11 @@ function withPercentages(list) {
 
 // 선명하고 다양한 팔레트
 const petColors = [
-  '--color-gold',
-  '--color-olive',
-  '--color-chart-blue',
-  '--color-chart-purple',
-  '--color-info',
-  '--color-danger',
+  '--color-chart-leaf',
+  '--color-chart-sage',
+  '--color-chart-teal',
+  '--color-chart-amber',
+  '--color-chart-lilac',
 ];
 
 const categoryItems = computed(() =>
@@ -166,7 +155,7 @@ const totalExpense = computed(() =>
 );
 
 function petIcon(species) {
-  return species === 'CAT' ? iconCat3d : iconDog3d;
+  return species === 'CAT' ? IconCat : IconDog;
 }
 
 function goToCategoryHistory(categoryKey) {
@@ -190,9 +179,8 @@ onMounted(() => {
 
 <template>
   <div
-    class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))] bg-(--color-gray-100) min-h-screen"
+    class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))] bg-(--color-app-bg) min-h-screen"
   >
-
     <header class="mb-(--space-6)">
       <h1
         class="text-(length:--font-2xl) font-bold text-(color:--color-gray-900)"
@@ -245,9 +233,9 @@ onMounted(() => {
       </div>
 
       <EmptyState
-        v-if="categoryItems.length === 0"
+        v-if="activeItems.length === 0"
         :icon="IconStats"
-        message="이번 달 지출 내역이 없어요"
+        :message="isPetTabActive ? '반려동물로 분류된 지출이 없어요' : '이번 달 지출 내역이 없어요'"
       />
 
       <template v-else>
@@ -299,11 +287,10 @@ onMounted(() => {
                   <p
                     class="flex items-center gap-(--space-1) text-(length:--font-base) font-semibold text-(color:--color-gray-900)"
                   >
-                    <img
+                    <component
+                      :is="petIcon(item.species)"
                       v-if="isPetTabActive"
-                      :src="petIcon(item.species)"
-                      :alt="item.species === 'CAT' ? '고양이' : '강아지'"
-                      class="w-[20px] h-[20px] object-contain saturate-[0.8] brightness-[1.03] contrast-[0.95]"
+                      size="24"
                     />
                     {{ item.label }}
                   </p>

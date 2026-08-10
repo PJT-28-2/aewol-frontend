@@ -87,7 +87,7 @@ const verifyCurrentPassword = async () => {
 
 <template>
   <main
-    class="min-h-svh w-full bg-(--color-white) px-[22px] pt-[var(--space-4)] pb-7"
+    class="min-h-svh w-full bg-(--color-app-bg) px-[22px] pt-[var(--space-4)] pb-7"
   >
     <header>
       <h1
@@ -127,7 +127,7 @@ const verifyCurrentPassword = async () => {
       <input
         id="profile-phone"
         :value="form.phone"
-        class="h-(--control-height-md) rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none focus:border-(--color-navy)"
+        class="h-(--control-height-md) rounded-(--radius-lg) border border-(--color-border) bg-(--color-white) px-[13px] text-[13px] text-(color:--color-navy) outline-none focus:border-(--color-leaf)"
         type="tel"
         autocomplete="tel"
         required
@@ -153,7 +153,7 @@ const verifyCurrentPassword = async () => {
         >
         <AppButton
           class="!h-(--control-height-md) !w-20 !rounded-(--radius-lg) !px-0 shrink-0 whitespace-nowrap !text-[length:var(--font-xs)] !font-(--font-bold)"
-          variant="navy"
+          variant="primary"
           type="button"
           @click="isAddressSearchOpen = true"
         >
@@ -186,7 +186,7 @@ const verifyCurrentPassword = async () => {
       <input
         id="profile-address-detail"
         v-model="form.addressDetail"
-        class="h-(--control-height-md) rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
+        class="h-(--control-height-md) rounded-(--radius-lg) border border-(--color-border) bg-(--color-white) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-leaf)"
         type="text"
         autocomplete="address-line2"
         placeholder="동, 호수 등 상세주소 입력"
@@ -218,13 +218,13 @@ const verifyCurrentPassword = async () => {
           id="current-password"
           v-model="form.currentPassword"
           wrapper-class="flex-1"
-          input-class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
+          input-class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-white) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-leaf)"
           autocomplete="current-password"
           placeholder="현재 비밀번호를 입력해주세요"
           @input="handleCurrentPasswordInput"
         />
         <button
-          class="h-(--control-height-md) w-20 shrink-0 rounded-(--radius-lg) bg-(--color-navy) text-[12.5px] font-(--font-bold) text-(color:--color-white) disabled:cursor-not-allowed disabled:opacity-50"
+          class="h-(--control-height-md) w-20 shrink-0 rounded-(--radius-lg) bg-(--color-leaf) text-[12.5px] font-(--font-bold) text-(color:--color-navy) disabled:cursor-not-allowed disabled:opacity-50"
           type="button"
           :disabled="!form.currentPassword || isVerifyingPassword"
           @click="verifyCurrentPassword"
@@ -261,7 +261,7 @@ const verifyCurrentPassword = async () => {
       <PasswordInput
         id="new-password"
         v-model="form.newPassword"
-        input-class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy) disabled:cursor-not-allowed disabled:opacity-50"
+        input-class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-white) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-leaf) disabled:cursor-not-allowed disabled:opacity-50"
         autocomplete="new-password"
         placeholder="2가지 조합 10자리 / 3가지 조합 8자리 이상"
         :disabled="!isCurrentPasswordVerified"
@@ -289,7 +289,7 @@ const verifyCurrentPassword = async () => {
       <PasswordInput
         id="new-password-confirm"
         v-model="form.newPasswordConfirm"
-        input-class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy) disabled:cursor-not-allowed disabled:opacity-50"
+        input-class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-white) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-leaf) disabled:cursor-not-allowed disabled:opacity-50"
         autocomplete="new-password"
         placeholder="비밀번호를 한번 더 입력해주세요"
         :disabled="!isCurrentPasswordVerified"

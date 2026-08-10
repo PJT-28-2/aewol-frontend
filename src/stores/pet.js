@@ -14,6 +14,8 @@ export const usePetStore = defineStore('pet', {
   state: () => ({
     pets: USE_MOCK_DATA ? mockPets.map(normalizePet) : [],
     currentPet: null,
+    // TODO(backend): 대표 반려동물 설정 API 연동 후 서버 값으로 초기화
+    representativePetId: null,
   }),
 
   actions: {
@@ -22,10 +24,12 @@ export const usePetStore = defineStore('pet', {
         if (this.pets.length === 0) {
           this.pets = mockPets.map(normalizePet)
         }
+        if (!this.representativePetId) this.representativePetId = this.pets[0]?.id ?? null
         return this.pets
       }
       const { data } = await petApi.getPets()
       this.pets = (data.result ?? []).map(normalizePet)
+      if (!this.representativePetId) this.representativePetId = this.pets[0]?.id ?? null
       return this.pets
     },
 
@@ -55,6 +59,15 @@ export const usePetStore = defineStore('pet', {
       await petApi.deletePet(id)
       this.pets = this.pets.filter((pet) => pet.id !== String(id))
       if (this.currentPet?.id === String(id)) this.currentPet = null
+      if (this.representativePetId === String(id)) {
+        this.representativePetId = this.pets[0]?.id ?? null
+      }
+    },
+
+    setRepresentativePet(id) {
+      if (this.pets.some((pet) => pet.id === String(id))) {
+        this.representativePetId = String(id)
+      }
     },
   },
 })

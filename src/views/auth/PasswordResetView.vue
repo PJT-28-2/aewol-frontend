@@ -5,7 +5,8 @@ import { authApi } from '@/api/auth'
 import { formatCountdown } from '@/utils/date'
 import PasswordInput from '@/components/common/PasswordInput.vue'
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
-import successImage from '@/assets/images/pet-success.png'
+import StatusVisual from '@/components/common/StatusVisual.vue'
+import AewolLogo from '@/components/common/AewolLogo.vue'
 
 const router = useRouter()
 
@@ -272,18 +273,21 @@ onBeforeUnmount(clearTimers)
 
 <template>
   <main
-    class="relative min-h-svh w-full bg-(--color-white) px-[22px] pt-[calc(var(--header-height)+var(--space-4))] pb-12"
+    class="relative min-h-svh w-full bg-(--color-app-bg) px-[22px] pt-[calc(var(--header-height)+var(--space-4))] pb-12"
   >
     <section
       v-if="isComplete"
-      class="text-center"
+      class="flex min-h-[calc(100svh-var(--header-height)-var(--space-8))] flex-col items-center text-center"
       aria-labelledby="reset-complete-title"
     >
-      <img
-        class="mx-auto mt-(--auth-success-password-image-offset) size-(--auth-success-image-size) object-cover"
-        :src="successImage"
-        alt=""
-      >
+      <AewolLogo
+        size="22"
+        class="self-start"
+      />
+      <StatusVisual
+        size="126"
+        class="mt-auto"
+      />
       <h1
         id="reset-complete-title"
         class="mt-(--auth-success-title-gap) text-(length:--font-2xl) leading-[1.3] font-(--font-bold) text-(color:--color-navy)"
@@ -294,7 +298,7 @@ onBeforeUnmount(clearTimers)
         새 비밀번호로 다시 로그인해주세요
       </p>
       <router-link
-        class="mt-11 flex h-[52px] w-full items-center justify-center rounded-(--radius-xl) bg-(--color-gold) text-[14.5px] leading-[1.3] font-(--font-bold) text-(color:--color-navy)"
+        class="mt-auto flex h-[52px] w-full items-center justify-center rounded-[20px] bg-(--color-leaf) text-[14.5px] leading-[1.3] font-(--font-bold) text-(color:--color-navy)"
         to="/login"
       >
         로그인하러 가기
@@ -303,7 +307,7 @@ onBeforeUnmount(clearTimers)
 
     <template v-else>
       <div
-        class="fixed inset-x-0 top-0 z-100 h-(--header-height) bg-(--color-white)"
+        class="fixed inset-x-0 top-0 z-100 h-(--header-height) bg-(--color-app-bg)"
         aria-hidden="true"
       />
       <button
@@ -338,14 +342,14 @@ onBeforeUnmount(clearTimers)
           <input
             id="reset-email"
             v-model.trim="email"
-            class="h-(--control-height-md) min-w-0 flex-1 rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy) disabled:opacity-65"
+            class="h-(--control-height-md) min-w-0 flex-1 rounded-(--radius-lg) border border-(--color-border) bg-(--color-white) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-leaf) disabled:opacity-65"
             type="email"
             autocomplete="email"
             placeholder="example@aewol.com"
             :disabled="isVerified"
           >
           <button
-            class="h-(--control-height-md) w-20 shrink-0 rounded-(--radius-lg) bg-(--color-navy) text-[11.5px] font-(--font-bold) text-(color:--color-white) disabled:cursor-not-allowed disabled:opacity-55"
+            class="h-(--control-height-md) w-20 shrink-0 rounded-(--radius-lg) bg-(--color-leaf) text-[11.5px] font-(--font-bold) text-(color:--color-navy) disabled:cursor-not-allowed disabled:opacity-55"
             type="button"
             :disabled="isLoading || isVerified"
             @click="handleRequestCode"
@@ -377,7 +381,7 @@ onBeforeUnmount(clearTimers)
             <input
               id="verification-code"
               v-model="verificationCode"
-              class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] pr-[70px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy) disabled:opacity-65"
+              class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-white) px-[13px] pr-[70px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-leaf) disabled:opacity-65"
               type="text"
               inputmode="numeric"
               autocomplete="one-time-code"
@@ -393,7 +397,7 @@ onBeforeUnmount(clearTimers)
             </span>
           </div>
           <button
-            class="h-(--control-height-md) w-20 shrink-0 rounded-(--radius-lg) bg-(--color-navy) text-[12.5px] font-(--font-bold) text-(color:--color-white) disabled:cursor-not-allowed disabled:opacity-55"
+            class="h-(--control-height-md) w-20 shrink-0 rounded-(--radius-lg) bg-(--color-leaf) text-[12.5px] font-(--font-bold) text-(color:--color-navy) disabled:cursor-not-allowed disabled:opacity-55"
             type="button"
             :disabled="isLoading || isVerified"
             @click="handleVerifyCode"
@@ -422,7 +426,7 @@ onBeforeUnmount(clearTimers)
         <div class="relative mt-[14px] h-7">
           <div class="absolute top-[13px] right-0 left-0 h-px bg-(--color-border)" />
           <span
-            class="absolute top-[5px] left-1/2 -translate-x-1/2 bg-(--color-white) px-2 text-[11.5px] font-(--font-bold) whitespace-nowrap text-(color:--color-slate-muted)"
+            class="absolute top-[5px] left-1/2 -translate-x-1/2 bg-(--color-app-bg) px-2 text-[11.5px] font-(--font-bold) whitespace-nowrap text-(color:--color-slate-muted)"
           >
             인증 완료 후 새 비밀번호 설정
           </span>
@@ -441,7 +445,7 @@ onBeforeUnmount(clearTimers)
           <PasswordInput
             id="new-password"
             v-model="newPassword"
-            input-class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
+            input-class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-white) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-leaf)"
             autocomplete="new-password"
             placeholder="2가지 조합 10자리 / 3가지 조합 8자리 이상"
             required
@@ -469,7 +473,7 @@ onBeforeUnmount(clearTimers)
           <PasswordInput
             id="new-password-confirm"
             v-model="newPasswordConfirm"
-            input-class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
+            input-class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-white) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-leaf)"
             autocomplete="new-password"
             placeholder="비밀번호를 한번 더 입력해주세요"
             required
@@ -497,7 +501,7 @@ onBeforeUnmount(clearTimers)
           </p>
 
           <button
-            class="mt-6 h-[52px] rounded-(--radius-xl) bg-(--color-gold) text-[14.5px] font-(--font-bold) text-(color:--color-navy) disabled:cursor-not-allowed disabled:opacity-55"
+            class="mt-6 h-[52px] rounded-(--radius-xl) bg-(--color-leaf) text-[14.5px] font-(--font-bold) text-(color:--color-navy) disabled:cursor-not-allowed disabled:opacity-55"
             type="submit"
             :disabled="isLoading"
           >

@@ -56,24 +56,38 @@ onMounted(loadInquiry);
 </script>
 
 <template>
-  <div class="min-h-screen max-w-(--content-max-width) mx-auto bg-(--color-bg) px-5 pt-(--space-4) pb-10">
+  <div class="mx-auto min-h-screen max-w-(--content-max-width) bg-(--color-app-bg) px-5 pt-(--space-4) pb-10">
+    <p
+      v-if="isLoading"
+      class="text-(length:--font-sm) text-(color:--color-gray-500)"
+    >
+      불러오는 중이에요…
+    </p>
 
-    <p v-if="isLoading" class="text-(length:--font-sm) text-(color:--color-gray-500)">불러오는 중이에요…</p>
-
-    <div v-else-if="loadError" class="p-4 rounded-(--radius-xl) bg-(--color-surface) text-center">
-      <p class="text-(length:--font-sm) text-(color:--color-danger-strong) mb-3">{{ loadError }}</p>
+    <div
+      v-else-if="loadError"
+      class="rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-4 text-center"
+    >
+      <p class="text-(length:--font-sm) text-(color:--color-danger-strong) mb-3">
+        {{ loadError }}
+      </p>
       <button
-        class="px-5 py-2 rounded-(--radius-xl) bg-(--color-navy) text-(color:--color-white) text-(length:--font-sm) font-semibold"
+        class="rounded-(--radius-xl) bg-(--color-leaf) px-5 py-2 text-(length:--font-sm) font-semibold text-(color:--color-navy)"
         @click="loadInquiry"
       >
         다시 시도
       </button>
     </div>
 
-    <div v-else-if="!inquiry" class="p-4 rounded-(--radius-xl) bg-(--color-surface) text-center">
-      <p class="text-(length:--font-sm) text-(color:--color-gray-600) mb-3">문의 내역을 찾을 수 없어요</p>
+    <div
+      v-else-if="!inquiry"
+      class="rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-4 text-center"
+    >
+      <p class="text-(length:--font-sm) text-(color:--color-gray-600) mb-3">
+        문의 내역을 찾을 수 없어요
+      </p>
       <button
-        class="px-5 py-2 rounded-(--radius-xl) bg-(--color-navy) text-(color:--color-white) text-(length:--font-sm) font-semibold"
+        class="rounded-(--radius-xl) bg-(--color-leaf) px-5 py-2 text-(length:--font-sm) font-semibold text-(color:--color-navy)"
         @click="router.push({ name: 'MyInquiries' })"
       >
         내 문의 내역으로 이동
@@ -88,7 +102,10 @@ onMounted(loadInquiry);
         >
           {{ statusLabel(inquiry.status) }}
         </span>
-        <span v-if="inquiry.category" class="text-(length:--font-xs) font-semibold text-(color:--color-gray-500)">
+        <span
+          v-if="inquiry.category"
+          class="text-(length:--font-xs) font-semibold text-(color:--color-gray-500)"
+        >
           {{ inquiry.category }}
         </span>
       </div>
@@ -96,22 +113,38 @@ onMounted(loadInquiry);
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-2 leading-snug">
         {{ inquiry.title }}
       </h1>
-      <p class="text-(length:--font-xs) text-(color:--color-gray-500) mb-1">{{ formatDate(inquiry.createdAt) }} 문의</p>
-      <p v-if="inquiry.inquiryNumber || inquiry.replyEmail" class="text-(length:--font-xs) text-(color:--color-gray-500) mb-6">
-        <template v-if="inquiry.inquiryNumber">문의번호 {{ inquiry.inquiryNumber }}</template>
-        <template v-if="inquiry.inquiryNumber && inquiry.replyEmail"> · </template>
-        <template v-if="inquiry.replyEmail">{{ inquiry.replyEmail }}</template>
+      <p class="text-(length:--font-xs) text-(color:--color-gray-500) mb-1">
+        {{ formatDate(inquiry.createdAt) }} 문의
+      </p>
+      <p
+        v-if="inquiry.inquiryNumber || inquiry.replyEmail"
+        class="text-(length:--font-xs) text-(color:--color-gray-500) mb-6"
+      >
+        <template v-if="inquiry.inquiryNumber">
+          문의번호 {{ inquiry.inquiryNumber }}
+        </template>
+        <template v-if="inquiry.inquiryNumber && inquiry.replyEmail">
+          ·
+        </template>
+        <template v-if="inquiry.replyEmail">
+          {{ inquiry.replyEmail }}
+        </template>
       </p>
 
       <div class="h-px bg-(--color-border) mb-6" />
 
       <section class="mb-8">
-        <h2 class="text-(length:--font-base) font-semibold text-(color:--color-navy) mb-3">문의 내용</h2>
-        <p class="text-(length:--font-md) text-(color:--color-gray-700) leading-relaxed rounded-(--radius-xl) bg-(--color-surface) p-4">
+        <h2 class="text-(length:--font-base) font-semibold text-(color:--color-navy) mb-3">
+          문의 내용
+        </h2>
+        <p class="rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-4 text-(length:--font-md) leading-relaxed text-(color:--color-gray-700) shadow-(--shadow-card)">
           {{ inquiry.content }}
         </p>
 
-        <div v-if="inquiry.attachments?.length" class="flex gap-2 mt-3">
+        <div
+          v-if="inquiry.attachments?.length"
+          class="flex gap-2 mt-3"
+        >
           <a
             v-for="url in inquiry.attachments"
             :key="url"
@@ -121,9 +154,20 @@ onMounted(loadInquiry);
             rel="noopener noreferrer"
             class="block w-16 h-16 rounded-(--radius-lg) overflow-hidden bg-(--color-surface) shrink-0"
           >
-            <img v-if="isImageAttachment(url)" :src="url" alt="" class="w-full h-full object-cover" />
-            <div v-else class="w-full h-full flex flex-col items-center justify-center gap-1 px-1">
-              <IconDocument :size="20" color="var(--color-gray-500)" />
+            <img
+              v-if="isImageAttachment(url)"
+              :src="url"
+              alt=""
+              class="w-full h-full object-cover"
+            >
+            <div
+              v-else
+              class="w-full h-full flex flex-col items-center justify-center gap-1 px-1"
+            >
+              <IconDocument
+                :size="20"
+                color="var(--color-gray-500)"
+              />
               <span class="text-(length:--font-xs) text-(color:--color-gray-600) truncate w-full text-center">{{ attachmentFileName(url) }}</span>
             </div>
           </a>
@@ -131,17 +175,25 @@ onMounted(loadInquiry);
       </section>
 
       <section>
-        <h2 class="text-(length:--font-base) font-semibold text-(color:--color-navy) mb-3">답변</h2>
+        <h2 class="text-(length:--font-base) font-semibold text-(color:--color-navy) mb-3">
+          답변
+        </h2>
         <p
           v-if="inquiry.status === 'ANSWERED'"
-          class="text-(length:--font-md) text-(color:--color-gray-700) leading-relaxed rounded-(--radius-xl) bg-(--color-surface) p-4"
+          class="rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-4 text-(length:--font-md) leading-relaxed text-(color:--color-gray-700) shadow-(--shadow-card)"
         >
           {{ inquiry.answer }}
         </p>
-        <p v-if="inquiry.status === 'ANSWERED' && inquiry.answeredAt" class="text-(length:--font-xs) text-(color:--color-gray-500) mt-2">
+        <p
+          v-if="inquiry.status === 'ANSWERED' && inquiry.answeredAt"
+          class="text-(length:--font-xs) text-(color:--color-gray-500) mt-2"
+        >
           {{ formatDate(inquiry.answeredAt) }} 답변
         </p>
-        <p v-else class="text-(length:--font-sm) text-(color:--color-gray-500) rounded-(--radius-xl) bg-(--color-surface) p-4 text-center">
+        <p
+          v-else
+          class="rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-4 text-center text-(length:--font-sm) text-(color:--color-gray-500)"
+        >
           아직 답변이 등록되지 않았어요. 답변이 완료되면 알려드릴게요.
         </p>
       </section>

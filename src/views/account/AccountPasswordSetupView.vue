@@ -34,7 +34,7 @@ function handleComplete(value) {
 </script>
 
 <template>
-  <div class="min-h-screen max-w-(--content-max-width) mx-auto bg-(--color-bg) px-(--space-5) pt-(--space-4)">
+  <div class="mx-auto min-h-screen max-w-(--content-max-width) bg-(--color-app-bg) px-(--space-5) pt-(--space-4)">
     <header class="mb-(--space-8)">
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) leading-snug">
         간편 비밀번호를 설정해주세요
@@ -56,6 +56,9 @@ function handleComplete(value) {
       </p>
     </div>
 
-    <PinKeypad v-model="pin" @complete="handleComplete" />
+    <PinKeypad
+      v-model="pin"
+      @complete="handleComplete"
+    />
   </div>
 </template>

@@ -43,34 +43,53 @@ function goToInquiryDetail(inquiryId) {
 </script>
 
 <template>
-  <div class="min-h-screen max-w-(--content-max-width) mx-auto bg-(--color-bg) px-5 pt-(--space-4) pb-10">
-
+  <div class="mx-auto min-h-screen max-w-(--content-max-width) bg-(--color-app-bg) px-5 pt-(--space-4) pb-10">
     <header class="mb-6">
-      <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">내 문의 내역</h1>
-      <p class="text-(length:--font-md) text-(color:--color-gray-600) mt-1">지금까지 문의한 내용을 확인해요</p>
+      <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">
+        내 문의 내역
+      </h1>
+      <p class="text-(length:--font-md) text-(color:--color-gray-600) mt-1">
+        지금까지 문의한 내용을 확인해요
+      </p>
     </header>
 
-    <p v-if="store.isLoading" class="text-(length:--font-sm) text-(color:--color-gray-500) mb-4">불러오는 중이에요…</p>
+    <p
+      v-if="store.isLoading"
+      class="text-(length:--font-sm) text-(color:--color-gray-500) mb-4"
+    >
+      불러오는 중이에요…
+    </p>
 
-    <div v-else-if="loadError" class="p-4 rounded-(--radius-xl) bg-(--color-surface) mb-4 text-center">
-      <p class="text-(length:--font-sm) text-(color:--color-danger-strong) mb-3">{{ loadError }}</p>
+    <div
+      v-else-if="loadError"
+      class="mb-4 rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-4 text-center"
+    >
+      <p class="text-(length:--font-sm) text-(color:--color-danger-strong) mb-3">
+        {{ loadError }}
+      </p>
       <button
-        class="px-5 py-2 rounded-(--radius-xl) bg-(--color-navy) text-(color:--color-white) text-(length:--font-sm) font-semibold"
+        class="rounded-(--radius-xl) bg-(--color-leaf) px-5 py-2 text-(length:--font-sm) font-semibold text-(color:--color-navy)"
         @click="loadInquiries"
       >
         다시 시도
       </button>
     </div>
 
-    <p v-else-if="store.myInquiries.length === 0" class="text-(length:--font-sm) text-(color:--color-gray-500) mb-4">
+    <p
+      v-else-if="store.myInquiries.length === 0"
+      class="text-(length:--font-sm) text-(color:--color-gray-500) mb-4"
+    >
       아직 문의한 내역이 없어요
     </p>
 
-    <ul v-if="!store.isLoading && !loadError" class="flex flex-col gap-3 mb-8">
+    <ul
+      v-if="!store.isLoading && !loadError"
+      class="flex flex-col gap-3 mb-8"
+    >
       <li
         v-for="inquiry in store.myInquiries"
         :key="inquiry.inquiryId"
-        class="rounded-(--radius-xl) bg-(--color-surface) p-4"
+        class="rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-4 shadow-(--shadow-card)"
       >
         <button
           class="w-full flex items-center justify-between gap-3"
@@ -83,16 +102,24 @@ function goToInquiryDetail(inquiryId) {
             >
               {{ statusLabel(inquiry.status) }}
             </span>
-            <p class="font-semibold text-(color:--color-navy) text-(length:--font-md)">{{ inquiry.title }}</p>
-            <p class="text-(length:--font-xs) text-(color:--color-gray-500) mt-1">{{ formatDate(inquiry.createdAt) }}</p>
+            <p class="font-semibold text-(color:--color-navy) text-(length:--font-md)">
+              {{ inquiry.title }}
+            </p>
+            <p class="text-(length:--font-xs) text-(color:--color-gray-500) mt-1">
+              {{ formatDate(inquiry.createdAt) }}
+            </p>
           </div>
-          <IconChevronRight :size="18" color="var(--color-gray-400)" class="shrink-0" />
+          <IconChevronRight
+            :size="18"
+            color="var(--color-gray-400)"
+            class="shrink-0"
+          />
         </button>
       </li>
     </ul>
 
     <button
-      class="w-full py-4 rounded-(--radius-xl) bg-(--color-navy) text-(color:--color-white) font-bold"
+      class="w-full rounded-(--radius-xl) bg-(--color-leaf) py-4 font-bold text-(color:--color-navy)"
       @click="router.push({ name: 'InquiryForm' })"
     >
       + 새 문의 작성하기

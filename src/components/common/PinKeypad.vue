@@ -45,8 +45,15 @@ function handleBackspace() {
     </div>
 
     <div class="grid grid-cols-3 gap-(--space-6)">
-      <template v-for="key in keypadKeys" :key="key || 'blank'">
-        <div v-if="key === ''" class="h-14" aria-hidden="true" />
+      <template
+        v-for="key in keypadKeys"
+        :key="key || 'blank'"
+      >
+        <div
+          v-if="key === ''"
+          class="h-14"
+          aria-hidden="true"
+        />
         <button
           v-else
           type="button"
@@ -54,8 +61,15 @@ function handleBackspace() {
           :aria-label="key === '⌫' ? '지우기' : key"
           @click="key === '⌫' ? handleBackspace() : handleKeyPress(key)"
         >
-          <IconDelete v-if="key === '⌫'" :size="20" color="var(--color-navy)" aria-hidden="true" />
-          <template v-else>{{ key }}</template>
+          <IconDelete
+            v-if="key === '⌫'"
+            :size="20"
+            color="var(--color-navy)"
+            aria-hidden="true"
+          />
+          <template v-else>
+            {{ key }}
+          </template>
         </button>
       </template>
     </div>

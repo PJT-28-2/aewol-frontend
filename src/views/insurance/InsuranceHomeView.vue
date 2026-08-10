@@ -1,9 +1,10 @@
 <script setup>
 import { useRouter } from 'vue-router'
 import AppButton from '@/components/common/AppButton.vue'
+import FeatureIconTile from '@/components/common/FeatureIconTile.vue'
 import IconChevronRight from '@/components/common/icons/IconChevronRight.vue'
-import simulatorImage from '@/assets/images/icons-3d/bar_chart_3d.png'
-import claimDocument3d from '@/assets/images/icons-3d/page_facing_up_3d.png'
+import IconStats from '@/components/common/icons/IconStats.vue'
+import IconDocument from '@/components/common/icons/IconDocument.vue'
 
 const router = useRouter()
 
@@ -15,7 +16,7 @@ const simulatorMenu = {
 
 const claimMenu = {
   to: '/insurance/claim',
-  icon: claimDocument3d,
+  icon: IconDocument,
   title: '청구 서류 작성',
   description: '영수증으로 청구서 초안을 만들어보세요',
 }
@@ -41,13 +42,11 @@ const claimMenu = {
         <p class="mt-(--space-2) text-(length:--font-sm) text-(color:--color-slate-dark)">
           예상 비용을 미리 비교해보세요
         </p>
-        <span class="absolute right-(--space-4) top-[25px] flex size-[104px] items-center justify-center rounded-[24px] bg-(--color-gray-100)">
-          <img
-            :src="simulatorImage"
-            alt=""
-            class="size-[82px] object-contain"
-          >
-        </span>
+        <FeatureIconTile
+          class="absolute right-(--space-4) top-[25px]"
+          :icon="IconStats"
+          tone="blue"
+        />
       </div>
       <AppButton
         variant="primary"
@@ -69,13 +68,10 @@ const claimMenu = {
         :to="claimMenu.to"
         class="flex items-center gap-(--space-4) rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-(--space-4) text-inherit no-underline active:bg-(--color-gray-100)"
       >
-        <span class="flex size-[40px] shrink-0 items-center justify-center rounded-[13px] bg-(--color-gray-100)">
-          <img
-            :src="claimMenu.icon"
-            alt=""
-            class="size-[27px] object-contain saturate-[0.8] brightness-[1.03] contrast-[0.95]"
-          >
-        </span>
+        <FeatureIconTile
+          :icon="claimMenu.icon"
+          tone="pink"
+        />
         <div class="min-w-0 flex-1">
           <h3 class="text-(length:--font-base) font-semibold text-(color:--color-navy)">
             {{ claimMenu.title }}
@@ -100,6 +96,5 @@ const claimMenu = {
         <span>청구서 초안 완성</span>
       </div>
     </section>
-
   </div>
 </template>

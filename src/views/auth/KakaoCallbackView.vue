@@ -3,6 +3,9 @@ import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { usePetStore } from '@/stores/pet'
+import AewolLogo from '@/components/common/AewolLogo.vue'
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
+import IconWarning from '@/components/common/icons/IconWarning.vue'
 
 const KAKAO_OAUTH_STATE_KEY = 'kakaoOAuthState'
 
@@ -71,67 +74,45 @@ onMounted(handleKakaoCallback)
 </script>
 
 <template>
-  <div class="callback-page">
-    <div v-if="!errorMessage" class="loading-container">
-      <div class="spinner"></div>
-      <p class="loading-text">카카오 로그인 처리 중...</p>
-    </div>
+  <main class="flex min-h-svh items-center justify-center bg-(--color-app-bg) px-(--space-5)">
+    <section
+      v-if="!errorMessage"
+      class="flex flex-col items-center text-center"
+    >
+      <AewolLogo size="24" />
+      <span class="mt-(--space-7) flex size-[76px] items-center justify-center rounded-full bg-(--color-leaf-soft)">
+        <LoadingSpinner
+          size="lg"
+          color="leaf"
+        />
+      </span>
+      <p class="mt-(--space-5) text-(length:--font-md) font-semibold text-(color:--color-navy)">
+        카카오 로그인 처리 중...
+      </p>
+      <p class="mt-(--space-1) text-(length:--font-sm) text-(color:--color-slate-muted)">
+        잠시만 기다려주세요
+      </p>
+    </section>
 
-    <div v-else class="error-container">
-      <p class="error-text">{{ errorMessage }}</p>
-      <router-link to="/login" class="btn-link">로그인으로 돌아가기</router-link>
-    </div>
-  </div>
+    <section
+      v-else
+      class="w-full max-w-[350px] rounded-[24px] border border-(--color-card-border) bg-(--color-white) p-(--space-6) text-center shadow-(--shadow-card)"
+    >
+      <span class="mx-auto flex size-[64px] items-center justify-center rounded-full bg-(--color-danger-soft) text-(color:--color-danger-strong)">
+        <IconWarning size="28" />
+      </span>
+      <h1 class="mt-(--space-4) text-(length:--font-xl) font-bold text-(color:--color-navy)">
+        로그인을 완료하지 못했어요
+      </h1>
+      <p class="mt-(--space-2) text-(length:--font-sm) leading-[1.55] text-(color:--color-slate-muted)">
+        {{ errorMessage }}
+      </p>
+      <router-link
+        to="/login"
+        class="mt-(--space-6) flex h-(--control-height-lg) w-full items-center justify-center rounded-(--radius-xl) bg-(--color-leaf) text-(length:--font-base) font-semibold text-(color:--color-navy) no-underline"
+      >
+        로그인으로 돌아가기
+      </router-link>
+    </section>
+  </main>
 </template>
-
-<style scoped>
-.callback-page {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--color-bg);
-}
-
-.loading-container {
-  text-align: center;
-}
-
-.spinner {
-  width: 48px;
-  height: 48px;
-  border: 4px solid var(--color-gray-200);
-  border-top-color: var(--color-navy);
-  border-radius: var(--radius-full);
-  animation: spin 0.8s linear infinite;
-  margin: 0 auto var(--space-5);
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.loading-text {
-  font-size: var(--font-base);
-  color: var(--color-gray-600);
-}
-
-.error-container {
-  text-align: center;
-}
-
-.error-text {
-  font-size: var(--font-base);
-  color: var(--color-danger-strong);
-  margin-bottom: var(--space-5);
-}
-
-.btn-link {
-  font-size: var(--font-md);
-  color: var(--color-navy);
-  text-decoration: none;
-  font-weight: var(--font-semibold);
-}
-</style>

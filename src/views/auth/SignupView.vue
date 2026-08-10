@@ -129,10 +129,10 @@ const handleSignup = async () => {
 
 <template>
   <main
-    class="min-h-svh w-full bg-(--color-white) px-[22px] pt-[calc(var(--header-height)+var(--space-4))] pb-6"
+    class="min-h-svh w-full bg-(--color-app-bg) px-[22px] pt-[calc(var(--header-height)+var(--space-4))] pb-6"
   >
     <div
-      class="fixed inset-x-0 top-0 z-100 h-(--header-height) bg-(--color-white)"
+      class="fixed inset-x-0 top-0 z-100 h-(--header-height) bg-(--color-app-bg)"
       aria-hidden="true"
     />
     <button
@@ -197,7 +197,7 @@ const handleSignup = async () => {
       <input
         id="signup-name"
         v-model="form.name"
-        class="h-(--control-height-md) rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy) read-only:cursor-default read-only:text-(color:--color-slate-muted)"
+        class="h-(--control-height-md) rounded-(--radius-lg) border border-(--color-border) bg-(--color-white) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-leaf) read-only:cursor-default read-only:text-(color:--color-slate-muted)"
         type="text"
         autocomplete="name"
         placeholder="홍길동"
@@ -214,7 +214,7 @@ const handleSignup = async () => {
       <input
         id="signup-phone"
         :value="form.phone"
-        class="h-(--control-height-md) rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy) read-only:cursor-default read-only:text-(color:--color-slate-muted)"
+        class="h-(--control-height-md) rounded-(--radius-lg) border border-(--color-border) bg-(--color-white) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-leaf) read-only:cursor-default read-only:text-(color:--color-slate-muted)"
         type="tel"
         autocomplete="tel"
         inputmode="tel"
@@ -234,7 +234,7 @@ const handleSignup = async () => {
         <input
           id="signup-email"
           v-model="form.email"
-          class="h-(--control-height-md) min-w-0 flex-1 rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy) read-only:cursor-default read-only:text-(color:--color-slate-muted)"
+          class="h-(--control-height-md) min-w-0 flex-1 rounded-(--radius-lg) border border-(--color-border) bg-(--color-white) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-leaf) read-only:cursor-default read-only:text-(color:--color-slate-muted)"
           type="email"
           autocomplete="email"
           placeholder="name@aewol.com"
@@ -243,7 +243,7 @@ const handleSignup = async () => {
         >
         <button
           v-if="!isKakaoSignup"
-          class="h-(--control-height-md) w-20 shrink-0 rounded-(--radius-lg) bg-(--color-navy) text-[12.5px] font-(--font-bold) text-(color:--color-white)"
+          class="h-(--control-height-md) w-20 shrink-0 rounded-(--radius-lg) bg-(--color-leaf) text-[12.5px] font-(--font-bold) text-(color:--color-navy)"
           type="button"
         >
           인증하기
@@ -260,7 +260,7 @@ const handleSignup = async () => {
         <input
           id="signup-code"
           v-model="form.verificationCode"
-          class="h-(--control-height-md) rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
+          class="h-(--control-height-md) rounded-(--radius-lg) border border-(--color-border) bg-(--color-white) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-leaf)"
           type="text"
           inputmode="numeric"
           maxlength="6"
@@ -277,7 +277,7 @@ const handleSignup = async () => {
         <PasswordInput
           id="signup-password"
           v-model="form.password"
-          input-class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
+          input-class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-white) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-leaf)"
           autocomplete="new-password"
           placeholder="2가지 조합 10자리 / 3가지 조합 8자리 이상"
           required
@@ -305,7 +305,7 @@ const handleSignup = async () => {
         <PasswordInput
           id="signup-password-confirm"
           v-model="form.passwordConfirm"
-          input-class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
+          input-class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-white) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-leaf)"
           autocomplete="new-password"
           placeholder="비밀번호를 한번 더 입력해주세요"
           required
@@ -344,7 +344,7 @@ const handleSignup = async () => {
         >
 
         <button
-          class="h-(--control-height-md) w-20 shrink-0 rounded-(--radius-lg) bg-(--color-navy) text-[11px] font-(--font-bold) text-(color:--color-white) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-navy)"
+          class="h-(--control-height-md) w-20 shrink-0 rounded-(--radius-lg) bg-(--color-leaf) text-[11px] font-(--font-bold) text-(color:--color-navy) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-leaf-dark)"
           type="button"
           @click="isAddressSearchOpen = true"
         >
@@ -378,13 +378,13 @@ const handleSignup = async () => {
       <input
         id="signup-address-detail"
         v-model="form.addressDetail"
-        class="h-(--control-height-md) rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
+        class="h-(--control-height-md) rounded-(--radius-lg) border border-(--color-border) bg-(--color-white) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-leaf)"
         type="text"
         autocomplete="address-line2"
         placeholder="건물, 아파트, 동/호수 입력"
       >
 
-      <fieldset class="mt-8 rounded-(--radius-xl) border border-(--color-border) bg-(--color-surface) px-[18px] py-4">
+      <fieldset class="mt-8 rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) px-[18px] py-4 shadow-(--shadow-card)">
         <legend class="sr-only">
           약관 동의
         </legend>
@@ -399,7 +399,7 @@ const handleSignup = async () => {
               @change="toggleAllAgreements"
             >
             <span
-              class="flex size-[22px] items-center justify-center rounded-full border border-(--color-border) bg-(--color-white) text-(color:--color-white) peer-checked:border-(--color-navy) peer-checked:bg-(--color-navy) peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-(--color-navy)"
+              class="flex size-[22px] items-center justify-center rounded-full border border-(--color-border) bg-(--color-white) text-(color:--color-navy) peer-checked:border-(--color-leaf) peer-checked:bg-(--color-leaf) peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-(--color-leaf-dark)"
               aria-hidden="true"
             >
               <IconCheck size="13" />
@@ -415,7 +415,7 @@ const handleSignup = async () => {
               required
             >
             <span
-              class="flex size-[18px] items-center justify-center rounded-full border border-(--color-border) bg-(--color-white) text-(color:--color-white) peer-checked:border-(--color-navy) peer-checked:bg-(--color-navy) peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-(--color-navy)"
+              class="flex size-[18px] items-center justify-center rounded-full border border-(--color-border) bg-(--color-white) text-(color:--color-navy) peer-checked:border-(--color-leaf) peer-checked:bg-(--color-leaf) peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-(--color-leaf-dark)"
               aria-hidden="true"
             >
               <IconCheck size="11" />
@@ -432,7 +432,7 @@ const handleSignup = async () => {
               required
             >
             <span
-              class="flex size-[18px] items-center justify-center rounded-full border border-(--color-border) bg-(--color-white) text-(color:--color-white) peer-checked:border-(--color-navy) peer-checked:bg-(--color-navy) peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-(--color-navy)"
+              class="flex size-[18px] items-center justify-center rounded-full border border-(--color-border) bg-(--color-white) text-(color:--color-navy) peer-checked:border-(--color-leaf) peer-checked:bg-(--color-leaf) peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-(--color-leaf-dark)"
               aria-hidden="true"
             >
               <IconCheck size="11" />
@@ -448,7 +448,7 @@ const handleSignup = async () => {
               type="checkbox"
             >
             <span
-              class="flex size-[18px] items-center justify-center rounded-full border border-(--color-border) bg-(--color-white) text-(color:--color-white) peer-checked:border-(--color-navy) peer-checked:bg-(--color-navy) peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-(--color-navy)"
+              class="flex size-[18px] items-center justify-center rounded-full border border-(--color-border) bg-(--color-white) text-(color:--color-navy) peer-checked:border-(--color-leaf) peer-checked:bg-(--color-leaf) peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-(--color-leaf-dark)"
               aria-hidden="true"
             >
               <IconCheck size="11" />

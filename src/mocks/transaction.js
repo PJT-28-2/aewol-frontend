@@ -14,7 +14,7 @@ export const mockTransactions = [
     date: '2026-08-18',
     time: '15:24',
     title: '24시 우리동물병원',
-    subtitle: '병원비 · 소로 진료',
+    subtitle: '병원비 · 포리 진료',
     amount: -42000,
     type: 'withdraw',
     category: 'MEDICAL',

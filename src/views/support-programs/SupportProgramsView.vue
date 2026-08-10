@@ -67,7 +67,7 @@ watch(
 
 <template>
   <div
-    class="mx-auto w-full max-w-(--content-max-width) box-border bg-(--color-white) px-[22px] text-(--color-navy)"
+    class="mx-auto box-border w-full max-w-(--content-max-width) bg-(--color-app-bg) px-(--space-4) text-(--color-navy)"
     :class="
       isDetail
         ? 'min-h-dvh pt-[var(--space-4)] pb-[calc(var(--space-6)+env(safe-area-inset-bottom))]'
@@ -92,7 +92,7 @@ watch(
       </p>
       <AppButton
         class="mt-[var(--space-4)]"
-        variant="navy"
+        variant="primary"
         size="sm"
         @click="loadPrograms"
       >
@@ -128,15 +128,14 @@ watch(
         <li
           v-for="program in supportProgramsStore.programs"
           :key="program.id"
-          class="flex items-end gap-[var(--space-3)] rounded-[18px] border border-(--color-border) p-[var(--space-4)]"
-          :class="program.eligible ? 'bg-(--color-white)' : 'bg-(--color-surface)'"
+          class="flex items-center gap-[var(--space-3)] rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-[var(--space-4)] shadow-(--shadow-card)"
         >
           <div class="min-w-0 flex-1">
             <span
               class="inline-flex h-[20px] items-center rounded-full px-[var(--space-2)] text-(length:--font-xs) font-bold"
               :class="
                 program.eligible
-                  ? 'bg-(--color-olive-surface) text-(--color-olive)'
+                  ? 'bg-(--color-leaf-soft) text-(--color-leaf-dark)'
                   : 'bg-(--color-danger-surface) text-(--color-danger-strong)'
               "
             >
@@ -155,7 +154,7 @@ watch(
           <AppButton
             class="shrink-0"
             :class="!program.eligible ? 'border-(--color-border)!' : ''"
-            :variant="program.eligible ? 'navy' : 'secondary'"
+            :variant="program.eligible ? 'primary' : 'secondary'"
             size="sm"
             @click="goToDetail(program.id)"
           >
@@ -170,7 +169,7 @@ watch(
         class="mt-[var(--space-5)] inline-flex h-[20px] items-center rounded-full px-[var(--space-2)] text-(length:--font-xs) font-bold"
         :class="
           selectedProgram.eligible
-            ? 'bg-(--color-olive-surface) text-(--color-olive)'
+            ? 'bg-(--color-leaf-soft) text-(--color-leaf-dark)'
             : 'bg-(--color-danger-surface) text-(--color-danger-strong)'
         "
       >
@@ -183,7 +182,7 @@ watch(
         {{ selectedProgram.agency }} · {{ selectedProgram.benefit }}
       </p>
 
-      <section class="mt-[var(--space-7)] rounded-(--radius-icon) bg-(--color-surface) p-[var(--space-4)]">
+      <section class="mt-[var(--space-7)] rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-[var(--space-4)] shadow-(--shadow-card)">
         <h2 class="m-0 text-(length:--font-sm) font-bold text-(--color-slate-dark)">
           신청 기간
         </h2>
@@ -192,7 +191,7 @@ watch(
         </p>
       </section>
 
-      <section class="mt-[var(--space-4)]">
+      <section class="mt-[var(--space-4)] rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-(--space-4) shadow-(--shadow-card)">
         <h2 class="mb-[var(--space-4)] mt-0 text-[length:var(--font-md)] font-bold">
           신청 조건
         </h2>
@@ -206,7 +205,7 @@ watch(
               class="grid size-(--support-status-icon-size) shrink-0 place-items-center rounded-full"
               :class="
                 condition.met
-                  ? 'bg-(--color-olive-surface) text-(--color-olive)'
+                  ? 'bg-(--color-leaf-soft) text-(--color-leaf-dark)'
                   : 'bg-(--color-danger-surface) text-(--color-danger-strong)'
               "
             >
@@ -231,7 +230,7 @@ watch(
 
       <section
         v-if="!selectedProgram.eligible"
-        class="mt-[var(--space-7)] rounded-(--radius-icon) bg-(--color-surface) p-[var(--space-4)]"
+        class="mt-[var(--space-4)] rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-[var(--space-4)] shadow-(--shadow-card)"
       >
         <div class="flex items-start gap-[var(--space-2)] text-(length:--font-sm) leading-[1.4] text-(--color-slate-dark)">
           <IconInfo
@@ -249,7 +248,7 @@ watch(
 
       <p
         v-if="isApplied"
-        class="mb-0 mt-[var(--space-4)] rounded-[var(--radius-lg)] bg-(--color-olive-surface) p-[var(--space-3)] text-center text-[length:var(--font-sm)] font-bold text-(--color-olive)"
+        class="mb-0 mt-[var(--space-4)] rounded-(--radius-xl) bg-(--color-leaf-soft) p-[var(--space-3)] text-center text-[length:var(--font-sm)] font-bold text-(--color-leaf-dark)"
         role="status"
       >
         {{ selectedProgram.applyUrl
@@ -262,7 +261,7 @@ watch(
           v-if="selectedProgram.eligible"
           block
           size="lg"
-          variant="navy"
+          variant="primary"
           :disabled="isApplied || supportProgramsStore.isApplying"
           :loading="supportProgramsStore.isApplying"
           @click="applyForProgram"
@@ -273,7 +272,7 @@ watch(
           v-else
           block
           size="lg"
-          variant="navy"
+          variant="primary"
           @click="goToList"
         >
           비슷한 지원사업 더 보기

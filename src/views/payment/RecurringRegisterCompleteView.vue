@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import AppButton from '@/components/common/AppButton.vue';
-import petSuccess from '@/assets/images/pet-success.png';
+import CompletionPageLayout from '@/components/common/CompletionPageLayout.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -16,33 +16,19 @@ function confirmComplete() {
 </script>
 
 <template>
-  <div
-    class="min-h-screen max-w-(--content-max-width) mx-auto bg-(--color-bg) px-(--space-6) pt-[calc(var(--header-height)+var(--space-4))] flex flex-col items-center text-center"
+  <CompletionPageLayout
+    title="정기결제 등록 완료"
+    :description="`매월 ${dayOfMonth}일에 ${amount.toLocaleString()}원이 자동으로 결제돼요`"
   >
-    <img
-      :src="petSuccess"
-      alt=""
-      class="w-32 h-auto mb-(--space-4)"
-    />
-    <h1
-      class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-2)"
-    >
-      정기결제가 등록됐어요
-    </h1>
-    <p
-      class="text-(length:--font-md) text-(color:--color-slate-muted) mb-(--space-8)"
-    >
-      매월 {{ dayOfMonth }}일에 {{ amount.toLocaleString() }}원이
-      자동으로 결제돼요
-    </p>
-
-    <AppButton
-      variant="primary"
-      size="lg"
-      block
-      @click="confirmComplete"
-    >
-      확인
-    </AppButton>
-  </div>
+    <template #action>
+      <AppButton
+        variant="primary"
+        size="lg"
+        block
+        @click="confirmComplete"
+      >
+        목록으로
+      </AppButton>
+    </template>
+  </CompletionPageLayout>
 </template>

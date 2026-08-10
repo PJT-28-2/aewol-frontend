@@ -77,24 +77,38 @@ function goToRelated(relatedFaqId) {
 </script>
 
 <template>
-  <div class="min-h-screen max-w-(--content-max-width) mx-auto bg-(--color-bg) px-5 pt-(--space-4) pb-10">
+  <div class="mx-auto min-h-screen max-w-(--content-max-width) bg-(--color-app-bg) px-5 pt-(--space-4) pb-10">
+    <p
+      v-if="isLoading"
+      class="text-(length:--font-sm) text-(color:--color-gray-500)"
+    >
+      불러오는 중이에요…
+    </p>
 
-    <p v-if="isLoading" class="text-(length:--font-sm) text-(color:--color-gray-500)">불러오는 중이에요…</p>
-
-    <div v-else-if="loadError" class="p-4 rounded-(--radius-xl) bg-(--color-surface) text-center">
-      <p class="text-(length:--font-sm) text-(color:--color-danger-strong) mb-3">{{ loadError }}</p>
+    <div
+      v-else-if="loadError"
+      class="rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-4 text-center"
+    >
+      <p class="text-(length:--font-sm) text-(color:--color-danger-strong) mb-3">
+        {{ loadError }}
+      </p>
       <button
-        class="px-5 py-2 rounded-(--radius-xl) bg-(--color-navy) text-(color:--color-white) text-(length:--font-sm) font-semibold"
+        class="rounded-(--radius-xl) bg-(--color-leaf) px-5 py-2 text-(length:--font-sm) font-semibold text-(color:--color-navy)"
         @click="loadFaq(route.params.faqId)"
       >
         다시 시도
       </button>
     </div>
 
-    <div v-else-if="!faq" class="p-4 rounded-(--radius-xl) bg-(--color-surface) text-center">
-      <p class="text-(length:--font-sm) text-(color:--color-gray-600) mb-3">질문을 찾을 수 없어요</p>
+    <div
+      v-else-if="!faq"
+      class="rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-4 text-center"
+    >
+      <p class="text-(length:--font-sm) text-(color:--color-gray-600) mb-3">
+        질문을 찾을 수 없어요
+      </p>
       <button
-        class="px-5 py-2 rounded-(--radius-xl) bg-(--color-navy) text-(color:--color-white) text-(length:--font-sm) font-semibold"
+        class="rounded-(--radius-xl) bg-(--color-leaf) px-5 py-2 text-(length:--font-sm) font-semibold text-(color:--color-navy)"
         @click="router.push({ name: 'CustomerCenter' })"
       >
         고객센터로 이동
@@ -102,7 +116,9 @@ function goToRelated(relatedFaqId) {
     </div>
 
     <template v-else>
-      <p class="text-(length:--font-xs) font-semibold text-(color:--color-gray-500) mb-2">{{ faq.category }}</p>
+      <p class="text-(length:--font-xs) font-semibold text-(color:--color-gray-500) mb-2">
+        {{ faq.category }}
+      </p>
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-6 leading-snug">
         {{ faq.question }}
       </h1>
@@ -119,7 +135,7 @@ function goToRelated(relatedFaqId) {
         </p>
       </div>
 
-      <div class="rounded-(--radius-xl) bg-(--color-surface) p-4 mb-8">
+      <div class="mb-8 rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-4 shadow-(--shadow-card)">
         <p class="text-(length:--font-sm) font-semibold text-(color:--color-navy) text-center mb-3">
           이 답변이 도움이 되었나요?
         </p>
@@ -128,39 +144,57 @@ function goToRelated(relatedFaqId) {
             class="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-(--radius-xl) text-(length:--font-sm) font-medium"
             :class="
               feedback === 'HELPFUL'
-                ? 'bg-(--color-navy) text-(color:--color-white)'
-                : 'bg-(--color-white) text-(color:--color-gray-600)'
+                ? 'bg-(--color-leaf-soft) text-(color:--color-navy)'
+                : 'bg-(--color-app-bg) text-(color:--color-gray-600)'
             "
             @click="submitFeedback('HELPFUL')"
           >
-            <IconThumbsUp :size="16" :color="feedback === 'HELPFUL' ? 'var(--color-white)' : 'var(--color-gray-600)'" />
+            <IconThumbsUp
+              :size="16"
+              :color="feedback === 'HELPFUL' ? 'var(--color-white)' : 'var(--color-gray-600)'"
+            />
             도움됨
           </button>
           <button
             class="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-(--radius-xl) text-(length:--font-sm) font-medium"
             :class="
               feedback === 'NOT_HELPFUL'
-                ? 'bg-(--color-navy) text-(color:--color-white)'
-                : 'bg-(--color-white) text-(color:--color-gray-600)'
+                ? 'bg-(--color-leaf-soft) text-(color:--color-navy)'
+                : 'bg-(--color-app-bg) text-(color:--color-gray-600)'
             "
             @click="submitFeedback('NOT_HELPFUL')"
           >
-            <IconThumbsDown :size="16" :color="feedback === 'NOT_HELPFUL' ? 'var(--color-white)' : 'var(--color-gray-600)'" />
+            <IconThumbsDown
+              :size="16"
+              :color="feedback === 'NOT_HELPFUL' ? 'var(--color-white)' : 'var(--color-gray-600)'"
+            />
             아쉬워요
           </button>
         </div>
       </div>
 
-      <section v-if="relatedFaqs.length" class="mb-8">
-        <h2 class="text-(length:--font-base) font-semibold text-(color:--color-navy) mb-3">관련 질문</h2>
+      <section
+        v-if="relatedFaqs.length"
+        class="mb-8"
+      >
+        <h2 class="text-(length:--font-base) font-semibold text-(color:--color-navy) mb-3">
+          관련 질문
+        </h2>
         <ul class="flex flex-col gap-2">
-          <li v-for="related in relatedFaqs" :key="related.faqId">
+          <li
+            v-for="related in relatedFaqs"
+            :key="related.faqId"
+          >
             <button
-              class="w-full flex items-center justify-between gap-3 p-4 rounded-(--radius-xl) bg-(--color-surface) text-left"
+              class="flex w-full items-center justify-between gap-3 rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-4 text-left shadow-(--shadow-card)"
               @click="goToRelated(related.faqId)"
             >
               <span class="text-(length:--font-md) text-(color:--color-navy)">{{ related.question }}</span>
-              <IconChevronRight :size="18" color="var(--color-gray-400)" class="shrink-0" />
+              <IconChevronRight
+                :size="18"
+                color="var(--color-gray-400)"
+                class="shrink-0"
+              />
             </button>
           </li>
         </ul>

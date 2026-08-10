@@ -3,8 +3,9 @@ import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppButton from '@/components/common/AppButton.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
-import shareJoinFamilyImage from '@/assets/images/share-join-family.png'
-import shareRegisterPetImage from '@/assets/images/share-register-pet.png'
+import FeatureIconTile from '@/components/common/FeatureIconTile.vue'
+import IconFamilyCare from '@/components/common/icons/IconFamilyCare.vue'
+import IconPetFace from '@/components/common/icons/IconPetFace.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -20,7 +21,7 @@ const showBackButton = computed(() => route.query.from === 'share')
   />
 
   <main
-    class="mx-auto min-h-dvh w-full max-w-(--content-max-width) box-border bg-(--color-white) px-[var(--space-5)] pb-[calc(var(--space-6)+env(safe-area-inset-bottom))] text-(--color-navy)"
+    class="mx-auto min-h-dvh w-full max-w-(--content-max-width) box-border bg-(--color-app-bg) px-[var(--space-5)] pb-[calc(var(--space-6)+env(safe-area-inset-bottom))] text-(--color-navy)"
     :class="showBackButton ? 'pt-(--header-height)' : 'pt-[var(--space-8)]'"
   >
     <div
@@ -52,11 +53,11 @@ const showBackButton = computed(() => route.query.from === 'share')
       @click="router.push('/pets/register')"
     >
       <span class="flex flex-col items-center">
-        <img
-          class="mb-[var(--space-2)] size-[72px] object-contain"
-          :src="shareRegisterPetImage"
-          alt=""
-        >
+        <FeatureIconTile
+          class="mb-[var(--space-3)]"
+          :icon="IconPetFace"
+          tone="green"
+        />
         <strong class="text-(length:--font-base) font-semibold text-(--color-navy)">새로운 반려동물 등록</strong>
         <small
           class="mt-[var(--space-1)] text-(length:--font-sm) font-normal text-(--color-slate-muted)"
@@ -73,11 +74,11 @@ const showBackButton = computed(() => route.query.from === 'share')
       @click="router.push('/share/join')"
     >
       <span class="flex flex-col items-center">
-        <img
-          class="mb-[var(--space-2)] size-[72px] object-contain"
-          :src="shareJoinFamilyImage"
-          alt=""
-        >
+        <FeatureIconTile
+          class="mb-[var(--space-3)]"
+          :icon="IconFamilyCare"
+          tone="blue"
+        />
         <strong class="text-(length:--font-base) font-semibold text-(--color-navy)">초대 링크로 참여</strong>
         <small
           class="mt-[var(--space-1)] text-(length:--font-sm) font-normal text-(--color-slate-muted)"

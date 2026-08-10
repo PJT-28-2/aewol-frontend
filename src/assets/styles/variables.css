@@ -1,47 +1,65 @@
 :root {
   /* Colors - Primary */
-  --color-navy: #1b2a49;
-  --color-navy-light: #2d4a7a;
-  --color-gold: #f2b853;
-  --color-gold-light: #f0c05a;
-  --color-olive: #6a930d;
-  --color-slate: #98a4bc;
-  --color-slate-light: #c9d1e3;
-  --color-slate-muted: #8a93a6;
-  --color-slate-dark: #4a5a7d;
+  --color-navy: #22262a;
+  --color-navy-light: #3a4045;
+  --color-gold: #8fcb45;
+  --color-gold-light: #a8d66f;
+  --color-olive: #8fcb45;
+  --color-slate: #9ba2a6;
+  --color-slate-light: #d8dddf;
+  --color-slate-muted: #858c90;
+  --color-slate-dark: #5f666a;
   --color-white: #ffffff;
   --color-bg: #ffffff;
-  --color-surface: #fafaf8;
-  --color-border: #eaeae4;
-  --color-olive-surface: #eef3e2;
-  --color-olive-dark: #3f5a08;
-  --color-olive-muted: #5c7a2e;
-  --color-gold-surface: #fbe7c6;
-  --color-gold-dark: #d99a2b;
-  --color-leaf: #8cde63;
-  --color-leaf-dark: #4c9a2a;
-  --color-leaf-surface: #e6f7db;
-  --color-leaf-soft: #f1faec;
-  --color-app-bg: #f4f6f3;
-  --color-card-border: #edf0ea;
-  --color-info-surface: #dce6f5;
+  --color-surface: #fafbf8;
+  --color-border: #e3e7e1;
+  --color-olive-surface: #eff5e7;
+  --color-olive-dark: #568b24;
+  --color-olive-muted: #6f9840;
+  --color-gold-surface: #f0f8de;
+  --color-gold-dark: #568b24;
+  --color-leaf: #8fcb45;
+  --color-leaf-dark: #568b24;
+  --color-leaf-surface: #e7f4d5;
+  --color-leaf-soft: #f0f8de;
+  --color-app-bg: #f5f7f2;
+  --color-card-border: #e7ebe4;
+  --color-info-surface: #f1f4ed;
   --color-danger-surface: #f2e3e3;
   --color-danger-dark: #8a3b3b;
-  --color-pastel-blue: #dce6f5;
-  --color-pastel-green: #eef3e2;
+  --color-pastel-blue: #f1f4ed;
+  --color-pastel-green: #eff5e7;
   --color-pastel-lilac: #f5e6ee;
   --color-pastel-peach: #fdecd8;
-  --color-pastel-mint: #e3f1f1;
+  --color-pastel-mint: #eff5e7;
   --color-pastel-coral: #fce3e1;
   --color-pastel-beige: #efeae3;
-  --color-pastel-sage: #e1f2e7;
-  --color-pastel-sky: #e5eaf6;
-  --color-pastel-mist: #edf0f7;
-  --color-pastel-frost: #e7effb;
+  --color-pastel-sage: #e7f1dd;
+  --color-pastel-sky: #f0f3ec;
+  --color-pastel-mist: #f3f5f1;
+  --color-pastel-frost: #edf2e8;
   --color-pastel-cream: #fbeed9;
   --color-pastel-violet: #ebe4f5;
-  --color-chart-blue: #4a6fa5;
-  --color-chart-purple: #b25cc9;
+  --color-chart-blue: #7f9f69;
+  --color-chart-purple: #a8c97a;
+  --color-chart-leaf: #8fcb45;
+  --color-chart-sage: #a7bd79;
+  --color-chart-teal: #75ad98;
+  --color-chart-amber: #d0b26f;
+  --color-chart-lilac: #a89cbe;
+  /* PUDDY-inspired feature icon palette */
+  --color-icon-green: #35c98b;
+  --color-icon-green-soft: #e1f8ee;
+  --color-icon-blue: #6da8ee;
+  --color-icon-blue-soft: #e7f1ff;
+  --color-icon-pink: #f08ca5;
+  --color-icon-pink-soft: #fde8ee;
+  --color-icon-yellow: #e5b64f;
+  --color-icon-yellow-soft: #fff4d6;
+  --color-icon-purple: #9b8be5;
+  --color-icon-purple-soft: #f0ecff;
+  --color-icon-gray: #9ba2a6;
+  --color-icon-gray-soft: #f0f2f2;
   --color-kakao: #fee500;
   --color-kakao-label: #181600;
 
@@ -77,8 +95,8 @@
     --color-brand-kakaobank: #fee500;
     --color-brand-toss: #0064ff;
     --color-brand-ibk: #004a95;
-    --color-brand-kb-text: #1b2a49;
-    --color-brand-kakaobank-text: #1b2a49;
+    --color-brand-kb-text: #22262a;
+    --color-brand-kakaobank-text: #22262a;
     --color-brand-text-on-dark: #ffffff;
   
     /* Typography - Font Family */
@@ -138,7 +156,7 @@
   --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
   --shadow-card: 0 6px 20px color-mix(in srgb, var(--color-navy) 7%, transparent);
-  --shadow-focus: 0 0 0 3px rgba(27, 42, 73, 0.1);
+  --shadow-focus: 0 0 0 3px color-mix(in srgb, var(--color-leaf) 22%, transparent);
 
   /* Control Heights */
   --control-height-sm: 36px;

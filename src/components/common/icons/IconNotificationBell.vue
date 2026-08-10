@@ -15,17 +15,8 @@ defineProps({
     focusable="false"
   >
     <path
-      d="M5.2 9.5a6.8 6.8 0 0 1 13.6 0v3.2l1.7 3.1a1.4 1.4 0 0 1-1.23 2.07H4.73A1.4 1.4 0 0 1 3.5 15.8l1.7-3.1V9.5Z"
-      :stroke="color"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    />
-    <path
-      d="M9.2 20.1a3.2 3.2 0 0 0 5.6 0"
-      :stroke="color"
-      stroke-width="2"
-      stroke-linecap="round"
+      :fill="color"
+      d="M12 4.3a5.7 5.7 0 0 1 5.7 5.7v2.8l1.5 2.8a1.3 1.3 0 0 1-1.1 1.9H5.9a1.3 1.3 0 0 1-1.1-1.9l1.5-2.8V10A5.7 5.7 0 0 1 12 4.3Zm-2.4 14.5h4.8a2.5 2.5 0 0 1-4.8 0Z"
     />
   </svg>
 </template>

@@ -75,11 +75,14 @@ function goToFaqDetail(faqId) {
 </script>
 
 <template>
-  <div class="min-h-screen max-w-(--content-max-width) mx-auto bg-(--color-bg) px-5 pt-(--space-4) pb-10">
-
+  <div class="mx-auto min-h-screen max-w-(--content-max-width) bg-(--color-app-bg) px-5 pt-(--space-4) pb-10">
     <header class="mb-5">
-      <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">고객센터</h1>
-      <p class="text-(length:--font-md) text-(color:--color-gray-600) mt-1">무엇을 도와드릴까요?</p>
+      <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">
+        고객센터
+      </h1>
+      <p class="text-(length:--font-md) text-(color:--color-gray-600) mt-1">
+        무엇을 도와드릴까요?
+      </p>
     </header>
 
     <div class="relative mb-4">
@@ -92,14 +95,17 @@ function goToFaqDetail(faqId) {
         v-model="keyword"
         type="text"
         placeholder="궁금한 내용을 검색해보세요"
-        class="w-full h-(--control-height-md) pl-11 pr-11 rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) text-[13px] text-(color:--color-navy) outline-none focus:border-(--color-navy)"
-      />
+        class="w-full h-(--control-height-md) pl-11 pr-11 rounded-(--radius-lg) border border-(--color-border) bg-(--color-white) text-[13px] text-(color:--color-navy) outline-none focus:border-(--color-leaf)"
+      >
       <button
         v-if="keyword"
         class="absolute right-4 top-1/2 -translate-y-1/2"
         @click="clearKeyword"
       >
-        <IconClose :size="16" color="var(--color-gray-400)" />
+        <IconClose
+          :size="16"
+          color="var(--color-gray-400)"
+        />
       </button>
     </div>
 
@@ -110,8 +116,8 @@ function goToFaqDetail(faqId) {
         class="px-4 py-2 rounded-full text-(length:--font-sm) font-medium"
         :class="
           selectedCategory === cat
-            ? 'bg-(--color-navy) text-(color:--color-white)'
-            : 'bg-(--color-surface) text-(color:--color-gray-600)'
+            ? 'border border-(--color-leaf) bg-(--color-leaf-soft) text-(color:--color-navy)'
+            : 'border border-(--color-card-border) bg-(--color-white) text-(color:--color-gray-600)'
         "
         @click="selectedCategory = cat"
       >
@@ -119,20 +125,29 @@ function goToFaqDetail(faqId) {
       </button>
     </div>
 
-    <div v-if="!isSearchMode" class="grid grid-cols-2 gap-3 mb-7">
+    <div
+      v-if="!isSearchMode"
+      class="grid grid-cols-2 gap-3 mb-7"
+    >
       <button
-        class="flex flex-col items-start gap-2 p-4 rounded-(--radius-xl) bg-(--color-surface) text-left"
+        class="flex flex-col items-start gap-2 rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-4 text-left shadow-(--shadow-card)"
         @click="router.push({ name: 'InquiryForm' })"
       >
-        <IconChatBubble :size="22" color="var(--color-navy)" />
+        <IconChatBubble
+          :size="22"
+          color="var(--color-navy)"
+        />
         <span class="font-semibold text-(color:--color-navy) text-(length:--font-md)">1:1 문의하기</span>
         <span class="text-(length:--font-xs) text-(color:--color-gray-500)">문의를 남겨주세요</span>
       </button>
       <button
-        class="flex flex-col items-start gap-2 p-4 rounded-(--radius-xl) bg-(--color-surface) text-left"
+        class="flex flex-col items-start gap-2 rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-4 text-left shadow-(--shadow-card)"
         @click="router.push({ name: 'MyInquiries' })"
       >
-        <IconDocument :size="22" color="var(--color-navy)" />
+        <IconDocument
+          :size="22"
+          color="var(--color-navy)"
+        />
         <span class="font-semibold text-(color:--color-navy) text-(length:--font-md)">내 문의 내역</span>
         <span class="text-(length:--font-xs) text-(color:--color-gray-500)">답변 상태 확인</span>
       </button>
@@ -141,14 +156,21 @@ function goToFaqDetail(faqId) {
     <!-- 검색 결과 모드: 키워드 검색 or 카테고리 필터 시 -->
     <template v-if="isSearchMode">
       <h2 class="text-(length:--font-base) font-semibold text-(color:--color-navy) mb-3">
-        <template v-if="keyword.trim()">'{{ keyword.trim() }}' 검색 결과 {{ filteredFaqs.length }}건</template>
-        <template v-else>{{ selectedCategory }} 질문 {{ filteredFaqs.length }}건</template>
+        <template v-if="keyword.trim()">
+          '{{ keyword.trim() }}' 검색 결과 {{ filteredFaqs.length }}건
+        </template>
+        <template v-else>
+          {{ selectedCategory }} 질문 {{ filteredFaqs.length }}건
+        </template>
       </h2>
 
       <ul class="flex flex-col gap-2 mb-6">
-        <li v-for="faq in filteredFaqs" :key="faq.faqId">
+        <li
+          v-for="faq in filteredFaqs"
+          :key="faq.faqId"
+        >
           <button
-            class="w-full flex items-center justify-between gap-3 p-4 rounded-(--radius-xl) bg-(--color-surface) text-left"
+            class="flex w-full items-center justify-between gap-3 rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-4 text-left shadow-(--shadow-card)"
             @click="goToFaqDetail(faq.faqId)"
           >
             <div>
@@ -158,24 +180,32 @@ function goToFaqDetail(faqId) {
               >
                 {{ faq.category }}
               </p>
-              <p class="text-(length:--font-md) font-semibold text-(color:--color-navy)">{{ faq.question }}</p>
+              <p class="text-(length:--font-md) font-semibold text-(color:--color-navy)">
+                {{ faq.question }}
+              </p>
             </div>
-            <IconChevronRight :size="18" color="var(--color-gray-400)" class="shrink-0" />
+            <IconChevronRight
+              :size="18"
+              color="var(--color-gray-400)"
+              class="shrink-0"
+            />
           </button>
         </li>
       </ul>
 
-      <div class="sticky bottom-(--bottom-nav-height) bg-(--color-bg) pt-(--space-3) pb-(--space-3)">
-        <div class="rounded-(--radius-xl) bg-(--color-surface) p-(--space-4) flex items-center gap-(--space-3)">
+      <div class="sticky bottom-(--bottom-nav-height) bg-(--color-app-bg) pt-(--space-3) pb-(--space-3)">
+        <div class="flex items-center gap-(--space-3) rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-(--space-4) shadow-(--shadow-card)">
           <div class="flex-1 min-w-0">
             <p class="text-(length:--font-sm) font-semibold text-(color:--color-navy) mb-(--space-1)">
               원하는 답변을 못 찾으셨나요?
             </p>
-            <p class="text-(length:--font-xs) text-(color:--color-gray-500)">1:1 문의로 직접 물어보세요</p>
+            <p class="text-(length:--font-xs) text-(color:--color-gray-500)">
+              1:1 문의로 직접 물어보세요
+            </p>
           </div>
 
           <button
-            class="shrink-0 px-(--space-4) py-(--space-2) rounded-(--radius-full) bg-(--color-navy) text-(color:--color-white) font-bold text-(length:--font-sm)"
+            class="shrink-0 rounded-(--radius-full) bg-(--color-leaf) px-(--space-4) py-(--space-2) text-(length:--font-sm) font-bold text-(color:--color-navy)"
             @click="router.push({ name: 'InquiryForm' })"
           >
             1:1 문의하기
@@ -186,25 +216,40 @@ function goToFaqDetail(faqId) {
 
     <!-- 기본 모드: 자주 묻는 질문 아코디언 -->
     <section v-else>
-      <h2 class="text-(length:--font-base) font-semibold text-(color:--color-navy) mb-3">자주 묻는 질문</h2>
+      <h2 class="text-(length:--font-base) font-semibold text-(color:--color-navy) mb-3">
+        자주 묻는 질문
+      </h2>
 
-      <p v-if="store.isLoading" class="text-(length:--font-sm) text-(color:--color-gray-500)">불러오는 중이에요…</p>
+      <p
+        v-if="store.isLoading"
+        class="text-(length:--font-sm) text-(color:--color-gray-500)"
+      >
+        불러오는 중이에요…
+      </p>
 
-      <div v-else-if="loadError" class="p-4 rounded-(--radius-xl) bg-(--color-surface) mb-3 text-center">
-        <p class="text-(length:--font-sm) text-(color:--color-danger-strong) mb-3">{{ loadError }}</p>
+      <div
+        v-else-if="loadError"
+        class="mb-3 rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-4 text-center"
+      >
+        <p class="text-(length:--font-sm) text-(color:--color-danger-strong) mb-3">
+          {{ loadError }}
+        </p>
         <button
-          class="px-5 py-2 rounded-(--radius-xl) bg-(--color-navy) text-(color:--color-white) text-(length:--font-sm) font-semibold"
+          class="rounded-(--radius-xl) bg-(--color-leaf) px-5 py-2 text-(length:--font-sm) font-semibold text-(color:--color-navy)"
           @click="loadFaqs"
         >
           다시 시도
         </button>
       </div>
 
-      <ul v-else class="flex flex-col gap-3">
+      <ul
+        v-else
+        class="flex flex-col gap-3"
+      >
         <li
           v-for="faq in filteredFaqs"
           :key="faq.faqId"
-          class="rounded-(--radius-xl) bg-(--color-surface) overflow-hidden"
+          class="overflow-hidden rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) shadow-(--shadow-card)"
         >
           <button
             class="w-full flex items-center justify-between gap-3 p-4 text-left"
@@ -218,20 +263,37 @@ function goToFaqDetail(faqId) {
               :class="{ 'rotate-180': expandedFaqId === faq.faqId }"
             />
           </button>
-          <div v-if="expandedFaqId === faq.faqId" class="px-4 pb-4">
-            <p v-if="isLoadingAnswer && !faq.answer" class="text-(length:--font-sm) text-(color:--color-gray-500)">
+          <div
+            v-if="expandedFaqId === faq.faqId"
+            class="px-4 pb-4"
+          >
+            <p
+              v-if="isLoadingAnswer && !faq.answer"
+              class="text-(length:--font-sm) text-(color:--color-gray-500)"
+            >
               불러오는 중이에요…
             </p>
-            <p v-else-if="answerError && !faq.answer" class="text-(length:--font-sm) text-(color:--color-danger-strong)">
+            <p
+              v-else-if="answerError && !faq.answer"
+              class="text-(length:--font-sm) text-(color:--color-danger-strong)"
+            >
               {{ answerError }}
             </p>
-            <p v-else class="text-(length:--font-sm) text-(color:--color-gray-600) leading-relaxed">{{ faq.answer }}</p>
+            <p
+              v-else
+              class="text-(length:--font-sm) text-(color:--color-gray-600) leading-relaxed"
+            >
+              {{ faq.answer }}
+            </p>
           </div>
         </li>
       </ul>
     </section>
 
-    <p v-if="!isSearchMode" class="text-(length:--font-xs) text-(color:--color-gray-500) text-center mt-9">
+    <p
+      v-if="!isSearchMode"
+      class="text-(length:--font-xs) text-(color:--color-gray-500) text-center mt-9"
+    >
       운영시간 평일 09:00 - 18:00 (주말 · 공휴일 휴무)
     </p>
   </div>

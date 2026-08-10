@@ -3,10 +3,9 @@ import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import AppButton from '@/components/common/AppButton.vue';
 import BottomSheet from '@/components/common/BottomSheet.vue';
-import IconCat from '@/components/common/icons/IconCat.vue';
+import PetSelectorChip from '@/components/common/PetSelectorChip.vue';
 import IconCheck from '@/components/common/icons/IconCheck.vue';
 import IconChevronDown from '@/components/common/icons/IconChevronDown.vue';
-import IconDog from '@/components/common/icons/IconDog.vue';
 import IconInfo from '@/components/common/icons/IconInfo.vue';
 import { mockWalletBalance } from '@/mocks/transaction';
 import { usePaymentStore } from '@/stores/payment';
@@ -18,10 +17,6 @@ const paymentStore = usePaymentStore();
 const petStore = usePetStore();
 
 const categories = RECURRING_CATEGORIES;
-
-function petIcon(species) {
-  return species === 'CAT' ? IconCat : IconDog;
-}
 
 const merchantName = ref('');
 const amount = ref('');
@@ -92,7 +87,7 @@ async function handleSubmit() {
 
 <template>
   <div
-    class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+96px)] bg-(--color-bg) min-h-screen"
+    class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-[calc(var(--bottom-nav-height)+96px)]"
   >
     <header class="mb-(--space-6)">
       <h1
@@ -170,8 +165,8 @@ async function handleSubmit() {
           class="inline-flex items-center gap-(--space-2) h-(--control-height-sm) px-(--space-4) rounded-(--radius-full) border text-(length:--font-sm) font-medium"
           :class="
             category === item.key
-              ? 'bg-(--color-navy) border-(--color-navy) text-(color:--color-white)'
-              : 'bg-(--color-white) border-(--color-border) text-(color:--color-slate-dark)'
+              ? 'bg-(--color-leaf-soft) border-(--color-leaf) text-(color:--color-navy)'
+              : 'bg-(--color-white) border-(--color-card-border) text-(color:--color-slate-dark)'
           "
           @click="selectCategory(item.key)"
         >
@@ -194,26 +189,14 @@ async function handleSubmit() {
         반려동물
       </h2>
       <div class="flex flex-wrap gap-(--space-2)">
-        <button
+        <PetSelectorChip
           v-for="pet in petStore.pets"
           :key="pet.id"
-          type="button"
-          :aria-pressed="selectedPetId === pet.id"
-          class="inline-flex items-center gap-(--space-2) h-(--control-height-sm) px-(--space-4) rounded-(--radius-full) border text-(length:--font-sm) font-medium"
-          :class="
-            selectedPetId === pet.id
-              ? 'bg-(--color-navy) border-(--color-navy) text-(color:--color-white)'
-              : 'bg-(--color-white) border-(--color-border) text-(color:--color-slate-dark)'
-          "
+          :label="pet.name"
+          :species="pet.species"
+          :selected="selectedPetId === pet.id"
           @click="selectPet(pet.id)"
-        >
-          <component
-            :is="petIcon(pet.species)"
-            size="16"
-            :color="selectedPetId === pet.id ? 'var(--color-white)' : 'var(--color-slate-dark)'"
-          />
-          {{ pet.name }}
-        </button>
+        />
       </div>
     </section>
 
@@ -240,7 +223,7 @@ async function handleSubmit() {
     </section>
 
     <div
-      class="flex items-start gap-(--space-2) rounded-(--radius-lg) bg-(--color-surface) p-(--space-4) mb-(--space-6)"
+      class="mb-(--space-6) flex items-start gap-(--space-2) rounded-(--radius-xl) border border-(--color-card-border) bg-(--color-white) p-(--space-4)"
     >
       <IconInfo
         size="16"
@@ -265,18 +248,18 @@ async function handleSubmit() {
       v-model="isDaySheetOpen"
       title="결제 주기 선택"
     >
-      <ul>
+      <ul class="flex flex-col gap-(--space-2)">
         <li
           v-for="day in dayOptions"
           :key="day"
         >
           <button
             type="button"
-            class="w-full flex items-center justify-between py-(--space-3) text-(length:--font-base)"
+            class="flex w-full items-center justify-between rounded-(--radius-xl) border px-(--space-4) py-(--space-3) text-(length:--font-base)"
             :class="
               day === dayOfMonth
-                ? 'text-(color:--color-gold) font-bold'
-                : 'text-(color:--color-slate-dark)'
+                ? 'border-(--color-leaf) bg-(--color-leaf-soft) font-bold text-(color:--color-navy)'
+                : 'border-(--color-card-border) bg-(--color-white) text-(color:--color-slate-dark)'
             "
             @click="selectDay(day)"
           >
@@ -284,7 +267,7 @@ async function handleSubmit() {
             <IconCheck
               v-if="day === dayOfMonth"
               size="18"
-              color="var(--color-gold)"
+              color="var(--color-leaf-dark)"
             />
           </button>
         </li>

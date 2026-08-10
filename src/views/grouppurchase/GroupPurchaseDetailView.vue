@@ -191,7 +191,7 @@ function goToPaymentPreview() {
 
 <template>
   <div
-    class="p-(--space-4) bg-(--color-bg) min-h-screen pb-[calc(var(--bottom-nav-height)+var(--size-cta-bar-height))]"
+    class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--size-cta-bar-height))]"
   >
     <!-- 로딩 상태 -->
     <div
@@ -210,7 +210,7 @@ function goToPaymentPreview() {
         공동구매 정보를 불러오지 못했어요
       </p>
       <AppButton
-        variant="navy"
+        variant="primary"
         @click="loadDetail"
       >
         다시 시도
@@ -264,7 +264,7 @@ function goToPaymentPreview() {
 
       <!-- 참여 현황 -->
       <section
-        class="p-(--space-4) rounded-(--radius-xl) bg-(--color-surface) mb-(--space-6)"
+        class="mb-(--space-6) rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-(--space-4) shadow-(--shadow-card)"
       >
         <div
           class="flex items-center justify-between mb-(--space-3)"
@@ -363,7 +363,7 @@ function goToPaymentPreview() {
 
       <!-- 배송 안내 -->
       <section
-        class="p-(--space-4) rounded-(--radius-xl) bg-(--color-surface) mb-(--space-6)"
+        class="mb-(--space-6) rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-(--space-4) shadow-(--shadow-card)"
       >
         <p
           class="text-(length:--font-sm) font-bold text-(color:--color-navy) pb-(--space-3) mb-(--space-3) border-b border-(--color-border)"
@@ -400,10 +400,10 @@ function goToPaymentPreview() {
 
       <!-- 결제 버튼: 금액은 groupPrice * 선택 수량으로 실시간 계산 -->
       <div
-        class="fixed bottom-(--bottom-nav-height) inset-x-0 p-(--space-4) bg-(--color-white)"
+        class="fixed inset-x-0 bottom-[calc(var(--bottom-nav-height)+var(--space-7))] bg-(--color-app-bg) p-(--space-4)"
       >
         <AppButton
-          variant="navy"
+          variant="primary"
           size="lg"
           block
           :disabled="isExpired || isQuantityOverTarget"

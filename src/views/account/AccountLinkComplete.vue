@@ -4,8 +4,7 @@ import { useRouter } from 'vue-router';
 import { useAccountStore } from '@/stores/account';
 import AccountSummaryCard from '@/components/common/AccountSummaryCard.vue';
 import AppButton from '@/components/common/AppButton.vue';
-import petSuccess from '@/assets/images/pet-success.png';
-import petNotFound from '@/assets/images/pet-not-found.png';
+import CompletionPageLayout from '@/components/common/CompletionPageLayout.vue';
 
 const router = useRouter();
 const store = useAccountStore();
@@ -26,17 +25,15 @@ function goToAccountManagement() {
 </script>
 
 <template>
-  <div class="min-h-screen max-w-(--content-max-width) mx-auto bg-(--color-bg) px-(--space-6) pt-[calc(var(--header-height)+var(--space-4))] flex flex-col items-center text-center">
-    <template v-if="!linkedAccount">
-      <img :src="petNotFound" alt="" class="w-32 h-auto mb-(--space-4)" />
-      <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-2)">
-        연동 정보를 찾을 수 없어요
-      </h1>
-      <p class="text-(length:--font-md) text-(color:--color-gray-600) mb-(--space-8)">
-        계좌 관리 화면에서 연동 상태를 다시 확인해주세요
-      </p>
+  <CompletionPageLayout
+    v-if="!linkedAccount"
+    title="연동 정보를 찾을 수 없어요"
+    description="계좌 관리 화면에서 연동 상태를 다시 확인해주세요"
+    variant="warning"
+  >
+    <template #action>
       <AppButton
-        variant="navy"
+        variant="primary"
         size="lg"
         block
         @click="goToAccountManagement"
@@ -44,27 +41,28 @@ function goToAccountManagement() {
         계좌 관리로 이동
       </AppButton>
     </template>
+  </CompletionPageLayout>
 
-    <template v-else>
-      <img :src="petSuccess" alt="" class="w-32 h-auto mb-(--space-4)" />
-      <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-2)">
-        <template v-if="store.justSetSimplePassword">계좌 연동과<br />비밀번호 설정까지 완료됐어요</template>
-        <template v-else>계좌 연동이 완료됐어요</template>
-      </h1>
-      <AccountSummaryCard
-        :bank-code="linkedAccount.bankCode"
-        :badge-size="36"
-        class="w-full mb-(--space-8)"
-      />
+  <CompletionPageLayout
+    v-else
+    :title="store.justSetSimplePassword ? '계좌 연동과 비밀번호 설정 완료' : '계좌 연동 완료'"
+    description="연결된 계좌를 애월 지갑에서 사용할 수 있어요"
+  >
+    <AccountSummaryCard
+      :bank-code="linkedAccount.bankCode"
+      :badge-size="36"
+      class="mt-(--space-6) w-full"
+    />
 
+    <template #action>
       <AppButton
         variant="primary"
         size="lg"
         block
         @click="goToAccountManagement"
       >
-        확인
+        계좌 목록으로
       </AppButton>
     </template>
-  </div>
+  </CompletionPageLayout>
 </template>

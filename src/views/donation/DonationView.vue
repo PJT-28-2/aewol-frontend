@@ -15,8 +15,7 @@ import IconSearch from '@/components/common/icons/IconSearch.vue'
 import IconSettings from '@/components/common/icons/IconSettings.vue'
 import IconStar from '@/components/common/icons/IconStar.vue'
 import IconWarning from '@/components/common/icons/IconWarning.vue'
-import donationCompleteImage from '@/assets/images/donation-complete.png'
-import donationConfirmImage from '@/assets/images/donation-confirm.png'
+import StatusVisual from '@/components/common/StatusVisual.vue'
 import { donationAmountPresets, donationCategories, savingUnits } from '@/constants/donation'
 import { useDonationStore } from '@/stores/donation'
 import { formatWon } from '@/utils/bankMeta'
@@ -78,7 +77,7 @@ onMounted(loadDonationData)
 
 <template>
   <div
-    class="mx-auto w-full max-w-(--content-max-width) box-border bg-(--color-white) px-[var(--space-5)] pt-[var(--space-4)] text-(--color-navy)"
+    class="mx-auto box-border w-full max-w-(--content-max-width) bg-(--color-app-bg) px-[var(--space-5)] pt-[var(--space-4)] text-(--color-navy)"
     :class="
       isMain
         ? 'min-h-[calc(100dvh-var(--header-height)-var(--bottom-nav-height))] pb-[calc(var(--space-8)+env(safe-area-inset-bottom))]'
@@ -103,7 +102,7 @@ onMounted(loadDonationData)
       </p>
       <AppButton
         class="mt-[var(--space-4)]"
-        variant="navy"
+        variant="primary"
         size="sm"
         @click="donationStore.fetchDonationData()"
       >
@@ -133,23 +132,23 @@ onMounted(loadDonationData)
       </header>
 
       <section
-        class="mt-[var(--space-5)] rounded-[var(--radius-xl)] bg-(--color-olive-surface) p-[var(--space-5)]"
+        class="mt-[var(--space-5)] rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-leaf-soft) p-[var(--space-5)] shadow-(--shadow-card)"
       >
         <b
-          class="block text-[length:var(--font-sm)] text-(--color-olive)"
+          class="block text-[length:var(--font-sm)] text-(--color-leaf-dark)"
         >누적 저금액</b>
         <strong
-          class="block text-[length:var(--font-3xl)] text-(--color-olive)"
+          class="block text-[length:var(--font-3xl)] text-(--color-navy)"
         >{{ formatWon(balance) }}</strong>
         <span
-          class="block text-[length:var(--font-sm)] text-(--color-olive)"
+          class="block text-[length:var(--font-sm)] text-(--color-leaf-dark)"
         >이번 달 {{ formatWon(monthlySaved) }} 모았어요</span>
         <div class="mt-[var(--space-3)] flex gap-[var(--space-3)]">
           <AppButton
             block
             pill
             size="sm"
-            variant="olive"
+            variant="primary"
             @click="go('/donation/give')"
           >
             기부하기
@@ -158,7 +157,8 @@ onMounted(loadDonationData)
             block
             pill
             size="sm"
-            variant="olive-outline"
+            variant="neutral"
+            class="bg-(--color-white)!"
             @click="go('/donation/withdraw')"
           >
             지갑으로 출금
@@ -167,7 +167,7 @@ onMounted(loadDonationData)
       </section>
 
       <section
-        class="mt-[var(--space-5)] flex flex-col gap-[var(--space-2)] rounded-[var(--radius-lg)] bg-(--color-surface) p-[var(--space-4)]"
+        class="mt-[var(--space-5)] flex flex-col gap-[var(--space-2)] rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-[var(--space-4)] shadow-(--shadow-card)"
       >
         <div class="flex items-center gap-[var(--space-1)]">
           <IconHeart
@@ -182,7 +182,7 @@ onMounted(loadDonationData)
       </section>
 
       <section
-        class="mt-[var(--space-3)] flex items-center gap-[var(--space-3)] rounded-[var(--radius-lg)] border border-(--color-border) p-[var(--space-4)]"
+        class="mt-[var(--space-3)] flex items-center gap-[var(--space-3)] rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-[var(--space-4)] shadow-(--shadow-card)"
         aria-label="저금통 설정 상태"
       >
         <div class="min-w-0 flex-1">
@@ -221,16 +221,16 @@ onMounted(loadDonationData)
       </h1>
 
       <section
-        class="rounded-[var(--radius-xl)] bg-(--color-navy) px-[var(--space-5)] py-[var(--space-3)] text-(--color-white)"
+        class="rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-leaf-soft) px-[var(--space-5)] py-[var(--space-4)] text-(--color-navy) shadow-(--shadow-card)"
       >
         <span
-          class="block text-[length:var(--font-sm)] text-(--color-slate-light)"
+          class="block text-[length:var(--font-sm)] text-(--color-slate-dark)"
         >내 저금통 잔액</span>
         <strong class="block text-[length:var(--font-2xl)]">
           ₩{{ balance.toLocaleString() }}
         </strong>
         <small
-          class="block text-[length:var(--font-sm)] text-(--color-slate-light)"
+          class="block text-[length:var(--font-sm)] text-(--color-slate-dark)"
         >잔돈을 모아 좋은 곳에 전해보세요</small>
       </section>
 
@@ -273,9 +273,9 @@ onMounted(loadDonationData)
       </h2>
       <article
         v-if="currentCampaign"
-        class="mt-[var(--space-3)] overflow-hidden rounded-[var(--radius-xl)] bg-(--color-surface) pb-[var(--space-3)]"
+        class="mt-[var(--space-3)] overflow-hidden rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) pb-[var(--space-3)] shadow-(--shadow-card)"
       >
-        <div class="grid h-28 place-items-center bg-(--color-border)">
+        <div class="grid h-28 place-items-center bg-(--color-leaf-soft)">
           <IconDog
             class="text-(--color-navy)"
             :size="34"
@@ -366,7 +366,7 @@ onMounted(loadDonationData)
           :key="campaign.id"
         >
           <button
-            class="flex w-full cursor-pointer items-center gap-[var(--space-3)] rounded-[var(--radius-lg)] border-0 bg-(--color-surface) p-[var(--space-3)] text-left text-(--color-navy) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-gold)"
+            class="flex w-full cursor-pointer items-center gap-[var(--space-3)] rounded-(--radius-xl) border border-(--color-card-border) bg-(--color-white) p-[var(--space-3)] text-left text-(--color-navy) shadow-(--shadow-card) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-leaf)"
             type="button"
             @click="donationStore.selectCampaign(campaign.id)"
           >
@@ -398,7 +398,7 @@ onMounted(loadDonationData)
         class="mt-[var(--space-5)]"
         block
         size="lg"
-        variant="navy"
+        variant="primary"
         :disabled="!donationStore.canDonate"
         @click="go('/donation/confirm')"
       >
@@ -409,11 +409,10 @@ onMounted(loadDonationData)
     <!-- RF-SI-03 · 기부확인 -->
     <template v-else-if="screen === 'confirm'">
       <section class="pt-[var(--space-2)] text-center">
-        <img
-          class="mx-auto mt-[45px] size-[139px] object-contain"
-          :src="donationConfirmImage"
-          alt=""
-        >
+        <StatusVisual
+          variant="warning"
+          class="mx-auto mt-[45px]"
+        />
         <h1 class="mt-[10px] text-[length:var(--font-2xl)] font-bold text-(--color-navy)">
           {{ formatWon(amount) }}을 기부할까요?
         </h1>
@@ -425,7 +424,7 @@ onMounted(loadDonationData)
 
         <div
           v-if="currentCampaign"
-          class="mt-[var(--space-7)] rounded-[var(--radius-xl)] bg-(--color-surface) p-[var(--space-4)] text-left"
+          class="mt-[var(--space-7)] rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-[var(--space-4)] text-left shadow-(--shadow-card)"
         >
           <b class="block">{{ currentCampaign.organization }}</b>
           <span
@@ -464,8 +463,8 @@ onMounted(loadDonationData)
           <AppButton
             block
             size="lg"
-            variant="secondary"
-            class="border-(--color-border)!"
+            variant="neutral"
+            class="bg-(--color-white)!"
             @click="go('/donation/give')"
           >
             취소
@@ -473,7 +472,7 @@ onMounted(loadDonationData)
           <AppButton
             block
             size="lg"
-            variant="navy"
+            variant="primary"
             :disabled="!donationStore.canDonate || donationStore.isSubmitting"
             :loading="donationStore.isSubmitting"
             @click="donate"
@@ -486,13 +485,12 @@ onMounted(loadDonationData)
 
     <!-- RF-SI-04 · 기부완료 -->
     <template v-else-if="screen === 'complete'">
-      <section class="pt-32 text-center">
-        <img
-          class="mx-auto mb-[var(--space-6)] size-[160px] object-contain"
-          :src="donationCompleteImage"
-          alt=""
-        >
-        <h1 class="m-0 text-[length:var(--font-2xl)] font-bold text-(--color-navy)">
+      <section class="flex min-h-[calc(100svh-var(--header-height)-var(--bottom-nav-height)-var(--space-8))] flex-col items-center text-center">
+        <StatusVisual
+          size="126"
+          class="mt-auto"
+        />
+        <h1 class="m-0 mt-(--space-7) text-[length:var(--font-2xl)] font-bold text-(--color-navy)">
           기부해주셔서 감사해요
         </h1>
         <p
@@ -502,7 +500,7 @@ onMounted(loadDonationData)
           전달했어요
         </p>
         <AppButton
-          class="mt-[var(--space-5)]"
+          class="mt-auto mb-(--space-3) !rounded-[20px]"
           block
           size="lg"
           variant="primary"
@@ -552,11 +550,11 @@ onMounted(loadDonationData)
         <button
           v-for="item in donationStore.filteredCampaigns"
           :key="item.id"
-          class="cursor-pointer overflow-hidden rounded-[var(--radius-xl)] border-0 bg-(--color-surface) p-0 text-left text-(--color-navy) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-gold)"
+          class="cursor-pointer overflow-hidden rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-0 text-left text-(--color-navy) shadow-(--shadow-card) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-leaf)"
           type="button"
           @click="chooseCampaign(item.id)"
         >
-          <span class="grid h-24 place-items-center bg-(--color-border)">
+          <span class="grid h-24 place-items-center bg-(--color-leaf-soft)">
             <IconDog
               class="text-(--color-navy)"
               :size="30"
@@ -609,7 +607,7 @@ onMounted(loadDonationData)
       </p>
 
       <section
-        class="mt-[var(--space-5)] flex items-start gap-[var(--space-4)] rounded-[var(--radius-xl)] bg-(--color-surface) p-[var(--space-4)]"
+        class="mt-[var(--space-5)] flex items-start gap-[var(--space-4)] rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-[var(--space-4)] shadow-(--shadow-card)"
       >
         <div class="min-w-0 flex-1">
           <b class="block">짜투리 저금통 사용</b>
@@ -665,7 +663,7 @@ onMounted(loadDonationData)
         자동 기부
       </h3>
       <section
-        class="flex items-start gap-[var(--space-4)] rounded-[var(--radius-xl)] bg-(--color-surface) p-[var(--space-4)]"
+        class="flex items-start gap-[var(--space-4)] rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-[var(--space-4)] shadow-(--shadow-card)"
       >
         <div class="min-w-0 flex-1">
           <b class="block">매달 자동으로 기부하기</b>

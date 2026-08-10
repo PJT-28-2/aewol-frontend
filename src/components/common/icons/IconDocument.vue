@@ -11,13 +11,11 @@ defineProps({
     :height="size"
     viewBox="0 0 24 24"
     fill="none"
-    :stroke="color"
-    stroke-width="2"
-    stroke-linecap="round"
-    stroke-linejoin="round"
   >
-    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-    <path d="M14 2v6h6" />
-    <path d="M9 13h6M9 17h6" />
+    <path
+      :fill="color"
+      fill-rule="evenodd"
+      d="M7 4.8h6.4L18 9.4v9.8H7V4.8Zm7.2 1.7v3.7h3.7l-3.7-3.7ZM9.5 13h6v1.5h-6V13Zm0 3h6v1.5h-6V16Z"
+    />
   </svg>
 </template>

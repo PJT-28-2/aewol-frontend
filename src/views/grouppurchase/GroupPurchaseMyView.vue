@@ -127,7 +127,7 @@ watch(selectedStatus, loadMyGroupPurchases);
 </script>
 
 <template>
-  <div class="p-(--space-4) pb-(--space-6) bg-(--color-bg) min-h-screen">
+  <div class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-(--space-6)">
     <!-- 헤더 -->
     <header class="mb-(--space-5)">
       <div class="flex items-center justify-between gap-(--space-3) mb-(--space-1)">
@@ -137,7 +137,7 @@ watch(selectedStatus, loadMyGroupPurchases);
         <!-- 상태 선택: 드롭다운이 아니라 바텀시트로 목록을 띄움 -->
         <button
           type="button"
-          class="inline-flex items-center shrink-0 gap-(--space-1) px-(--space-3) py-(--space-2) bg-(--color-white) border border-(--color-border) rounded-full text-(length:--font-sm) text-(color:--color-gray-700)"
+          class="inline-flex shrink-0 items-center gap-(--space-1) rounded-full border border-(--color-leaf) bg-(--color-leaf-soft) px-(--space-3) py-(--space-2) text-(length:--font-sm) font-semibold text-(color:--color-navy)"
           @click="isStatusSheetOpen = true"
         >
           {{ selectedStatus }}
@@ -157,18 +157,18 @@ watch(selectedStatus, loadMyGroupPurchases);
       v-model="isStatusSheetOpen"
       title="상태 선택"
     >
-      <ul class="list-none p-0 m-0 flex flex-col">
+      <ul class="m-0 list-none p-0">
         <li
           v-for="option in statusOptions"
           :key="option"
         >
           <button
             type="button"
-            class="w-full flex items-center justify-between px-(--space-2) py-(--space-3) text-(length:--font-base)"
+            class="flex w-full items-center justify-between py-(--space-3) text-(length:--font-base)"
             :class="
               selectedStatus === option
-                ? 'font-semibold text-(color:--color-navy)'
-                : 'text-(color:--color-gray-700)'
+                ? 'font-bold text-(color:--color-gold)'
+                : 'text-(color:--color-slate-dark)'
             "
             @click="selectStatus(option)"
           >
@@ -176,7 +176,7 @@ watch(selectedStatus, loadMyGroupPurchases);
             <IconCheck
               v-if="selectedStatus === option"
               size="20"
-              color="var(--color-navy)"
+              color="var(--color-gold)"
             />
           </button>
         </li>
@@ -200,7 +200,7 @@ watch(selectedStatus, loadMyGroupPurchases);
         공동구매 내역을 불러오지 못했어요
       </p>
       <AppButton
-        variant="navy"
+        variant="primary"
         @click="loadMyGroupPurchases"
       >
         다시 시도
@@ -227,7 +227,7 @@ watch(selectedStatus, loadMyGroupPurchases);
       >
         <router-link
           :to="`/group-purchase/${gp.gpId}/status?from=my`"
-          class="flex items-center justify-between gap-(--space-3) p-(--space-4) bg-(--color-white) rounded-(--radius-xl) shadow-(--shadow-sm) no-underline"
+          class="flex items-center justify-between gap-(--space-3) rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-(--space-4) shadow-(--shadow-card) no-underline"
         >
           <div class="min-w-0">
             <h3 class="text-(length:--font-md) font-semibold text-(color:--color-gray-900) mb-(--space-1)">

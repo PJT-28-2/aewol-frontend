@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import EmptyState from '@/components/common/EmptyState.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
+import FeatureIconTile from '@/components/common/FeatureIconTile.vue';
 import IconRecurring from '@/components/common/icons/IconRecurring.vue';
 import { usePaymentStore } from '@/stores/payment';
 import { getRecurringCategory } from '@/utils/recurringCategory';
@@ -28,7 +29,7 @@ function goToCancel(id) {
 
 <template>
   <div
-    class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))] bg-(--color-bg) min-h-screen"
+    class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-6))]"
   >
     <header class="mb-(--space-6)">
       <h1
@@ -70,18 +71,13 @@ function goToCancel(id) {
         <li
           v-for="payment in paymentStore.recurringPayments"
           :key="payment.id"
-          class="flex items-center gap-(--space-3) bg-(--color-white) border border-(--color-border) rounded-(--radius-icon) p-(--space-4)"
+          class="flex items-center gap-(--space-3) rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-(--space-4) shadow-(--shadow-card)"
         >
-          <span
-            class="flex items-center justify-center w-[40px] h-[40px] rounded-(--radius-lg) shrink-0"
-            :style="{ backgroundColor: getRecurringCategory(payment.category).bg }"
-          >
-            <component
-              :is="getRecurringCategory(payment.category).icon"
-              size="18"
-              color="var(--color-navy)"
-            />
-          </span>
+          <FeatureIconTile
+            :icon="getRecurringCategory(payment.category).icon"
+            :tone="getRecurringCategory(payment.category).tone"
+            :icon-size="20"
+          />
           <div class="flex-1">
             <p
               class="text-(length:--font-md) font-semibold text-(color:--color-navy)"
@@ -112,7 +108,7 @@ function goToCancel(id) {
 
     <button
       type="button"
-      class="w-full h-[52px] rounded-(--radius-xl) bg-(--color-navy) text-(color:--color-white) text-(length:--font-base) font-semibold"
+      class="h-[52px] w-full rounded-(--radius-xl) bg-(--color-leaf) text-(length:--font-base) font-semibold text-(color:--color-navy)"
       @click="goToRegister"
     >
       + 정기결제 등록하기

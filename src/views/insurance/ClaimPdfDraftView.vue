@@ -4,11 +4,10 @@ import { useRouter } from 'vue-router'
 import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
 import { useInsuranceStore } from '@/stores/insurance'
-import { registerHeaderBack } from '@/composables/useHeaderBack'
 import AppModal from '@/components/common/AppModal.vue'
 import AppButton from '@/components/common/AppButton.vue'
 import IconWarning from '@/components/common/icons/IconWarning.vue'
-import pageSaved3d from '@/assets/images/icons-3d/page_facing_up_3d.png'
+import IconDocument from '@/components/common/icons/IconDocument.vue'
 
 const router = useRouter()
 const insuranceStore = useInsuranceStore()
@@ -102,11 +101,6 @@ const handleDownload = async () => {
   }
 }
 
-const goBack = () => {
-  router.push({ path: '/insurance/claim', query: { step: '3' } })
-}
-registerHeaderBack(goBack)
-
 const goToInsuranceHome = () => {
   showSuccessModal.value = false
   router.replace('/insurance')
@@ -114,24 +108,31 @@ const goToInsuranceHome = () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-(--color-gray-100) flex flex-col">
-
+  <div class="min-h-screen bg-(--color-app-bg) flex flex-col">
     <!-- PDF 미리보기 영역 -->
     <div class="flex-1 p-(--space-5) px-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-5))] overflow-y-auto">
       <header class="mb-(--space-5) max-w-(--layout-max-width) mx-auto">
-        <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">PDF 초안 미리보기</h1>
+        <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">
+          PDF 초안 미리보기
+        </h1>
       </header>
 
-      <div ref="previewRef" class="bg-(--color-white) rounded-(--radius-lg) [box-shadow:var(--shadow-md)] p-(--space-6) max-w-(--layout-max-width) mx-auto">
-
-          <!-- PDF 헤더 -->
-          <div class="flex items-center gap-(--space-4) mb-(--space-5)">
+      <div
+        ref="previewRef"
+        class="mx-auto max-w-(--layout-max-width) rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-(--space-6) shadow-(--shadow-card)"
+      >
+        <!-- PDF 헤더 -->
+        <div class="flex items-center gap-(--space-4) mb-(--space-5)">
           <div class="flex items-end text-(length:--font-xl) leading-none font-bold tracking-[-0.045em] text-(color:--color-gray-900)">
             AEWOL
           </div>
           <div class="ml-auto text-right">
-            <p class="text-(length:--font-lg) font-bold text-(color:--color-navy)">보험금 청구서</p>
-            <p class="text-(length:--font-xs) text-(color:--color-slate) mt-(--space-1)">Insurance Claim Form</p>
+            <p class="text-(length:--font-lg) font-bold text-(color:--color-navy)">
+              보험금 청구서
+            </p>
+            <p class="text-(length:--font-xs) text-(color:--color-slate) mt-(--space-1)">
+              Insurance Claim Form
+            </p>
           </div>
         </div>
 
@@ -142,13 +143,13 @@ const goToInsuranceHome = () => {
         <ul class="mb-(--space-5)">
           <li
             v-for="row in [
-              { label: '병원명',     value: claimData.hospitalName,   extra: null },
-              { label: '진료일자',   value: claimData.visitDate,      extra: null },
-              { label: '청구금액',   value: claimData.claimAmount, extra: 'amount' },
-              { label: '사업자번호', value: claimData.businessNumber,  extra: 'biz' },
-              { label: '진단명',     value: claimData.diagnosis,      extra: null },
+              { label: '병원명', value: claimData.hospitalName, extra: null },
+              { label: '진료일자', value: claimData.visitDate, extra: null },
+              { label: '청구금액', value: claimData.claimAmount, extra: 'amount' },
+              { label: '사업자번호', value: claimData.businessNumber, extra: 'biz' },
+              { label: '진단명', value: claimData.diagnosis, extra: null },
               { label: '계약자 정보', value: claimData.ownerName || '미입력', extra: null },
-              { label: '계좌정보',   value: claimData.accountInfo,    extra: null },
+              { label: '계좌정보', value: claimData.accountInfo, extra: null },
             ]"
             :key="row.label"
             class="flex items-center py-(--space-3) border-b border-(--color-border) last:border-0"
@@ -168,21 +169,30 @@ const goToInsuranceHome = () => {
         </ul>
 
         <!-- 미확인 항목 경고 -->
-        <div v-if="!claimData.businessNumber" class="flex items-center gap-(--space-3) bg-(--color-gold-surface) rounded-(--radius-md) p-(--space-4) mb-(--space-5)">
+        <div
+          v-if="!claimData.businessNumber"
+          class="flex items-center gap-(--space-3) bg-(--color-gold-surface) rounded-(--radius-md) p-(--space-4) mb-(--space-5)"
+        >
           <IconWarning
             size="20"
             color="var(--color-gold-dark)"
             class="shrink-0"
           />
           <div>
-            <p class="text-(length:--font-sm) font-semibold text-(color:--color-gold-dark)">직접 확인이 필요한 항목이 있어요</p>
-            <p class="text-(length:--font-xs) text-(color:--color-gray-600) leading-relaxed">사업자번호는 영수증에서 직접 확인 후 기입해 주세요.</p>
+            <p class="text-(length:--font-sm) font-semibold text-(color:--color-gold-dark)">
+              직접 확인이 필요한 항목이 있어요
+            </p>
+            <p class="text-(length:--font-xs) text-(color:--color-gray-600) leading-relaxed">
+              사업자번호는 영수증에서 직접 확인 후 기입해 주세요.
+            </p>
           </div>
         </div>
 
         <!-- PDF 푸터 -->
         <div class="border-t border-(--color-border) pt-(--space-4) text-center">
-          <p class="text-(length:--font-xs) text-(color:--color-gray-500)">본 청구서는 애월 앱에서 자동 생성된 초안입니다.</p>
+          <p class="text-(length:--font-xs) text-(color:--color-gray-500)">
+            본 청구서는 애월 앱에서 자동 생성된 초안입니다.
+          </p>
           <p class="text-(length:--font-xs) text-(color:--color-gray-400) mt-(--space-1)">
             생성일: {{ new Date().toLocaleDateString('ko-KR') }}
           </p>
@@ -192,7 +202,10 @@ const goToInsuranceHome = () => {
       <!-- PDF 다운로드 버튼 -->
       <div class="print:hidden max-w-(--layout-max-width) mx-auto mt-(--space-5)">
         <!-- 필수값 누락 안내 -->
-        <p v-if="missingFields.length > 0" class="text-(length:--font-xs) text-(color:--color-danger-strong) text-center mb-(--space-2)">
+        <p
+          v-if="missingFields.length > 0"
+          class="text-(length:--font-xs) text-(color:--color-danger-strong) text-center mb-(--space-2)"
+        >
           누락된 항목이 있어요: {{ missingFields.join(', ') }}<br>이전 화면으로 돌아가서 채워주세요
         </p>
         <AppButton
@@ -211,15 +224,19 @@ const goToInsuranceHome = () => {
   </div>
 
   <!-- 저장 완료 모달 -->
-  <AppModal v-model="showSuccessModal" title="PDF 저장 완료" :show-close="false" :divider="false">
+  <AppModal
+    v-model="showSuccessModal"
+    title="PDF 저장 완료"
+    :show-close="false"
+    :divider="false"
+  >
     <div class="flex flex-col items-center text-center">
-      <img
-        :src="pageSaved3d"
-        alt=""
-        class="w-16 h-16 object-contain mb-(--space-3)"
-      >
+      <IconDocument
+        size="48"
+        class="mb-(--space-3)"
+      />
       <p class="text-(length:--font-md) text-(color:--color-gray-600) leading-relaxed">
-        보험금 청구서 PDF가 저장되었어요.<br />
+        보험금 청구서 PDF가 저장되었어요.<br>
         보험사에 제출 전 내용을 다시 한번 확인해 주세요.
       </p>
     </div>

@@ -9,12 +9,13 @@ import AppModal from '@/components/common/AppModal.vue'
 import AppInput from '@/components/common/AppInput.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
-import IconDog from '@/components/common/icons/IconDog.vue'
-import IconCat from '@/components/common/icons/IconCat.vue'
+import FeatureIconTile from '@/components/common/FeatureIconTile.vue'
+import PetSelectorChip from '@/components/common/PetSelectorChip.vue'
 import IconRegistrationPaper from '@/components/common/icons/IconRegistrationPaper.vue'
 import IconSyringe from '@/components/common/icons/IconSyringe.vue'
 import IconStethoscope from '@/components/common/icons/IconStethoscope.vue'
 import IconChevronRight from '@/components/common/icons/IconChevronRight.vue'
+import IconPlus from '@/components/common/icons/IconPlus.vue'
 
 const router = useRouter()
 const certificateStore = useCertificateStore()
@@ -194,7 +195,7 @@ async function handleMedicalSelect(event) {
 </script>
 
 <template>
-  <div class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))]">
+  <div class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-7))]">
     <header class="mb-(--space-5)">
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-2)">
         증명서 관리
@@ -206,31 +207,20 @@ async function handleMedicalSelect(event) {
 
     <!-- 반려동물 탭 -->
     <div
-      class="mb-(--space-6) flex items-center gap-(--space-2)"
+      class="mb-(--space-6) flex items-center gap-(--space-2) overflow-x-auto whitespace-nowrap pb-(--space-1) [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       role="tablist"
       aria-label="반려동물 선택"
     >
-      <button
+      <PetSelectorChip
         v-for="pet in certificateStore.pets"
         :key="pet.petId"
-        type="button"
+        :label="pet.name"
+        :species="pet.species"
+        :selected="certificateStore.selectedPetId === pet.petId"
         role="tab"
         :aria-selected="certificateStore.selectedPetId === pet.petId"
-        class="inline-flex h-(--control-height-sm) items-center gap-(--space-1) px-(--space-4) rounded-(--radius-full) border text-(length:--font-sm) font-bold transition-opacity hover:opacity-80"
-        :class="
-          certificateStore.selectedPetId === pet.petId
-            ? 'border-(--color-navy) bg-(--color-navy) text-(color:--color-white)'
-            : 'border-(--color-border) bg-(--color-surface) text-(color:--color-slate-dark)'
-        "
         @click="certificateStore.selectPet(pet.petId)"
-      >
-        <component
-          :is="pet.species === 'CAT' ? IconCat : IconDog"
-          :size="16"
-          :color="certificateStore.selectedPetId === pet.petId ? 'var(--color-white)' : 'var(--color-slate-dark)'"
-        />
-        {{ pet.name }}
-      </button>
+      />
     </div>
 
     <LoadingSpinner
@@ -249,12 +239,10 @@ async function handleMedicalSelect(event) {
           v-if="certificateStore.registrationDoc"
           class="flex items-center gap-(--space-3) bg-(--color-white) border border-(--color-border) rounded-(--radius-lg) p-(--space-4)"
         >
-          <span class="shrink-0 flex items-center justify-center w-10 h-10 rounded-(--radius-md) bg-(--color-pastel-blue)">
-            <IconRegistrationPaper
-              :size="20"
-              color="var(--color-navy)"
-            />
-          </span>
+          <FeatureIconTile
+            :icon="IconRegistrationPaper"
+            tone="pink"
+          />
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-(--space-2) mb-(--space-1)">
               <p class="text-(length:--font-md) font-bold text-(color:--color-navy) truncate">
@@ -287,11 +275,16 @@ async function handleMedicalSelect(event) {
             message="아직 연동된 동물등록증이 없어요"
           />
           <AppButton
-            variant="secondary"
+            variant="neutral"
             block
+            class="border-(--color-leaf)! bg-(--color-white)!"
             @click="openLinkFlow"
           >
-            + 동물등록증 연동하기
+            <IconPlus
+              size="18"
+              color="var(--color-leaf-dark)"
+            />
+            동물등록증 연동하기
           </AppButton>
         </template>
       </section>
@@ -311,12 +304,10 @@ async function handleMedicalSelect(event) {
             :key="doc.docId"
             class="flex items-center gap-(--space-3) bg-(--color-white) border border-(--color-border) rounded-(--radius-lg) p-(--space-4) mb-(--space-2)"
           >
-            <span class="shrink-0 flex items-center justify-center w-10 h-10 rounded-(--radius-md) bg-(--color-pastel-green)">
-              <IconSyringe
-                :size="18"
-                color="var(--color-navy)"
-              />
-            </span>
+            <FeatureIconTile
+              :icon="IconSyringe"
+              tone="blue"
+            />
             <div class="flex-1 min-w-0">
               <p class="text-(length:--font-md) font-semibold text-(color:--color-navy) truncate">
                 {{ doc.docName }}
@@ -352,11 +343,16 @@ async function handleMedicalSelect(event) {
           @change="handleVaccinationSelect"
         >
         <AppButton
-          variant="secondary"
+          variant="neutral"
           block
+          class="border-(--color-leaf)! bg-(--color-white)!"
           @click="openVaccinationUpload"
         >
-          + 접종증명서 업로드
+          <IconPlus
+            size="18"
+            color="var(--color-leaf-dark)"
+          />
+          접종증명서 업로드
         </AppButton>
       </section>
 
@@ -375,12 +371,10 @@ async function handleMedicalSelect(event) {
             :key="doc.docId"
             class="flex items-center gap-(--space-3) bg-(--color-white) border border-(--color-border) rounded-(--radius-lg) p-(--space-4) mb-(--space-2)"
           >
-            <span class="shrink-0 flex items-center justify-center w-10 h-10 rounded-(--radius-md) bg-(--color-pastel-lilac)">
-              <IconStethoscope
-                :size="18"
-                color="var(--color-navy)"
-              />
-            </span>
+            <FeatureIconTile
+              :icon="IconStethoscope"
+              tone="green"
+            />
             <div class="flex-1 min-w-0">
               <p class="text-(length:--font-md) font-semibold text-(color:--color-navy) truncate">
                 {{ doc.docName }}
@@ -416,11 +410,16 @@ async function handleMedicalSelect(event) {
           @change="handleMedicalSelect"
         >
         <AppButton
-          variant="secondary"
+          variant="neutral"
           block
+          class="border-(--color-leaf)! bg-(--color-white)!"
           @click="openMedicalUpload"
         >
-          + 진료확인서 업로드
+          <IconPlus
+            size="18"
+            color="var(--color-leaf-dark)"
+          />
+          진료확인서 업로드
         </AppButton>
       </section>
     </template>
@@ -430,6 +429,9 @@ async function handleMedicalSelect(event) {
       v-model="showAuthModal"
       title="동물등록증 조회"
     >
+      <template #icon>
+        <IconRegistrationPaper size="24" />
+      </template>
       <p class="text-(length:--font-sm) text-(color:--color-gray-600) mb-(--space-4)">
         국가동물보호정보시스템 조회를 위해 신청인 정보를 입력해주세요
       </p>
@@ -463,13 +465,16 @@ async function handleMedicalSelect(event) {
       <template #footer>
         <div class="flex w-full gap-(--space-3)">
           <AppButton
-            variant="secondary"
-            class="flex-1 border-(--color-border)!"
+            variant="neutral"
+            size="lg"
+            class="flex-1"
             @click="showAuthModal = false"
           >
             취소
           </AppButton>
           <AppButton
+            variant="primary"
+            size="lg"
             class="flex-1"
             :loading="isSubmittingAuth"
             @click="submitAuth"
@@ -486,6 +491,9 @@ async function handleMedicalSelect(event) {
       title="조회된 동물등록정보"
       :show-close="false"
     >
+      <template #icon>
+        <IconRegistrationPaper size="24" />
+      </template>
       <template v-if="candidates.length > 0">
         <p class="text-(length:--font-sm) text-(color:--color-gray-600) mb-(--space-3)">
           신청인 명의로 조회된 동물이에요. 연동할 항목을 선택해주세요
@@ -495,11 +503,16 @@ async function handleMedicalSelect(event) {
             v-for="candidate in candidates"
             :key="candidate.petId"
           >
-            <label class="flex items-center gap-(--space-3) bg-(--color-surface) rounded-(--radius-lg) p-(--space-3) cursor-pointer">
+            <label
+              class="flex cursor-pointer items-center gap-(--space-3) rounded-(--radius-xl) border p-(--space-4) transition-colors"
+              :class="selectedCandidatePetIds.includes(candidate.petId)
+                ? 'border-(--color-leaf) bg-(--color-leaf-soft)'
+                : 'border-(--color-card-border) bg-(--color-white)'"
+            >
               <input
                 type="checkbox"
                 :checked="selectedCandidatePetIds.includes(candidate.petId)"
-                class="shrink-0 w-5 h-5 accent-(--color-navy)"
+                class="size-5 shrink-0 accent-(--color-leaf)"
                 @change="toggleCandidate(candidate.petId)"
               >
               <div class="flex-1 min-w-0">
@@ -527,20 +540,27 @@ async function handleMedicalSelect(event) {
         {{ matchError }}
       </p>
       <template #footer>
-        <AppButton
-          variant="secondary"
-          @click="showMatchModal = false"
-        >
-          닫기
-        </AppButton>
-        <AppButton
-          v-if="candidates.length > 0"
-          :loading="isConfirming"
-          :disabled="selectedCandidatePetIds.length === 0"
-          @click="confirmMatches"
-        >
-          선택한 동물 연동하기
-        </AppButton>
+        <div class="flex w-full gap-(--space-3)">
+          <AppButton
+            variant="neutral"
+            size="lg"
+            class="flex-1"
+            @click="showMatchModal = false"
+          >
+            닫기
+          </AppButton>
+          <AppButton
+            v-if="candidates.length > 0"
+            variant="primary"
+            size="lg"
+            class="flex-1"
+            :loading="isConfirming"
+            :disabled="selectedCandidatePetIds.length === 0"
+            @click="confirmMatches"
+          >
+            연동하기
+          </AppButton>
+        </div>
       </template>
     </AppModal>
   </div>

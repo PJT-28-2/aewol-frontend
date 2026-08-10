@@ -5,6 +5,7 @@ import { useAuthStore } from '@/stores/auth'
 import { usePetStore } from '@/stores/pet'
 import PasswordInput from '@/components/common/PasswordInput.vue'
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
+import AewolLogo from '@/components/common/AewolLogo.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -158,11 +159,11 @@ const handleKakaoLogin = () => {
 
 <template>
   <main
-    class="min-h-svh w-full bg-(--color-white)"
+    class="min-h-svh w-full bg-(--color-app-bg)"
   >
     <template v-if="!showEmailForm">
       <section
-        class="relative h-[480px] bg-(--color-pastel-mist) max-h-[700px]:h-[420px]"
+        class="relative h-[480px] bg-(--color-leaf-soft) max-h-[700px]:h-[420px]"
         aria-labelledby="login-title"
       >
         <h1
@@ -172,12 +173,10 @@ const handleKakaoLogin = () => {
           애월 로그인
         </h1>
 
-        <div
-          class="absolute top-[190px] left-1/2 flex -translate-x-1/2 items-end text-[38px] leading-none font-bold tracking-[-0.055em] text-(color:--color-gray-900) max-h-[700px]:top-[155px]"
-          aria-hidden="true"
-        >
-          AEWOL
-        </div>
+        <AewolLogo
+          class="absolute top-[190px] left-1/2 -translate-x-1/2 max-h-[700px]:top-[155px]"
+          size="38"
+        />
         <p
           class="absolute top-[250px] w-full text-center text-(length:--auth-font-sm) leading-[1.3] text-(color:--color-slate-dark) max-h-[700px]:top-[214px]"
         >
@@ -197,7 +196,7 @@ const handleKakaoLogin = () => {
           카카오로 3초만에 시작하기
         </button>
         <button
-          class="flex h-[52px] w-full items-center justify-center rounded-(--radius-xl) bg-(--color-navy) text-[14.5px] leading-[1.3] font-(--font-bold) text-(color:--color-white)"
+          class="flex h-[52px] w-full items-center justify-center rounded-(--radius-xl) bg-(--color-leaf) text-[14.5px] leading-[1.3] font-(--font-bold) text-(color:--color-navy)"
           type="button"
           @click="openEmailLogin"
         >
@@ -236,7 +235,7 @@ const handleKakaoLogin = () => {
       aria-labelledby="email-login-title"
     >
       <div
-        class="fixed inset-x-0 top-0 z-100 h-(--header-height) bg-(--color-white)"
+        class="fixed inset-x-0 top-0 z-100 h-(--header-height) bg-(--color-app-bg)"
         aria-hidden="true"
       />
       <button
@@ -264,7 +263,7 @@ const handleKakaoLogin = () => {
       >
         <p
           v-if="isDevelopment"
-          class="mb-4 rounded-(--radius-lg) bg-(--color-surface) px-3 py-2 text-[12px] leading-[1.5] text-(color:--color-slate-dark)"
+          class="mb-4 rounded-(--radius-xl) border border-(--color-card-border) bg-(--color-white) px-3 py-2 text-[12px] leading-[1.5] text-(color:--color-slate-dark)"
         >
           개발용 계정: test@aewol.com / test1234
         </p>
@@ -277,7 +276,7 @@ const handleKakaoLogin = () => {
         <input
           id="email"
           v-model="email"
-          class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
+          class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-white) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-leaf)"
           type="email"
           autocomplete="email"
           placeholder="example@aewol.com"
@@ -292,14 +291,14 @@ const handleKakaoLogin = () => {
         <PasswordInput
           id="password"
           v-model="password"
-          input-class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
+          input-class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-white) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-leaf)"
           autocomplete="current-password"
           placeholder="8자 이상 입력해주세요"
           minlength="8"
           required
         />
         <button
-          class="mt-6 flex h-[52px] w-full items-center justify-center rounded-(--radius-xl) bg-(--color-gold) text-[14.5px] leading-[1.3] font-(--font-bold) text-(color:--color-navy) disabled:cursor-wait disabled:opacity-65"
+          class="mt-6 flex h-[52px] w-full items-center justify-center rounded-(--radius-xl) bg-(--color-leaf) text-[14.5px] leading-[1.3] font-(--font-bold) text-(color:--color-navy) disabled:cursor-wait disabled:opacity-65"
           type="submit"
           :disabled="isLoading"
         >

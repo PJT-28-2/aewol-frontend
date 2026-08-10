@@ -271,7 +271,7 @@ const isPinSheetOpen = ref(false);
 
 <template>
   <div
-    class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+88px)] bg-(--color-bg) min-h-screen"
+    class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-[calc(var(--bottom-nav-height)+88px)]"
   >
     <!-- 로딩 상태 -->
     <div
@@ -290,7 +290,7 @@ const isPinSheetOpen = ref(false);
         결제 정보를 불러오지 못했어요
       </p>
       <AppButton
-        variant="navy"
+        variant="primary"
         @click="loadPaymentMethod"
       >
         다시 시도
@@ -308,7 +308,7 @@ const isPinSheetOpen = ref(false);
       <!-- 배송지: 잔액부족 상태에서는 표시하지 않음 -->
       <section
         v-if="!isBalanceInsufficient"
-        class="bg-(--color-surface) rounded-(--radius-lg) p-(--space-4) mb-(--space-4)"
+        class="mb-(--space-4) rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-(--space-4) shadow-(--shadow-card)"
       >
         <template v-if="shippingAddress">
           <div class="flex items-center justify-between mb-(--space-2)">
@@ -347,7 +347,8 @@ const isPinSheetOpen = ref(false);
             등록된 배송지가 없어요
           </p>
           <AppButton
-            variant="secondary"
+            variant="neutral"
+            class="bg-(--color-white)!"
             block
             @click="handleChangeAddress"
           >
@@ -358,7 +359,7 @@ const isPinSheetOpen = ref(false);
 
       <!-- 상품 정보 -->
       <section
-        class="flex items-center gap-(--space-3) bg-(--color-surface) rounded-(--radius-lg) p-(--space-4) mb-(--space-4)"
+        class="mb-(--space-4) flex items-center gap-(--space-3) rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-(--space-4) shadow-(--shadow-card)"
       >
         <div
           class="shrink-0 w-[48px] h-[48px] bg-(--color-white) border border-(--color-border) rounded-(--radius-md)"
@@ -392,15 +393,15 @@ const isPinSheetOpen = ref(false);
           :class="
             isBalanceInsufficient
               ? 'bg-(--color-danger-soft) border-[1.5px] border-(--color-danger-strong)'
-              : 'bg-(--color-white) border-2 border-(--color-navy)'
+              : 'bg-(--color-white) border border-(--color-leaf) shadow-(--shadow-card)'
           "
         >
           <span
-            class="inline-flex items-center justify-center w-10 h-6 rounded-(--radius-sm) bg-(--color-navy)"
+            class="inline-flex h-6 w-10 items-center justify-center rounded-(--radius-sm) bg-(--color-leaf)"
           >
             <IconWallet
               :size="16"
-              color="var(--color-white)"
+              color="var(--color-navy)"
             />
           </span>
           <p
@@ -517,7 +518,7 @@ const isPinSheetOpen = ref(false);
         variant="primary"
         size="lg"
         block
-        class="fixed bottom-[calc(var(--bottom-nav-height)+var(--space-4))] left-(--space-4) right-(--space-4) !w-auto shadow-(--shadow-md)"
+        class="fixed bottom-[calc(var(--bottom-nav-height)+var(--space-7))] left-(--space-4) right-(--space-4) !w-auto shadow-(--shadow-md)"
         @click="handleCharge"
       >
         충전하러 가기
@@ -526,12 +527,12 @@ const isPinSheetOpen = ref(false);
       <!-- 결제하기 버튼: 배송지 미등록 시 비활성화 -->
       <AppButton
         v-else
-        variant="navy"
+        variant="primary"
         size="lg"
         block
         :disabled="!shippingAddress"
         :loading="isPaying"
-        class="fixed bottom-[calc(var(--bottom-nav-height)+var(--space-4))] left-(--space-4) right-(--space-4) !w-auto !h-auto !min-h-(--control-height-lg) !py-(--space-3) text-center shadow-(--shadow-md)"
+        class="fixed bottom-[calc(var(--bottom-nav-height)+var(--space-7))] left-(--space-4) right-(--space-4) !w-auto !h-auto !min-h-(--control-height-lg) !py-(--space-3) text-center shadow-(--shadow-md)"
         @click="isPinSheetOpen = true"
       >
         {{
@@ -624,7 +625,7 @@ const isPinSheetOpen = ref(false);
             >
             <AppButton
               class="!h-[46px] !w-20 !rounded-(--radius-md) !px-0 shrink-0 whitespace-nowrap !text-[length:var(--font-xs)] !font-bold"
-              variant="navy"
+              variant="primary"
               type="button"
               @click="isPostcodeOpen = true"
             >
@@ -692,9 +693,9 @@ const isPinSheetOpen = ref(false);
 
         <div class="flex gap-(--space-3)">
           <AppButton
-            variant="secondary"
+            variant="neutral"
+            class="flex-1 bg-(--color-white)!"
             size="lg"
-            class="flex-1 border-(--color-border)!"
             @click="closeAddressSheet"
           >
             취소

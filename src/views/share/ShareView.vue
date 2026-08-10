@@ -6,9 +6,7 @@ import BottomSheet from '@/components/common/BottomSheet.vue'
 import ContributionDonutChart from '@/components/share/ContributionDonutChart.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
-import SelectableChip from '@/components/common/SelectableChip.vue'
-import IconCat from '@/components/common/icons/IconCat.vue'
-import IconDog from '@/components/common/icons/IconDog.vue'
+import PetSelectorChip from '@/components/common/PetSelectorChip.vue'
 import IconPaw from '@/components/common/icons/IconPaw.vue'
 import IconPlus from '@/components/common/icons/IconPlus.vue'
 import { useShareStore } from '@/stores/share'
@@ -56,7 +54,7 @@ onMounted(initializeSharedCare)
 
 <template>
   <div
-    class="mx-auto min-h-[calc(100dvh-var(--header-height)-var(--bottom-nav-height))] w-full max-w-(--content-max-width) box-border bg-(--color-white) px-[var(--space-5)] pt-[var(--space-4)] pb-[calc(var(--space-6)+env(safe-area-inset-bottom))] text-(--color-navy)"
+    class="mx-auto min-h-[calc(100dvh-var(--header-height)-var(--bottom-nav-height))] w-full max-w-(--content-max-width) box-border bg-(--color-app-bg) px-[var(--space-5)] pt-[var(--space-4)] pb-[calc(var(--space-7)+env(safe-area-inset-bottom))] text-(--color-navy)"
   >
     <section
       v-if="shareStore.isLoading"
@@ -76,7 +74,7 @@ onMounted(initializeSharedCare)
       </p>
       <AppButton
         class="mt-[var(--space-4)]"
-        variant="navy"
+        variant="primary"
         size="sm"
         @click="retryFetchSharedCare"
       >
@@ -100,7 +98,7 @@ onMounted(initializeSharedCare)
         <p
           class="mb-0 mt-[var(--space-1)] text-(length:--font-md) text-(--color-slate-muted)"
         >
-          가족과 지갑을 공유하고 기여도를 확인해요
+          가족과 돌봄 기록을 나누고 함께 관리해요
         </p>
       </header>
 
@@ -116,27 +114,21 @@ onMounted(initializeSharedCare)
         </h2>
 
         <div
-          class="mt-[var(--space-4)] flex items-center gap-[var(--space-2)]"
+          class="mt-[var(--space-4)] flex items-center gap-[var(--space-2)] overflow-x-auto whitespace-nowrap pb-(--space-1) [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           role="group"
           aria-labelledby="pet-select-title"
         >
-          <SelectableChip
+          <PetSelectorChip
             v-for="pet in shareStore.pets"
             :key="pet.id"
-            class="min-w-[var(--share-pet-chip-min-width)]"
-            :class="selectedPetId !== pet.id ? 'text-(--color-navy)!' : ''"
+            :label="pet.name"
+            :species="pet.type"
             :selected="selectedPetId === pet.id"
             @click="selectedPetId = pet.id"
-          >
-            <component
-              :is="pet.type === 'cat' ? IconCat : IconDog"
-              :size="16"
-            />
-            {{ pet.name }}
-          </SelectableChip>
+          />
           <AppButton
-            class="!h-[var(--control-height-sm)] shrink-0 border-(--color-border)!"
-            variant="secondary"
+            class="!h-[var(--control-height-sm)] shrink-0"
+            variant="neutral"
             size="sm"
             pill
             icon-only
@@ -149,19 +141,19 @@ onMounted(initializeSharedCare)
       </section>
 
       <section
-        class="mt-[var(--space-4)]"
+        class="mt-[var(--space-5)] rounded-[24px] bg-(--color-white) p-(--space-5) shadow-(--shadow-sm)"
         aria-labelledby="members-title"
       >
         <h2
           id="members-title"
-          class="m-0 text-(length:--font-base) font-semibold text-(--color-navy)"
+          class="m-0 text-(length:--font-base) font-bold text-(--color-navy)"
         >
           참여 중인 가족
         </h2>
 
         <div
           v-if="hasMembers"
-          class="mt-[var(--space-4)] flex items-start gap-[var(--space-3)] overflow-x-auto pb-[var(--space-2)] [scrollbar-color:transparent_transparent] scrollbar-thin hover:[scrollbar-color:var(--color-gray-300)_transparent] [&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-transparent [&::-webkit-scrollbar-track]:bg-transparent hover:[&::-webkit-scrollbar-thumb]:bg-(--color-gray-300)"
+          class="mt-[var(--space-4)] flex items-start gap-[var(--space-3)] overflow-x-auto pb-[var(--space-2)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           <article
             v-for="member in shareStore.members"
@@ -188,7 +180,7 @@ onMounted(initializeSharedCare)
           >
             <span class="flex flex-col items-center">
               <span
-                class="grid size-[var(--share-avatar-size)] place-items-center rounded-full bg-(--color-surface)"
+                class="grid size-[var(--share-avatar-size)] place-items-center rounded-full bg-(--color-leaf-soft)"
               >
                 <IconPlus :size="24" />
               </span>
@@ -207,7 +199,7 @@ onMounted(initializeSharedCare)
       </section>
 
       <section
-        class="mt-[var(--space-8)] grid place-items-center"
+        class="mt-[var(--space-5)] grid place-items-center rounded-[24px] bg-(--color-white) p-(--space-6) shadow-(--shadow-sm)"
         aria-labelledby="contribution-title"
       >
         <div
@@ -240,12 +232,12 @@ onMounted(initializeSharedCare)
       </section>
 
       <section
-        class="mt-[var(--space-7)]"
+        class="mt-[var(--space-5)] rounded-[24px] bg-(--color-white) p-(--space-5) shadow-(--shadow-sm)"
         aria-labelledby="contribution-list-title"
       >
         <h2
           id="contribution-list-title"
-          class="m-0 text-(length:--font-base) font-semibold text-(--color-navy)"
+          class="m-0 text-(length:--font-base) font-bold text-(--color-navy)"
         >
           가족별 기여도
         </h2>
@@ -257,7 +249,7 @@ onMounted(initializeSharedCare)
           <li
             v-for="contribution in sortedContributions"
             :key="contribution.id"
-            class="flex h-[var(--control-height-md)] items-center rounded-[var(--radius-lg)] bg-(--color-surface) px-[var(--space-4)]"
+            class="flex h-[var(--control-height-md)] items-center rounded-[var(--radius-xl)] bg-(--color-app-bg) px-[var(--space-4)]"
           >
             <span
               class="mr-[var(--space-3)] size-[var(--share-contribution-dot-size)] shrink-0 rounded-full"
