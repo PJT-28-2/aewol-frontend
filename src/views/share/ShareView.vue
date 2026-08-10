@@ -8,6 +8,7 @@ import EmptyState from '@/components/common/EmptyState.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import SelectableChip from '@/components/common/SelectableChip.vue'
 import IconCat from '@/components/common/icons/IconCat.vue'
+import IconDocument from '@/components/common/icons/IconDocument.vue'
 import IconDog from '@/components/common/icons/IconDog.vue'
 import IconPaw from '@/components/common/icons/IconPaw.vue'
 import IconPlus from '@/components/common/icons/IconPlus.vue'
@@ -205,6 +206,16 @@ onMounted(initializeSharedCare)
           함께 돌볼 가족을 초대해 주세요.
         </p>
       </section>
+
+      <AppButton
+        class="mt-[var(--space-5)]"
+        variant="secondary"
+        block
+        @click="router.push({ path: '/share/diary', query: { petId: selectedPetId } })"
+      >
+        <IconDocument :size="20" />
+        육아일기 보기
+      </AppButton>
 
       <section
         class="mt-[var(--space-8)] grid place-items-center"

@@ -44,4 +44,32 @@ export const shareApi = {
   getLogs(petId) {
     return api.get('/share/logs', { params: { petId } })
   },
+
+  // ── 공동육아 일기 ──────────────────────────────────────────────
+
+  getDiaries(petId, yearMonth) {
+    return api.get(`/share/${petId}/diaries`, { params: { yearMonth } })
+  },
+
+  getDiary(diaryId) {
+    return api.get(`/share/diaries/${diaryId}`)
+  },
+
+  // 사진을 함께 보내야 해서 multipart로 전송한다. Content-Type은 브라우저가
+  // boundary와 함께 자동으로 채우므로 직접 지정하지 않는다.
+  createDiary({ petId, diaryDate, content, image }) {
+    const formData = new FormData()
+    formData.append('diaryDate', diaryDate)
+    if (content) formData.append('content', content)
+    if (image) formData.append('image', image)
+    return api.post(`/share/${petId}/diaries`, formData)
+  },
+
+  updateDiary(diaryId, { diaryDate, content }) {
+    return api.put(`/share/diaries/${diaryId}`, { diaryDate, content })
+  },
+
+  deleteDiary(diaryId) {
+    return api.delete(`/share/diaries/${diaryId}`)
+  },
 }
