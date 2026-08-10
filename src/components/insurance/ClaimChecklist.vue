@@ -10,7 +10,7 @@ const props = defineProps({
 </script>
 
 <template>
-  <section class="bg-(--color-white) rounded-(--radius-xl) p-(--space-5) [box-shadow:var(--shadow-md)]">
+  <section class="rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-(--space-5) shadow-(--shadow-card)">
     <h2 class="text-(length:--font-base) font-semibold text-(color:--color-gray-900) mb-(--space-4)">
       청구 서류 체크리스트
     </h2>
@@ -25,10 +25,15 @@ const props = defineProps({
           role="img"
           :aria-label="item.checked ? `${item.name} 확보 완료` : `${item.name} 미확보`"
           :class="item.checked
-            ? 'bg-(--color-olive) border-(--color-olive)'
+            ? 'bg-(--color-leaf) border-(--color-leaf)'
             : 'border-(--color-gray-300)'"
         >
-          <IconCheck v-if="item.checked" :size="14" color="var(--color-white)" aria-hidden="true" />
+          <IconCheck
+            v-if="item.checked"
+            :size="14"
+            color="var(--color-white)"
+            aria-hidden="true"
+          />
         </span>
         <div class="flex flex-col gap-(--space-1)">
           <span class="text-(length:--font-md) font-medium text-(color:--color-gray-900)">{{ item.name }}</span>

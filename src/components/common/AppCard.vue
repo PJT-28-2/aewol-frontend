@@ -13,29 +13,9 @@ defineProps({
 
 <template>
   <div
-    class="app-card"
-    :class="{
-      'app-card--padded': padding,
-      'app-card--shadow': shadow,
-    }"
+    class="overflow-hidden rounded-[22px] border border-(--color-card-border) bg-(--color-white)"
+    :class="[padding ? 'p-(--space-5)' : '', shadow ? 'shadow-(--shadow-card)' : '']"
   >
     <slot />
   </div>
 </template>
-
-<style scoped>
-.app-card {
-  background-color: var(--color-white);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--color-border);
-  overflow: hidden;
-}
-
-.app-card--padded {
-  padding: var(--space-4);
-}
-
-.app-card--shadow {
-  box-shadow: var(--shadow-sm);
-}
-</style>

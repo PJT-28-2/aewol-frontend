@@ -2,7 +2,7 @@
 export const mockPets = [
   {
     id: 1,
-    name: '소로',
+    name: '포리',
     species: 'DOG',
     breed: '포메라니안',
     birthDate: '2023-05-12',
@@ -23,7 +23,7 @@ export const mockPets = [
 export const mockPetsById = {
   1: {
     id: 1,
-    name: '소로',
+    name: '포리',
     species: 'DOG',
     regNumber: '410000012345678',
     breed: '포메라니안',

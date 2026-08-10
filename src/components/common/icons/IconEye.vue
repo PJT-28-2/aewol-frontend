@@ -28,7 +28,7 @@ defineProps({
     <path
       d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"
       stroke="currentColor"
-      stroke-width="1.8"
+      stroke-width="2"
       stroke-linecap="round"
       stroke-linejoin="round"
     />
@@ -37,13 +37,13 @@ defineProps({
       cy="12"
       r="2.5"
       stroke="currentColor"
-      stroke-width="1.8"
+      stroke-width="2"
     />
     <path
       v-if="crossed"
       d="m4 4 16 16"
       stroke="currentColor"
-      stroke-width="1.8"
+      stroke-width="2"
       stroke-linecap="round"
     />
   </svg>

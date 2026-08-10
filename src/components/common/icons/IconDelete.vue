@@ -1,26 +1,16 @@
 <script setup>
-defineProps({
-  size: {
-    type: [Number, String],
-    default: 24,
-  },
-  color: {
-    type: String,
-    default: 'currentColor',
-  },
-});
+defineProps({ size: { type: [String, Number], default: 24 }, color: { type: String, default: 'currentColor' } })
 </script>
-
 <template>
   <svg
     :width="size"
     :height="size"
     viewBox="0 0 24 24"
-    :fill="color"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      d="m17.561 10.561-1.44 1.439 1.44 1.439a1.5 1.5 0 0 1 -2.122 2.122l-1.439-1.44-1.439 1.44a1.5 1.5 0 0 1 -2.122-2.122l1.44-1.439-1.44-1.439a1.5 1.5 0 0 1 2.122-2.122l1.439 1.44 1.439-1.44a1.5 1.5 0 0 1 2.122 2.122zm6.439-3.561v10a5.006 5.006 0 0 1 -5 5h-9.023a5.534 5.534 0 0 1 -4.37-2.159l-5.3-6.93a1.5 1.5 0 0 1 0-1.822l5.3-6.93a5.534 5.534 0 0 1 4.37-2.159h9.023a5.006 5.006 0 0 1 5 5zm-3 0a2 2 0 0 0 -2-2h-9.023a2.518 2.518 0 0 0 -1.987.981l-4.601 6.019 4.6 6.019a2.518 2.518 0 0 0 1.988.981h9.023a2 2 0 0 0 2-2z"
-    />
-  </svg>
+    fill="none"
+    :stroke="color"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+  ><path d="M4 7h16M9 3h6l1 4H8l1-4ZM6 7l1 14h10l1-14M10 11v6M14 11v6" /></svg>
 </template>

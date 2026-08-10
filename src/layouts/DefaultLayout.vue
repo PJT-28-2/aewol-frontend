@@ -7,7 +7,10 @@ const route = useRoute()
 </script>
 
 <template>
-  <div class="flex min-h-svh flex-col bg-(--color-app-bg)">
+  <div
+    class="flex min-h-svh flex-col"
+    :class="route.path.startsWith('/payment/qr') ? 'bg-(--color-navy)' : 'bg-(--color-app-bg)'"
+  >
     <PageHeader
       v-if="!route.meta.hideHeader"
       :title="route.meta.title || ''"
@@ -15,12 +18,16 @@ const route = useRoute()
     />
 
     <main
-      class="flex-1 bg-(--color-app-bg) pb-[calc(var(--bottom-nav-height)+var(--space-6)+env(safe-area-inset-bottom,0px))]"
-      :class="route.meta.hideHeader ? '' : 'pt-(--header-height)'"
+      class="flex-1"
+      :class="[
+        route.meta.hideBottomNav ? 'pb-0' : 'pb-[calc(var(--bottom-nav-height)+var(--space-6)+env(safe-area-inset-bottom,0px))]',
+        route.meta.hideHeader ? '' : 'pt-(--header-height)',
+        route.path.startsWith('/payment/qr') ? 'bg-(--color-navy)' : 'bg-(--color-app-bg)',
+      ]"
     >
       <router-view />
     </main>
 
-    <BottomNavBar />
+    <BottomNavBar v-if="!route.meta.hideBottomNav" />
   </div>
 </template>

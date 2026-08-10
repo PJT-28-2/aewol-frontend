@@ -3,7 +3,8 @@ import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import AppButton from '@/components/common/AppButton.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
-import petDeleteWarning from '@/assets/images/pet-delete-warning.png';
+import StatusVisual from '@/components/common/StatusVisual.vue';
+import FeatureIconTile from '@/components/common/FeatureIconTile.vue';
 import { usePaymentStore } from '@/stores/payment';
 import { getRecurringCategory } from '@/utils/recurringCategory';
 
@@ -35,7 +36,7 @@ async function handleCancel() {
 
 <template>
   <div
-    class="min-h-screen max-w-(--content-max-width) mx-auto bg-(--color-bg) px-(--space-6) pt-[calc(var(--header-height)+var(--space-4))] flex flex-col items-center text-center"
+    class="mx-auto flex min-h-screen max-w-(--content-max-width) flex-col items-center bg-(--color-app-bg) px-(--space-6) pt-[calc(var(--header-height)+var(--space-4))] text-center"
   >
     <LoadingSpinner v-if="isLoading" />
 
@@ -51,7 +52,7 @@ async function handleCancel() {
         정기결제 관리 화면에서 다시 시도해주세요
       </p>
       <AppButton
-        variant="navy"
+        variant="primary"
         size="lg"
         block
         @click="router.replace('/payment/recurring')"
@@ -61,11 +62,10 @@ async function handleCancel() {
     </template>
 
     <template v-else>
-      <img
-        :src="petDeleteWarning"
-        alt=""
-        class="w-[139px] h-[139px] mb-(--space-4)"
-      >
+      <StatusVisual
+        variant="warning"
+        class="mb-(--space-4)"
+      />
       <h1
         class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-2)"
       >
@@ -78,18 +78,12 @@ async function handleCancel() {
       </p>
 
       <div
-        class="w-full flex items-center gap-(--space-3) bg-(--color-surface) rounded-(--radius-xl) p-(--space-4) mb-(--space-8)"
+        class="mb-(--space-8) flex w-full items-center gap-(--space-3) rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-(--space-4) shadow-(--shadow-card)"
       >
-        <span
-          class="flex items-center justify-center w-[40px] h-[40px] rounded-(--radius-lg) shrink-0"
-          :style="{ backgroundColor: getRecurringCategory(payment.category).bg }"
-        >
-          <component
-            :is="getRecurringCategory(payment.category).icon"
-            size="18"
-            color="var(--color-navy)"
-          />
-        </span>
+        <FeatureIconTile
+          :icon="getRecurringCategory(payment.category).icon"
+          :tone="getRecurringCategory(payment.category).tone"
+        />
         <div class="flex-1 text-left">
           <p
             class="text-(length:--font-md) font-semibold text-(color:--color-navy)"
@@ -106,9 +100,9 @@ async function handleCancel() {
 
       <div class="w-full flex gap-(--space-3)">
         <AppButton
-          variant="secondary"
+          variant="neutral"
           size="lg"
-          class="flex-1 border-(--color-border)!"
+          class="flex-1 bg-(--color-white)!"
           @click="router.back()"
         >
           취소

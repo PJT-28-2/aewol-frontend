@@ -3,11 +3,12 @@ import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import AppButton from '@/components/common/AppButton.vue';
 import AppInput from '@/components/common/AppInput.vue';
+import FeatureIconTile from '@/components/common/FeatureIconTile.vue';
 import { petApi } from '@/api/pet';
 import { useMemberStore } from '@/stores/member';
 import { isValidCalendarDate } from '@/utils/date';
-import dogFace3d from '@/assets/images/icons-3d/dog_face_3d.png';
-import catFace3d from '@/assets/images/icons-3d/cat_face_3d.png';
+import IconDog from '@/components/common/icons/IconDog.vue';
+import IconCat from '@/components/common/icons/IconCat.vue';
 
 const router = useRouter();
 const memberStore = useMemberStore();
@@ -134,10 +135,10 @@ async function handleSubmit() {
       await petApi.uploadDocument(createdPetId.value, vaccinationFile.value);
     }
     await router.push({
-      path: '/pets',
+      path: '/settings/pet-photo',
       query: registrationVerificationFailed
-        ? { registration: 'unverified', petId: createdPetId.value }
-        : undefined,
+        ? { mode: 'create', next: '/pets', registration: 'unverified', petId: createdPetId.value }
+        : { mode: 'create', next: '/home' },
     });
   } catch (error) {
     const messages = {
@@ -159,6 +160,14 @@ async function handleSubmit() {
   <div
     class="min-h-screen bg-(--color-app-bg) px-(--space-4) pt-(--space-3) pb-[calc(var(--bottom-nav-height)+var(--space-7))]"
   >
+    <header class="mb-(--space-5)">
+      <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">
+        반려동물 프로필 등록
+      </h1>
+      <p class="mt-(--space-1) text-(length:--font-md) text-(color:--color-slate-muted)">
+        함께할 반려동물 정보를 입력해주세요
+      </p>
+    </header>
     <form
       class="flex flex-col gap-(--space-4)"
       @submit.prevent="handleSubmit"
@@ -187,11 +196,10 @@ async function handleSubmit() {
               "
               @click="selectSpecies('DOG')"
             >
-              <img
-                :src="dogFace3d"
-                alt=""
-                class="size-[48px] object-contain"
-              >
+              <FeatureIconTile
+                :icon="IconDog"
+                tone="green"
+              />
               강아지
             </button>
             <button
@@ -205,11 +213,10 @@ async function handleSubmit() {
               "
               @click="selectSpecies('CAT')"
             >
-              <img
-                :src="catFace3d"
-                alt=""
-                class="size-[48px] object-contain"
-              >
+              <FeatureIconTile
+                :icon="IconCat"
+                tone="purple"
+              />
               고양이
             </button>
           </div>

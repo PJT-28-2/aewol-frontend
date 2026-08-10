@@ -38,3 +38,7 @@ coverage/
 # --- AGENT ---
 CLAUDE.md
 AGENT.md
+.claude/
+
+# --- Design drafts ---
+scripts/figma/

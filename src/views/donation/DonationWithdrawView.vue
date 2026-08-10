@@ -69,7 +69,7 @@ onMounted(() => {
 
 <template>
   <main
-    class="mx-auto min-h-dvh w-full max-w-(--content-max-width) box-border bg-(--color-white) px-[var(--space-5)] pt-[var(--space-4)] pb-[calc(var(--space-8)+env(safe-area-inset-bottom))] text-(--color-navy)"
+    class="mx-auto min-h-dvh w-full max-w-(--content-max-width) box-border bg-(--color-app-bg) px-[var(--space-5)] pt-[var(--space-4)] pb-[calc(var(--space-8)+env(safe-area-inset-bottom))] text-(--color-navy)"
   >
     <section
       v-if="isLoading"
@@ -89,7 +89,7 @@ onMounted(() => {
       </p>
       <AppButton
         class="mt-[var(--space-4)]"
-        variant="navy"
+        variant="primary"
         size="sm"
         @click="donationStore.fetchDonationData()"
       >
@@ -105,7 +105,7 @@ onMounted(() => {
       </h1>
 
       <section
-        class="rounded-[var(--radius-xl)] bg-(--color-navy) px-[var(--space-5)] py-[var(--space-4)] text-(--color-white)"
+        class="rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-leaf-soft) px-[var(--space-5)] py-[var(--space-4)] text-(--color-navy) shadow-(--shadow-card)"
       >
         <span
           class="block text-[length:var(--font-sm)] text-(--color-slate-light)"
@@ -154,7 +154,7 @@ onMounted(() => {
         </div>
 
         <section
-          class="mt-[var(--space-4)] flex items-center justify-between rounded-[var(--radius-lg)] bg-(--color-surface) p-[var(--space-4)]"
+          class="mt-[var(--space-4)] flex items-center justify-between rounded-(--radius-xl) border border-(--color-card-border) bg-(--color-white) p-[var(--space-4)]"
         >
           <span class="text-[length:var(--font-sm)] text-(--color-slate-dark)">
             {{ withdrawError ? '출금 가능 금액' : '출금 후 저금통 잔액' }}
@@ -169,7 +169,7 @@ onMounted(() => {
         </section>
 
         <section
-          class="mt-[var(--space-4)] flex items-start gap-[var(--space-2)] rounded-[var(--radius-lg)] bg-(--color-surface) p-[var(--space-4)]"
+          class="mt-[var(--space-4)] flex items-start gap-[var(--space-2)] rounded-(--radius-xl) border border-(--color-card-border) bg-(--color-white) p-[var(--space-4)]"
         >
           <IconInfo
             class="mt-[var(--icon-inline-offset)] shrink-0 text-(--color-gold-dark)"
@@ -189,7 +189,7 @@ onMounted(() => {
           class="mt-[var(--space-7)]"
           block
           size="lg"
-          variant="navy"
+          variant="primary"
           :disabled="!donationStore.canWithdraw"
           @click="openConfirm"
         >
@@ -227,7 +227,7 @@ onMounted(() => {
     </p>
 
     <dl
-      class="mt-[var(--space-5)] mb-0 rounded-[var(--radius-lg)] bg-(--color-surface) p-[var(--space-4)]"
+      class="mt-[var(--space-5)] mb-0 rounded-(--radius-xl) border border-(--color-card-border) bg-(--color-white) p-[var(--space-4)]"
     >
       <div class="flex justify-between">
         <dt class="text-[length:var(--font-sm)] text-(--color-slate-dark)">
@@ -252,8 +252,8 @@ onMounted(() => {
       <AppButton
         block
         size="lg"
-        variant="secondary"
-        class="border-(--color-border)!"
+        variant="neutral"
+        class="bg-(--color-white)!"
         @click="isConfirmOpen = false"
       >
         취소
@@ -261,7 +261,7 @@ onMounted(() => {
       <AppButton
         block
         size="lg"
-        variant="navy"
+        variant="primary"
         :disabled="donationStore.isSubmitting"
         :loading="donationStore.isSubmitting"
         @click="confirmWithdraw"

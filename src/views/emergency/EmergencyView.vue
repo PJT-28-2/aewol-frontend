@@ -4,8 +4,9 @@ import { storeToRefs } from 'pinia';
 import AppButton from '@/components/common/AppButton.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
+import FeatureIconTile from '@/components/common/FeatureIconTile.vue';
 import ToggleSwitch from '@/components/common/ToggleSwitch.vue';
-import IconHospital from '@/components/common/icons/IconHospital.vue';
+import IconEmergencyCross from '@/components/common/icons/IconEmergencyCross.vue';
 import IconPhone from '@/components/common/icons/IconPhone.vue';
 import IconWarning from '@/components/common/icons/IconWarning.vue';
 import { useEmergencyStore } from '@/stores/emergency';
@@ -121,7 +122,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-(--color-bg) flex flex-col">
+  <div class="min-h-screen bg-(--color-app-bg) flex flex-col">
     <!-- 헤더 -->
     <header class="px-(--space-4) pt-(--space-5) pb-(--space-2)">
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">
@@ -145,14 +146,14 @@ onMounted(async () => {
         >
           지도 미리보기
         </h2>
-        <div class="relative rounded-(--radius-lg) overflow-hidden shadow-(--shadow-sm)">
+        <div class="relative overflow-hidden rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) shadow-(--shadow-card)">
           <div
             ref="mapContainer"
             class="w-full h-(--size-map-preview-height) bg-(--color-gray-200)"
           />
           <div
             v-if="mapError"
-            class="absolute inset-0 flex flex-col items-center justify-center gap-(--space-2) bg-(--color-gray-100)"
+            class="absolute inset-0 flex flex-col items-center justify-center gap-(--space-2) bg-(--color-leaf-soft)"
           >
             <IconWarning
               :size="24"
@@ -207,7 +208,7 @@ onMounted(async () => {
 
         <div
           v-if="error"
-          class="flex items-center gap-(--space-2) rounded-(--radius-lg) bg-(--color-gray-100) p-(--space-3) mb-(--space-3)"
+          class="mb-(--space-3) flex items-center gap-(--space-2) rounded-(--radius-xl) border border-(--color-card-border) bg-(--color-white) p-(--space-3)"
         >
           <IconWarning
             :size="18"
@@ -234,7 +235,7 @@ onMounted(async () => {
 
         <EmptyState
           v-else-if="!hospitals.length"
-          :icon="IconHospital"
+          :icon="IconEmergencyCross"
           message="주변에 응급 동물병원이 없습니다."
         />
 
@@ -245,16 +246,12 @@ onMounted(async () => {
           <li
             v-for="hospital in hospitals"
             :key="hospitalKey(hospital)"
-            class="flex items-center gap-(--space-3) bg-(--color-white) rounded-(--radius-lg) p-(--space-4) shadow-(--shadow-sm)"
+            class="flex items-center gap-(--space-3) rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-(--space-4) shadow-(--shadow-card)"
           >
-            <div
-              class="flex items-center justify-center w-(--space-9) h-(--space-9) rounded-(--radius-icon) bg-(--color-gray-100) shrink-0"
-            >
-              <IconHospital
-                :size="24"
-                color="var(--color-navy)"
-              />
-            </div>
+            <FeatureIconTile
+              :icon="IconEmergencyCross"
+              tone="blue"
+            />
 
             <div class="flex-1 min-w-0">
               <p

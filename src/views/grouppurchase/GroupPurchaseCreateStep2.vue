@@ -129,7 +129,7 @@ function goToNextStep() {
 </script>
 
 <template>
-  <div class="p-(--space-4) pb-(--space-8) bg-(--color-bg) min-h-screen">
+  <div class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-(--space-8)">
     <header class="mb-(--space-5)">
       <div class="flex items-center justify-end mb-(--space-4)">
         <p class="text-(length:--font-sm) font-bold text-(color:--color-slate-muted)">
@@ -253,7 +253,7 @@ function goToNextStep() {
               isBeforeMinDeadline(cell)
                 ? 'text-(color:--color-gray-300) cursor-not-allowed'
                 : 'text-(color:--color-navy)',
-              isSelectedDeadline(cell) ? 'bg-(--color-navy) text-(color:--color-white) font-bold' : '',
+              isSelectedDeadline(cell) ? 'bg-(--color-leaf) text-(color:--color-navy) font-bold' : '',
             ]"
             :aria-label="`${calendarViewYear}년 ${calendarViewMonth + 1}월 ${cell.getDate()}일`"
             :disabled="isBeforeMinDeadline(cell)"
@@ -350,15 +350,15 @@ function goToNextStep() {
     <!-- 이전 / 다음 -->
     <div class="flex gap-(--space-3)">
       <AppButton
-        variant="secondary"
+        variant="neutral"
         size="lg"
-        class="flex-1"
+        class="flex-1 bg-(--color-white)!"
         @click="goToPrevStep"
       >
         이전
       </AppButton>
       <AppButton
-        variant="navy"
+        variant="primary"
         size="lg"
         class="flex-1"
         :disabled="!isFormValid"

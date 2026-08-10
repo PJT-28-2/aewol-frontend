@@ -88,7 +88,7 @@ function goToNextStep() {
 </script>
 
 <template>
-  <div class="p-(--space-4) pb-(--space-8) bg-(--color-bg) min-h-screen">
+  <div class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-(--space-8)">
     <header class="mb-(--space-5)">
       <div class="flex items-center justify-end mb-(--space-4)">
         <p class="text-(length:--font-sm) font-bold text-(color:--color-slate-muted)">
@@ -116,7 +116,7 @@ function goToNextStep() {
         </span>
       </div>
       <label
-        class="w-full h-[90px] rounded-(--radius-xl) bg-(--color-white) border-[1.2px] border-(--color-slate-muted) flex flex-col items-center justify-center gap-(--space-1) cursor-pointer"
+        class="flex h-[90px] w-full cursor-pointer flex-col items-center justify-center gap-(--space-1) rounded-(--radius-xl) border-2 border-dashed border-(--color-leaf) bg-(--color-leaf-soft)"
       >
         <input
           type="file"
@@ -285,7 +285,7 @@ function goToNextStep() {
 
     <!-- 다음: 사진/필수 입력값이 모두 채워져야 2단계(구매 조건)로 이동 가능 -->
     <AppButton
-      variant="navy"
+      variant="primary"
       size="lg"
       block
       :disabled="!isFormValid"

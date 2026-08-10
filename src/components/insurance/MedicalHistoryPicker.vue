@@ -144,7 +144,7 @@ function removeMedicalTag(id) {
         placeholder="병력을 입력해주세요"
         aria-label="기타 병력 직접 입력"
         class="flex-1 min-w-0 h-(--control-height-md) px-(--space-4) border border-(--color-gray-300) rounded-(--radius-lg) text-(length:--font-base)"
-      />
+      >
       <AppButton
         type="button"
         variant="navy"
@@ -163,9 +163,15 @@ function removeMedicalTag(id) {
       {{ tagFeedback }}
     </p>
 
-    <BottomSheet v-model="isMedicalSheetOpen" title="병력 선택">
+    <BottomSheet
+      v-model="isMedicalSheetOpen"
+      title="병력 선택"
+    >
       <ul>
-        <li v-for="opt in medicalOptions" :key="opt.code">
+        <li
+          v-for="opt in medicalOptions"
+          :key="opt.code"
+        >
           <button
             type="button"
             class="w-full flex items-center justify-between py-(--space-3) text-(length:--font-base)"

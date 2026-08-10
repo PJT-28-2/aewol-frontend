@@ -4,15 +4,16 @@ import { useRouter } from 'vue-router';
 import BottomSheet from '@/components/common/BottomSheet.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import TransactionList from '@/components/common/TransactionList.vue';
+import FeatureIconTile from '@/components/common/FeatureIconTile.vue';
 import { formatYearMonth } from '@/utils/date';
 import IconCheck from '@/components/common/icons/IconCheck.vue';
 import IconChevronDown from '@/components/common/icons/IconChevronDown.vue';
-import iconRecurring3d from '@/assets/images/icons-3d/calendar_3d.png';
-import iconStats3d from '@/assets/images/icons-3d/bar_chart_3d.png';
-import iconSavings3d from '@/assets/images/icons-3d/money_bag_3d.png';
-import iconSearch3d from '@/assets/images/icons-3d/magnifying_glass_tilted_right_3d.png';
-import iconCat3d from '@/assets/images/icons-3d/cat_face_3d.png';
-import iconDog3d from '@/assets/images/icons-3d/dog_face_3d.png';
+import IconStats from '@/components/common/icons/IconStats.vue';
+import IconWallet from '@/components/common/icons/IconWallet.vue';
+import IconRecurring from '@/components/common/icons/IconRecurring.vue';
+import IconSavings from '@/components/common/icons/IconSavings.vue';
+import IconCat from '@/components/common/icons/IconCat.vue';
+import IconDog from '@/components/common/icons/IconDog.vue';
 import { mockWalletBalance } from '@/mocks/transaction';
 import { usePetStore } from '@/stores/pet';
 import { useTransactionStore } from '@/stores/transaction';
@@ -30,21 +31,24 @@ const isLoading = ref(true);
 
 // 서브 메뉴 4종
 const subMenus = [
-  { label: '지출리포트', to: '/dashboard', icon: iconStats3d },
+  { label: '지출리포트', to: '/dashboard', icon: IconStats, tone: 'blue' },
   {
-    label: '전체내역',
+    label: '거래 내역',
     to: '/wallet/history',
-    icon: iconSearch3d,
+    icon: IconWallet,
+    tone: 'green',
   },
   {
     label: '정기결제',
     to: '/payment/recurring',
-    icon: iconRecurring3d,
+    icon: IconRecurring,
+    tone: 'pink',
   },
   {
     label: '저금통',
     to: '/donation',
-    icon: iconSavings3d,
+    icon: IconSavings,
+    tone: 'yellow',
   },
 ];
 
@@ -129,7 +133,7 @@ const petFilterButtonLabel = computed(
 const hasMultiplePets = computed(() => petStore.pets.length > 1);
 
 function petIcon(species) {
-  return species === 'CAT' ? iconCat3d : iconDog3d;
+  return species === 'CAT' ? IconCat : IconDog;
 }
 
 function selectPetFilter(petId) {
@@ -175,9 +179,9 @@ onMounted(async () => {
 
 <template>
   <div
-    class="min-h-screen bg-(--color-app-bg) px-(--space-4) pt-(--space-3) pb-[calc(var(--bottom-nav-height)+var(--space-7))]"
+    class="min-h-screen bg-(--color-app-bg) px-(--space-5) pt-(--space-3) pb-[calc(var(--bottom-nav-height)+var(--space-8))]"
   >
-    <header class="mb-(--space-4)">
+    <header class="mb-(--space-5) flex h-[42px] items-center">
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">
         지갑
       </h1>
@@ -185,29 +189,29 @@ onMounted(async () => {
 
     <!-- 잔액 + 충전/송금 카드 -->
     <div
-      class="relative mb-(--space-4) overflow-hidden rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) px-(--space-5) py-(--space-5) shadow-(--shadow-card)"
+      class="relative mb-(--space-4) overflow-hidden rounded-[28px] bg-(--color-navy) px-(--space-6) py-(--space-6) text-(color:--color-white) shadow-(--shadow-card)"
     >
       <p
-        class="text-(length:--font-sm) text-(color:--color-slate-muted)"
+        class="text-(length:--font-sm) text-(color:--color-slate-light)"
       >
         김애월님
       </p>
       <p
-        class="relative z-1 mt-[2px] text-[27px] font-bold tracking-[-0.02em] text-(color:--color-gray-900)"
+        class="relative z-1 mt-(--space-2) text-[30px] font-bold tracking-[-0.03em] text-(color:--color-white)"
       >
         {{ walletBalance.toLocaleString() }}원
       </p>
       <div class="relative z-1 mt-(--space-2) flex justify-end gap-(--space-2)">
         <button
           type="button"
-          class="rounded-(--radius-full) border border-(--color-card-border) bg-(--color-white) px-(--space-4) py-[9px] text-(length:--font-sm) font-semibold text-(color:--color-gray-900)"
+          class="rounded-(--radius-full) bg-(--color-white) px-(--space-5) py-[10px] text-(length:--font-sm) font-semibold text-(color:--color-navy)"
           @click="handleCharge"
         >
           충전
         </button>
         <button
           type="button"
-          class="rounded-(--radius-full) bg-(--color-leaf) px-(--space-4) py-[9px] text-(length:--font-sm) font-bold text-(color:--color-gray-900)"
+          class="rounded-(--radius-full) bg-(--color-leaf) px-(--space-5) py-[10px] text-(length:--font-sm) font-bold text-(color:--color-navy)"
           @click="handleTransfer"
         >
           송금
@@ -226,18 +230,18 @@ onMounted(async () => {
         :to="menu.to"
         class="flex min-w-0 flex-col items-center justify-center gap-(--space-2) px-(--space-1) py-(--space-4) text-center text-[11px] leading-tight font-medium text-(color:--color-gray-700) no-underline transition-colors active:bg-(--color-gray-100)"
       >
-        <span class="flex size-[40px] items-center justify-center rounded-[13px] bg-(--color-gray-100)">
-          <img
-            :src="menu.icon"
-            alt=""
-            class="size-[25px] object-contain saturate-[0.8] brightness-[1.03] contrast-[0.95]"
-          >
-        </span>
+        <FeatureIconTile
+          :icon="menu.icon"
+          :tone="menu.tone"
+        />
         <span class="truncate">{{ menu.label }}</span>
       </router-link>
     </nav>
 
-    <div v-if="isLoading" class="py-(--space-8)">
+    <div
+      v-if="isLoading"
+      class="py-(--space-8)"
+    >
       <LoadingSpinner />
     </div>
 
@@ -312,9 +316,15 @@ onMounted(async () => {
       </div>
     </template>
 
-    <BottomSheet v-model="isTypeSheetOpen" title="거래 유형">
+    <BottomSheet
+      v-model="isTypeSheetOpen"
+      title="거래 유형"
+    >
       <ul>
-        <li v-for="filter in filters" :key="filter.key">
+        <li
+          v-for="filter in filters"
+          :key="filter.key"
+        >
           <button
             type="button"
             class="w-full flex items-center justify-between py-(--space-3) text-(length:--font-base)"
@@ -336,7 +346,10 @@ onMounted(async () => {
       </ul>
     </BottomSheet>
 
-    <BottomSheet v-model="isPetSheetOpen" title="반려동물 선택">
+    <BottomSheet
+      v-model="isPetSheetOpen"
+      title="반려동물 선택"
+    >
       <ul>
         <li>
           <button
@@ -357,7 +370,10 @@ onMounted(async () => {
             />
           </button>
         </li>
-        <li v-for="pet in petStore.pets" :key="pet.id">
+        <li
+          v-for="pet in petStore.pets"
+          :key="pet.id"
+        >
           <button
             type="button"
             class="w-full flex items-center justify-between py-(--space-3) text-(length:--font-base)"
@@ -369,12 +385,10 @@ onMounted(async () => {
             @click="selectPetFilter(pet.id)"
           >
             <span class="flex items-center gap-(--space-2)">
-              <img
-                :src="petIcon(pet.species)"
-                :alt="
-                  pet.species === 'CAT' ? '고양이' : '강아지'
-                "
-                class="w-[22px] h-[22px] object-contain saturate-[0.8] brightness-[1.03] contrast-[0.95]"
+              <component
+                :is="petIcon(pet.species)"
+                size="24"
+                color="var(--color-navy)"
               />
               {{ pet.name }}
             </span>
@@ -388,7 +402,10 @@ onMounted(async () => {
       </ul>
     </BottomSheet>
 
-    <BottomSheet v-model="isMonthSheetOpen" title="월 선택">
+    <BottomSheet
+      v-model="isMonthSheetOpen"
+      title="월 선택"
+    >
       <ul>
         <li
           v-for="option in monthOptions"

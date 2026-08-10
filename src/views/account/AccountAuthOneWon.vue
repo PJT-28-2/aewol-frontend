@@ -4,7 +4,6 @@ import { useRouter } from 'vue-router';
 import { useAccountStore } from '@/stores/account';
 import { getBankMeta } from '@/utils/bankMeta';
 import { formatCountdown } from '@/utils/date';
-import { registerHeaderBack } from '@/composables/useHeaderBack';
 import AppButton from '@/components/common/AppButton.vue';
 import BankBadge from '@/components/common/BankBadge.vue';
 import IconLock from '@/components/common/icons/IconLock.vue';
@@ -232,37 +231,26 @@ async function submitVerification() {
   }
 }
 
-function goBack() {
-  if (step.value === 'depositorName') {
-    clearInterval(tickId);
-    depositorInput.value = '';
-    composingPreview.value = '';
-    isComposing.value = false;
-    if (hiddenInputRef.value) hiddenInputRef.value.value = '';
-    isFocused.value = false;
-    verifyError.value = '';
-    step.value = 'accountNumber';
-  } else {
-    router.back();
-  }
-}
-
-registerHeaderBack(goBack);
 </script>
 
 <template>
-  <div class="min-h-screen max-w-(--content-max-width) mx-auto bg-(--color-bg) px-(--space-5) pt-(--space-4) pb-(--space-8)">
+  <div class="mx-auto min-h-screen max-w-(--content-max-width) bg-(--color-app-bg) px-(--space-5) pt-(--space-4) pb-(--space-8)">
     <!-- Step 1: 계좌번호 입력 -->
     <template v-if="step === 'accountNumber'">
       <header class="mb-7">
         <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) leading-snug">
           계좌번호를 입력해주세요
         </h1>
-        <p class="text-(length:--font-md) text-(color:--color-slate-muted) mt-(--space-1)">{{ bankMeta.name }}에 1원을 보내 계좌를 확인할게요</p>
+        <p class="text-(length:--font-md) text-(color:--color-slate-muted) mt-(--space-1)">
+          {{ bankMeta.name }}에 1원을 보내 계좌를 확인할게요
+        </p>
       </header>
 
       <div class="flex items-center gap-(--space-3) p-(--space-4) rounded-(--radius-xl) bg-(--color-white) border border-(--color-border) mb-(--space-5)">
-        <BankBadge :bank-code="store.linking.bankCode" :size="36" />
+        <BankBadge
+          :bank-code="store.linking.bankCode"
+          :size="36"
+        />
         <span class="font-bold text-(color:--color-navy) text-(length:--font-base)">{{ bankMeta.name }}</span>
       </div>
 
@@ -272,14 +260,19 @@ registerHeaderBack(goBack);
         inputmode="numeric"
         autocomplete="off"
         placeholder="계좌번호를 입력해주세요 (숫자만)"
-        class="w-full p-(--space-4) rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) text-(length:--font-base) text-(color:--color-navy) mb-(--space-2) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
+        class="w-full p-(--space-4) rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) text-(length:--font-base) text-(color:--color-navy) mb-(--space-2) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-leaf)"
         @input="onAccountNumberInput"
-      />
+      >
 
-      <p v-if="requestError" class="text-(length:--font-sm) text-(color:--color-danger-strong) mb-(--space-4)">{{ requestError }}</p>
+      <p
+        v-if="requestError"
+        class="text-(length:--font-sm) text-(color:--color-danger-strong) mb-(--space-4)"
+      >
+        {{ requestError }}
+      </p>
 
       <AppButton
-        variant="navy"
+        variant="primary"
         size="lg"
         block
         class="mt-(--space-4)"
@@ -294,26 +287,39 @@ registerHeaderBack(goBack);
     <template v-else>
       <header class="mb-(--space-6)">
         <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) leading-snug">
-          입금된 1원의 {{ depositorNameLength }}글자<br />입금자명을 입력해주세요
+          입금된 1원의 {{ depositorNameLength }}글자<br>입금자명을 입력해주세요
         </h1>
       </header>
 
       <div class="flex items-center gap-(--space-3) p-(--space-4) rounded-(--radius-xl) bg-(--color-white) border border-(--color-border) mb-(--space-4)">
-        <BankBadge :bank-code="store.linking.bankCode" :size="36" />
+        <BankBadge
+          :bank-code="store.linking.bankCode"
+          :size="36"
+        />
         <div>
-          <p class="font-bold text-(color:--color-navy) text-(length:--font-base)">{{ bankMeta.name }}</p>
-          <p class="text-(length:--font-sm) text-(color:--color-gray-500)">{{ store.linking.maskedAccountNumber }}</p>
+          <p class="font-bold text-(color:--color-navy) text-(length:--font-base)">
+            {{ bankMeta.name }}
+          </p>
+          <p class="text-(length:--font-sm) text-(color:--color-gray-500)">
+            {{ store.linking.maskedAccountNumber }}
+          </p>
         </div>
       </div>
 
       <div class="flex items-center gap-(--space-2) p-3.5 rounded-(--radius-lg) bg-(--color-surface) mb-(--space-6)">
-        <IconLock :size="14" color="var(--color-slate-dark)" />
+        <IconLock
+          :size="14"
+          color="var(--color-slate-dark)"
+        />
         <span class="text-(length:--font-sm) text-(color:--color-slate-dark)">{{ bankMeta.name }}으로 1원을 보냈어요</span>
       </div>
 
       <div class="flex items-center justify-between mb-(--space-4)">
         <span class="text-(length:--font-base) font-semibold text-(color:--color-navy)">입금자명 {{ depositorNameLength }}글자</span>
-        <span v-if="remainingSeconds > 0 && !store.linking.isConfirmLocked" class="text-(length:--font-sm) font-semibold text-(color:--color-danger-strong)">{{ timerLabel }}</span>
+        <span
+          v-if="remainingSeconds > 0 && !store.linking.isConfirmLocked"
+          class="text-(length:--font-sm) font-semibold text-(color:--color-danger-strong)"
+        >{{ timerLabel }}</span>
         <button
           v-else
           type="button"
@@ -324,7 +330,12 @@ registerHeaderBack(goBack);
           {{ isResending ? '다시 보내는 중…' : '다시 보내기' }}
         </button>
       </div>
-      <p v-if="resendError" class="text-(length:--font-sm) text-(color:--color-danger-strong) mb-(--space-2)">{{ resendError }}</p>
+      <p
+        v-if="resendError"
+        class="text-(length:--font-sm) text-(color:--color-danger-strong) mb-(--space-2)"
+      >
+        {{ resendError }}
+      </p>
 
       <div
         class="relative flex flex-wrap justify-center gap-(--space-3) mb-(--space-4)"
@@ -343,7 +354,7 @@ registerHeaderBack(goBack);
           @compositionend="onCompositionEnd"
           @focus="isFocused = true"
           @blur="isFocused = false"
-        />
+        >
         <div
           v-for="(digit, i) in digits"
           :key="i"
@@ -354,14 +365,21 @@ registerHeaderBack(goBack);
             v-if="!digit && isFocused && i === activeIndex"
             class="w-0.5 h-6 bg-(--color-navy) animate-pulse"
           />
-          <template v-else>{{ digit }}</template>
+          <template v-else>
+            {{ digit }}
+          </template>
         </div>
       </div>
 
       <p class="text-(length:--font-sm) text-(color:--color-gray-500) leading-relaxed mb-(--space-2)">
-        은행 앱 알림이나 입출금 문자에서<br />입금자명(예: 푸른애월)의 앞 {{ depositorNameLength }}글자를 확인할 수 있어요
+        은행 앱 알림이나 입출금 문자에서<br>입금자명(예: 푸른애월)의 앞 {{ depositorNameLength }}글자를 확인할 수 있어요
       </p>
-      <p v-if="verifyError" class="text-(length:--font-sm) text-(color:--color-danger-strong) mb-(--space-2)">{{ verifyError }}</p>
+      <p
+        v-if="verifyError"
+        class="text-(length:--font-sm) text-(color:--color-danger-strong) mb-(--space-2)"
+      >
+        {{ verifyError }}
+      </p>
 
       <AppButton
         variant="primary"

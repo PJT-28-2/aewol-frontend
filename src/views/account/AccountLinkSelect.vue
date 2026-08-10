@@ -46,8 +46,7 @@ function selectBank(bankCode) {
 </script>
 
 <template>
-  <div class="min-h-screen max-w-(--content-max-width) mx-auto bg-(--color-bg) px-(--space-5) pt-(--space-4) pb-(--space-8)">
-
+  <div class="mx-auto min-h-screen max-w-(--content-max-width) bg-(--color-app-bg) px-(--space-5) pt-(--space-4) pb-(--space-8)">
     <header class="mb-7">
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">
         계좌 연동하기
@@ -66,13 +65,13 @@ function selectBank(bankCode) {
 
     <div
       v-else-if="loadError"
-      class="p-(--space-4) rounded-(--radius-xl) bg-(--color-surface) mb-(--space-6) text-center"
+      class="mb-(--space-6) rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-(--space-4) text-center shadow-(--shadow-card)"
     >
       <p class="text-(length:--font-sm) text-(color:--color-danger-strong) mb-(--space-3)">
         {{ loadError }}
       </p>
       <AppButton
-        variant="navy"
+        variant="primary"
         size="sm"
         @click="loadBanks"
       >
@@ -110,7 +109,7 @@ function selectBank(bankCode) {
       </button>
     </div>
 
-    <div class="p-(--space-4) rounded-(--radius-xl) bg-(--color-surface)">
+    <div class="rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-(--space-4)">
       <p class="text-(length:--font-sm) font-(--font-semibold) text-(color:--color-navy) mb-(--space-1)">
         계좌 데이터는 CODEF API를 통해 조회 전용으로 연동돼요
       </p>

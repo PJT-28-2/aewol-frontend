@@ -3,8 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import IconPaw from '@/components/common/icons/IconPaw.vue'
 import AppButton from '@/components/common/AppButton.vue'
-import iconCat3d from '@/assets/images/icons-3d/cat_face_3d.png'
-import iconDog3d from '@/assets/images/icons-3d/dog_face_3d.png'
+import PetSelectorChip from '@/components/common/PetSelectorChip.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import MedicalHistoryPicker from '@/components/insurance/MedicalHistoryPicker.vue'
 import { usePetStore } from '@/stores/pet'
@@ -30,10 +29,6 @@ const selectedPet = computed(
 )
 
 const medicalTags = ref([])
-
-function petIcon(species) {
-  return species === 'CAT' ? iconCat3d : iconDog3d
-}
 
 const result = ref(null)
 const isLoading = ref(false)
@@ -86,9 +81,8 @@ function handleReset() {
 
 <template>
   <div
-    class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))] bg-(--color-gray-100) min-h-screen"
+    class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))] bg-(--color-app-bg) min-h-screen"
   >
-
     <header class="mb-(--space-5)">
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">
         손익분기 시뮬레이터
@@ -131,26 +125,14 @@ function handleReset() {
               role="group"
               aria-labelledby="pet-select-label"
             >
-              <button
+              <PetSelectorChip
                 v-for="pet in pets"
                 :key="pet.id"
-                type="button"
-                class="inline-flex items-center gap-(--space-1) py-(--space-2) px-(--space-3) border rounded-(--radius-full) text-(length:--font-sm)"
-                :class="
-                  pet.id === selectedPetId
-                    ? 'border-(--color-navy) bg-(--color-navy) text-(color:--color-white)'
-                    : 'border-(--color-border) bg-(--color-surface) text-(color:--color-gray-700)'
-                "
-                :aria-pressed="pet.id === selectedPetId"
+                :label="pet.name"
+                :species="pet.species"
+                :selected="pet.id === selectedPetId"
                 @click="selectedPetId = pet.id"
-              >
-                <img
-                  :src="petIcon(pet.species)"
-                  alt=""
-                  class="w-[18px] h-[18px] object-contain saturate-[0.8] brightness-[1.03] contrast-[0.95]"
-                >
-                {{ pet.name }}
-              </button>
+              />
             </div>
           </div>
 

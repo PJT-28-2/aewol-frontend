@@ -36,7 +36,7 @@ async function handleComplete(value) {
 </script>
 
 <template>
-  <div class="min-h-screen max-w-(--content-max-width) mx-auto bg-(--color-bg) px-(--space-5) pt-(--space-4)">
+  <div class="mx-auto min-h-screen max-w-(--content-max-width) bg-(--color-app-bg) px-(--space-5) pt-(--space-4)">
     <header class="mb-(--space-8)">
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) leading-snug">
         비밀번호를 한번 더 입력해주세요
@@ -58,6 +58,9 @@ async function handleComplete(value) {
       </p>
     </div>
 
-    <PinKeypad v-model="pin" @complete="handleComplete" />
+    <PinKeypad
+      v-model="pin"
+      @complete="handleComplete"
+    />
   </div>
 </template>

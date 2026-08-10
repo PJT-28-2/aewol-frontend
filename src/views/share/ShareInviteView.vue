@@ -99,7 +99,7 @@ async function copyLink() {
     <p
       class="mb-[var(--space-7)] mt-0 text-[length:var(--font-sm)] text-(--color-slate-muted)"
     >
-      함께 돌보기의 가족을 초대해 지갑을 공유해요
+      함께 돌볼 가족을 초대해 반려동물의 기록을 나눠요
     </p>
 
     <label

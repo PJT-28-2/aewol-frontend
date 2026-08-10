@@ -108,7 +108,7 @@ function handleNext() {
 
 <template>
   <div
-    class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+96px)] bg-(--color-bg) min-h-screen"
+    class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+96px)] bg-(--color-app-bg) min-h-screen"
   >
     <header class="mb-(--space-5)">
       <h1
@@ -219,7 +219,7 @@ function handleNext() {
       variant="primary"
       size="lg"
       :disabled="!canProceed"
-      class="fixed bottom-[calc(var(--bottom-nav-height)+var(--space-4))] left-(--space-4) right-(--space-4) rounded-(--radius-xl) shadow-(--shadow-md)"
+      class="fixed bottom-[calc(var(--bottom-nav-height)+var(--space-7))] left-(--space-4) right-(--space-4) rounded-(--radius-xl) shadow-(--shadow-md)"
       @click="handleNext"
     >
       다음

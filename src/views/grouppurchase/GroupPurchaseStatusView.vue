@@ -6,9 +6,7 @@ import IconCheck from '@/components/common/icons/IconCheck.vue';
 import BottomSheet from '@/components/common/BottomSheet.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import PinAuthSheet from '@/components/common/PinAuthSheet.vue';
-import statusWaitingImage from '@/assets/images/group-purchase-waiting.png';
-import statusConfirmedImage from '@/assets/images/group-purchase-confirmed.png';
-import statusCancelledImage from '@/assets/images/group-purchase-cancelled.png';
+import StatusVisual from '@/components/common/StatusVisual.vue';
 import {
   MOCK_GROUP_PURCHASE_STATUS,
   MOCK_GROUP_PURCHASE_STATUS_OWNER_BY_GP_ID,
@@ -87,14 +85,11 @@ const statusTitle = computed(
   () => STATUS_TITLE[status.value.status] ?? '구매가 보류 중이에요',
 );
 
-const STATUS_IMAGE = {
-  waiting: statusWaitingImage,
-  confirmed: statusConfirmedImage,
-  cancelled: statusCancelledImage,
-};
-const statusImage = computed(
-  () => STATUS_IMAGE[status.value.status] ?? statusWaitingImage,
-);
+const statusVisualVariant = computed(() => ({
+  waiting: 'info',
+  confirmed: 'success',
+  cancelled: 'cancel',
+}[status.value.status] ?? 'info'));
 
 const progressPercent = computed(() =>
   Math.min(
@@ -180,7 +175,7 @@ function confirmCancelSuccess() {
 </script>
 
 <template>
-  <div class="p-(--space-4) pb-(--space-6) bg-(--color-bg) min-h-screen">
+  <div class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-(--space-6)">
     <!-- 로딩 상태 -->
     <div
       v-if="isLoading"
@@ -201,7 +196,7 @@ function confirmCancelSuccess() {
         공동구매 상태를 불러오지 못했어요
       </p>
       <AppButton
-        variant="navy"
+        variant="primary"
         @click="loadStatus"
       >
         다시 시도
@@ -211,13 +206,7 @@ function confirmCancelSuccess() {
     <template v-else>
       <!-- 상태 이미지 -->
       <div class="flex justify-center mt-(--space-6) mb-(--space-5)">
-        <div class="w-[139px] h-[139px] overflow-hidden">
-          <img
-            :src="statusImage"
-            alt=""
-            class="w-full h-full object-cover"
-          >
-        </div>
+        <StatusVisual :variant="statusVisualVariant" />
       </div>
 
       <!-- 상태 안내 -->
@@ -234,7 +223,7 @@ function confirmCancelSuccess() {
 
       <!-- 상품 정보 -->
       <section
-        class="flex items-center justify-between bg-(--color-surface) rounded-(--radius-xl) p-(--space-4) mb-(--space-5)"
+        class="mb-(--space-5) flex items-center justify-between rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-(--space-4) shadow-(--shadow-card)"
       >
         <div class="min-w-0">
           <h2
@@ -290,7 +279,7 @@ function confirmCancelSuccess() {
 
       <!-- 안내 사항 -->
       <section
-        class="bg-(--color-white) border border-(--color-border) rounded-(--radius-lg) p-(--space-4) mb-(--space-5)"
+        class="mb-(--space-5) rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-(--space-4) shadow-(--shadow-card)"
       >
         <ul class="flex flex-col gap-(--space-3)">
           <li class="flex items-start gap-(--space-2)">
@@ -328,7 +317,7 @@ function confirmCancelSuccess() {
 
       <!-- 리스트/마이페이지 중 진입 경로에 맞춰 돌아가기 -->
       <AppButton
-        variant="navy"
+        variant="primary"
         size="lg"
         block
         class="mb-(--space-3)"
@@ -385,7 +374,7 @@ function confirmCancelSuccess() {
             {{ cancelSuccessMessage }}
           </p>
           <AppButton
-            variant="navy"
+            variant="primary"
             size="lg"
             block
             @click="confirmCancelSuccess"

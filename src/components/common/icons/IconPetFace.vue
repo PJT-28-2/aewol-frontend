@@ -7,18 +7,52 @@ defineProps({
 </script>
 
 <template>
-  <svg :width="size" :height="size" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-    <template v-if="filled">
-      <path :fill="color" d="M7.7 6.1A7.1 7.1 0 0 1 12 4.7c1.6 0 3.08.52 4.3 1.4A5.1 5.1 0 0 1 20.5 4c.83 0 1.5.67 1.5 1.5v2.25a5.25 5.25 0 0 1-2.84 4.66v1.26A7.17 7.17 0 0 1 12 20.83a7.17 7.17 0 0 1-7.16-7.16V12.4A5.25 5.25 0 0 1 2 7.75V5.5C2 4.67 2.67 4 3.5 4a5.1 5.1 0 0 1 4.2 2.1Z" />
-      <circle cx="9" cy="12" r="1" fill="var(--color-white)" />
-      <circle cx="15" cy="12" r="1" fill="var(--color-white)" />
-      <path d="M10.25 15.25h3.5c0 1.05-.78 1.9-1.75 1.9s-1.75-.85-1.75-1.9Z" fill="var(--color-white)" />
-    </template>
-    <template v-else>
-      <path d="M7.7 6.1A7.1 7.1 0 0 1 12 4.7c1.6 0 3.08.52 4.3 1.4A5.1 5.1 0 0 1 20.5 4c.83 0 1.5.67 1.5 1.5v2.25a5.25 5.25 0 0 1-2.84 4.66v1.26A7.17 7.17 0 0 1 12 20.83a7.17 7.17 0 0 1-7.16-7.16V12.4A5.25 5.25 0 0 1 2 7.75V5.5C2 4.67 2.67 4 3.5 4a5.1 5.1 0 0 1 4.2 2.1Z" fill="none" :stroke="color" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-      <circle cx="9" cy="12" r="1" :fill="color" />
-      <circle cx="15" cy="12" r="1" :fill="color" />
-      <path d="M10.25 15.25h3.5c0 1.05-.78 1.9-1.75 1.9s-1.75-.85-1.75-1.9Z" :fill="color" />
-    </template>
+  <svg
+    :width="size"
+    :height="size"
+    viewBox="0 0 24 24"
+    aria-hidden="true"
+    focusable="false"
+  >
+    <path
+      d="M12 21s-7.4-4.35-9.45-8.55C.65 8.55 2.68 4 6.7 4c2.12 0 3.94 1.18 5.3 2.83C13.36 5.18 15.18 4 17.3 4c4.02 0 6.05 4.55 4.15 8.45C19.4 16.65 12 21 12 21Z"
+      :fill="filled ? color : 'none'"
+      :stroke="filled ? 'none' : color"
+      stroke-width="1.9"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+    <g :fill="filled ? 'var(--color-white)' : color">
+      <ellipse
+        cx="12"
+        cy="14.25"
+        rx="2.65"
+        ry="2.05"
+      />
+      <ellipse
+        cx="8.85"
+        cy="11.45"
+        rx="1.05"
+        ry="1.35"
+      />
+      <ellipse
+        cx="11.05"
+        cy="9.6"
+        rx="1.05"
+        ry="1.35"
+      />
+      <ellipse
+        cx="13.65"
+        cy="9.6"
+        rx="1.05"
+        ry="1.35"
+      />
+      <ellipse
+        cx="15.85"
+        cy="11.45"
+        rx="1.05"
+        ry="1.35"
+      />
+    </g>
   </svg>
 </template>

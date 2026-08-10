@@ -4,7 +4,8 @@ import { useRouter } from 'vue-router'
 import { formatCountdown } from '@/utils/date'
 import { formatPhoneNumber } from '@/utils/phone'
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
-import successImage from '@/assets/images/pet-success.png'
+import StatusVisual from '@/components/common/StatusVisual.vue'
+import AewolLogo from '@/components/common/AewolLogo.vue'
 
 const router = useRouter()
 
@@ -192,18 +193,21 @@ onBeforeUnmount(clearTimers)
 
 <template>
   <main
-    class="relative min-h-svh w-full bg-(--color-white) px-[22px] pt-[calc(var(--header-height)+var(--space-4))] pb-12"
+    class="relative min-h-svh w-full bg-(--color-app-bg) px-[22px] pt-[calc(var(--header-height)+var(--space-4))] pb-12"
   >
     <section
       v-if="isResultVisible"
-      class="text-center"
+      class="flex min-h-[calc(100svh-var(--header-height)-var(--space-8))] flex-col items-center text-center"
       aria-labelledby="find-id-result-title"
     >
-      <img
-        class="mx-auto mt-(--auth-success-find-id-image-offset) size-(--auth-success-image-size) object-cover"
-        :src="successImage"
-        alt=""
-      >
+      <AewolLogo
+        size="22"
+        class="self-start"
+      />
+      <StatusVisual
+        size="126"
+        class="mt-auto"
+      />
       <h1
         id="find-id-result-title"
         class="mt-(--auth-success-title-gap) text-(length:--font-2xl) leading-[1.3] font-(--font-bold) text-(color:--color-navy)"
@@ -214,12 +218,12 @@ onBeforeUnmount(clearTimers)
         {{ name || '홍길동' }}님의 가입 이메일이에요
       </p>
       <div
-        class="mt-[27px] flex h-[66px] items-center justify-center rounded-(--radius-xl) bg-(--color-surface) text-(length:--font-base) leading-[1.3] font-(--font-bold) text-(color:--color-navy)"
+        class="mt-[27px] flex h-[66px] items-center justify-center rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) text-(length:--font-base) leading-[1.3] font-(--font-bold) text-(color:--color-navy) shadow-(--shadow-card)"
       >
         {{ maskedEmail }}
       </div>
       <router-link
-        class="mt-6 flex h-[52px] items-center justify-center rounded-(--radius-xl) bg-(--color-gold) text-[14.5px] font-(--font-bold) text-(color:--color-navy)"
+        class="mt-auto flex h-[52px] w-full items-center justify-center rounded-[20px] bg-(--color-leaf) text-[14.5px] font-(--font-bold) text-(color:--color-navy)"
         to="/login"
       >
         로그인하러 가기
@@ -234,7 +238,7 @@ onBeforeUnmount(clearTimers)
 
     <template v-else>
       <div
-        class="fixed inset-x-0 top-0 z-100 h-(--header-height) bg-(--color-white)"
+        class="fixed inset-x-0 top-0 z-100 h-(--header-height) bg-(--color-app-bg)"
         aria-hidden="true"
       />
       <button
@@ -268,7 +272,7 @@ onBeforeUnmount(clearTimers)
         <input
           id="find-id-name"
           v-model.trim="name"
-          class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
+          class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-white) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-leaf)"
           type="text"
           autocomplete="name"
           placeholder="홍길동"
@@ -291,14 +295,14 @@ onBeforeUnmount(clearTimers)
           <input
             id="find-id-phone"
             :value="phone"
-            class="h-(--control-height-md) min-w-0 flex-1 rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
+            class="h-(--control-height-md) min-w-0 flex-1 rounded-(--radius-lg) border border-(--color-border) bg-(--color-white) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-leaf)"
             type="tel"
             autocomplete="tel"
             placeholder="010-1234-5678"
             @input="handlePhoneInput"
           >
           <button
-            class="h-(--control-height-md) w-20 shrink-0 rounded-(--radius-lg) bg-(--color-navy) text-[11.5px] font-(--font-bold) text-(color:--color-white) disabled:cursor-not-allowed disabled:opacity-55"
+            class="h-(--control-height-md) w-20 shrink-0 rounded-(--radius-lg) bg-(--color-leaf) text-[11.5px] font-(--font-bold) text-(color:--color-navy) disabled:cursor-not-allowed disabled:opacity-55"
             type="button"
             :disabled="isVerified"
             @click="handleRequestCode"
@@ -330,7 +334,7 @@ onBeforeUnmount(clearTimers)
             <input
               id="find-id-code"
               v-model="verificationCode"
-              class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] pr-[70px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy) disabled:opacity-65"
+              class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-white) px-[13px] pr-[70px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-leaf) disabled:opacity-65"
               type="text"
               inputmode="numeric"
               autocomplete="one-time-code"
@@ -346,7 +350,7 @@ onBeforeUnmount(clearTimers)
             </span>
           </div>
           <button
-            class="h-(--control-height-md) w-20 shrink-0 rounded-(--radius-lg) bg-(--color-navy) text-[12.5px] font-(--font-bold) text-(color:--color-white) disabled:opacity-55"
+            class="h-(--control-height-md) w-20 shrink-0 rounded-(--radius-lg) bg-(--color-leaf) text-[12.5px] font-(--font-bold) text-(color:--color-navy) disabled:opacity-55"
             type="button"
             :disabled="isVerified"
             @click="handleVerifyCode"
@@ -376,7 +380,7 @@ onBeforeUnmount(clearTimers)
         </p>
 
         <button
-          class="mt-6 h-[52px] rounded-(--radius-xl) bg-(--color-gold) text-[14.5px] font-(--font-bold) text-(color:--color-navy)"
+          class="mt-6 h-[52px] rounded-(--radius-xl) bg-(--color-leaf) text-[14.5px] font-(--font-bold) text-(color:--color-navy)"
           type="submit"
         >
           아이디 찾기
