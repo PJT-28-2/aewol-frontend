@@ -139,7 +139,11 @@ export const useSupportStore = defineStore('support', {
       this.error = null;
       try {
         const { data } = await getMyInquiries();
-        this.myInquiries = data.result ?? [];
+        // ⚠️ 백엔드 응답이 배열이 아니라 { inquiries: [...], hasNext } 객체예요
+        // (InquiryListResponse, api_명세서.md 예시 기준). data.result를 그대로 배열에
+        // 넣으면 Vue의 v-for가 객체 속성(inquiries 배열 자체, hasNext 불리언)을 각각
+        // "항목"으로 순회해버려서 카드는 개수만 맞고 제목/날짜가 전부 비는 버그가 있었음(2026-08-11).
+        this.myInquiries = data.result?.inquiries ?? [];
       } catch (err) {
         this.error = err;
         throw err;

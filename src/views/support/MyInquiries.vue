@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useSupportStore } from '@/stores/support';
 import IconChevronRight from '@/components/common/icons/IconChevronRight.vue';
+import IconPaw from '@/components/common/icons/IconPaw.vue';
 
 const router = useRouter();
 const store = useSupportStore();
@@ -28,8 +29,8 @@ function statusLabel(status) {
 
 function statusClass(status) {
   return status === 'ANSWERED'
-    ? 'bg-(--color-gold) text-(color:--color-navy)'
-    : 'bg-(--color-gray-200) text-(color:--color-gray-700)';
+    ? 'bg-(--color-leaf-surface) text-(color:--color-leaf-dark)'
+    : 'bg-(--color-icon-yellow-soft) text-(color:--color-icon-yellow)';
 }
 
 function formatDate(dateString) {
@@ -92,28 +93,37 @@ function goToInquiryDetail(inquiryId) {
         class="rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-4 shadow-(--shadow-card)"
       >
         <button
-          class="w-full flex items-center justify-between gap-3"
+          class="w-full flex items-start justify-between gap-3"
           @click="goToInquiryDetail(inquiry.inquiryId)"
         >
-          <div class="flex-1 text-left">
+          <div class="flex flex-1 min-w-0 items-start gap-3 text-left">
+            <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-(--color-leaf-surface)">
+              <IconPaw
+                :size="18"
+                color="var(--color-leaf-dark)"
+              />
+            </span>
+            <div class="min-w-0 flex-1">
+              <p class="truncate font-semibold text-(color:--color-navy) text-(length:--font-md)">
+                {{ inquiry.title }}
+              </p>
+              <p class="text-(length:--font-xs) text-(color:--color-gray-500) mt-1">
+                {{ formatDate(inquiry.createdAt) }}
+              </p>
+            </div>
+          </div>
+          <div class="flex shrink-0 flex-col items-end gap-2">
             <span
-              class="inline-block px-2.5 py-1 rounded-full text-(length:--font-xs) font-semibold mb-2"
+              class="inline-block px-2.5 py-1 rounded-full text-(length:--font-xs) font-semibold"
               :class="statusClass(inquiry.status)"
             >
               {{ statusLabel(inquiry.status) }}
             </span>
-            <p class="font-semibold text-(color:--color-navy) text-(length:--font-md)">
-              {{ inquiry.title }}
-            </p>
-            <p class="text-(length:--font-xs) text-(color:--color-gray-500) mt-1">
-              {{ formatDate(inquiry.createdAt) }}
-            </p>
+            <IconChevronRight
+              :size="16"
+              color="var(--color-gray-400)"
+            />
           </div>
-          <IconChevronRight
-            :size="18"
-            color="var(--color-gray-400)"
-            class="shrink-0"
-          />
         </button>
       </li>
     </ul>
