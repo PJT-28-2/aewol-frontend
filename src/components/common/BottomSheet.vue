@@ -99,7 +99,7 @@ watch(
     >
       <div
         v-if="modelValue"
-        class="fixed inset-0 z-1000 flex items-end bg-black/50"
+        class="fixed inset-0 z-1000 flex items-end bg-[color-mix(in_srgb,var(--color-navy)_38%,transparent)] backdrop-blur-[2px]"
         @click="onOverlayClick"
       >
         <div
@@ -108,31 +108,31 @@ watch(
           aria-modal="true"
           :aria-labelledby="title ? titleId : undefined"
           tabindex="-1"
-          class="w-full max-w-(--layout-max-width) mx-auto bg-(--color-white) rounded-t-(--radius-sheet) overflow-hidden flex flex-col pb-[env(safe-area-inset-bottom,0)] outline-none"
+          class="mx-auto flex w-full max-w-(--layout-max-width) flex-col overflow-hidden rounded-t-[32px] border-x border-t border-(--color-card-border) bg-(--color-app-bg) pb-[env(safe-area-inset-bottom,0)] shadow-[0_-12px_40px_color-mix(in_srgb,var(--color-navy)_14%,transparent)] outline-none"
           :class="maxHeightClasses[size]"
           @keydown="onKeydown"
         >
           <button
             type="button"
-            class="flex justify-center w-full pt-(--space-3) shrink-0"
+            class="flex w-full shrink-0 justify-center pt-(--space-3) pb-(--space-1)"
             aria-label="닫기"
             @click="close"
           >
             <span
-              class="w-10 h-1 rounded-full bg-(--color-gray-300)"
+              class="h-[5px] w-[44px] rounded-full bg-(--color-slate-light)"
             />
           </button>
 
           <h2
             v-if="title"
             :id="titleId"
-            class="shrink-0 px-(--space-5) pt-(--space-4) pb-(--space-2) text-(length:--font-lg) font-semibold text-(color:--color-gray-900)"
+            class="shrink-0 px-(--space-5) pt-(--space-3) pb-(--space-3) text-center text-(length:--font-lg) font-bold text-(color:--color-navy)"
           >
             {{ title }}
           </h2>
 
           <div
-            class="flex-1 min-h-0 px-(--space-5) pt-(--space-2) pb-(--space-6) overflow-y-auto [scrollbar-color:transparent_transparent] scrollbar-thin hover:[scrollbar-color:var(--color-gray-300)_transparent] [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-transparent [&::-webkit-scrollbar-track]:bg-transparent hover:[&::-webkit-scrollbar-thumb]:bg-(--color-gray-300)"
+            class="min-h-0 flex-1 overflow-y-auto px-(--space-5) pt-(--space-3) pb-(--space-7) [scrollbar-color:transparent_transparent] scrollbar-thin hover:[scrollbar-color:var(--color-gray-300)_transparent] [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-transparent [&::-webkit-scrollbar-track]:bg-transparent hover:[&::-webkit-scrollbar-thumb]:bg-(--color-gray-300)"
           >
             <slot />
           </div>

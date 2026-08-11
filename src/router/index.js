@@ -108,16 +108,22 @@ const authRoutes = [
     meta: { requiresAuth: true, layout: 'DefaultLayout', hideHeader: true },
   },
   {
+    path: '/notifications',
+    name: 'NotificationInbox',
+    component: () => import('@/views/notification/NotificationInboxView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true, title: '알림함' },
+  },
+  {
     path: '/home',
     name: 'Home',
     component: () => import('@/views/home/HomeView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', hideHeader: true },
   },
   {
     path: '/pets',
     name: 'PetList',
     component: () => import('@/views/pet/PetListView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', hideHeader: true },
     // 등록된 반려동물이 없으면 관리 화면 대신 반려동물 등록/가족 참여 안내 화면으로 보낸다.
     beforeEnter: async () => {
       const petStore = usePetStore();
@@ -128,6 +134,18 @@ const authRoutes = [
       }
       if (petStore.pets.length === 0) return '/share/start';
     },
+  },
+  {
+    path: '/pets/memories',
+    name: 'PetMemoryList',
+    component: () => import('@/views/pet/PetMemoryListView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
+  },
+  {
+    path: '/pets/memories/new',
+    name: 'PetMemoryCreate',
+    component: () => import('@/views/pet/PetMemoryCreateView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true, title: '오늘의 추억' },
   },
   {
     path: '/pets/register',
@@ -157,7 +175,7 @@ const authRoutes = [
     path: '/wallet',
     name: 'Wallet',
     component: () => import('@/views/wallet/WalletView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', hideHeader: true },
   },
   {
     path: '/wallet/charge',
@@ -220,6 +238,12 @@ const authRoutes = [
     meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
+    path: '/payment/qr',
+    name: 'QrPayment',
+    component: () => import('@/views/payment/QrPaymentView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout', hideHeader: true },
+  },
+  {
     path: '/payment/recurring/register',
     name: 'RecurringRegister',
     component: () => import('@/views/payment/RecurringRegisterView.vue'),
@@ -253,7 +277,7 @@ const authRoutes = [
     path: '/insurance',
     name: 'InsuranceHome',
     component: () => import('@/views/insurance/InsuranceHomeView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/insurance/simulator',
@@ -476,7 +500,7 @@ const authRoutes = [
     path: '/settings',
     name: 'Settings',
     component: () => import('@/views/settings/SettingsView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout' },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', hideHeader: true },
   },
   {
     path: '/settings/profile',
@@ -502,13 +526,13 @@ const authRoutes = [
     path: '/settings/withdraw',
     name: 'Withdraw',
     component: () => import('@/views/settings/WithdrawView.vue'),
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/settings/pet-photo',
     name: 'PetProfilePhoto',
     component: () => import('@/views/settings/PetProfilePhotoView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', hideHeader: true, hideBottomNav: true },
   },
 ];
 
@@ -535,6 +559,17 @@ const PUBLIC_ROUTE_NAMES = new Set(
 );
 
 router.beforeEach((to) => {
+  // 외부 링크를 복사하면서 슬래시가 중복되어도 빈 화면 대신 정상 경로로 보낸다.
+  const normalizedPath = to.path.replace(/\/{2,}/g, '/');
+  if (normalizedPath !== to.path) {
+    return {
+      path: normalizedPath,
+      query: to.query,
+      hash: to.hash,
+      replace: true,
+    };
+  }
+
   const authStore = useAuthStore();
 
   // 로그인 화면 구현 전까지 로컬 화면 개발을 위한 인증 우회

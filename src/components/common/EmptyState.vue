@@ -1,5 +1,7 @@
 <script setup>
 import { useRouter } from 'vue-router'
+import AppButton from './AppButton.vue'
+import FeatureIconTile from './FeatureIconTile.vue'
 
 const props = defineProps({
   icon: {
@@ -30,59 +32,25 @@ function handleAction() {
 </script>
 
 <template>
-  <div class="empty-state">
-    <component
-      :is="icon"
+  <div class="flex flex-col items-center justify-center px-(--space-4) py-(--space-10) text-center">
+    <FeatureIconTile
       v-if="icon"
-      class="empty-state__icon"
-      :size="48"
+      class="mb-(--space-4)"
+      :icon="icon"
+      tone="gray"
     />
-    <p class="empty-state__message whitespace-pre-line">
+    <p
+      class="text-(length:--font-md) leading-[1.6] whitespace-pre-line text-(color:--color-slate-dark)"
+      :class="actionText ? 'mb-(--space-6)' : ''"
+    >
       {{ message }}
     </p>
-    <button
+    <AppButton
       v-if="actionText"
-      class="empty-state__action"
+      size="md"
       @click="handleAction"
     >
       {{ actionText }}
-    </button>
+    </AppButton>
   </div>
 </template>
-
-<style scoped>
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-10) var(--space-4);
-  text-align: center;
-}
-
-.empty-state__icon {
-  color: var(--color-gray-400);
-  margin-bottom: var(--space-4);
-}
-
-.empty-state__message {
-  font-size: var(--font-md);
-  color: var(--color-gray-600);
-  line-height: 1.6;
-  margin-bottom: var(--space-6);
-}
-
-.empty-state__action {
-  padding: var(--space-3) var(--space-6);
-  background-color: var(--color-gold);
-  color: var(--color-white);
-  font-size: var(--font-md);
-  font-weight: var(--font-semibold);
-  border-radius: var(--radius-md);
-  transition: opacity 0.2s;
-}
-
-.empty-state__action:hover {
-  opacity: 0.9;
-}
-</style>

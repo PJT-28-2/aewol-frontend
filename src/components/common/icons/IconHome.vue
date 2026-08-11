@@ -7,7 +7,13 @@ defineProps({
 </script>
 
 <template>
-  <svg :width="size" :height="size" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+  <svg
+    :width="size"
+    :height="size"
+    viewBox="0 0 24 24"
+    aria-hidden="true"
+    focusable="false"
+  >
     <path
       v-if="filled"
       :fill="color"

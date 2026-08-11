@@ -2,30 +2,32 @@
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import AppButton from '@/components/common/AppButton.vue';
-import onboardingSpendImage from '@/assets/images/onboarding-spend.png';
-import onboardingFamilyImage from '@/assets/images/onboarding-family.png';
-import onboardingEmergencyImage from '@/assets/images/onboarding-emergency.png';
+import AewolLogo from '@/components/common/AewolLogo.vue';
+import OnboardingVisual from '@/components/onboarding/OnboardingVisual.vue';
 
 const router = useRouter();
 
 const slides = [
   {
-    image: onboardingSpendImage,
-    title: '반려동물 지출을\n한 곳에서',
+    visual: 'wallet',
+    label: '반려동물 전용 전자지갑',
+    title: '결제와 거래 내역을\n한 곳에서 관리해요',
     description:
-      '결제, 저축, 보험청구까지\n애월 하나면 충분해요',
+      '충전, 송금, QR 결제를 이용하고\n정기결제와 전체 거래 내역을 확인해요',
   },
   {
-    image: onboardingFamilyImage,
-    title: '가족과 함께\n기여도도 투명하게',
+    visual: 'report',
+    label: '반려동물 지출 리포트',
+    title: '어디에 얼마나 썼는지\n한눈에 확인해요',
     description:
-      '공동양육 중이라면\n서로의 기여도를 확인할 수 있어요',
+      '의료비, 식비, 미용 등 카테고리와\n반려동물별 월 지출을 비교할 수 있어요',
   },
   {
-    image: onboardingEmergencyImage,
-    title: '위급할 때\n가장 가까운 병원으로',
+    visual: 'insurance',
+    label: '보험 판단과 간편 청구',
+    title: '보험이 유리한지 계산하고\n청구 준비도 간편하게',
     description:
-      '근처 24시 병원을 찾아\n전화부터 길찾기까지 한 번에 해결해요',
+      '예상 비용으로 가입 여부를 비교하고\n영수증으로 청구서 초안을 만들어요',
   },
 ];
 
@@ -72,14 +74,15 @@ function handleTouchEnd(event) {
 
 <template>
   <main
-    class="flex min-h-svh w-full flex-col bg-(--color-white) px-[22px] pt-(--space-5) pb-6"
+    class="relative flex min-h-svh w-full flex-col overflow-hidden bg-(--color-app-bg) px-(--space-5) pt-(--space-5) pb-(--space-5)"
     @touchstart.passive="handleTouchStart"
     @touchend.passive="handleTouchEnd"
   >
-    <div class="flex h-5 justify-end">
+    <div class="relative z-1 flex h-8 items-center justify-between">
+      <AewolLogo size="18" />
       <button
         v-if="!isLastSlide"
-        class="text-(length:--font-sm) text-(color:--color-slate-muted)"
+        class="rounded-(--radius-full) px-(--space-3) py-[6px] text-(length:--font-sm) font-medium text-(color:--color-slate-dark) transition-colors active:bg-(--color-gray-200)"
         type="button"
         @click="goToLogin"
       >
@@ -87,40 +90,45 @@ function handleTouchEnd(event) {
       </button>
     </div>
 
-    <div
-      class="mt-(--space-6) flex aspect-[48/54] items-center justify-center overflow-hidden rounded-(--radius-xl) bg-(--color-pastel-frost) p-(--space-5)"
-    >
-      <img
-        :src="currentSlide.image"
-        alt=""
-        class="h-full w-full object-cover"
+    <div class="relative z-1 mt-(--space-5) h-[42svh] min-h-[326px] max-h-[370px]">
+      <OnboardingVisual
+        :key="currentSlide.visual"
+        :type="currentSlide.visual"
       />
+      <span
+        class="absolute top-(--space-4) right-(--space-4) rounded-full bg-(--color-white) px-(--space-3) py-[6px] text-[11px] font-bold text-(--color-leaf-dark) shadow-(--shadow-sm)"
+      >
+        {{ currentIndex + 1 }} / {{ slides.length }}
+      </span>
     </div>
 
-    <section class="mt-(--space-7) text-center">
+    <section class="relative z-1 mt-(--space-5) text-center">
+      <p
+        class="mb-(--space-2) text-(length:--font-sm) font-semibold text-(--color-leaf-dark)"
+      >
+        {{ currentSlide.label }}
+      </p>
       <h1
-        class="text-(length:--font-2xl) leading-[1.3] font-bold text-(color:--color-navy) whitespace-pre-line"
+        class="text-[26px] leading-[1.28] font-bold tracking-[-0.03em] text-(color:--color-navy) whitespace-pre-line"
       >
         {{ currentSlide.title }}
       </h1>
       <p
-        class="mt-(--space-2) text-(length:--font-md) leading-[1.4] text-(color:--color-slate-muted) whitespace-pre-line"
+        class="mt-(--space-3) text-(length:--font-sm) leading-[1.55] text-(color:--color-slate-muted) whitespace-pre-line"
       >
         {{ currentSlide.description }}
       </p>
     </section>
 
-    <div class="flex-1" />
-
-    <div class="flex justify-center gap-[6px]">
+    <div class="relative z-1 mt-auto flex justify-center gap-(--space-2) pt-(--space-4)">
       <button
         v-for="(_, index) in slides"
         :key="index"
-        class="h-2 rounded-full transition-all"
+        class="h-[5px] rounded-full transition-all duration-200"
         :class="
           index === currentIndex
-            ? 'w-5 bg-(--color-navy)'
-            : 'w-2 bg-(--color-gray-300)'
+            ? 'w-(--space-7) bg-(--color-leaf)'
+            : 'w-(--space-3) bg-(--color-gray-300)'
         "
         type="button"
         :aria-label="`${index + 1}번째 화면으로 이동`"
@@ -128,11 +136,10 @@ function handleTouchEnd(event) {
       />
     </div>
 
-    <div class="flex-1" />
-
     <AppButton
       block
       size="lg"
+      class="relative z-1 mt-(--space-4)"
       @click="handleNext"
     >
       {{ isLastSlide ? '시작하기' : '다음' }}

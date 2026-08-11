@@ -7,15 +7,16 @@ import { usePetStore } from '@/stores/pet'
 import AppButton from '@/components/common/AppButton.vue'
 import AppModal from '@/components/common/AppModal.vue'
 import PasswordInput from '@/components/common/PasswordInput.vue'
-import IconChevronRight from '@/components/common/icons/IconChevronRight.vue'
+import FeatureIconTile from '@/components/common/FeatureIconTile.vue'
 import IconImage from '@/components/common/icons/IconImage.vue'
-import iconPetProfile3d from '@/assets/images/icons-3d/dog_face_3d.png'
-import iconCatProfile3d from '@/assets/images/icons-3d/cat_face_3d.png'
-import iconNotification3d from '@/assets/images/icons-3d/bell_3d.png'
-import iconAccountCard3d from '@/assets/images/icons-3d/credit_card_3d.png'
-import iconRecurring3d from '@/assets/images/icons-3d/calendar_3d.png'
-import iconDiscussion3d from '@/assets/images/icons-3d/speech_balloon_3d.png'
-import iconFamily3d from '@/assets/images/icons-3d/people_hugging_3d.png'
+import IconChatBubble from '@/components/common/icons/IconChatBubble.vue'
+import IconGroupPurchase from '@/components/common/icons/IconGroupPurchase.vue'
+import IconPublicSupport from '@/components/common/icons/IconPublicSupport.vue'
+import IconNotificationBell from '@/components/common/icons/IconNotificationBell.vue'
+import IconRecurring from '@/components/common/icons/IconRecurring.vue'
+import IconSavings from '@/components/common/icons/IconSavings.vue'
+import IconWallet from '@/components/common/icons/IconWallet.vue'
+import profileMascot from '@/assets/images/pet-poodle-profile-mascot.png'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -29,65 +30,66 @@ const isVerifying = ref(false)
 const PROFILE_VERIFIED_KEY = 'profileEditPasswordVerified'
 import { MOCK_CURRENT_PASSWORD } from '@/mocks/settings'
 
-const profilePetIcon = computed(() =>
-  petStore.pets[0]?.species === 'CAT'
-    ? iconCatProfile3d
-    : iconPetProfile3d,
-)
-
 const memberName = computed(() => memberStore.profile?.name ?? '')
 const memberEmail = computed(() => memberStore.profile?.email ?? '')
+const petName = computed(() => petStore.pets[0]?.name ?? '포리')
+const profileImage = computed(() => memberStore.petProfilePhotoUrl || profileMascot)
 
 onMounted(async () => {
-  if (!memberStore.profile) {
-    try {
-      await memberStore.fetchProfile()
-    } catch {
-      // 프로필 조회 실패 시 이름/이메일은 빈 상태로 유지한다.
-    }
-  }
+  await Promise.allSettled([
+    memberStore.profile ? Promise.resolve() : memberStore.fetchProfile(),
+    petStore.pets.length ? Promise.resolve() : petStore.fetchPets(),
+  ])
 })
 
-const menuSections = [
+const benefitItems = [
   {
-    title: '서비스 관리',
-    items: [
-      {
-        title: '함께 돌보기',
-        description: '가족 초대 및 공동양육 관리',
-        path: '/share',
-        icon: iconFamily3d,
-      },
-      {
-        title: '계좌 관리',
-        description: '연동된 계좌 확인 및 등록',
-        path: '/account',
-        icon: iconAccountCard3d,
-      },
-      {
-        title: '정기 결제 관리',
-        description: '구독형 결제 내역 확인',
-        path: '/payment/recurring',
-        icon: iconRecurring3d,
-      },
-    ],
+    title: '공동구매',
+    description: '인증 업체 특가',
+    path: '/group-purchase',
+    icon: IconGroupPurchase,
+    tone: 'green',
   },
   {
-    title: '설정 · 지원',
-    items: [
-      {
-        title: '알림 설정',
-        description: '푸시 알림 켜기 / 끄기',
-        path: '/settings/notifications',
-        icon: iconNotification3d,
-      },
-      {
-        title: '고객센터',
-        description: '자주 묻는 질문 및 문의',
-        path: '/support',
-        icon: iconDiscussion3d,
-      },
-    ],
+    title: '짜투리 저금통',
+    description: '모아서 기부하기',
+    path: '/donation',
+    icon: IconSavings,
+    tone: 'yellow',
+  },
+  {
+    title: '지원사업',
+    description: '지역 혜택 찾기',
+    path: '/support-programs',
+    icon: IconPublicSupport,
+    tone: 'blue',
+  },
+]
+
+const settingItems = [
+  {
+    title: '계좌 관리',
+    path: '/account',
+    icon: IconWallet,
+    tone: 'blue',
+  },
+  {
+    title: '정기 결제',
+    path: '/payment/recurring',
+    icon: IconRecurring,
+    tone: 'purple',
+  },
+  {
+    title: '알림 설정',
+    path: '/settings/notifications',
+    icon: IconNotificationBell,
+    tone: 'pink',
+  },
+  {
+    title: '고객센터',
+    path: '/support',
+    icon: IconChatBubble,
+    tone: 'gray',
   },
 ]
 
@@ -142,10 +144,10 @@ const confirmLogout = () => {
 
 <template>
   <section
-    class="min-h-screen w-full bg-(--color-app-bg) px-(--space-4) pt-(--space-3) pb-[calc(var(--bottom-nav-height)+var(--space-7))]"
+    class="min-h-screen w-full bg-(--color-app-bg) px-(--space-5) pt-(--space-3) pb-[calc(var(--bottom-nav-height)+var(--space-8))]"
     aria-labelledby="mypage-title"
   >
-    <header class="mb-(--space-4)">
+    <header class="mb-(--space-5) flex h-[42px] items-center">
       <h1
         id="mypage-title"
         class="text-(length:--font-2xl) font-bold text-(color:--color-navy)"
@@ -155,96 +157,99 @@ const confirmLogout = () => {
     </header>
 
     <article
-      class="flex items-center gap-(--space-3) rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-(--space-4) shadow-(--shadow-card)"
+      class="relative overflow-hidden rounded-[28px] bg-(--color-leaf) p-(--space-5) shadow-(--shadow-card)"
       aria-label="회원 정보"
     >
-      <div class="relative shrink-0">
-        <img
-          v-if="memberStore.petProfilePhotoUrl"
-          :src="memberStore.petProfilePhotoUrl"
-          alt=""
-          class="size-[52px] rounded-[16px] object-cover"
-        >
-        <div
-          v-else
-          class="flex size-[52px] items-center justify-center rounded-[16px] border border-(--color-card-border) bg-(--color-white)"
-          aria-hidden="true"
-        >
-          <img
-            :src="profilePetIcon"
-            :alt="petStore.pets[0]?.species === 'CAT' ? '고양이 프로필' : '강아지 프로필'"
-            class="size-[40px] object-contain saturate-[0.85] brightness-[1.03] contrast-[0.96]"
+      <div class="relative flex items-center gap-(--space-4)">
+        <div class="relative shrink-0">
+          <div class="flex size-[86px] items-center justify-center overflow-hidden rounded-full bg-(--color-leaf-soft)">
+            <!-- 생성 이미지가 투명 PNG여도 프로필 배경은 UI에서 유지한다. -->
+            <img
+              :src="profileImage"
+              :alt="`${petName} 프로필`"
+              class="size-full scale-[1.08] object-cover"
+            >
+          </div>
+          <router-link
+            to="/settings/pet-photo?mode=edit"
+            class="absolute -right-[5px] -bottom-[5px] flex size-[27px] items-center justify-center rounded-full border-2 border-(--color-leaf) bg-(--color-white) shadow-(--shadow-sm)"
+            aria-label="프로필 사진 만들기"
           >
+            <IconImage
+              size="13"
+              color="var(--color-navy)"
+            />
+          </router-link>
         </div>
-        <router-link
-          to="/settings/pet-photo"
-          class="absolute -right-[4px] -bottom-[4px] flex size-[22px] items-center justify-center rounded-full bg-(--color-white) border border-(--color-gray-200) shadow-(--shadow-sm)"
-          aria-label="프로필 사진 만들기"
-        >
-          <IconImage
-            size="12"
-            color="var(--color-navy)"
-          />
-        </router-link>
-      </div>
-      <div class="min-w-0 flex-1">
-        <p class="truncate text-[15px] leading-[1.3] font-(--font-bold) text-(color:--color-navy)">
-          {{ memberName ? `${memberName}님` : '회원님' }}
-        </p>
-        <p class="mt-[5px] truncate text-[12px] leading-[1.3] text-(color:--color-slate-muted)">
-          {{ memberEmail || '이메일 정보가 없습니다' }}
-        </p>
+        <div class="relative min-w-0 flex-1">
+          <p class="text-(length:--font-xs) font-semibold text-(color:--color-leaf-dark)">
+            {{ petName }}와 함께하는 보호자
+          </p>
+          <p class="mt-(--space-1) truncate text-(length:--font-xl) font-bold text-(color:--color-navy)">
+            {{ memberName ? `${memberName}님` : '회원님' }}
+          </p>
+          <p class="mt-[3px] truncate text-(length:--font-xs) text-(color:--color-navy-light)">
+            {{ memberEmail || '이메일 정보가 없습니다' }}
+          </p>
+        </div>
       </div>
       <button
         type="button"
-        class="shrink-0 rounded-(--radius-full) bg-(--color-leaf-surface) px-(--space-3) py-[7px] text-(length:--font-xs) font-semibold text-(--color-leaf-dark) active:bg-(--color-leaf)"
+        class="relative mt-(--space-4) w-full rounded-(--radius-xl) bg-[color-mix(in_srgb,var(--color-white)_68%,transparent)] py-(--space-3) text-(length:--font-sm) font-bold text-(color:--color-navy) active:bg-(--color-white)"
         @click="handleMenuClick({ action: 'verifyProfile' })"
       >
-        프로필 수정
+        내 정보 수정
       </button>
     </article>
 
-    <section
-      v-for="section in menuSections"
-      :key="section.title"
-      class="mt-(--space-6)"
-    >
-      <h2 class="mb-(--space-2) px-(--space-1) text-(length:--font-sm) font-semibold text-(--color-slate-dark)">
-        {{ section.title }}
-      </h2>
+    <section class="mt-(--space-7)">
+      <div class="mb-(--space-3) flex items-center justify-between px-(--space-1)">
+        <h2 class="text-(length:--font-lg) font-bold text-(color:--color-navy)">
+          혜택 · 생활
+        </h2>
+      </div>
       <nav
-        class="flex flex-col overflow-hidden rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white)"
-        :aria-label="section.title"
+        class="grid grid-cols-3 gap-(--space-2)"
+        aria-label="혜택과 생활"
       >
         <button
-          v-for="item in section.items"
+          v-for="item in benefitItems"
           :key="item.title"
-          class="flex w-full cursor-pointer items-center gap-(--space-3) border-b border-(--color-card-border) px-(--space-4) py-(--space-3) text-left transition-colors last:border-b-0 active:bg-(--color-gray-100) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-navy)"
           type="button"
+          class="min-w-0 rounded-[20px] bg-(--color-white) px-(--space-2) py-(--space-4) text-center shadow-(--shadow-sm) active:bg-(--color-leaf-soft)"
           @click="handleMenuClick(item)"
         >
-          <span
-            class="flex size-[40px] shrink-0 items-center justify-center rounded-[13px] bg-(--color-gray-100)"
-          >
-            <img
-              :src="item.icon"
-              alt=""
-              class="size-[27px] object-contain saturate-[0.8] brightness-[1.03] contrast-[0.95]"
-            >
-          </span>
-          <div class="min-w-0 flex-1">
-            <strong class="block truncate text-(length:--font-md) font-semibold text-(color:--color-navy)">
-              {{ item.title }}
-            </strong>
-            <p class="mt-[3px] truncate text-(length:--font-xs) text-(color:--color-slate-muted)">
-              {{ item.description }}
-            </p>
-          </div>
-          <IconChevronRight
-            size="18"
-            color="var(--color-gray-400)"
-            class="shrink-0"
+          <FeatureIconTile
+            class="mx-auto"
+            :icon="item.icon"
+            :tone="item.tone"
           />
+          <strong class="mt-(--space-3) block truncate text-[13px] font-bold text-(color:--color-navy)">{{ item.title }}</strong>
+          <span class="mt-[3px] block truncate text-[10px] text-(color:--color-slate-muted)">{{ item.description }}</span>
+        </button>
+      </nav>
+    </section>
+
+    <section class="mt-(--space-7)">
+      <h2 class="mb-(--space-3) px-(--space-1) text-(length:--font-lg) font-bold text-(color:--color-navy)">
+        계정 · 설정
+      </h2>
+      <nav
+        class="grid grid-cols-2 overflow-hidden rounded-[22px] bg-(--color-white)"
+        aria-label="계정과 설정"
+      >
+        <button
+          v-for="item in settingItems"
+          :key="item.title"
+          type="button"
+          class="flex items-center gap-(--space-2) border-r border-b border-(--color-card-border) p-(--space-4) text-left even:border-r-0 active:bg-(--color-gray-100)"
+          @click="handleMenuClick(item)"
+        >
+          <FeatureIconTile
+            :icon="item.icon"
+            :tone="item.tone"
+          />
+          <span class="text-[13px] font-semibold text-(color:--color-navy)">{{ item.title }}</span>
         </button>
       </nav>
     </section>

@@ -4,6 +4,7 @@ import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router';
 import { withEulReul } from '@/utils/korean';
 import AppButton from '@/components/common/AppButton.vue';
 import AppInput from '@/components/common/AppInput.vue';
+import FeatureIconTile from '@/components/common/FeatureIconTile.vue';
 import ConfirmDeleteModal from '@/components/common/ConfirmDeleteModal.vue';
 import IconClose from '@/components/common/icons/IconClose.vue';
 import { mockPetsById } from '@/mocks/pet';
@@ -12,8 +13,8 @@ import { petApi } from '@/api/pet';
 import { usePetStore } from '@/stores/pet';
 import { useMemberStore } from '@/stores/member';
 import { isValidCalendarDate } from '@/utils/date';
-import dogFace3d from '@/assets/images/icons-3d/dog_face_3d.png';
-import catFace3d from '@/assets/images/icons-3d/cat_face_3d.png';
+import IconDog from '@/components/common/icons/IconDog.vue';
+import IconCat from '@/components/common/icons/IconCat.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -262,13 +263,13 @@ async function handleDelete() {
     await router.push('/pets');
   } catch (error) {
     const messages = {
-      403: '반려동물을 삭제할 권한이 없습니다.',
+      403: '반려동물 등록을 해제할 권한이 없습니다.',
       404: '반려동물 정보를 찾을 수 없습니다.',
     };
     errorMessage.value =
       error.response?.data?.message ||
       messages[error.response?.status] ||
-      '반려동물 삭제에 실패했습니다. 다시 시도해주세요.';
+      '반려동물 등록 해제에 실패했습니다. 다시 시도해주세요.';
   } finally {
     isDeleting.value = false;
   }
@@ -288,6 +289,14 @@ function handleDocumentDelete() {
   <div
     class="min-h-screen bg-(--color-app-bg) px-(--space-4) pt-(--space-3) pb-[calc(var(--bottom-nav-height)+var(--space-7))]"
   >
+    <header class="mb-(--space-5)">
+      <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">
+        반려동물 프로필 수정
+      </h1>
+      <p class="mt-(--space-1) text-(length:--font-md) text-(color:--color-slate-muted)">
+        등록된 반려동물 정보를 관리해요
+      </p>
+    </header>
     <div
       v-if="notFound"
       class="text-center py-(--space-8) text-(color:--color-gray-500)"
@@ -324,11 +333,10 @@ function handleDocumentDelete() {
               "
               @click="selectSpecies('DOG')"
             >
-              <img
-                :src="dogFace3d"
-                alt=""
-                class="size-[48px] object-contain"
-              >
+              <FeatureIconTile
+                :icon="IconDog"
+                tone="green"
+              />
               강아지
             </button>
             <button
@@ -342,11 +350,10 @@ function handleDocumentDelete() {
               "
               @click="selectSpecies('CAT')"
             >
-              <img
-                :src="catFace3d"
-                alt=""
-                class="size-[48px] object-contain"
-              >
+              <FeatureIconTile
+                :icon="IconCat"
+                tone="purple"
+              />
               고양이
             </button>
           </div>
@@ -557,20 +564,20 @@ function handleDocumentDelete() {
         block
         @click="isDeleteModalOpen = true"
       >
-        이 반려동물 삭제하기
+        반려동물 등록 해제
       </AppButton>
     </form>
 
     <ConfirmDeleteModal
       v-model="isDeleteModalOpen"
-      :title="`${withEulReul(petName)} 정말 삭제할까요?`"
-      description="반려동물과 연결된 정보가 모두 삭제돼요. 삭제 후에는 복구할 수 없어요."
+      :title="`${withEulReul(petName)} 애월에서 떠나보낼까요?`"
+      description="등록을 해제하면 반려동물과 연결된 정보가 모두 제거되며 복구할 수 없어요."
       :items="[
         '반려동물 기본 정보와 건강 기록',
         '동물등록증과 접종증명서 등 등록 문서',
         '연결된 지출 내역과 분류 기록',
       ]"
-      confirm-label="삭제"
+      confirm-label="등록 해제"
       :confirm-loading="isDeleting"
       @confirm="handleDelete"
     />

@@ -6,13 +6,11 @@ import { usePetStore } from '@/stores/pet'
 import { useInsuranceStore } from '@/stores/insurance'
 import AppButton from '@/components/common/AppButton.vue'
 import AppModal from '@/components/common/AppModal.vue'
-import { registerHeaderBack } from '@/composables/useHeaderBack'
 import OcrResultCard from '@/components/insurance/OcrResultCard.vue'
 import ClaimDraftCard from '@/components/insurance/ClaimDraftCard.vue'
 import ClaimChecklist from '@/components/insurance/ClaimChecklist.vue'
-import iconCat3d from '@/assets/images/icons-3d/cat_face_3d.png'
-import iconDog3d from '@/assets/images/icons-3d/dog_face_3d.png'
-import memoIcon3d from '@/assets/images/icons-3d/memo_3d.png'
+import PetSelectorChip from '@/components/common/PetSelectorChip.vue'
+import IconDocument from '@/components/common/icons/IconDocument.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -21,14 +19,6 @@ const insuranceStore = useInsuranceStore()
 const { pets } = storeToRefs(petStore)
 
 const step = ref(1)
-
-registerHeaderBack(() => {
-  if (step.value > 1) {
-    step.value -= 1
-  } else {
-    router.back()
-  }
-})
 
 // 반려동물 선택
 const selectedPetId = ref(null)
@@ -43,10 +33,6 @@ onMounted(async () => {
     petLoadError.value = '반려동물 정보를 불러오지 못했어요.'
   }
 })
-
-function petIcon(species) {
-  return species === 'CAT' ? iconCat3d : iconDog3d
-}
 
 // 영수증 업로드
 const receiptFileName = ref('')
@@ -173,6 +159,7 @@ const goToPdfDraft = () => {
   }
 
   insuranceStore.setClaimDraft({
+    claimId:        currentClaimId.value,
     hospitalName:   f[0].value,
     visitDate:      f[1].value,
     claimAmount:    f[2].value,
@@ -196,62 +183,73 @@ const docChecklist = [
   <!-- Step 1: 보험금 청구 서류 작성 -->
   <div
     v-if="step === 1"
-    class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))] bg-(--color-gray-100) min-h-screen"
+    class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-6))]"
   >
     <header class="mb-(--space-6)">
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-1)">
         보험금 청구 서류 작성
       </h1>
       <p class="text-(length:--font-md) text-(color:--color-slate-muted) leading-relaxed">
-        진료 영수증을 업로드하면 AI가 항목을 자동으로 인식해<br />
+        진료 영수증을 업로드하면 AI가 항목을 자동으로 인식해<br>
         서류 초안을 만들어드려요
       </p>
     </header>
 
-    <p v-if="petLoadError" class="text-(color:--color-danger-strong) text-(length:--font-sm) mb-(--space-4)">
+    <p
+      v-if="petLoadError"
+      class="text-(color:--color-danger-strong) text-(length:--font-sm) mb-(--space-4)"
+    >
       {{ petLoadError }}
     </p>
 
     <!-- 반려동물 선택 -->
     <section
       v-if="!petLoadError"
-      class="bg-(--color-white) rounded-(--radius-xl) p-(--space-5) shadow-(--shadow-md) mb-(--space-4)"
+      class="mb-(--space-4) rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-(--space-5) shadow-(--shadow-card)"
     >
-      <p class="text-(length:--font-base) font-bold text-(color:--color-navy) mb-(--space-3)">반려동물 선택</p>
-      <div v-if="pets.length > 0" class="flex gap-(--space-3) overflow-x-auto pb-(--space-1)">
-        <button
+      <p class="text-(length:--font-base) font-bold text-(color:--color-navy) mb-(--space-3)">
+        반려동물 선택
+      </p>
+      <div
+        v-if="pets.length > 0"
+        class="flex gap-(--space-3) overflow-x-auto whitespace-nowrap pb-(--space-1) [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+        <PetSelectorChip
           v-for="pet in pets"
           :key="pet.id"
-          type="button"
-          class="flex flex-col items-center gap-(--space-1) px-(--space-3) py-(--space-2) rounded-(--radius-lg) border-2 shrink-0 transition-colors"
-          :class="selectedPetId === pet.id
-            ? 'border-(--color-gold) bg-(--color-gold-surface)'
-            : 'border-(--color-border) bg-(--color-surface)'"
+          :label="pet.name"
+          :species="pet.species"
+          :selected="selectedPetId === pet.id"
           @click="selectedPetId = pet.id; uploadError = ''"
-        >
-          <img :src="petIcon(pet.species)" alt="" class="w-8 h-8 object-contain" />
-          <span class="text-(length:--font-sm) font-medium text-(color:--color-navy)">{{ pet.name }}</span>
-        </button>
+        />
       </div>
-      <p v-else class="text-(length:--font-sm) text-(color:--color-slate-muted) text-center py-(--space-3)">
+      <p
+        v-else
+        class="text-(length:--font-sm) text-(color:--color-slate-muted) text-center py-(--space-3)"
+      >
         등록된 반려동물이 없어요. 먼저 반려동물을 등록해주세요.
       </p>
     </section>
 
     <!-- 영수증 업로드 -->
-    <section class="bg-(--color-white) rounded-(--radius-xl) p-(--space-5) shadow-(--shadow-md)">
-      <p class="text-(length:--font-base) font-bold text-(color:--color-navy) mb-(--space-2)">진료 영수증 업로드</p>
+    <section class="rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-(--space-5) shadow-(--shadow-card)">
+      <p class="text-(length:--font-base) font-bold text-(color:--color-navy) mb-(--space-2)">
+        진료 영수증 업로드
+      </p>
       <p class="text-(length:--font-sm) text-(color:--color-slate-muted) leading-relaxed mb-(--space-4)">
         AI가 항목을 자동으로 인식해 서류 초안을 만들어드려요
       </p>
 
-      <p v-if="uploadError" class="text-(color:--color-danger-strong) text-(length:--font-sm) mb-(--space-3)">
+      <p
+        v-if="uploadError"
+        class="text-(color:--color-danger-strong) text-(length:--font-sm) mb-(--space-3)"
+      >
         {{ uploadError }}
       </p>
 
       <label
         for="receipt-input"
-        class="flex items-center justify-center w-full py-(--space-4) bg-(--color-surface) border-2 border-dashed border-(--color-gray-300) rounded-(--radius-lg)"
+        class="flex w-full items-center justify-center rounded-(--radius-xl) border-2 border-dashed border-(--color-leaf) bg-(--color-leaf-soft) py-(--space-4)"
         :class="(isUploading || !!petLoadError || pets.length === 0) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'"
       >
         <input
@@ -261,8 +259,8 @@ const docChecklist = [
           class="sr-only"
           :disabled="isUploading || !!petLoadError || pets.length === 0"
           @change="handleFileSelect"
-        />
-        <span class="text-(length:--font-base) font-medium text-(color:--color-gray-500)">
+        >
+        <span class="text-(length:--font-base) font-medium text-(color:--color-leaf-dark)">
           {{ isUploading ? 'AI가 영수증을 분석하는 중...' : (receiptFileName || '+ 영수증 이미지 첨부') }}
         </span>
       </label>
@@ -272,7 +270,7 @@ const docChecklist = [
   <!-- Step 2: 보험금 청구 서류 확인 -->
   <div
     v-else-if="step === 2"
-    class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))] bg-(--color-gray-100) min-h-screen"
+    class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-6))]"
   >
     <header class="mb-(--space-6)">
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-1)">
@@ -283,15 +281,23 @@ const docChecklist = [
       </p>
     </header>
 
-    <OcrResultCard :file-name="receiptFileName" :items="ocrItems" />
+    <OcrResultCard
+      :file-name="receiptFileName"
+      :items="ocrItems"
+    />
 
-    <AppButton block @click="goToDraft">서류 초안 생성하기</AppButton>
+    <AppButton
+      block
+      @click="goToDraft"
+    >
+      서류 초안 생성하기
+    </AppButton>
   </div>
 
   <!-- Step 3: 보험금 청구 서류 초안 -->
   <div
     v-else
-    class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))] bg-(--color-gray-100) min-h-screen"
+    class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-6))]"
   >
     <header class="mb-(--space-5)">
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-1)">
@@ -304,33 +310,52 @@ const docChecklist = [
 
     <!-- 요약 통계 -->
     <div class="grid grid-cols-2 gap-(--space-3) mb-(--space-5)">
-      <div class="bg-(--color-white) rounded-(--radius-lg) p-(--space-5) shadow-(--shadow-md)">
-        <p class="text-(length:--font-sm) text-(color:--color-slate-dark)">자동 완성</p>
-        <p class="text-(length:--font-xl) font-bold text-(color:--color-olive) mt-(--space-2)">{{ autoCount }}건</p>
+      <div class="rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-(--space-5) shadow-(--shadow-card)">
+        <p class="text-(length:--font-sm) text-(color:--color-slate-dark)">
+          자동 완성
+        </p>
+        <p class="text-(length:--font-xl) font-bold text-(color:--color-olive) mt-(--space-2)">
+          {{ autoCount }}건
+        </p>
       </div>
-      <div class="bg-(--color-white) rounded-(--radius-lg) p-(--space-5) shadow-(--shadow-md)">
-        <p class="text-(length:--font-sm) text-(color:--color-slate-dark)">직접 확인 필요</p>
-        <p class="text-(length:--font-xl) font-bold text-(color:--color-danger-strong) mt-(--space-2)">{{ requiredCount }}건</p>
+      <div class="rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-(--space-5) shadow-(--shadow-card)">
+        <p class="text-(length:--font-sm) text-(color:--color-slate-dark)">
+          직접 확인 필요
+        </p>
+        <p class="text-(length:--font-xl) font-bold text-(color:--color-danger-strong) mt-(--space-2)">
+          {{ requiredCount }}건
+        </p>
       </div>
     </div>
 
-    <ClaimDraftCard :fields="draftFields" @pdf-click="goToPdfDraft" />
+    <ClaimDraftCard
+      :fields="draftFields"
+      @pdf-click="goToPdfDraft"
+    />
 
     <ClaimChecklist :items="docChecklist" />
 
-    <AppButton block variant="secondary" class="mt-(--space-5)" @click="router.push('/home')">
+    <AppButton
+      block
+      variant="secondary"
+      class="mt-(--space-5)"
+      @click="router.push('/home')"
+    >
       홈으로 돌아가기
     </AppButton>
   </div>
 
   <!-- 필수값 누락 모달 -->
-  <AppModal v-model="showValidationModal" title="입력이 필요한 항목이 있어요" :divider="false">
+  <AppModal
+    v-model="showValidationModal"
+    title="입력이 필요한 항목이 있어요"
+    :divider="false"
+  >
     <div class="flex flex-col items-center text-center">
-      <img
-        :src="memoIcon3d"
-        alt=""
-        class="w-16 h-16 object-contain mb-(--space-3)"
-      >
+      <IconDocument
+        size="48"
+        class="mb-(--space-3)"
+      />
       <p class="text-(length:--font-md) text-(color:--color-gray-600) mb-(--space-4)">
         PDF 초안을 만들기 전에 아래 항목을 채워주세요.
       </p>

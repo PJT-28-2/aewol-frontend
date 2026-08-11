@@ -6,9 +6,17 @@ defineProps({
 </script>
 
 <template>
-  <svg :width="size" :height="size" viewBox="0 0 24 24" :fill="color">
+  <svg
+    :width="size"
+    :height="size"
+    viewBox="0 0 24 24"
+    fill="none"
+    aria-hidden="true"
+  >
     <path
-      d="M12 2C6.48 2 2 5.94 2 10.8c0 2.62 1.34 4.96 3.44 6.56-.15 1.13-.6 2.36-1.3 3.55a.5.5 0 0 0 .58.73c1.98-.53 3.53-1.29 4.66-2 .84.15 1.71.22 2.62.22 5.52 0 10-3.94 10-8.8S17.52 2 12 2Z"
+      :fill="color"
+      fill-rule="evenodd"
+      d="M12 5a7 7 0 0 0-6.2 10.3L4.5 19l3.8-1.2A7 7 0 1 0 12 5Zm-3 7.9a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm3 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm3 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"
     />
   </svg>
 </template>

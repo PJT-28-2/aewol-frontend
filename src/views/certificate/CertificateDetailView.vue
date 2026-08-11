@@ -6,9 +6,13 @@ import html2canvas from 'html2canvas'
 import { useCertificateStore } from '@/stores/certificate'
 import { formatDateDot, formatDateTimeDot } from '@/utils/date'
 import AppButton from '@/components/common/AppButton.vue'
+import FeatureIconTile from '@/components/common/FeatureIconTile.vue'
 import AppModal from '@/components/common/AppModal.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import IconRefresh from '@/components/common/icons/IconRefresh.vue'
+import IconCheck from '@/components/common/icons/IconCheck.vue'
+import IconDocument from '@/components/common/icons/IconDocument.vue'
+import IconWarning from '@/components/common/icons/IconWarning.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -216,7 +220,7 @@ async function handlePhotoDelete() {
 </script>
 
 <template>
-  <div class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))]">
+  <div class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-7))]">
     <header class="mb-(--space-5)">
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-2)">
         {{ pageTitle }}
@@ -235,13 +239,13 @@ async function handlePhotoDelete() {
     <template v-else-if="isPhotoDoc">
       <div
         ref="detailCardRef"
-        class="bg-(--color-white) rounded-(--radius-xl) p-(--space-4) mb-(--space-5) border border-(--color-border)"
+        class="mb-(--space-5) overflow-hidden rounded-[28px] border border-(--color-card-border) bg-(--color-white) p-(--space-4) shadow-(--shadow-card)"
       >
         <img
           v-if="currentDoc?.fileUrl && !photoLoadError"
           :src="currentDoc.fileUrl"
           :alt="currentDoc.docName"
-          class="w-full rounded-(--radius-md)"
+          class="w-full rounded-[20px]"
           @error="photoLoadError = true"
         >
         <p
@@ -262,7 +266,7 @@ async function handlePhotoDelete() {
           사진 삭제
         </AppButton>
         <AppButton
-          variant="navy"
+          variant="primary"
           size="lg"
           class="flex-1"
           :loading="isSharing"
@@ -278,25 +282,29 @@ async function handlePhotoDelete() {
       <!-- 캡처 대상: PDF 저장/공유하기에서 그대로 이미지화 -->
       <div
         ref="detailCardRef"
-        class="bg-(--color-navy) border border-(--color-border) rounded-(--radius-xl) p-(--space-1) mb-(--space-4)"
+        class="mb-(--space-4) overflow-hidden rounded-[28px] border border-(--color-card-border) bg-(--color-white) shadow-(--shadow-card)"
       >
-        <div class="flex items-center justify-center py-(--space-4)">
-          <p class="text-center text-(length:--font-base) font-bold text-(color:--color-white) tracking-widest">
+        <div class="flex items-center justify-center gap-(--space-2) bg-(--color-leaf-soft) px-(--space-4) py-(--space-5)">
+          <FeatureIconTile
+            :icon="IconDocument"
+            tone="pink"
+          />
+          <p class="text-center text-(length:--font-base) font-bold tracking-[0.12em] text-(color:--color-navy)">
             동 물 등 록 증
           </p>
         </div>
 
-        <div class="bg-(--color-white) border-x border-b border-(--color-border) rounded-(--radius-lg) p-(--space-4)">
-          <ul>
+        <div class="bg-(--color-white) px-(--space-5) py-(--space-3)">
+          <ul class="divide-y divide-(--color-card-border)">
             <li
               v-for="row in infoRows"
               :key="row.label"
-              class="flex items-center gap-(--space-3) py-(--space-3)"
+              class="flex items-start gap-(--space-3) py-(--space-4)"
             >
-              <span class="w-[38%] text-(length:--font-sm) text-(color:--color-gray-600) font-medium">
+              <span class="w-[36%] shrink-0 text-(length:--font-sm) font-medium text-(color:--color-slate-muted)">
                 {{ row.label }}
               </span>
-              <span class="flex-1 min-w-0 text-left text-(length:--font-sm) font-semibold text-(color:--color-gray-900) [overflow-wrap:anywhere]">
+              <span class="min-w-0 flex-1 text-left text-(length:--font-sm) font-semibold text-(color:--color-navy) [overflow-wrap:anywhere]">
                 {{ row.value }}
               </span>
             </li>
@@ -305,16 +313,16 @@ async function handlePhotoDelete() {
       </div>
 
       <!-- 동기화 안내 -->
-      <div class="flex items-start gap-(--space-2) bg-(--color-surface) rounded-(--radius-md) p-(--space-4) mb-(--space-5)">
+      <div class="mb-(--space-5) flex items-start gap-(--space-3) rounded-(--radius-xl) bg-(--color-white) p-(--space-4)">
         <button
           type="button"
-          class="shrink-0 flex items-center justify-center w-5 h-5 rounded-full bg-(--color-pastel-blue) disabled:opacity-50"
+          class="flex size-[40px] shrink-0 items-center justify-center rounded-[13px] bg-(--color-leaf-soft) disabled:opacity-50"
           :disabled="isResyncing"
           aria-label="지금 동기화"
           @click="handleResync"
         >
           <IconRefresh
-            :size="12"
+            :size="24"
             color="var(--color-navy)"
             :class="isResyncing ? 'animate-spin' : ''"
           />
@@ -338,7 +346,7 @@ async function handlePhotoDelete() {
       <!-- PDF 저장 / 공유하기 -->
       <div class="flex gap-(--space-3) mb-(--space-4)">
         <AppButton
-          variant="secondary"
+          variant="neutral"
           size="lg"
           class="flex-1"
           :loading="isGeneratingPdf"
@@ -347,7 +355,7 @@ async function handlePhotoDelete() {
           PDF 저장
         </AppButton>
         <AppButton
-          variant="navy"
+          variant="primary"
           size="lg"
           class="flex-1"
           :loading="isSharing"
@@ -359,7 +367,7 @@ async function handlePhotoDelete() {
 
       <button
         type="button"
-        class="w-full text-center text-(length:--font-sm) text-(color:--color-gray-500) underline underline-offset-2"
+        class="w-full rounded-(--radius-xl) py-(--space-3) text-center text-(length:--font-sm) font-medium text-(color:--color-danger-muted)"
         @click="openDeleteModal"
       >
         동물등록증 연동 해제
@@ -380,11 +388,19 @@ async function handlePhotoDelete() {
       title="PDF 저장 완료"
       :show-close="false"
     >
+      <template #icon>
+        <IconCheck size="24" />
+      </template>
       <p class="text-(length:--font-md) text-(color:--color-gray-600)">
         {{ isPhotoDoc ? `${certName} 파일이 저장되었어요.` : '동물등록증 PDF가 저장되었어요.' }}
       </p>
       <template #footer>
-        <AppButton @click="showSavedModal = false">
+        <AppButton
+          variant="primary"
+          size="lg"
+          block
+          @click="showSavedModal = false"
+        >
           확인
         </AppButton>
       </template>
@@ -396,18 +412,28 @@ async function handlePhotoDelete() {
       title="공유가 지원되지 않아요"
       :show-close="false"
     >
+      <template #icon>
+        <IconDocument size="24" />
+      </template>
       <p class="text-(length:--font-md) text-(color:--color-gray-600)">
         이 기기·브라우저에서는 바로 공유할 수 없어요.<br>
         대신 PDF로 저장해드릴게요.
       </p>
       <template #footer>
         <AppButton
-          variant="secondary"
+          variant="neutral"
+          size="lg"
+          class="flex-1"
           @click="showShareFallbackModal = false"
         >
           닫기
         </AppButton>
-        <AppButton @click="handleShareFallbackConfirm">
+        <AppButton
+          variant="primary"
+          size="lg"
+          class="flex-1"
+          @click="handleShareFallbackConfirm"
+        >
           PDF로 저장하기
         </AppButton>
       </template>
@@ -418,6 +444,9 @@ async function handlePhotoDelete() {
       v-model="showDeleteModal"
       title="동물등록증 연동을 해제할까요?"
     >
+      <template #icon>
+        <IconWarning size="24" />
+      </template>
       <p class="text-(length:--font-md) text-(color:--color-gray-600)">
         연동을 해제하면 저장된 등록정보가 삭제돼요. 해제 후에도 언제든 다시 연동할 수 있어요.
       </p>
@@ -429,7 +458,9 @@ async function handlePhotoDelete() {
       </p>
       <template #footer>
         <AppButton
-          variant="secondary"
+          variant="neutral"
+          size="lg"
+          class="flex-1"
           :disabled="isDeleting"
           @click="showDeleteModal = false"
         >
@@ -437,6 +468,8 @@ async function handlePhotoDelete() {
         </AppButton>
         <AppButton
           variant="danger"
+          size="lg"
+          class="flex-1"
           :loading="isDeleting"
           @click="handleDelete"
         >
@@ -450,6 +483,9 @@ async function handlePhotoDelete() {
       v-model="showPhotoDeleteModal"
       title="사진을 삭제할까요?"
     >
+      <template #icon>
+        <IconWarning size="24" />
+      </template>
       <p class="text-(length:--font-md) text-(color:--color-gray-600)">
         삭제하면 다시 업로드해야 해요.
       </p>
@@ -461,7 +497,9 @@ async function handlePhotoDelete() {
       </p>
       <template #footer>
         <AppButton
-          variant="secondary"
+          variant="neutral"
+          size="lg"
+          class="flex-1"
           :disabled="isDeletingPhoto"
           @click="showPhotoDeleteModal = false"
         >
@@ -469,6 +507,8 @@ async function handlePhotoDelete() {
         </AppButton>
         <AppButton
           variant="danger"
+          size="lg"
+          class="flex-1"
           :loading="isDeletingPhoto"
           @click="handlePhotoDelete"
         >

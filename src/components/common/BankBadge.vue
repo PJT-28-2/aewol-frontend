@@ -23,7 +23,7 @@ const meta = computed(() => getBankMeta(props.bankCode, props.fallbackName));
     alt=""
     class="shrink-0 object-cover"
     :style="{ width: `${size}px`, height: `${size}px` }"
-  />
+  >
   <div
     v-else
     class="flex items-center justify-center rounded-(--radius-md) font-bold shrink-0"

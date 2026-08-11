@@ -47,7 +47,7 @@ const isAllEnabled = computed({
 
 <template>
   <main
-    class="mx-auto min-h-svh w-full max-w-[390px] bg-(--color-white) px-[22px] pt-[var(--space-4)] pb-[62px]"
+    class="mx-auto min-h-svh w-full max-w-[390px] bg-(--color-app-bg) px-[22px] pt-[var(--space-4)] pb-[62px]"
     aria-labelledby="notification-settings-title"
   >
     <header>
@@ -67,7 +67,7 @@ const isAllEnabled = computed({
       aria-label="전체 알림 설정"
     >
       <div
-        class="flex h-[66px] items-center justify-between rounded-(--radius-icon) bg-(--color-surface) px-[17px]"
+        class="flex h-[72px] items-center justify-between rounded-(--radius-2xl) border border-(--color-leaf) bg-(--color-leaf-soft) px-[17px] shadow-(--shadow-card)"
       >
         <span>
           <strong
@@ -92,7 +92,7 @@ const isAllEnabled = computed({
             aria-label="전체 알림"
           >
           <span
-            class="block relative h-[24px] w-[44px] shrink-0 rounded-full bg-(--color-border) transition-colors after:absolute after:top-[2px] after:left-[2px] after:size-5 after:rounded-full after:bg-(--color-white) after:shadow-(--shadow-sm) after:transition-transform peer-checked:bg-(--color-gold) peer-checked:after:translate-x-5 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-(--color-navy)"
+            class="block relative h-[24px] w-[44px] shrink-0 rounded-full bg-(--color-border) transition-colors after:absolute after:top-[2px] after:left-[2px] after:size-5 after:rounded-full after:bg-(--color-white) after:shadow-(--shadow-sm) after:transition-transform peer-checked:bg-(--color-leaf) peer-checked:after:translate-x-5 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-(--color-leaf-dark)"
             aria-hidden="true"
           />
         </label>
@@ -118,7 +118,7 @@ const isAllEnabled = computed({
         <div
           v-for="setting in notificationSettings"
           :key="setting.id"
-          class="flex h-[66px] items-center justify-between rounded-(--radius-icon) border border-(--color-border) px-[17px]"
+          class="flex min-h-[72px] items-center justify-between rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) px-[17px] py-(--space-3) shadow-(--shadow-card)"
         >
           <span class="min-w-0 pr-4">
             <strong
@@ -143,7 +143,7 @@ const isAllEnabled = computed({
               :aria-label="setting.title"
             >
             <span
-              class="block relative h-[24px] w-[44px] shrink-0 rounded-full bg-(--color-border) transition-colors after:absolute after:top-[2px] after:left-[2px] after:size-5 after:rounded-full after:bg-(--color-white) after:shadow-(--shadow-sm) after:transition-transform peer-checked:bg-(--color-gold) peer-checked:after:translate-x-5 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-(--color-navy)"
+              class="block relative h-[24px] w-[44px] shrink-0 rounded-full bg-(--color-border) transition-colors after:absolute after:top-[2px] after:left-[2px] after:size-5 after:rounded-full after:bg-(--color-white) after:shadow-(--shadow-sm) after:transition-transform peer-checked:bg-(--color-leaf) peer-checked:after:translate-x-5 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-(--color-leaf-dark)"
               aria-hidden="true"
             />
           </label>

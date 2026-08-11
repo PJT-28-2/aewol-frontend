@@ -1,14 +1,5 @@
 <script setup>
-defineProps({
-  size: {
-    type: [Number, String],
-    default: 24,
-  },
-  color: {
-    type: String,
-    default: 'currentColor',
-  },
-});
+defineProps({ size: { type: [String, Number], default: 24 }, color: { type: String, default: 'currentColor' } })
 </script>
 
 <template>
@@ -16,11 +7,14 @@ defineProps({
     :width="size"
     :height="size"
     viewBox="0 0 24 24"
-    :fill="color"
-    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    :stroke="color"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
   >
-    <path
-      d="M13.5,10.5v5c0,.83-.67,1.5-1.5,1.5s-1.5-.67-1.5-1.5v-5c0-.83,.67-1.5,1.5-1.5s1.5,.67,1.5,1.5Zm-1.5,8.5c-.83,0-1.5,.67-1.5,1.5s.67,1.5,1.5,1.5,1.5-.67,1.5-1.5-.67-1.5-1.5-1.5Zm11.05-4.19L15.31,2.73c-.75-1.08-1.99-1.73-3.31-1.73s-2.56,.65-3.34,1.78L.99,14.76c-1.09,1.56-1.29,3.45-.52,4.92,.77,1.48,2.34,2.32,4.32,2.32h1.72c.83,0,1.5-.67,1.5-1.5s-.67-1.5-1.5-1.5h-1.72c-.48,0-1.33-.09-1.66-.71-.25-.48-.13-1.17,.35-1.87L11.15,4.44c.28-.4,.69-.44,.85-.44s.57,.04,.82,.39l7.74,12.08c.45,.64,.57,1.34,.32,1.82-.32,.62-1.18,.71-1.66,.71h-1.72c-.83,0-1.5,.67-1.5,1.5s.67,1.5,1.5,1.5h1.72c1.97,0,3.55-.85,4.32-2.32,.77-1.47,.57-3.36-.48-4.87Z"
-    />
+    <path d="M10.3 3.7 2.5 18a2 2 0 0 0 1.75 3h15.5a2 2 0 0 0 1.75-3L13.7 3.7a2 2 0 0 0-3.4 0Z" />
+    <path d="M12 9v4M12 17h.01" />
   </svg>
 </template>

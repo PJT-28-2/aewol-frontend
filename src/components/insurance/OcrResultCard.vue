@@ -30,7 +30,7 @@ const finishEdit = () => {
 </script>
 
 <template>
-  <section class="bg-(--color-white) rounded-(--radius-xl) p-(--space-5) mb-(--space-5) [box-shadow:var(--shadow-md)]">
+  <section class="mb-(--space-5) rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-(--space-5) shadow-(--shadow-card)">
     <!-- 파일 정보 -->
     <div class="mb-(--space-4)">
       <p class="text-(length:--font-base) font-semibold text-(color:--color-gray-900) mb-(--space-1)">
@@ -39,7 +39,7 @@ const finishEdit = () => {
       <p class="text-(length:--font-sm) text-(color:--color-gray-500) mb-(--space-2)">
         OCR 인식 완료 · Gemini Vision
       </p>
-      <span class="inline-block text-(length:--font-xs) font-semibold px-(--space-3) py-[3px] rounded-(--radius-full) bg-(--color-olive-surface) text-(color:--color-olive)">
+      <span class="inline-block rounded-(--radius-full) bg-(--color-leaf-soft) px-(--space-3) py-[3px] text-(length:--font-xs) font-semibold text-(color:--color-leaf-dark)">
         인식 완료
       </span>
     </div>
@@ -71,8 +71,11 @@ const finishEdit = () => {
           class="text-(length:--font-md) font-semibold text-(color:--color-gray-900) text-right outline-none border-none bg-transparent w-full"
           @blur="finishEdit"
           @keyup.enter="finishEdit"
-        />
-        <span v-else class="text-(length:--font-md) font-semibold text-(color:--color-gray-900) text-right">
+        >
+        <span
+          v-else
+          class="text-(length:--font-md) font-semibold text-(color:--color-gray-900) text-right"
+        >
           {{ item.value }}
         </span>
       </li>

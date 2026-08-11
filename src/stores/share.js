@@ -8,10 +8,10 @@ const MEMBER_AVATAR_CLASSES = [
   'bg-(--color-slate)',
 ]
 const CONTRIBUTION_TONES = [
-  ['bg-(--color-navy)', '--color-navy'],
-  ['bg-(--color-gold)', '--color-gold'],
-  ['bg-(--color-olive)', '--color-olive'],
-  ['bg-(--color-slate)', '--color-slate'],
+  ['bg-(--color-chart-leaf)', '--color-chart-leaf'],
+  ['bg-(--color-chart-sage)', '--color-chart-sage'],
+  ['bg-(--color-chart-teal)', '--color-chart-teal'],
+  ['bg-(--color-chart-lilac)', '--color-chart-lilac'],
 ]
 
 // 백엔드 공통 응답은 { status, message, result } 래퍼라 실제 페이로드는 data.result에 있다

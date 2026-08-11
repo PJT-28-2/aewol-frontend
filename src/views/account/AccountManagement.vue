@@ -7,8 +7,7 @@ import AccountSummaryCard from '@/components/common/AccountSummaryCard.vue';
 import AppButton from '@/components/common/AppButton.vue';
 import BottomSheet from '@/components/common/BottomSheet.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
-import petDeleteWarning from '@/assets/images/pet-delete-warning.png';
-import petCancelWarning from '@/assets/images/pet-cancel-warning.png';
+import StatusVisual from '@/components/common/StatusVisual.vue';
 
 const router = useRouter();
 const store = useAccountStore();
@@ -80,14 +79,19 @@ function goToLink() {
 </script>
 
 <template>
-  <div class="min-h-screen max-w-(--content-max-width) mx-auto bg-(--color-bg) px-(--space-5) pt-(--space-4) pb-(--space-8)">
+  <div class="mx-auto min-h-screen max-w-(--content-max-width) bg-(--color-app-bg) px-(--space-5) pt-(--space-4) pb-(--space-8)">
     <!-- 완료 화면: 목록 위에 전체 화면으로 덮음 -->
     <div
       v-if="showUnlinkSuccess"
-      class="fixed inset-0 z-40 bg-(--color-white) flex flex-col items-center justify-center px-(--space-6)"
+      class="fixed inset-0 z-40 flex flex-col items-center justify-center bg-(--color-app-bg) px-(--space-6)"
     >
-      <img :src="petCancelWarning" alt="" class="w-32 h-auto mb-(--space-4)" />
-      <h2 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-2)">계좌 연동이 해지됐어요</h2>
+      <StatusVisual
+        variant="cancel"
+        class="mb-(--space-4)"
+      />
+      <h2 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-2)">
+        계좌 연동이 해지됐어요
+      </h2>
       <p class="text-(length:--font-md) text-(color:--color-slate-muted) mb-(--space-8)">
         {{ unlinkedAccountName }} 계좌가 목록에서 제거됐어요
       </p>
@@ -101,23 +105,37 @@ function goToLink() {
       </AppButton>
     </div>
 
-       <template v-else>
+    <template v-else>
       <header class="mb-7">
-        <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">계좌 관리</h1>
-        <p class="text-(length:--font-md) text-(color:--color-slate-muted) mt-(--space-1)">CODEF로 연동된 계좌를 확인해요</p>
+        <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">
+          계좌 관리
+        </h1>
+        <p class="text-(length:--font-md) text-(color:--color-slate-muted) mt-(--space-1)">
+          CODEF로 연동된 계좌를 확인해요
+        </p>
       </header>
 
       <section class="mb-(--space-6)">
-        <h2 class="text-(length:--font-base) font-semibold text-(color:--color-navy) mb-(--space-3)">연동된 계좌</h2>
+        <h2 class="text-(length:--font-base) font-semibold text-(color:--color-navy) mb-(--space-3)">
+          연동된 계좌
+        </h2>
 
-        <div v-if="store.isLoading" class="py-(--space-8)">
+        <div
+          v-if="store.isLoading"
+          class="py-(--space-8)"
+        >
           <LoadingSpinner />
         </div>
 
-        <div v-else-if="loadError" class="p-(--space-4) rounded-(--radius-xl) bg-(--color-surface) mb-(--space-3) text-center">
-          <p class="text-(length:--font-sm) text-(color:--color-danger-strong) mb-(--space-3)">{{ loadError }}</p>
+        <div
+          v-else-if="loadError"
+          class="mb-(--space-3) rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-(--space-4) text-center shadow-(--shadow-card)"
+        >
+          <p class="text-(length:--font-sm) text-(color:--color-danger-strong) mb-(--space-3)">
+            {{ loadError }}
+          </p>
           <AppButton
-            variant="navy"
+            variant="primary"
             size="sm"
             @click="loadAccounts"
           >
@@ -125,12 +143,21 @@ function goToLink() {
           </AppButton>
         </div>
 
-        <p v-else-if="store.accounts.length === 0" class="text-(length:--font-sm) text-(color:--color-gray-500)">
+        <p
+          v-else-if="store.accounts.length === 0"
+          class="text-(length:--font-sm) text-(color:--color-gray-500)"
+        >
           아직 연동된 계좌가 없어요
         </p>
 
-        <ul v-if="!store.isLoading && !loadError" class="flex flex-col gap-(--space-3)">
-          <li v-for="account in store.accounts" :key="account.accountId">
+        <ul
+          v-if="!store.isLoading && !loadError"
+          class="flex flex-col gap-(--space-3)"
+        >
+          <li
+            v-for="account in store.accounts"
+            :key="account.accountId"
+          >
             <AccountSummaryCard
               :bank-code="account.bankCode"
               :account-number-masked="account.accountNumberMasked"
@@ -153,7 +180,7 @@ function goToLink() {
 
       <AppButton
         class="mb-(--space-6)"
-        variant="navy"
+        variant="primary"
         size="lg"
         block
         @click="goToLink"
@@ -161,7 +188,7 @@ function goToLink() {
         + 계좌 연동하기
       </AppButton>
 
-      <div class="p-(--space-4) rounded-(--radius-xl) bg-(--color-surface)">
+      <div class="rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-(--space-4) shadow-(--shadow-card)">
         <p class="text-(length:--font-sm) font-(--font-semibold) text-(color:--color-navy) mb-(--space-1)">
           계좌 데이터는 CODEF API를 통해 조회 전용으로 연동돼요
         </p>
@@ -172,11 +199,25 @@ function goToLink() {
     </template>
 
     <!-- 해지 확인 바텀시트 -->
-    <BottomSheet :model-value="showUnlinkSheet" size="tall" @update:model-value="closeUnlinkSheet">
-      <div v-if="pendingAccount" class="flex flex-col items-center text-center">
-        <img :src="petDeleteWarning" alt="" class="w-[139px] h-[139px] mt-(--space-5) mb-(--space-4)" />
-        <h3 class="text-(length:--font-lg) font-bold text-(color:--color-navy) mb-(--space-2)">계좌 연동을 해지할까요?</h3>
-        <p class="text-(length:--font-sm) text-(color:--color-slate-muted) mb-(--space-4)">해지 후에도 언제든 다시 연동할 수 있어요</p>
+    <BottomSheet
+      :model-value="showUnlinkSheet"
+      size="tall"
+      @update:model-value="closeUnlinkSheet"
+    >
+      <div
+        v-if="pendingAccount"
+        class="flex flex-col items-center text-center"
+      >
+        <StatusVisual
+          variant="warning"
+          class="mt-(--space-5) mb-(--space-4)"
+        />
+        <h3 class="text-(length:--font-lg) font-bold text-(color:--color-navy) mb-(--space-2)">
+          계좌 연동을 해지할까요?
+        </h3>
+        <p class="text-(length:--font-sm) text-(color:--color-slate-muted) mb-(--space-4)">
+          해지 후에도 언제든 다시 연동할 수 있어요
+        </p>
 
         <AccountSummaryCard
           :bank-code="pendingAccount.bankCode"
@@ -191,7 +232,7 @@ function goToLink() {
           </li>
           <li class="flex items-center gap-(--space-2) text-(length:--font-sm) text-(color:--color-danger-muted)">
             <span class="w-[6px] h-[6px] rounded-full bg-(--color-danger-strong) shrink-0" />
-            결제 내역·자동 태깅 기록은 그대로 보관돼요
+            거래 내역·자동 태깅 기록은 그대로 보관돼요
           </li>
           <li class="flex items-center gap-(--space-2) text-(length:--font-sm) text-(color:--color-danger-muted)">
             <span class="w-[6px] h-[6px] rounded-full bg-(--color-danger-strong) shrink-0" />
@@ -199,7 +240,12 @@ function goToLink() {
           </li>
         </ul>
 
-        <p v-if="unlinkError" class="text-(length:--font-sm) text-(color:--color-danger-strong) mb-(--space-3)">{{ unlinkError }}</p>
+        <p
+          v-if="unlinkError"
+          class="text-(length:--font-sm) text-(color:--color-danger-strong) mb-(--space-3)"
+        >
+          {{ unlinkError }}
+        </p>
 
         <div class="grid grid-cols-2 gap-(--space-3) w-full">
           <button

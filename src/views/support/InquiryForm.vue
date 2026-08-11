@@ -117,23 +117,28 @@ async function submit() {
 </script>
 
 <template>
-  <div class="min-h-screen max-w-(--content-max-width) mx-auto bg-(--color-bg) px-5 pt-(--space-4) pb-10">
-
+  <div class="mx-auto min-h-screen max-w-(--content-max-width) bg-(--color-app-bg) px-5 pt-(--space-4) pb-10">
     <header class="mb-6">
-      <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">1:1 문의하기</h1>
-      <p class="text-(length:--font-md) text-(color:--color-gray-600) mt-1">궁금한 점을 남겨주시면 빠르게 답변드릴게요</p>
+      <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">
+        1:1 문의하기
+      </h1>
+      <p class="text-(length:--font-md) text-(color:--color-gray-600) mt-1">
+        궁금한 점을 남겨주시면 빠르게 답변드릴게요
+      </p>
     </header>
 
     <section class="mb-6">
-      <h2 class="text-(length:--font-sm) font-semibold text-(color:--color-navy) mb-2">카테고리</h2>
+      <h2 class="text-(length:--font-sm) font-semibold text-(color:--color-navy) mb-2">
+        카테고리
+      </h2>
       <div class="flex flex-wrap gap-2">
         <button
           v-for="c in CATEGORIES"
           :key="c"
           class="px-4 py-2 rounded-full text-(length:--font-sm) font-medium"
           :class="{
-            'bg-(--color-navy) text-(color:--color-white)': category === c,
-            'bg-(--color-surface) text-(color:--color-gray-600)': category !== c,
+            'border border-(--color-leaf) bg-(--color-leaf-soft) text-(color:--color-navy)': category === c,
+            'border border-(--color-card-border) bg-(--color-white) text-(color:--color-gray-600)': category !== c,
           }"
           @click="category = c"
         >
@@ -143,23 +148,27 @@ async function submit() {
     </section>
 
     <section class="mb-6">
-      <h2 class="text-(length:--font-sm) font-semibold text-(color:--color-navy) mb-2">제목</h2>
+      <h2 class="text-(length:--font-sm) font-semibold text-(color:--color-navy) mb-2">
+        제목
+      </h2>
       <input
         v-model="title"
         type="text"
         placeholder="문의 제목을 입력해주세요"
-        class="w-full h-(--control-height-md) px-[13px] rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
-      />
+        class="w-full h-(--control-height-md) px-[13px] rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-leaf)"
+      >
     </section>
 
     <section class="mb-6">
-      <h2 class="text-(length:--font-sm) font-semibold text-(color:--color-navy) mb-2">내용</h2>
+      <h2 class="text-(length:--font-sm) font-semibold text-(color:--color-navy) mb-2">
+        내용
+      </h2>
       <textarea
         v-model="content"
         rows="5"
         placeholder="어떤 점이 궁금하신가요?
 최대한 자세히 남겨주시면 더 빠르고 정확하게 답변드릴 수 있어요."
-        class="w-full p-[13px] rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy) resize-none"
+        class="w-full p-[13px] rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-leaf) resize-none"
       />
     </section>
 
@@ -171,46 +180,73 @@ async function submit() {
         multiple
         class="hidden"
         @change="onFilesSelected"
-      />
+      >
       <button
-        class="w-full flex items-center justify-center gap-2 py-4 rounded-(--radius-xl) border border-(--color-border) text-(length:--font-sm) text-(color:--color-gray-600) disabled:opacity-50"
+        class="flex w-full items-center justify-center gap-2 rounded-(--radius-xl) border border-(--color-leaf) bg-(--color-white) py-4 text-(length:--font-sm) text-(color:--color-navy) disabled:opacity-50"
         :disabled="attachments.length >= MAX_ATTACHMENT_COUNT"
         @click="openFilePicker"
       >
-        <IconImage :size="16" color="var(--color-gray-500)" />
+        <IconImage
+          :size="16"
+          color="var(--color-gray-500)"
+        />
         스크린샷 · 이미지 · PDF 첨부 (최대 3장, 파일당 최대 10MB)
       </button>
-      <p v-if="attachmentError" class="text-(length:--font-xs) text-(color:--color-danger-strong) mt-2">{{ attachmentError }}</p>
+      <p
+        v-if="attachmentError"
+        class="text-(length:--font-xs) text-(color:--color-danger-strong) mt-2"
+      >
+        {{ attachmentError }}
+      </p>
 
-      <div v-if="attachments.length" class="flex gap-2 mt-3">
+      <div
+        v-if="attachments.length"
+        class="flex gap-2 mt-3"
+      >
         <div
           v-for="(item, index) in attachments"
           :key="index"
           class="relative w-16 h-16 rounded-(--radius-lg) overflow-hidden bg-(--color-surface)"
         >
-          <img v-if="item.previewUrl" :src="item.previewUrl" alt="" class="w-full h-full object-cover" />
-          <div v-else class="w-full h-full flex flex-col items-center justify-center gap-1 px-1">
-            <IconDocument :size="20" color="var(--color-gray-500)" />
+          <img
+            v-if="item.previewUrl"
+            :src="item.previewUrl"
+            alt=""
+            class="w-full h-full object-cover"
+          >
+          <div
+            v-else
+            class="w-full h-full flex flex-col items-center justify-center gap-1 px-1"
+          >
+            <IconDocument
+              :size="20"
+              color="var(--color-gray-500)"
+            />
             <span class="text-(length:--font-xs) text-(color:--color-gray-600) truncate w-full text-center">{{ item.file.name }}</span>
           </div>
           <button
             class="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-(--color-navy) flex items-center justify-center"
             @click="removeAttachment(index)"
           >
-            <IconClose :size="10" color="var(--color-white)" />
+            <IconClose
+              :size="10"
+              color="var(--color-white)"
+            />
           </button>
         </div>
       </div>
     </section>
 
     <section class="mb-6">
-      <h2 class="text-(length:--font-sm) font-semibold text-(color:--color-navy) mb-2">회신받을 이메일</h2>
+      <h2 class="text-(length:--font-sm) font-semibold text-(color:--color-navy) mb-2">
+        회신받을 이메일
+      </h2>
       <input
         v-model="email"
         type="email"
         placeholder="example@aewol.com"
-        class="w-full h-(--control-height-md) px-[13px] rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-navy)"
-      />
+        class="w-full h-(--control-height-md) px-[13px] rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-leaf)"
+      >
       <p
         v-if="email.trim() && !isEmailValid()"
         class="text-(length:--font-xs) text-(color:--color-danger-strong) mt-1"
@@ -219,10 +255,15 @@ async function submit() {
       </p>
     </section>
 
-    <p v-if="submitError" class="text-(length:--font-sm) text-(color:--color-danger-strong) mb-3">{{ submitError }}</p>
+    <p
+      v-if="submitError"
+      class="text-(length:--font-sm) text-(color:--color-danger-strong) mb-3"
+    >
+      {{ submitError }}
+    </p>
 
     <button
-      class="w-full py-4 rounded-(--radius-xl) bg-(--color-gold) text-(color:--color-navy) font-bold disabled:opacity-50"
+      class="w-full rounded-(--radius-xl) bg-(--color-leaf) py-4 font-bold text-(color:--color-navy) disabled:opacity-50"
       :disabled="!isFormValid() || isSubmitting"
       @click="submit"
     >

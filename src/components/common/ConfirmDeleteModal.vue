@@ -1,5 +1,5 @@
 <script setup>
-import warning3d from '@/assets/images/icons-3d/warning_3d.png'
+import IconWarning from './icons/IconWarning.vue'
 import AppButton from './AppButton.vue'
 import BottomSheet from './BottomSheet.vue'
 
@@ -52,11 +52,9 @@ function onConfirm() {
     @update:model-value="emit('update:modelValue', $event)"
   >
     <div class="flex flex-col items-center pt-(--space-3) text-center">
-      <img
-        :src="warning3d"
-        alt=""
-        class="mb-(--space-4) h-[76px] w-auto object-contain"
-      >
+      <span class="mb-(--space-4) flex size-[64px] items-center justify-center rounded-full bg-(--color-danger-soft) text-(color:--color-danger-strong)">
+        <IconWarning size="32" />
+      </span>
 
       <h2 class="mb-(--space-2) text-(length:--font-xl) font-bold text-(color:--color-navy)">
         {{ title }}

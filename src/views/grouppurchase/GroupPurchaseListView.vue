@@ -205,7 +205,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div
-    class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+88px)] bg-(--color-bg) min-h-screen"
+    class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-[calc(var(--bottom-nav-height)+88px)]"
   >
     <!-- 헤더 -->
     <header class="flex items-start justify-between mb-(--space-5)">
@@ -221,7 +221,7 @@ onBeforeUnmount(() => {
       <router-link
         to="/group-purchase/my"
         aria-label="마이페이지"
-        class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-(--color-gray-100) no-underline"
+        class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-(--color-leaf-soft) no-underline"
       >
         <IconUser
           :size="24"
@@ -239,8 +239,8 @@ onBeforeUnmount(() => {
         class="shrink-0 px-(--space-4) py-(--space-2) rounded-full border text-(length:--font-sm) font-medium"
         :class="
           selectedCategory === category
-            ? 'bg-(--color-navy) border-(--color-navy) text-(color:--color-white)'
-            : 'bg-(--color-white) border-(--color-border) text-(color:--color-gray-600)'
+            ? 'bg-(--color-leaf-soft) border-(--color-leaf) text-(color:--color-navy)'
+            : 'bg-(--color-white) border-(--color-card-border) text-(color:--color-gray-600)'
         "
         @click="selectCategory(category)"
       >
@@ -306,7 +306,7 @@ onBeforeUnmount(() => {
         공동구매 목록을 불러오지 못했어요
       </p>
       <AppButton
-        variant="navy"
+        variant="primary"
         @click="resetAndLoad"
       >
         다시 시도
@@ -328,7 +328,7 @@ onBeforeUnmount(() => {
         <li
           v-for="gp in groupPurchases"
           :key="gp.id"
-          class="flex items-center justify-between gap-(--space-3) p-(--space-4) bg-(--color-surface) border border-(--color-border) rounded-(--radius-lg)"
+          class="flex items-center justify-between gap-(--space-3) rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-(--space-4) shadow-(--shadow-card)"
         >
           <div>
             <h3 class="text-(length:--font-md) font-semibold text-(color:--color-gray-900) mb-(--space-1)">
@@ -353,7 +353,7 @@ onBeforeUnmount(() => {
           <router-link
             v-if="gp.status === '진행중'"
             :to="gp.isOwner || gp.isParticipating ? `/group-purchase/${gp.id}/status` : `/group-purchase/${gp.id}`"
-            class="shrink-0 px-(--space-4) py-(--space-2) bg-(--color-navy) text-(color:--color-white) rounded-full text-(length:--font-sm) font-semibold no-underline whitespace-nowrap"
+            class="shrink-0 whitespace-nowrap rounded-full bg-(--color-leaf) px-(--space-4) py-(--space-2) text-(length:--font-sm) font-semibold text-(color:--color-navy) no-underline"
           >
             {{ gp.isOwner ? '확인하기' : gp.isParticipating ? '참여중' : '참여하기' }}
           </router-link>
@@ -383,7 +383,7 @@ onBeforeUnmount(() => {
     <!-- 글쓰기 버튼 -->
     <router-link
       to="/group-purchase/create/step1"
-      class="fixed bottom-[calc(var(--bottom-nav-height)+var(--space-4))] left-(--space-4) right-(--space-4) flex items-center justify-center p-(--space-4) bg-(--color-gold) text-(color:--color-navy) rounded-(--radius-xl) text-(length:--font-base) font-bold no-underline shadow-(--shadow-md)"
+      class="fixed bottom-[calc(var(--bottom-nav-height)+var(--space-7))] left-(--space-4) right-(--space-4) flex items-center justify-center rounded-(--radius-xl) bg-(--color-leaf) p-(--space-4) text-(length:--font-base) font-bold text-(color:--color-navy) no-underline shadow-(--shadow-card)"
     >
       + 공동구매 글쓰기
     </router-link>

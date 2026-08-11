@@ -136,7 +136,7 @@ async function handleSubmit() {
 </script>
 
 <template>
-  <div class="p-(--space-4) pb-(--space-8) bg-(--color-bg) min-h-screen">
+  <div class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-(--space-8)">
     <header class="mb-(--space-5)">
       <div class="flex items-center justify-end mb-(--space-4)">
         <p class="text-(length:--font-sm) font-bold text-(color:--color-slate-muted)">
@@ -152,7 +152,7 @@ async function handleSubmit() {
     </header>
 
     <!-- 상품 이미지 미리보기 -->
-    <div class="h-[130px] rounded-(--radius-xl) bg-(--color-surface) flex flex-col items-center justify-center gap-(--space-2) mb-(--space-4) overflow-hidden">
+    <div class="mb-(--space-4) flex h-[130px] flex-col items-center justify-center gap-(--space-2) overflow-hidden rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) shadow-(--shadow-card)">
       <img
         v-if="photoPreviewUrl"
         :src="photoPreviewUrl"
@@ -171,7 +171,7 @@ async function handleSubmit() {
     </div>
 
     <!-- 상품 요약 -->
-    <div class="p-(--space-4) rounded-(--radius-xl) bg-(--color-white) border border-(--color-border) mb-(--space-5)">
+    <div class="mb-(--space-5) rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-(--space-4) shadow-(--shadow-card)">
       <div class="flex items-center justify-between mb-(--space-1)">
         <p class="text-(length:--font-sm) font-bold text-(color:--color-navy)">
           {{ productName }}
@@ -197,7 +197,7 @@ async function handleSubmit() {
     </div>
 
     <!-- 목표 수량 -->
-    <div class="p-(--space-4) rounded-(--radius-xl) bg-(--color-surface) mb-(--space-4)">
+    <div class="mb-(--space-4) rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-(--space-4) shadow-(--shadow-card)">
       <p class="text-(length:--font-xs) font-bold text-(color:--color-slate-dark) mb-(--space-1)">
         목표 수량
       </p>
@@ -213,7 +213,7 @@ async function handleSubmit() {
     </div>
 
     <!-- 마감일 -->
-    <div class="p-(--space-4) rounded-(--radius-xl) bg-(--color-white) border border-(--color-border) mb-(--space-5)">
+    <div class="mb-(--space-5) rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-(--space-4) shadow-(--shadow-card)">
       <p class="text-(length:--font-xs) font-bold text-(color:--color-slate-dark) mb-(--space-1)">
         마감일
       </p>
@@ -223,7 +223,7 @@ async function handleSubmit() {
     </div>
 
     <!-- 배송 정보 -->
-    <div class="p-(--space-4) rounded-(--radius-xl) bg-(--color-surface) mb-(--space-5)">
+    <div class="mb-(--space-5) rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-(--space-4) shadow-(--shadow-card)">
       <p class="text-(length:--font-xs) font-bold text-(color:--color-slate-dark) mb-(--space-3)">
         배송 정보
       </p>
@@ -254,7 +254,7 @@ async function handleSubmit() {
     </div>
 
     <!-- 안내 문구 -->
-    <div class="flex items-start gap-(--space-2) p-(--space-4) rounded-(--radius-xl) bg-(--color-surface) mb-(--space-6)">
+    <div class="mb-(--space-6) flex items-start gap-(--space-2) rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-(--space-4)">
       <IconInfo
         size="14"
         color="var(--color-slate-dark)"
@@ -274,9 +274,9 @@ async function handleSubmit() {
     <!-- 이전 / 글 올리기 -->
     <div class="flex gap-(--space-3)">
       <AppButton
-        variant="secondary"
+        variant="neutral"
         size="lg"
-        class="flex-1"
+        class="flex-1 bg-(--color-white)!"
         :disabled="isSubmitting"
         @click="goToPrevStep"
       >

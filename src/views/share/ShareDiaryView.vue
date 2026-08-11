@@ -5,12 +5,10 @@ import AppButton from '@/components/common/AppButton.vue'
 import ConfirmDeleteModal from '@/components/common/ConfirmDeleteModal.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
-import SelectableChip from '@/components/common/SelectableChip.vue'
-import IconCat from '@/components/common/icons/IconCat.vue'
+import PetSelectorChip from '@/components/common/PetSelectorChip.vue'
 import IconChevronRight from '@/components/common/icons/IconChevronRight.vue'
 import IconDelete from '@/components/common/icons/IconDelete.vue'
 import IconDocument from '@/components/common/icons/IconDocument.vue'
-import IconDog from '@/components/common/icons/IconDog.vue'
 import IconPaw from '@/components/common/icons/IconPaw.vue'
 import IconPlus from '@/components/common/icons/IconPlus.vue'
 import { useShareStore } from '@/stores/share'
@@ -105,20 +103,14 @@ onMounted(initializeDiary)
           role="group"
           aria-labelledby="diary-pet-title"
         >
-          <SelectableChip
+          <PetSelectorChip
             v-for="pet in shareStore.pets"
             :key="pet.id"
-            class="min-w-[var(--share-pet-chip-min-width)]"
-            :class="selectedPetId !== pet.id ? 'text-(--color-navy)!' : ''"
+            :label="pet.name"
+            :species="pet.type"
             :selected="selectedPetId === pet.id"
             @click="selectedPetId = pet.id"
-          >
-            <component
-              :is="pet.type === 'cat' ? IconCat : IconDog"
-              :size="16"
-            />
-            {{ pet.name }}
-          </SelectableChip>
+          />
         </div>
       </section>
 
