@@ -336,6 +336,18 @@ const authRoutes = [
     meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
+    path: '/share/diary',
+    name: 'ShareDiary',
+    component: () => import('@/views/share/ShareDiaryView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
+  },
+  {
+    path: '/share/diary/write',
+    name: 'ShareDiaryWrite',
+    component: () => import('@/views/share/ShareDiaryWriteView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
+  },
+  {
     path: '/group-purchase',
     name: 'GroupPurchaseList',
     component: () => import('@/views/grouppurchase/GroupPurchaseListView.vue'),
