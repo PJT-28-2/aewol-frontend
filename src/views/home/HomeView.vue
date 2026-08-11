@@ -3,18 +3,20 @@ import { computed, onMounted, ref } from 'vue'
 import AewolLogo from '@/components/common/AewolLogo.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import IconNotificationBell from '@/components/common/icons/IconNotificationBell.vue'
-import { mockWalletBalance } from '@/mocks/transaction'
 import { useMemberStore } from '@/stores/member'
 import { usePetStore } from '@/stores/pet'
 import { useTransactionStore } from '@/stores/transaction'
+import { useWalletStore } from '@/stores/wallet'
 import dogHero from '@/assets/images/pet-poodle-home-mascot-v2.png'
 import catHero from '@/assets/images/pet-siamese-home-mascot-v2.png'
 
 const memberStore = useMemberStore()
 const petStore = usePetStore()
 const transactionStore = useTransactionStore()
+const walletStore = useWalletStore()
 const isLoading = ref(true)
 const today = new Date()
+const currentPeriod = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`
 
 const primaryPet = computed(() =>
   petStore.pets.find((pet) => pet.id === petStore.representativePetId)
@@ -24,13 +26,21 @@ const primaryPet = computed(() =>
 const petName = computed(() => primaryPet.value?.name || '포리')
 const memberName = computed(() => memberStore.profile?.name || '회원')
 const heroImage = computed(() => primaryPet.value?.species === 'CAT' ? catHero : dogHero)
-const formattedBalance = computed(() => Number(mockWalletBalance).toLocaleString('ko-KR'))
+const formattedBalance = computed(() =>
+  Number(walletStore.wallet?.totalBalance ?? 0).toLocaleString('ko-KR'),
+)
 const monthlyExpense = computed(() => transactionStore.monthlyExpenseTotal(today.getFullYear(), today.getMonth() + 1))
 
 onMounted(async () => {
   await Promise.allSettled([
     memberStore.profile ? Promise.resolve() : memberStore.fetchProfile(),
     petStore.pets.length ? Promise.resolve() : petStore.fetchPets(),
+    walletStore.fetchWallet(),
+    transactionStore.fetchTransactions({
+      type: 'WITHDRAW',
+      period: currentPeriod,
+      size: 100,
+    }),
   ])
   isLoading.value = false
 })
