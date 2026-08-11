@@ -29,6 +29,7 @@ const amount = ref('');
 const category = ref('');
 const selectedPetId = ref(null);
 const isLoading = ref(false);
+const errorMessage = ref('');
 
 onMounted(async () => {
   isLoading.value = true;
@@ -48,6 +49,10 @@ onMounted(async () => {
     dayOfMonth.value = payment.dayOfMonth;
     category.value = payment.category;
     selectedPetId.value = payment.petId ?? null;
+  } catch (error) {
+    errorMessage.value =
+      error?.response?.data?.message ??
+      '정기결제 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요';
   } finally {
     isLoading.value = false;
   }
@@ -83,7 +88,6 @@ const canSubmit = computed(
 );
 
 const isSubmitting = ref(false);
-const errorMessage = ref('');
 
 const pageTitle = computed(() => (isEditMode.value ? '정기결제 변경' : '정기결제 등록'));
 const pageSubtitle = computed(() =>
