@@ -8,8 +8,14 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('accessToken')
-    if (token) {
+    if (config.skipAuth) {
+      if (!config.useExplicitAuthorization) {
+        delete config.headers.Authorization
+      }
+    } else if (token) {
       config.headers.Authorization = `Bearer ${token}`
+    } else {
+      delete config.headers.Authorization
     }
     return config
   },
@@ -36,8 +42,13 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      !originalRequest.skipAuthRefresh
+    ) {
       if (isRefreshing) {
+        originalRequest._retry = true
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject })
         }).then((token) => {
@@ -51,8 +62,9 @@ api.interceptors.response.use(
 
       try {
         const refreshToken = localStorage.getItem('refreshToken')
-        // 백엔드 /api/auth/refresh는 refreshToken을 body가 아니라
-        // Authorization: Bearer 헤더에서 읽는다.
+        if (!refreshToken) {
+          throw new Error('No refresh token')
+        }
         const { data } = await axios.post(
           `${import.meta.env.VITE_API_BASE_URL}/auth/refresh`,
           null,
@@ -66,7 +78,6 @@ api.interceptors.response.use(
           localStorage.setItem('refreshToken', result.refreshToken)
         }
 
-        api.defaults.headers.common.Authorization = `Bearer ${newAccessToken}`
         processQueue(null, newAccessToken)
 
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
@@ -75,6 +86,8 @@ api.interceptors.response.use(
         processQueue(refreshError, null)
         localStorage.removeItem('accessToken')
         localStorage.removeItem('refreshToken')
+        window.sessionStorage.removeItem('profileEditPasswordVerified')
+        window.sessionStorage.removeItem('kakaoOAuthState')
         window.location.href = '/login'
         return Promise.reject(refreshError)
       } finally {

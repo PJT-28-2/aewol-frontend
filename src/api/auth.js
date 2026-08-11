@@ -2,11 +2,22 @@ import api from './index'
 
 export const authApi = {
   login(email, password) {
-    return api.post('/auth/login', { email, password })
+    return api.post('/auth/login', { email, password }, {
+      skipAuth: true,
+      skipAuthRefresh: true,
+    })
   },
 
   signup(data) {
     return api.post('/auth/signup', data)
+  },
+
+  sendSignupCode(email) {
+    return api.post('/auth/signup/send-code', { email })
+  },
+
+  verifySignupCode(email, verificationCode) {
+    return api.post('/auth/signup/verify-code', { email, verificationCode })
   },
 
   verifyEmail(email, code) {
@@ -14,13 +25,19 @@ export const authApi = {
   },
 
   kakaoLogin(code) {
-    return api.post('/auth/kakao', { code })
+    return api.post('/auth/oauth/kakao', null, {
+      params: { code },
+      skipAuth: true,
+      skipAuthRefresh: true,
+    })
   },
 
   refresh(refreshToken) {
-    // 백엔드는 refreshToken을 Authorization: Bearer 헤더에서 읽는다.
     return api.post('/auth/refresh', null, {
       headers: { Authorization: `Bearer ${refreshToken}` },
+      skipAuth: true,
+      skipAuthRefresh: true,
+      useExplicitAuthorization: true,
     })
   },
 
@@ -36,7 +53,4 @@ export const authApi = {
     return api.post('/auth/password/reset', data)
   },
 
-  withdraw() {
-    return api.delete('/auth/withdraw')
-  },
 }
