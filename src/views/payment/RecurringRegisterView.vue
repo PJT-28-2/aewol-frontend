@@ -63,7 +63,7 @@ function selectPet(id) {
 
 const dayOfMonth = ref(15);
 const isDaySheetOpen = ref(false);
-const dayOptions = Array.from({ length: 28 }, (_, index) => index + 1);
+const dayOptions = Array.from({ length: 31 }, (_, index) => index + 1);
 
 function selectDay(day) {
   dayOfMonth.value = day;
