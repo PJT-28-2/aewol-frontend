@@ -24,7 +24,7 @@ function goToAccountManagement() {
       variant="primary"
       size="lg"
       block
-      class="mt-(--space-8)"
+      class="mt-(--space-8) rounded-(--radius-2xl)"
       @click="goToAccountManagement"
     >
       계좌 관리로
