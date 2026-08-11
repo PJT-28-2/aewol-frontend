@@ -51,9 +51,12 @@ api.interceptors.response.use(
 
       try {
         const refreshToken = localStorage.getItem('refreshToken')
+        // 백엔드 /api/auth/refresh는 refreshToken을 body가 아니라
+        // Authorization: Bearer 헤더에서 읽는다.
         const { data } = await axios.post(
           `${import.meta.env.VITE_API_BASE_URL}/auth/refresh`,
-          { refreshToken },
+          null,
+          { headers: { Authorization: `Bearer ${refreshToken}` } },
         )
 
         const result = data.result ?? data
