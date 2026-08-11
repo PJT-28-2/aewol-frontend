@@ -132,8 +132,14 @@ async function handleSubmit() {
     await groupPurchaseApi.create(payload)
     groupPurchaseCreateStore.reset()
     router.push('/group-purchase/my')
-  } catch {
-    submitError.value = '등록에 실패했어요. 다시 시도해주세요.'
+  } catch (err) {
+    // 403(관리자 아님)은 Spring Security 기본 응답이라 바디가 비어있어 별도 문구로 처리하고,
+    // 그 외 실패는 백엔드가 ApiResponse로 내려주는 실제 사유(이미지 확장자 등)를 그대로 보여준다
+    if (err.response?.status === 403) {
+      submitError.value = '관리자만 등록할 수 있어요.'
+    } else {
+      submitError.value = err.response?.data?.message ?? '등록에 실패했어요. 다시 시도해주세요.'
+    }
   } finally {
     isSubmitting.value = false
   }
