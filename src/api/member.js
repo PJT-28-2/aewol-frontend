@@ -1,11 +1,13 @@
 import api from './index'
 
+// MemberController가 마이페이지 리팩토링 때 /api/members → /api/users로 이동했고,
+// getMyInfo/updateMyInfo도 PUT에서 PATCH로 바뀌었어요(2026-08-11 재확인).
 export const memberApi = {
   getProfile() {
-    return api.get('/members/me')
+    return api.get('/users/me')
   },
 
   updateProfile(data) {
-    return api.put('/members/me', data)
+    return api.patch('/users/me', data)
   },
 }

@@ -73,10 +73,13 @@ export function unlinkAccount(accountId) {
 
 /**
  * 간편 비밀번호 설정 — 최초 계좌 연동 시 1회만 호출 (계정당 하나)
- * POST /api/members/simple-password
+ * POST /api/users/simple-password
  * body: { password }
+ * ⚠️ MemberController가 마이페이지 리팩토링 때 /api/members → /api/users로 이동했어요.
+ * 이 파일이 예전 /members 경로로 되돌아가 있는 걸 재발견한 적 있으니, 404가 나면 가장
+ * 먼저 이 경로부터 의심할 것(2026-08-11).
  * ⚠️ 아직 Notion API 명세서에 없는 엔드포인트예요. 명세 확정되면 경로/응답 다시 확인 필요.
  */
 export function setSimplePassword(password) {
-  return api.post('/members/simple-password', { password });
+  return api.post('/users/simple-password', { password });
 }
