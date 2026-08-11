@@ -106,9 +106,11 @@ async function handleSubmit() {
     const imageFormData = new FormData()
     imageFormData.append('image', image.value)
     const { data: uploadData } = await groupPurchaseApi.uploadImage(imageFormData)
-    const imageUrl = uploadData.result
+    const imageUrl = uploadData.result.imageUrl
 
-    // 백엔드가 POST /api/group-purchase에서 JSON(Map<String, Object>)으로 받음
+    // 백엔드(GroupPurchaseCreateRequest)가 JSON으로 받으며 필드는 camelCase, deadline은
+    // LocalDateTime(@Future)이라 날짜만 보내면 파싱에 실패함 — 앱 전역에서 날짜만 있는
+    // deadline은 23:59:59를 마감 시각으로 취급하므로(getDeadlineTimestamp) 그 규칙을 그대로 붙인다
     const payload = {
       image: imageUrl,
       productName: productName.value,
@@ -116,10 +118,13 @@ async function handleSubmit() {
       unitPrice: parsePrice(unitPrice.value),
       groupPrice: parsePrice(groupPrice.value),
       targetQuantity: Number(targetQuantity.value),
-      deadline: deadline.value,
+      deadline: `${deadline.value}T23:59:59`,
       deliveryMethod: deliveryMethod.value,
       deliveryFee: parsePrice(deliveryFee.value),
-      // TODO: DB의 delivery_date(실제 날짜)는 deadline + deliveryEstimateDays로 백엔드에서 계산한다고 가정. 프론트는 일수만 전달
+      // TODO(backend): 배송 예정일을 "목표 수량 달성일 + 예상 일수"로 계산하기로 했으나,
+      // 현재 백엔드에는 이 계산에 필요한 달성 시각 기록(confirmed_at 등)과
+      // deliveryEstimateDays 요청 필드 자체가 없어(GroupPurchaseCreateRequest.deliveryDate만 존재)
+      // 이 값은 아직 백엔드에 전달되지 않는다. 백엔드 변경 후 deliveryDate 필드로 교체할 것
       deliveryEstimateDays: Number(deliveryEstimateDays.value),
       description: description.value,
     }

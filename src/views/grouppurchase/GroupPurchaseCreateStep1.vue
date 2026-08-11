@@ -15,7 +15,8 @@ const { image, productName, category, unitPrice, groupPrice } = storeToRefs(
   groupPurchaseCreateStore,
 )
 
-const categoryOptions = ['사료', '간식', '영양제', '용품', '기타']
+// 백엔드 검증 규칙(GroupPurchaseCreateRequest: 사료|간식|용품|기타)과 동일하게 맞춤 — 다른 값은 등록 시 400 에러
+const categoryOptions = ['사료', '간식', '용품', '기타']
 const isCategorySheetOpen = ref(false)
 function selectCategory(option) {
   category.value = option
