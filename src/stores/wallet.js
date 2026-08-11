@@ -16,10 +16,16 @@ export const useWalletStore = defineStore('wallet', {
 
   actions: {
     async fetchWallet() {
-      // 백엔드 응답은 { status, message, result: WalletResponse } 래퍼라 data.result가 실제 지갑 정보
-      const { data } = await walletApi.getWallet()
-      this.wallet = normalizeWallet(data.result)
-      return this.wallet
+      try {
+        // 백엔드 응답은 { status, message, result: WalletResponse } 래퍼라 data.result가 실제 지갑 정보
+        const { data } = await walletApi.getWallet()
+        this.wallet = normalizeWallet(data.result)
+        return this.wallet
+      } catch (error) {
+        // 이전 화면에서 조회한 잔액을 최신 값처럼 노출하지 않는다.
+        this.wallet = null
+        throw error
+      }
     },
 
     async charge(amount) {

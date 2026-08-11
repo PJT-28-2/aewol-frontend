@@ -22,7 +22,7 @@ const primaryPet = computed(() =>
     ?? null,
 )
 const petName = computed(() => primaryPet.value?.name || '포리')
-const memberName = computed(() => memberStore.profile?.name || '애월')
+const memberName = computed(() => memberStore.profile?.name || '회원')
 const heroImage = computed(() => primaryPet.value?.species === 'CAT' ? catHero : dogHero)
 const formattedBalance = computed(() => Number(mockWalletBalance).toLocaleString('ko-KR'))
 const monthlyExpense = computed(() => transactionStore.monthlyExpenseTotal(today.getFullYear(), today.getMonth() + 1))
@@ -84,7 +84,7 @@ onMounted(async () => {
         <div class="flex items-start justify-between gap-(--space-4)">
           <div>
             <p class="text-(length:--font-sm) font-medium text-(color:--color-slate-muted)">
-              {{ petName }}의 애월 지갑
+              {{ memberName }}님의 애월지갑
             </p>
             <router-link
               to="/wallet"
