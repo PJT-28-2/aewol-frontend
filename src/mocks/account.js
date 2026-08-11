@@ -30,22 +30,3 @@ export const MOCK_ACCOUNTS = [
     isPrimary: false,
   },
 ]
-
-export const MOCK_RECURRING_PAYMENTS = [
-  {
-    id: 1,
-    merchantName: '강아지 사료 정기배송',
-    amount: 32000,
-    dayOfMonth: 15,
-    nextPaymentLabel: '다음 8/15',
-    category: 'FOOD',
-  },
-  {
-    id: 2,
-    merchantName: '펫보험료',
-    amount: 26000,
-    dayOfMonth: 1,
-    nextPaymentLabel: '다음 8/1',
-    category: 'MEDICAL',
-  },
-]
