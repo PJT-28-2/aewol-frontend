@@ -93,13 +93,19 @@ const authRoutes = [
     path: '/account/link/password',
     name: 'AccountPasswordSetup',
     component: () => import('@/views/account/AccountPasswordSetupView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true, hideBottomNav: true },
   },
   {
     path: '/account/link/password/confirm',
     name: 'AccountPasswordConfirm',
     component: () => import('@/views/account/AccountPasswordConfirmView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true, hideBottomNav: true },
+  },
+  {
+    path: '/account/link/password/complete',
+    name: 'PasswordSetupComplete',
+    component: () => import('@/views/account/PasswordSetupComplete.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout', hideHeader: true },
   },
   {
     path: '/account/link/complete',
