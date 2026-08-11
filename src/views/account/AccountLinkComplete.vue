@@ -29,7 +29,7 @@ function goToAccountManagement() {
     v-if="!linkedAccount"
     title="연동 정보를 찾을 수 없어요"
     description="계좌 관리 화면에서 연동 상태를 다시 확인해주세요"
-    variant="warning"
+    variant="danger"
   >
     <template #action>
       <AppButton

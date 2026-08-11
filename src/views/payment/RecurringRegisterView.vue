@@ -1,8 +1,9 @@
 <script setup>
-import { computed, ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { computed, onMounted, ref } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import AppButton from '@/components/common/AppButton.vue';
 import BottomSheet from '@/components/common/BottomSheet.vue';
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import PetSelectorChip from '@/components/common/PetSelectorChip.vue';
 import IconCheck from '@/components/common/icons/IconCheck.vue';
 import IconChevronDown from '@/components/common/icons/IconChevronDown.vue';
@@ -12,9 +13,14 @@ import { usePaymentStore } from '@/stores/payment';
 import { usePetStore } from '@/stores/pet';
 import { RECURRING_CATEGORIES } from '@/utils/recurringCategory';
 
+const route = useRoute();
 const router = useRouter();
 const paymentStore = usePaymentStore();
 const petStore = usePetStore();
+
+// 라우트에 id가 있으면(/payment/recurring/:id/edit) 변경(수정) 모드, 없으면 등록 모드.
+const editId = computed(() => route.params.id ?? null);
+const isEditMode = computed(() => !!editId.value);
 
 const categories = RECURRING_CATEGORIES;
 
@@ -22,6 +28,35 @@ const merchantName = ref('');
 const amount = ref('');
 const category = ref('');
 const selectedPetId = ref(null);
+const isLoading = ref(false);
+const errorMessage = ref('');
+
+onMounted(async () => {
+  isLoading.value = true;
+  try {
+    // 반려동물 선택은 필수이므로 등록/변경 모두 반려동물 목록이 필요하다.
+    await petStore.fetchPets();
+    if (!isEditMode.value) return;
+    // 변경 모드: 기존 정기결제 값을 폼에 채워둔다.
+    await paymentStore.fetchRecurringPayments();
+    const payment = paymentStore.findRecurringPayment(editId.value);
+    if (!payment) {
+      router.replace('/payment/recurring');
+      return;
+    }
+    merchantName.value = payment.merchantName;
+    amount.value = String(payment.amount);
+    dayOfMonth.value = payment.dayOfMonth;
+    category.value = payment.category;
+    selectedPetId.value = payment.petId ?? null;
+  } catch (error) {
+    errorMessage.value =
+      error?.response?.data?.message ??
+      '정기결제 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요';
+  } finally {
+    isLoading.value = false;
+  }
+});
 
 function selectCategory(key) {
   category.value = key;
@@ -33,7 +68,7 @@ function selectPet(id) {
 
 const dayOfMonth = ref(15);
 const isDaySheetOpen = ref(false);
-const dayOptions = Array.from({ length: 28 }, (_, index) => index + 1);
+const dayOptions = Array.from({ length: 31 }, (_, index) => index + 1);
 
 function selectDay(day) {
   dayOfMonth.value = day;
@@ -45,10 +80,20 @@ function selectDay(day) {
 const numericAmount = computed(() => Number(String(amount.value).replace(/[^0-9]/g, '')) || 0);
 
 const canSubmit = computed(
-  () => !!merchantName.value.trim() && numericAmount.value > 0 && !!category.value,
+  () =>
+    !!merchantName.value.trim() &&
+    numericAmount.value > 0 &&
+    !!category.value &&
+    !!selectedPetId.value,
 );
 
 const isSubmitting = ref(false);
+
+const pageTitle = computed(() => (isEditMode.value ? '정기결제 변경' : '정기결제 등록'));
+const pageSubtitle = computed(() =>
+  isEditMode.value ? '정기결제 정보를 수정해주세요' : '구독형 결제 정보를 입력해주세요',
+);
+const submitLabel = computed(() => (isEditMode.value ? '변경 완료' : '정기결제 등록하기'));
 
 // mockData.js의 기존 항목과 같은 "다음 M/D" 형식으로 다음 결제일을 계산한다.
 function computeNextPaymentLabel(day) {
@@ -64,21 +109,35 @@ function computeNextPaymentLabel(day) {
 async function handleSubmit() {
   if (!canSubmit.value || isSubmitting.value) return;
   isSubmitting.value = true;
+  errorMessage.value = '';
+  const pet = petStore.pets.find((p) => p.id === selectedPetId.value);
+  const payload = {
+    merchantName: merchantName.value.trim(),
+    amount: numericAmount.value,
+    dayOfMonth: dayOfMonth.value,
+    nextPaymentLabel: computeNextPaymentLabel(dayOfMonth.value),
+    category: category.value,
+    petId: selectedPetId.value,
+    petName: pet?.name ?? null,
+  };
   try {
-    const pet = petStore.pets.find((p) => p.id === selectedPetId.value);
-    await paymentStore.createRecurringPayment({
-      merchantName: merchantName.value.trim(),
-      amount: numericAmount.value,
-      dayOfMonth: dayOfMonth.value,
-      nextPaymentLabel: computeNextPaymentLabel(dayOfMonth.value),
-      category: category.value,
-      petId: selectedPetId.value,
-      petName: pet?.name ?? null,
-    });
-    router.push({
-      path: '/payment/recurring/register/complete',
-      query: { dayOfMonth: dayOfMonth.value, amount: numericAmount.value },
-    });
+    if (isEditMode.value) {
+      await paymentStore.updateRecurringPayment(editId.value, payload);
+      // 변경 후 정기결제 관리 목록으로 돌아간다.
+      router.replace('/payment/recurring');
+    } else {
+      await paymentStore.createRecurringPayment(payload);
+      router.push({
+        path: '/payment/recurring/register/complete',
+        query: { dayOfMonth: dayOfMonth.value, amount: numericAmount.value },
+      });
+    }
+  } catch (error) {
+    errorMessage.value =
+      error?.response?.data?.message ??
+      (isEditMode.value
+        ? '정기결제 변경에 실패했어요. 잠시 후 다시 시도해주세요'
+        : '정기결제 등록에 실패했어요. 잠시 후 다시 시도해주세요');
   } finally {
     isSubmitting.value = false;
   }
@@ -89,16 +148,19 @@ async function handleSubmit() {
   <div
     class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-[calc(var(--bottom-nav-height)+96px)]"
   >
+    <LoadingSpinner v-if="isLoading" />
+
+    <template v-else>
     <header class="mb-(--space-6)">
       <h1
         class="text-(length:--font-2xl) font-bold text-(color:--color-navy)"
       >
-        정기결제 등록
+        {{ pageTitle }}
       </h1>
       <p
         class="text-(length:--font-md) text-(color:--color-slate-muted) mt-(--space-1)"
       >
-        구독형 결제 정보를 입력해주세요
+        {{ pageSubtitle }}
       </p>
     </header>
 
@@ -165,14 +227,14 @@ async function handleSubmit() {
           class="inline-flex items-center gap-(--space-2) h-(--control-height-sm) px-(--space-4) rounded-(--radius-full) border text-(length:--font-sm) font-medium"
           :class="
             category === item.key
-              ? 'bg-(--color-leaf-soft) border-(--color-leaf) text-(color:--color-navy)'
-              : 'bg-(--color-white) border-(--color-card-border) text-(color:--color-slate-dark)'
+              ? 'bg-(--color-gray-900) border-(--color-gray-900) text-(color:--color-white)'
+              : 'bg-(--color-white) border-(--color-border) text-(color:--color-slate-dark)'
           "
           @click="selectCategory(item.key)"
         >
           <component
             :is="item.icon"
-            size="16"
+            size="18"
           />
           {{ item.label }}
         </button>
@@ -186,7 +248,7 @@ async function handleSubmit() {
       <h2
         class="text-(length:--font-md) font-semibold text-(color:--color-navy) mb-(--space-2)"
       >
-        반려동물
+        반려동물 *
       </h2>
       <div class="flex flex-wrap gap-(--space-2)">
         <PetSelectorChip
@@ -234,6 +296,13 @@ async function handleSubmit() {
       </p>
     </div>
 
+    <p
+      v-if="errorMessage"
+      class="mb-(--space-3) text-(length:--font-sm) text-(color:--color-danger-strong)"
+    >
+      {{ errorMessage }}
+    </p>
+
     <AppButton
       variant="primary"
       size="lg"
@@ -241,25 +310,25 @@ async function handleSubmit() {
       :disabled="!canSubmit || isSubmitting"
       @click="handleSubmit"
     >
-      정기결제 등록하기
+      {{ submitLabel }}
     </AppButton>
 
     <BottomSheet
       v-model="isDaySheetOpen"
       title="결제 주기 선택"
     >
-      <ul class="flex flex-col gap-(--space-2)">
+      <ul>
         <li
           v-for="day in dayOptions"
           :key="day"
         >
           <button
             type="button"
-            class="flex w-full items-center justify-between rounded-(--radius-xl) border px-(--space-4) py-(--space-3) text-(length:--font-base)"
+            class="w-full flex items-center justify-between py-(--space-3) text-(length:--font-base)"
             :class="
               day === dayOfMonth
-                ? 'border-(--color-leaf) bg-(--color-leaf-soft) font-bold text-(color:--color-navy)'
-                : 'border-(--color-card-border) bg-(--color-white) text-(color:--color-slate-dark)'
+                ? 'text-(color:--color-gold) font-bold'
+                : 'text-(color:--color-slate-dark)'
             "
             @click="selectDay(day)"
           >
@@ -267,11 +336,12 @@ async function handleSubmit() {
             <IconCheck
               v-if="day === dayOfMonth"
               size="18"
-              color="var(--color-leaf-dark)"
+              color="var(--color-gold)"
             />
           </button>
         </li>
       </ul>
     </BottomSheet>
+    </template>
   </div>
 </template>

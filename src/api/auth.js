@@ -18,7 +18,10 @@ export const authApi = {
   },
 
   refresh(refreshToken) {
-    return api.post('/auth/refresh', { refreshToken })
+    // 백엔드는 refreshToken을 Authorization: Bearer 헤더에서 읽는다.
+    return api.post('/auth/refresh', null, {
+      headers: { Authorization: `Bearer ${refreshToken}` },
+    })
   },
 
   logout() {

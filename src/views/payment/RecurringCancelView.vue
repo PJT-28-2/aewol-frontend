@@ -13,24 +13,40 @@ const router = useRouter();
 const paymentStore = usePaymentStore();
 
 const isLoading = ref(true);
+const isCanceling = ref(false);
+const errorMessage = ref('');
 
 onMounted(async () => {
-  await paymentStore.fetchRecurringPayments();
-  isLoading.value = false;
+  try {
+    await paymentStore.fetchRecurringPayments();
+  } catch {
+    // 조회 실패 시 payment가 null이 되어 "찾을 수 없어요" 안내가 노출된다.
+  } finally {
+    isLoading.value = false;
+  }
 });
 
 const payment = computed(() => paymentStore.findRecurringPayment(route.params.id));
 
 async function handleCancel() {
-  if (!payment.value) return;
+  if (!payment.value || isCanceling.value) return;
   // cancelRecurringPayment이 store에서 항목을 제거하면 payment computed가 즉시 null로
   // 바뀌므로, 취소 요청 전에 필요한 값을 미리 지역 변수로 캡처해둔다.
   const { id, merchantName } = payment.value;
-  await paymentStore.cancelRecurringPayment(id);
-  router.replace({
-    path: '/payment/recurring/cancel/complete',
-    query: { merchantName },
-  });
+  isCanceling.value = true;
+  errorMessage.value = '';
+  try {
+    await paymentStore.cancelRecurringPayment(id);
+    router.replace({
+      path: '/payment/recurring/cancel/complete',
+      query: { merchantName },
+    });
+  } catch (error) {
+    errorMessage.value =
+      error?.response?.data?.message ?? '정기결제 해지에 실패했어요. 잠시 후 다시 시도해주세요';
+  } finally {
+    isCanceling.value = false;
+  }
 }
 </script>
 
@@ -63,7 +79,7 @@ async function handleCancel() {
 
     <template v-else>
       <StatusVisual
-        variant="warning"
+        variant="danger"
         class="mb-(--space-4)"
       />
       <h1
@@ -98,11 +114,19 @@ async function handleCancel() {
         </div>
       </div>
 
+      <p
+        v-if="errorMessage"
+        class="mb-(--space-3) text-(length:--font-sm) text-(color:--color-danger-strong)"
+      >
+        {{ errorMessage }}
+      </p>
+
       <div class="w-full flex gap-(--space-3)">
         <AppButton
           variant="neutral"
           size="lg"
           class="flex-1 bg-(--color-white)!"
+          :disabled="isCanceling"
           @click="router.back()"
         >
           취소
@@ -111,6 +135,7 @@ async function handleCancel() {
           variant="danger"
           size="lg"
           class="flex-1"
+          :disabled="isCanceling"
           @click="handleCancel"
         >
           해지하기
