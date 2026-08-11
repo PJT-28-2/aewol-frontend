@@ -40,7 +40,7 @@ function confirmComplete() {
     v-if="isInvalid"
     title="송금 정보를 찾을 수 없어요"
     description="애월지갑에서 송금을 다시 시도해주세요"
-    variant="warning"
+    variant="danger"
   >
     <template #action>
       <AppButton

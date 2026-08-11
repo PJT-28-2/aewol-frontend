@@ -4,13 +4,9 @@ import { useRoute, useRouter } from 'vue-router';
 import AppButton from '@/components/common/AppButton.vue';
 import FeatureIconTile from '@/components/common/FeatureIconTile.vue';
 import PetSelectorChip from '@/components/common/PetSelectorChip.vue';
-import IconHospital from '@/components/common/icons/IconHospital.vue';
-import IconDogBowl from '@/components/common/icons/IconDogBowl.vue';
-import IconShowerGel from '@/components/common/icons/IconShowerGel.vue';
-import IconGroupPurchase from '@/components/common/icons/IconGroupPurchase.vue';
-import IconEtc from '@/components/common/icons/IconEtc.vue';
 import IconWallet from '@/components/common/icons/IconWallet.vue';
 import { CATEGORY_LABELS } from '@/mocks/transaction';
+import { getRecurringCategory } from '@/utils/recurringCategory';
 import { usePetStore } from '@/stores/pet';
 import { useTransactionStore } from '@/stores/transaction';
 
@@ -28,36 +24,37 @@ const isWithdraw = computed(() => transaction.value?.type === 'withdraw');
 
 const pets = computed(() => petStore.pets);
 
-// 바로가기 메뉴(HomeView.vue quickActions)와 동일한 파스텔 배경 팔레트 스타일 적용
+// 카테고리 아이콘은 정기결제와 동일한 세트를 쓰도록 getRecurringCategory 단일 소스에서 가져온다.
+// 배경(bg)은 바로가기 메뉴(HomeView.vue quickActions)와 동일한 파스텔 팔레트 스타일을 유지.
 const categories = [
   {
     key: 'MEDICAL',
     label: CATEGORY_LABELS.MEDICAL,
-    icon: IconHospital,
+    icon: getRecurringCategory('MEDICAL').icon,
     bg: 'var(--color-pastel-violet)',
   },
   {
     key: 'GROOMING',
     label: CATEGORY_LABELS.GROOMING,
-    icon: IconShowerGel,
+    icon: getRecurringCategory('GROOMING').icon,
     bg: 'var(--color-pastel-coral)',
   },
   {
     key: 'FOOD',
     label: CATEGORY_LABELS.FOOD,
-    icon: IconDogBowl,
+    icon: getRecurringCategory('FOOD').icon,
     bg: 'var(--color-pastel-blue)',
   },
   {
     key: 'SUPPLIES',
     label: CATEGORY_LABELS.SUPPLIES,
-    icon: IconGroupPurchase,
+    icon: getRecurringCategory('SUPPLIES').icon,
     bg: 'var(--color-pastel-peach)',
   },
   {
     key: 'ETC',
     label: CATEGORY_LABELS.ETC,
-    icon: IconEtc,
+    icon: getRecurringCategory('ETC').icon,
     bg: 'var(--color-pastel-beige)',
   },
 ];
@@ -82,7 +79,7 @@ const selectedCategoryOption = computed(() =>
 
 const headerIcon = computed(() => {
   if (!isWithdraw.value) return IconWallet;
-  return selectedCategoryOption.value?.icon ?? IconHospital;
+  return selectedCategoryOption.value?.icon ?? getRecurringCategory('MEDICAL').icon;
 });
 
 const formattedAmount = computed(() => {
@@ -195,7 +192,7 @@ function handleSave() {
               >
                 <component
                   :is="category.icon"
-                  size="24"
+                  size="18"
                 />
                 {{ category.label }}
               </button>

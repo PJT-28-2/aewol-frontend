@@ -86,7 +86,7 @@ function goToLink() {
       class="fixed inset-0 z-40 flex flex-col items-center justify-center bg-(--color-app-bg) px-(--space-6)"
     >
       <StatusVisual
-        variant="cancel"
+        variant="success"
         class="mb-(--space-4)"
       />
       <h2 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-2)">
@@ -209,7 +209,7 @@ function goToLink() {
         class="flex flex-col items-center text-center"
       >
         <StatusVisual
-          variant="warning"
+          variant="danger"
           class="mt-(--space-5) mb-(--space-4)"
         />
         <h3 class="text-(length:--font-lg) font-bold text-(color:--color-navy) mb-(--space-2)">

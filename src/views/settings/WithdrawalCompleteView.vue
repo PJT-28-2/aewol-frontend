@@ -6,7 +6,7 @@ import CompletionPageLayout from '@/components/common/CompletionPageLayout.vue'
   <CompletionPageLayout
     title="회원 탈퇴 완료"
     description="그동안 애월과 함께해주셔서 감사해요"
-    variant="cancel"
+    variant="success"
   >
     <template #action>
       <router-link
