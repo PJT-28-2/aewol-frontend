@@ -1,8 +1,9 @@
 <script setup>
-import { computed, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import AppButton from '@/components/common/AppButton.vue';
 import FeatureIconTile from '@/components/common/FeatureIconTile.vue';
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import PetSelectorChip from '@/components/common/PetSelectorChip.vue';
 import IconWallet from '@/components/common/icons/IconWallet.vue';
 import { CATEGORY_LABELS } from '@/mocks/transaction';
@@ -14,13 +15,16 @@ const route = useRoute();
 const router = useRouter();
 const petStore = usePetStore();
 const transactionStore = useTransactionStore();
-const txId = computed(() => Number(route.params.txId));
+const txId = computed(() => String(route.params.txId));
 
-const transaction = computed(() =>
-  transactionStore.transactions.find((tx) => tx.id === txId.value),
-);
+const transaction = computed(() => transactionStore.currentTxn);
+const isLoading = ref(true);
+const loadError = ref(false);
 const notFound = computed(() => !transaction.value);
 const isWithdraw = computed(() => transaction.value?.type === 'withdraw');
+const returnPath = computed(() =>
+  route.query.from === 'wallet' ? '/wallet' : '/wallet/history',
+);
 
 const pets = computed(() => petStore.pets);
 
@@ -62,6 +66,7 @@ const categories = [
 const selectedCategory = ref('');
 const selectedPetId = ref(null);
 const isSaving = ref(false);
+const saveError = ref('');
 
 watch(
   transaction,
@@ -110,17 +115,42 @@ function goBack() {
   router.back();
 }
 
-function handleSave() {
+async function fetchTransaction() {
+  isLoading.value = true;
+  loadError.value = false;
+  transactionStore.currentTxn = null;
+
+  try {
+    await Promise.all([
+      transactionStore.fetchTransaction(txId.value),
+      petStore.pets.length ? Promise.resolve() : petStore.fetchPets(),
+    ]);
+  } catch {
+    loadError.value = true;
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+async function handleSave() {
   if (!selectedCategory.value) return;
 
   isSaving.value = true;
-  transactionStore.updateTransactionTag(txId.value, {
-    category: selectedCategory.value,
-    petId: selectedPetId.value,
-  });
-  isSaving.value = false;
-  router.push('/wallet/history');
+  saveError.value = '';
+  try {
+    await transactionStore.updateTransactionTag(txId.value, {
+      category: selectedCategory.value,
+      petId: selectedPetId.value,
+    });
+    router.push(returnPath.value);
+  } catch {
+    saveError.value = '거래 분류를 저장하지 못했어요. 다시 시도해주세요.';
+  } finally {
+    isSaving.value = false;
+  }
 }
+
+onMounted(fetchTransaction);
 </script>
 
 <template>
@@ -128,10 +158,25 @@ function handleSave() {
     class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))] bg-(--color-app-bg) min-h-screen"
   >
     <div
-      v-if="notFound"
-      class="text-center py-(--space-8) text-(color:--color-gray-500)"
+      v-if="isLoading"
+      class="py-(--space-8)"
+    >
+      <LoadingSpinner />
+    </div>
+
+    <div
+      v-else-if="loadError || notFound"
+      class="flex flex-col items-center py-(--space-8) text-center text-(color:--color-gray-500)"
+      role="alert"
     >
       <p>거래 내역을 찾을 수 없어요.</p>
+      <AppButton
+        class="mt-(--space-4)"
+        size="sm"
+        @click="fetchTransaction"
+      >
+        다시 시도
+      </AppButton>
     </div>
 
     <template v-else>
@@ -244,6 +289,13 @@ function handleSave() {
         >
           변경사항 저장
         </AppButton>
+        <p
+          v-if="saveError"
+          class="mt-(--space-3) text-center text-(length:--font-sm) text-(color:--color-danger-strong)"
+          role="alert"
+        >
+          {{ saveError }}
+        </p>
       </template>
 
       <template v-else>
