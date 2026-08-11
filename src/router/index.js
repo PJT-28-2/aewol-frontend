@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import { useMemberStore } from '@/stores/member';
 import { useGroupPurchaseCreateStore } from '@/stores/groupPurchase';
 import { usePetStore } from '@/stores/pet';
 
@@ -495,8 +496,19 @@ const authRoutes = [
     name: 'ProfileEdit',
     component: () => import('@/views/settings/ProfileEditView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
-    beforeEnter: () => {
+    beforeEnter: async () => {
       const verificationKey = 'profileEditPasswordVerified';
+      const memberStore = useMemberStore();
+      if (!memberStore.profile) {
+        try {
+          await memberStore.fetchProfile();
+        } catch {
+          return '/settings';
+        }
+      }
+
+      if (memberStore.profile?.provider === 'KAKAO') return;
+
       const isVerified = window.sessionStorage.getItem(verificationKey) === 'true';
 
       if (!isVerified) return '/settings';
@@ -546,7 +558,7 @@ const PUBLIC_ROUTE_NAMES = new Set(
   publicRoutes.filter((r) => r.name).map((r) => r.name),
 );
 
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
   // 외부 링크를 복사하면서 슬래시가 중복되어도 빈 화면 대신 정상 경로로 보낸다.
   const normalizedPath = to.path.replace(/\/{2,}/g, '/');
   if (normalizedPath !== to.path) {
@@ -561,13 +573,18 @@ router.beforeEach((to) => {
   const authStore = useAuthStore();
 
   // 로그인 화면 구현 전까지 로컬 화면 개발을 위한 인증 우회
-  if (import.meta.env.DEV) {
-    return;
-  }
-
   // Redirect unauthenticated users to login
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     return { path: '/login', query: { redirect: to.fullPath } };
+  }
+
+  if (authStore.isAuthenticated && !useMemberStore().profile) {
+    try {
+      await useMemberStore().fetchProfile();
+    } catch {
+      authStore.clearSession();
+      return { path: '/login', query: { redirect: to.fullPath } };
+    }
   }
 
   // Redirect authenticated users away from public pages (except callback)

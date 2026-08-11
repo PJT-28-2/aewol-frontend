@@ -1,6 +1,6 @@
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { usePetStore } from '@/stores/pet'
 import PasswordInput from '@/components/common/PasswordInput.vue'
@@ -8,6 +8,7 @@ import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 import AewolLogo from '@/components/common/AewolLogo.vue'
 
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
 const petStore = usePetStore()
 
@@ -15,20 +16,28 @@ const petStore = usePetStore()
  * 로그인 직후 이동할 화면을 정한다.
  * 등록된 반려동물이 없으면 반려동물 등록/가족 참여를 먼저 안내하는 시작 화면으로 보낸다.
  *
- * @returns {string}
+ * @returns {Promise<string>}
  */
-const resolvePostLoginPath = () =>
-  petStore.pets.length === 0 ? '/share/start' : '/home'
+const resolvePostLoginPath = async () => {
+  try {
+    const pets = await petStore.fetchPets()
+    return pets.length === 0 ? '/share/start' : '/home'
+  } catch {
+    return '/home'
+  }
+}
 
 const showEmailForm = ref(false)
 const email = ref('')
 const password = ref('')
 const isLoading = ref(false)
 const errorMessage = ref('')
+const passwordChangeNotice = computed(() =>
+  route.query.reason === 'password-changed'
+    ? '비밀번호가 변경되었습니다. 다시 로그인해주세요.'
+    : '',
+)
 const KAKAO_OAUTH_STATE_KEY = 'kakaoOAuthState'
-const DEV_MOCK_EMAIL = 'test@aewol.com'
-const DEV_MOCK_PASSWORD = 'test1234'
-const isDevelopment = import.meta.env.DEV
 let loginAttemptId = 0
 
 /**
@@ -86,15 +95,6 @@ const handleEmailLogin = async () => {
   isLoading.value = true
 
   try {
-    if (
-      isDevelopment &&
-      email.value === DEV_MOCK_EMAIL &&
-      password.value === DEV_MOCK_PASSWORD
-    ) {
-      await router.push(resolvePostLoginPath())
-      return
-    }
-
     // =========================
     // 로그인 API 요청
     // =========================
@@ -103,7 +103,9 @@ const handleEmailLogin = async () => {
 
     // 뒤로가기로 무효화된 요청은 성공하더라도 화면을 이동시키지 않는다.
     if (currentAttemptId !== loginAttemptId) return
-    await router.push(resolvePostLoginPath())
+    const postLoginPath = await resolvePostLoginPath()
+    if (currentAttemptId !== loginAttemptId) return
+    await router.push(postLoginPath)
   } catch (error) {
     // 뒤로간 뒤 도착한 오류가 로그인 선택 화면에 노출되는 것을 방지한다.
     if (currentAttemptId !== loginAttemptId) return
@@ -188,6 +190,13 @@ const handleKakaoLogin = () => {
         class="relative flex flex-col gap-[14px] px-[26px] pt-[60px] pb-8 max-h-[700px]:pt-9"
         aria-label="로그인 메뉴"
       >
+        <p
+          v-if="passwordChangeNotice"
+          class="text-center text-(length:--font-sm) text-(color:--color-olive)"
+          role="status"
+        >
+          {{ passwordChangeNotice }}
+        </p>
         <button
           class="flex h-[52px] w-full items-center justify-center rounded-(--radius-xl) bg-(--color-kakao) text-[14.5px] leading-[1.3] font-(--font-bold) text-(color:--color-kakao-label)"
           type="button"
@@ -256,17 +265,18 @@ const handleKakaoLogin = () => {
       <p class="mt-[3px] text-(length:--font-md) leading-[1.3] text-(color:--color-slate-muted)">
         계정 정보를 입력해주세요
       </p>
+      <p
+        v-if="passwordChangeNotice"
+        class="mt-3 text-(length:--font-sm) text-(color:--color-olive)"
+        role="status"
+      >
+        {{ passwordChangeNotice }}
+      </p>
 
       <form
         class="mt-9 flex flex-col"
         @submit.prevent="handleEmailLogin"
       >
-        <p
-          v-if="isDevelopment"
-          class="mb-4 rounded-(--radius-xl) border border-(--color-card-border) bg-(--color-white) px-3 py-2 text-[12px] leading-[1.5] text-(color:--color-slate-dark)"
-        >
-          개발용 계정: test@aewol.com / test1234
-        </p>
         <label
           class="mb-1 text-[12.5px] leading-[1.3] font-(--font-bold) text-(color:--color-slate-dark)"
           for="email"
