@@ -4,26 +4,45 @@ import { useRouter } from 'vue-router';
 import EmptyState from '@/components/common/EmptyState.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import FeatureIconTile from '@/components/common/FeatureIconTile.vue';
+import IconChevronRight from '@/components/common/icons/IconChevronRight.vue';
 import IconRecurring from '@/components/common/icons/IconRecurring.vue';
 import { usePaymentStore } from '@/stores/payment';
+import { usePetStore } from '@/stores/pet';
 import { getRecurringCategory } from '@/utils/recurringCategory';
 
 const router = useRouter();
 const paymentStore = usePaymentStore();
+const petStore = usePetStore();
 
 const isLoading = ref(true);
+const loadError = ref(false);
 
 onMounted(async () => {
-  await paymentStore.fetchRecurringPayments();
-  isLoading.value = false;
+  try {
+    // 정기결제에 지정된 반려동물 이름을 보여주려면 반려동물 목록도 함께 필요하다.
+    await Promise.all([
+      paymentStore.fetchRecurringPayments(),
+      petStore.fetchPets(),
+    ]);
+  } catch {
+    loadError.value = true;
+  } finally {
+    isLoading.value = false;
+  }
 });
+
+// petId가 지정된 정기결제만 이름을 노출한다. 목록에 없는 pet(삭제 등)은 표시하지 않는다.
+function petNameOf(payment) {
+  if (!payment.petId) return '';
+  return petStore.pets.find((pet) => pet.id === payment.petId)?.name ?? '';
+}
 
 function goToRegister() {
   router.push('/payment/recurring/register');
 }
 
-function goToCancel(id) {
-  router.push(`/payment/recurring/${id}/cancel`);
+function goToDetail(id) {
+  router.push(`/payment/recurring/${id}`);
 }
 </script>
 
@@ -59,6 +78,12 @@ function goToCancel(id) {
       </div>
 
       <EmptyState
+        v-else-if="loadError"
+        :icon="IconRecurring"
+        message="정기결제를 불러오지 못했어요. 잠시 후 다시 시도해주세요"
+      />
+
+      <EmptyState
         v-else-if="!paymentStore.recurringPayments.length"
         :icon="IconRecurring"
         message="등록된 정기결제가 없어요"
@@ -71,36 +96,42 @@ function goToCancel(id) {
         <li
           v-for="payment in paymentStore.recurringPayments"
           :key="payment.id"
-          class="flex items-center gap-(--space-3) rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-(--space-4) shadow-(--shadow-card)"
+          class="rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) shadow-(--shadow-card)"
         >
-          <FeatureIconTile
-            :icon="getRecurringCategory(payment.category).icon"
-            :tone="getRecurringCategory(payment.category).tone"
-            :icon-size="20"
-          />
-          <div class="flex-1">
-            <p
-              class="text-(length:--font-md) font-semibold text-(color:--color-navy)"
-            >
-              {{ payment.merchantName }}
-            </p>
-            <p
-              class="text-(length:--font-sm) text-(color:--color-slate-muted) mt-(--space-1)"
-            >
-              매월 {{ payment.dayOfMonth }}일 · {{ payment.amount.toLocaleString() }}원
-            </p>
-            <p
-              class="text-(length:--font-xs) text-(color:--color-slate-dark) mt-(--space-1)"
-            >
-              {{ payment.nextPaymentLabel }}
-            </p>
-          </div>
           <button
             type="button"
-            class="shrink-0 px-(--space-3) py-(--space-1) rounded-(--radius-full) bg-(--color-white) border border-(--color-danger-soft) text-(length:--font-sm) text-(color:--color-danger-strong) font-semibold"
-            @click="goToCancel(payment.id)"
+            class="w-full flex items-center gap-(--space-3) p-(--space-4) text-left"
+            @click="goToDetail(payment.id)"
           >
-            해지
+            <FeatureIconTile
+              :icon="getRecurringCategory(payment.category).icon"
+              :tone="getRecurringCategory(payment.category).tone"
+            />
+            <div class="flex-1">
+              <div class="flex items-center gap-(--space-2)">
+                <p
+                  class="text-(length:--font-md) font-semibold text-(color:--color-navy)"
+                >
+                  {{ payment.merchantName }}
+                </p>
+                <span
+                  v-if="petNameOf(payment)"
+                  class="shrink-0 rounded-(--radius-full) bg-(--color-leaf-soft) px-(--space-2) py-[2px] text-(length:--font-xs) font-medium text-(color:--color-navy)"
+                >
+                  {{ petNameOf(payment) }}
+                </span>
+              </div>
+              <p
+                class="text-(length:--font-sm) text-(color:--color-slate-muted) mt-(--space-1)"
+              >
+                매월 {{ payment.dayOfMonth }}일 · {{ payment.amount.toLocaleString() }}원
+              </p>
+            </div>
+            <IconChevronRight
+              :size="18"
+              color="var(--color-slate-muted)"
+              class="shrink-0"
+            />
           </button>
         </li>
       </ul>

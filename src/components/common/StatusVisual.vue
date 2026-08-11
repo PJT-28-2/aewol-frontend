@@ -13,6 +13,7 @@ const props = defineProps({
 const config = computed(() => ({
   success: { icon: IconCheck, outer: 'var(--color-leaf-soft)', inner: 'var(--color-leaf)', foreground: 'var(--color-navy)' },
   warning: { icon: IconWarning, outer: 'color-mix(in srgb, var(--color-chart-amber) 22%, white)', inner: 'var(--color-chart-amber)', foreground: 'var(--color-navy)' },
+  danger: { icon: IconWarning, outer: 'color-mix(in srgb, var(--color-navy) 6%, white)', inner: 'color-mix(in srgb, var(--color-navy) 14%, white)', foreground: 'var(--color-navy)' },
   cancel: { icon: IconClose, outer: 'var(--color-gray-200)', inner: 'var(--color-gray-400)', foreground: 'var(--color-navy)' },
   info: { icon: IconInfo, outer: 'var(--color-leaf-soft)', inner: 'var(--color-leaf)', foreground: 'var(--color-navy)' },
 }[props.variant] ?? { icon: IconInfo, outer: 'var(--color-leaf-soft)', inner: 'var(--color-leaf)', foreground: 'var(--color-navy)' }))

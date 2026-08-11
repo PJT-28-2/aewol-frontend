@@ -20,7 +20,7 @@ function confirmComplete() {
   <CompletionPageLayout
     title="정기결제 해지 완료"
     :description="`${merchantName} 결제가 더 이상 진행되지 않아요`"
-    variant="cancel"
+    variant="success"
   >
     <template #action>
       <AppButton

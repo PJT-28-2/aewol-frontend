@@ -256,6 +256,18 @@ const authRoutes = [
     meta: { requiresAuth: true, layout: 'DefaultLayout', hideHeader: true },
   },
   {
+    path: '/payment/recurring/:id',
+    name: 'RecurringDetail',
+    component: () => import('@/views/payment/RecurringDetailView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
+  },
+  {
+    path: '/payment/recurring/:id/edit',
+    name: 'RecurringEdit',
+    component: () => import('@/views/payment/RecurringRegisterView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
+  },
+  {
     path: '/payment/recurring/:id/cancel',
     name: 'RecurringCancel',
     component: () => import('@/views/payment/RecurringCancelView.vue'),
