@@ -22,6 +22,7 @@ const diaryStore = useShareDiaryStore()
 
 const selectedPetId = ref('')
 const deleteTargetId = ref('')
+const deleteError = ref('')
 // 파일이 지워졌거나 서버가 사진을 못 내려줄 때 깨진 이미지 아이콘 대신 글만 보여준다.
 const brokenImageIds = ref(new Set())
 
@@ -31,7 +32,10 @@ const monthLabel = computed(() => formatYearMonth(diaryStore.year, diaryStore.mo
 const isDeleteOpen = computed({
   get: () => Boolean(deleteTargetId.value),
   set: (isOpen) => {
-    if (!isOpen) deleteTargetId.value = ''
+    // 삭제 중에는 닫지 않는다. 닫히면 진행 상태도, 실패 결과도 볼 수 없다.
+    if (isOpen || diaryStore.isSubmitting) return
+    deleteTargetId.value = ''
+    deleteError.value = ''
   },
 })
 
@@ -54,11 +58,17 @@ function goWrite() {
 
 async function confirmDelete() {
   const diaryId = deleteTargetId.value
-  deleteTargetId.value = ''
+  if (!diaryId || diaryStore.isSubmitting) return
+
+  deleteError.value = ''
   try {
     await diaryStore.deleteDiary(diaryId)
+    // 성공한 뒤에 닫는다. 먼저 닫으면 삭제되는 동안 로딩이 보이지 않고,
+    // 실패해도 사용자는 이미 지워진 것으로 오해한다.
+    deleteTargetId.value = ''
   } catch (error) {
-    diaryStore.error = error.response?.data?.message || '일기를 삭제하지 못했어요.'
+    deleteError.value = error.response?.data?.message
+      || '일기를 삭제하지 못했어요. 잠시 후 다시 시도해 주세요.'
   }
 }
 
@@ -269,6 +279,8 @@ onMounted(initializeDiary)
     :model-value="isDeleteOpen"
     title="일기를 삭제할까요?"
     description="삭제한 일기는 목록에서 사라져요."
+    :items="deleteError ? [deleteError] : []"
+    :confirm-label="deleteError ? '다시 시도' : '삭제하기'"
     :confirm-loading="diaryStore.isSubmitting"
     @update:model-value="isDeleteOpen = $event"
     @confirm="confirmDelete"
