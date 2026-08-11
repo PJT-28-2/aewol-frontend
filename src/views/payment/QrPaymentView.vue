@@ -123,7 +123,17 @@ async function submitPayment() {
       amount: detectedPayment.value.amount,
     })
     // 결제는 이미 끝났으므로 잔액 재조회가 실패해도 완료 화면으로 넘어간다.
-    await loadBalance()
+    try {
+      await walletStore.fetchWallet()
+    } catch {
+      // 재조회 실패 시 결제 금액을 차감해 완료 화면에 근사 잔액을 표시한다.
+      // 기존 잔액 정보가 없으면 null로 두어 '-'로 표시한다.
+      if (walletStore.wallet !== null) {
+        walletStore.$patch(state => {
+          state.wallet.totalBalance -= detectedPayment.value.amount
+        })
+      }
+    }
     step.value = 'done'
   } catch (error) {
     paymentError.value = toPaymentErrorMessage(error)
