@@ -410,7 +410,7 @@ onMounted(loadDonationData)
     <template v-else-if="screen === 'confirm'">
       <section class="pt-[var(--space-2)] text-center">
         <StatusVisual
-          variant="warning"
+          variant="danger"
           class="mx-auto mt-[45px]"
         />
         <h1 class="mt-[10px] text-[length:var(--font-2xl)] font-bold text-(--color-navy)">

@@ -28,12 +28,13 @@ const profilePassword = ref('')
 const passwordError = ref('')
 const isVerifying = ref(false)
 const PROFILE_VERIFIED_KEY = 'profileEditPasswordVerified'
-import { MOCK_CURRENT_PASSWORD } from '@/mocks/settings'
 
 const memberName = computed(() => memberStore.profile?.name ?? '')
 const memberEmail = computed(() => memberStore.profile?.email ?? '')
 const petName = computed(() => petStore.pets[0]?.name ?? '포리')
-const profileImage = computed(() => memberStore.petProfilePhotoUrl || profileMascot)
+const profileImage = computed(() =>
+  memberStore.profile?.profileImg || memberStore.petProfilePhotoUrl || profileMascot,
+)
 
 onMounted(async () => {
   await Promise.allSettled([
@@ -95,6 +96,10 @@ const settingItems = [
 
 const handleMenuClick = (item) => {
   if (item.action === 'verifyProfile') {
+    if (memberStore.profile?.provider === 'KAKAO') {
+      router.push('/settings/profile')
+      return
+    }
     profilePassword.value = ''
     passwordError.value = ''
     showPasswordModal.value = true
@@ -111,15 +116,7 @@ const verifyProfilePassword = async () => {
   isVerifying.value = true
 
   try {
-    if (!import.meta.env.DEV) {
-      passwordError.value = '비밀번호 확인 API 연동 예정입니다.'
-      return
-    }
-
-    if (profilePassword.value !== MOCK_CURRENT_PASSWORD) {
-      passwordError.value = '현재 비밀번호가 일치하지 않습니다.'
-      return
-    }
+    await memberStore.verifyPassword(profilePassword.value)
 
     window.sessionStorage.setItem(PROFILE_VERIFIED_KEY, 'true')
     showPasswordModal.value = false
@@ -136,9 +133,9 @@ const handleLogout = () => {
   showLogoutModal.value = true
 }
 
-const confirmLogout = () => {
+const confirmLogout = async () => {
   showLogoutModal.value = false
-  authStore.logout()
+  await authStore.logout()
 }
 </script>
 

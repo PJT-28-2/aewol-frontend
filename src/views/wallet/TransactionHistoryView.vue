@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import AppButton from '@/components/common/AppButton.vue';
 import BottomSheet from '@/components/common/BottomSheet.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import TransactionList from '@/components/common/TransactionList.vue';
@@ -41,7 +42,7 @@ function clearCategoryFilter() {
 function resolvePetFilterFromQuery() {
   return typeof route.query.petId === 'string' &&
     petStore.pets.some((pet) => String(pet.id) === route.query.petId)
-    ? Number(route.query.petId)
+    ? route.query.petId
     : null;
 }
 
@@ -80,10 +81,50 @@ function selectPetFilter(petId) {
   router.replace({ query: rest });
 }
 
-// TODO: 백엔드 API 연동 후 mock 데이터 제거하고 실제 fetch로 교체
 const transactions = computed(() => transactionStore.transactions);
 const isLoading = ref(true);
+const isLoadingMore = ref(false);
 const isError = ref(false);
+const loadMoreError = ref(false);
+
+function transactionRequestParams(cursor = null) {
+  return {
+    type: activeFilter.value.toUpperCase(),
+    period: `${activeMonth.value.year}-${String(activeMonth.value.month).padStart(2, '0')}`,
+    size: 100,
+    ...(cursor ? { cursor } : {}),
+  };
+}
+
+async function fetchTransactions() {
+  isLoading.value = true;
+  isError.value = false;
+
+  try {
+    await transactionStore.fetchTransactions(transactionRequestParams());
+  } catch {
+    isError.value = true;
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+async function fetchMoreTransactions() {
+  if (!transactionStore.nextCursor || isLoadingMore.value) return;
+  isLoadingMore.value = true;
+  loadMoreError.value = false;
+
+  try {
+    await transactionStore.fetchTransactions(
+      transactionRequestParams(transactionStore.nextCursor),
+      { append: true },
+    );
+  } catch {
+    loadMoreError.value = true;
+  } finally {
+    isLoadingMore.value = false;
+  }
+}
 
 // 거래 타입 선택 바텀시트 (전체/충전/출금)
 const filters = [
@@ -102,6 +143,7 @@ const activeFilterLabel = computed(() =>
 function selectType(key) {
   activeFilter.value = key;
   isTypeSheetOpen.value = false;
+  fetchTransactions();
 }
 
 // 월 선택 바텀시트
@@ -148,6 +190,7 @@ function isActiveMonth(option) {
 function selectMonth(option) {
   activeMonth.value = { year: option.year, month: option.month };
   isMonthSheetOpen.value = false;
+  fetchTransactions();
 }
 
 const filteredTransactions = computed(() => {
@@ -163,14 +206,19 @@ const filteredTransactions = computed(() => {
       const matchesCategory =
         !categoryFilter.value || tx.category === categoryFilter.value;
       const matchesPet =
-        !petFilter.value || tx.petId === petFilter.value;
+        petFilter.value === null ||
+        (tx.petId !== null && String(tx.petId) === String(petFilter.value));
       return matchesMonth && matchesType && matchesCategory && matchesPet;
     })
     .sort((a, b) => `${b.date}${b.time}`.localeCompare(`${a.date}${a.time}`));
 });
 
-onMounted(() => {
-  isLoading.value = false;
+onMounted(async () => {
+  await Promise.allSettled([
+    petStore.pets.length ? Promise.resolve() : petStore.fetchPets(),
+    fetchTransactions(),
+  ]);
+  petFilter.value = resolvePetFilterFromQuery();
 });
 </script>
 
@@ -193,9 +241,17 @@ onMounted(() => {
 
     <div
       v-else-if="isError"
-      class="text-center py-(--space-8) text-(color:--color-gray-500)"
+      class="flex flex-col items-center py-(--space-8) text-center text-(color:--color-gray-500)"
+      role="alert"
     >
-      <p>거래 내역을 불러오지 못했습니다.</p>
+      <p>거래 내역을 불러오지 못했어요.</p>
+      <AppButton
+        class="mt-(--space-4)"
+        size="sm"
+        @click="fetchTransactions"
+      >
+        다시 시도
+      </AppButton>
     </div>
 
     <template v-else>
@@ -263,7 +319,28 @@ onMounted(() => {
         />
       </button>
 
-      <TransactionList :transactions="filteredTransactions" />
+      <TransactionList
+        :transactions="filteredTransactions"
+        empty-text="해당 조건의 거래 내역이 없어요"
+      />
+      <AppButton
+        v-if="transactionStore.nextCursor"
+        class="mt-(--space-4)"
+        variant="secondary"
+        size="md"
+        block
+        :loading="isLoadingMore"
+        @click="fetchMoreTransactions"
+      >
+        거래 내역 더 보기
+      </AppButton>
+      <p
+        v-if="loadMoreError"
+        class="mt-(--space-3) text-center text-(length:--font-sm) text-(color:--color-danger-strong)"
+        role="alert"
+      >
+        추가 거래 내역을 불러오지 못했어요. 다시 시도해주세요.
+      </p>
     </template>
 
     <BottomSheet

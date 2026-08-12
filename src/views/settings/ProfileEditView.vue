@@ -1,16 +1,23 @@
 <script setup>
-import { computed, reactive, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+import { useMemberStore } from '@/stores/member'
 import AddressSearchLayer from '@/components/common/AddressSearchLayer.vue'
 import AppButton from '@/components/common/AppButton.vue'
 import PasswordInput from '@/components/common/PasswordInput.vue'
 import { formatPhoneNumber } from '@/utils/phone'
 
+const memberStore = useMemberStore()
+const authStore = useAuthStore()
+const router = useRouter()
 const form = reactive({
-  name: '김애월',
-  phone: '010-1234-5678',
-  postalCode: '16856',
-  address: '서울특별시 광진구 화양동',
-  addressDetail: '세종대점 컴포즈 302호',
+  name: '',
+  phone: '',
+  profileImg: null,
+  zipCode: '',
+  address: '',
+  addressDetail: '',
   currentPassword: '',
   newPassword: '',
   newPasswordConfirm: '',
@@ -19,23 +26,16 @@ const isCurrentPasswordVerified = ref(false)
 const isAddressSearchOpen = ref(false)
 const passwordError = ref('')
 const isVerifyingPassword = ref(false)
-import { MOCK_CURRENT_PASSWORD } from '@/mocks/settings'
-
-const newPasswordCategoryCount = computed(() => {
-  const categories = [
-    /[A-Za-z]/.test(form.newPassword),
-    /\d/.test(form.newPassword),
-    /[^A-Za-z0-9]/.test(form.newPassword),
-  ]
-
-  return categories.filter(Boolean).length
-})
+const isSaving = ref(false)
+const isChangingPassword = ref(false)
+const saveError = ref('')
+const isSaveSuccessVisible = ref(false)
+const isLocalProvider = computed(() => memberStore.profile?.provider === 'LOCAL')
+let saveSuccessTimer = null
 
 const isNewPasswordValid = computed(() => {
   const length = form.newPassword.length
-  const categoryCount = newPasswordCategoryCount.value
-
-  return (categoryCount >= 2 && length >= 10) || (categoryCount >= 3 && length >= 8)
+  return length >= 8 && length <= 20
 })
 
 const handlePhoneInput = (event) => {
@@ -50,7 +50,7 @@ const handleCurrentPasswordInput = () => {
 }
 
 const handleAddressSelect = ({ zipCode, address }) => {
-  form.postalCode = zipCode
+  form.zipCode = zipCode
   form.address = address
 }
 
@@ -65,16 +65,7 @@ const verifyCurrentPassword = async () => {
   isVerifyingPassword.value = true
 
   try {
-    if (!import.meta.env.DEV) {
-      passwordError.value = '비밀번호 확인 API 연동 예정입니다.'
-      return
-    }
-
-    if (form.currentPassword !== MOCK_CURRENT_PASSWORD) {
-      passwordError.value = '현재 비밀번호가 일치하지 않습니다.'
-      return
-    }
-
+    await memberStore.verifyPassword(form.currentPassword)
     isCurrentPasswordVerified.value = true
   } catch (error) {
     passwordError.value =
@@ -83,6 +74,82 @@ const verifyCurrentPassword = async () => {
     isVerifyingPassword.value = false
   }
 }
+
+const handleProfileSave = async () => {
+  saveError.value = ''
+  isSaveSuccessVisible.value = false
+  window.clearTimeout(saveSuccessTimer)
+  const phone = form.phone.replace(/\D/g, '')
+  if (!phone || !form.zipCode.trim() || !form.address.trim()) {
+    saveError.value = '전화번호와 주소를 확인해주세요.'
+    return
+  }
+  isSaving.value = true
+  try {
+    await memberStore.updateProfile({
+      phone,
+      profileImg: form.profileImg,
+      zipCode: form.zipCode.trim(),
+      address: form.address.trim(),
+      addressDetail: form.addressDetail.trim(),
+    })
+    isSaveSuccessVisible.value = true
+    saveSuccessTimer = window.setTimeout(() => {
+      isSaveSuccessVisible.value = false
+    }, 2500)
+  } catch (error) {
+    saveError.value = error.response?.data?.message ?? '프로필 저장에 실패했습니다.'
+  } finally {
+    isSaving.value = false
+  }
+}
+
+const handlePasswordChange = async () => {
+  passwordError.value = ''
+  if (!form.currentPassword) {
+    passwordError.value = '현재 비밀번호를 입력해주세요.'
+    return
+  }
+  if (!form.newPassword) {
+    passwordError.value = '새 비밀번호를 입력해주세요.'
+    return
+  }
+  if (!isCurrentPasswordVerified.value || !isNewPasswordValid.value) {
+    passwordError.value = '비밀번호 변경 정보를 확인해주세요.'
+    return
+  }
+  if (form.newPassword !== form.newPasswordConfirm) {
+    passwordError.value = '새 비밀번호가 일치하지 않습니다.'
+    return
+  }
+  if (form.currentPassword === form.newPassword) {
+    passwordError.value = '새 비밀번호는 현재 비밀번호와 다르게 설정해주세요.'
+    return
+  }
+
+  isChangingPassword.value = true
+  try {
+    await memberStore.changePassword(form.currentPassword, form.newPassword)
+    authStore.clearSession()
+    await router.replace({ path: '/login', query: { reason: 'password-changed' } })
+  } catch (error) {
+    passwordError.value = error.response?.data?.message ?? '비밀번호 변경에 실패했습니다.'
+  } finally {
+    isChangingPassword.value = false
+  }
+}
+
+onMounted(async () => {
+  const profile = memberStore.profile ?? await memberStore.fetchProfile()
+  form.name = profile.name ?? ''
+  form.phone = formatPhoneNumber(profile.phone ?? '')
+  form.profileImg = profile.profileImg ?? null
+  form.zipCode = profile.zipCode ?? ''
+  form.address = profile.address ?? ''
+  form.addressDetail = profile.addressDetail ?? ''
+})
+
+onBeforeUnmount(() => window.clearTimeout(saveSuccessTimer))
 </script>
 
 <template>
@@ -102,7 +169,7 @@ const verifyCurrentPassword = async () => {
 
     <form
       class="mt-[26px] flex flex-col"
-      @submit.prevent
+      @submit.prevent="handleProfileSave"
     >
       <label
         class="mb-1 text-[12.5px] font-(--font-bold) text-(color:--color-slate-dark)"
@@ -143,7 +210,7 @@ const verifyCurrentPassword = async () => {
       <div class="flex gap-(--space-2)">
         <input
           id="profile-postal-code"
-          v-model="form.postalCode"
+          v-model="form.zipCode"
           class="h-(--control-height-md) min-w-0 flex-1 cursor-default rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-[13px] text-[13px] text-(color:--color-navy) outline-none"
           type="text"
           inputmode="numeric"
@@ -193,6 +260,31 @@ const verifyCurrentPassword = async () => {
         required
       >
 
+      <p
+        v-if="saveError"
+        class="mt-3 text-[12px] text-(color:--color-danger-strong)"
+        role="alert"
+      >
+        {{ saveError }}
+      </p>
+
+      <AppButton
+        class="mt-7"
+        type="submit"
+        size="lg"
+        block
+        :loading="isSaving"
+        :disabled="isSaving"
+      >
+        저장하기
+      </AppButton>
+    </form>
+
+    <form
+      v-if="isLocalProvider"
+      class="flex flex-col"
+      @submit.prevent="handlePasswordChange"
+    >
       <div
         class="mt-8 flex items-center gap-3 text-[12px] font-(--font-bold) text-(color:--color-slate-muted)"
       >
@@ -263,7 +355,7 @@ const verifyCurrentPassword = async () => {
         v-model="form.newPassword"
         input-class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-white) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-leaf) disabled:cursor-not-allowed disabled:opacity-50"
         autocomplete="new-password"
-        placeholder="2가지 조합 10자리 / 3가지 조합 8자리 이상"
+        placeholder="8자 이상 20자 이하"
         :disabled="!isCurrentPasswordVerified"
       />
       <p
@@ -271,7 +363,7 @@ const verifyCurrentPassword = async () => {
         class="mt-1 text-[11px] text-(color:--color-danger-strong)"
         role="alert"
       >
-        영문·숫자·특수문자 중 2가지 조합은 10자리, 3가지 조합은 8자리 이상 입력해주세요.
+        비밀번호는 8자 이상 20자 이하로 입력해주세요.
       </p>
       <p
         v-else-if="form.newPassword && isNewPasswordValid"
@@ -294,15 +386,23 @@ const verifyCurrentPassword = async () => {
         placeholder="비밀번호를 한번 더 입력해주세요"
         :disabled="!isCurrentPasswordVerified"
       />
+      <p
+        v-if="passwordError"
+        class="mt-3 text-[12px] text-(color:--color-danger-strong)"
+        role="alert"
+      >
+        {{ passwordError }}
+      </p>
 
       <AppButton
         class="mt-7"
-        type="button"
+        type="submit"
         size="lg"
         block
-        disabled
+        :loading="isChangingPassword"
+        :disabled="isChangingPassword"
       >
-        저장하기 · API 연동 예정
+        비밀번호 변경하기
       </AppButton>
     </form>
 
@@ -318,5 +418,24 @@ const verifyCurrentPassword = async () => {
       title="우편번호 찾기"
       @select="handleAddressSelect"
     />
+
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition duration-200 ease-out"
+        enter-from-class="-translate-y-2 opacity-0"
+        enter-to-class="translate-y-0 opacity-100"
+        leave-active-class="transition duration-150 ease-in"
+        leave-to-class="-translate-y-2 opacity-0"
+      >
+        <div
+          v-if="isSaveSuccessVisible"
+          role="status"
+          aria-live="polite"
+          class="fixed top-7 left-1/2 z-[1100] -translate-x-1/2 rounded-(--radius-icon) border border-(--color-border) bg-(--color-white) px-4 py-3 text-[12.5px] font-(--font-bold) text-(color:--color-navy) shadow-(--shadow-lg)"
+        >
+          프로필이 저장되었습니다.
+        </div>
+      </Transition>
+    </Teleport>
   </main>
 </template>

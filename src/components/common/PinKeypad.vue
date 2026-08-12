@@ -1,4 +1,5 @@
 <script setup>
+import { ref } from 'vue'
 import IconDelete from './icons/IconDelete.vue'
 
 const props = defineProps({
@@ -14,7 +15,22 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'complete'])
 
-const keypadKeys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', '⌫']
+const DEFAULT_KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '__shuffle__', '0', '⌫']
+
+const keypadKeys = ref([...DEFAULT_KEYS])
+
+// "재배열" 버튼을 눌렀을 때만 숫자 10개의 위치를 섞어요 — 자동으로 계속 섞으면 오히려
+// 사용자가 매번 숫자 위치를 다시 찾아야 해서 입력이 느려지니, 숄더서핑이 걱정될 때만
+// 직접 섞을 수 있게 버튼으로 뒀어요. 재배열 버튼과 지우기 버튼은 조작 편의를 위해
+// 항상 같은 자리(맨 끝 줄 양끝)에 고정하고, 숫자 10개만 섞어요.
+function shuffle() {
+  const digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+  for (let i = digits.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[digits[i], digits[j]] = [digits[j], digits[i]]
+  }
+  keypadKeys.value = [...digits.slice(0, 9), '__shuffle__', digits[9], '⌫']
+}
 
 function handleKeyPress(digit) {
   if (!digit || props.modelValue.length >= props.length) return
@@ -31,29 +47,20 @@ function handleBackspace() {
 
 <template>
   <div>
-    <div class="flex items-center justify-center gap-(--space-2) mb-(--space-10)">
-      <span
-        v-for="index in length"
-        :key="index"
-        class="w-3 h-3 rounded-full"
-        :class="
-          index <= modelValue.length
-            ? 'bg-(--color-navy)'
-            : 'border border-(--color-border)'
-        "
-      />
-    </div>
-
     <div class="grid grid-cols-3 gap-(--space-6)">
       <template
         v-for="key in keypadKeys"
         :key="key || 'blank'"
       >
-        <div
-          v-if="key === ''"
-          class="h-14"
-          aria-hidden="true"
-        />
+        <button
+          v-if="key === '__shuffle__'"
+          type="button"
+          class="h-14 flex items-center justify-center text-(length:--font-sm) font-medium text-(color:--color-navy)"
+          aria-label="숫자판 재배열"
+          @click="shuffle"
+        >
+          재배열
+        </button>
         <button
           v-else
           type="button"

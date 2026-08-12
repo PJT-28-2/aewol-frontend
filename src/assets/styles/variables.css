@@ -205,6 +205,8 @@
   --share-member-width: 64px;
   --share-avatar-size: 56px;
   --share-contribution-dot-size: 14px;
+  --diary-avatar-size: 32px;
+  --diary-photo-max-height: 320px;
   --icon-badge-size: 56px;
   --share-chart-size: 200px;
   --share-chart-hole-size: 132px;

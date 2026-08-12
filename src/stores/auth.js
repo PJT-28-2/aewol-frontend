@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia'
 import { authApi } from '@/api/auth'
+import { useMemberStore } from '@/stores/member'
 import router from '@/router'
+import { decodeJwtPayload } from '@/utils/jwt'
 
 const unwrapResult = (data) => data.result ?? data
 
@@ -12,6 +14,10 @@ export const useAuthStore = defineStore('auth', {
 
   getters: {
     isAuthenticated: (state) => !!state.accessToken,
+    // 값은 ADMIN/USER로 확정됨. 클레임 키 이름("role")은 백엔드 JWT 스펙 확정 전 가정치라
+    // 실제 스펙이 다르면 이 부분만 맞춰서 수정하면 된다
+    role: (state) => decodeJwtPayload(state.accessToken)?.role ?? null,
+    isAdmin: (state) => decodeJwtPayload(state.accessToken)?.role === 'ADMIN',
   },
 
   actions: {
@@ -20,16 +26,24 @@ export const useAuthStore = defineStore('auth', {
       this.user = null
       localStorage.removeItem('accessToken')
       localStorage.removeItem('refreshToken')
+      window.sessionStorage.removeItem('profileEditPasswordVerified')
+      window.sessionStorage.removeItem('kakaoOAuthState')
+      useMemberStore().clearProfile()
     },
 
     async login(email, password) {
       const { data } = await authApi.login(email, password)
       const result = unwrapResult(data)
       this.accessToken = result.accessToken
-      this.user = result.user ?? null
       localStorage.setItem('accessToken', result.accessToken)
       if (result.refreshToken) {
         localStorage.setItem('refreshToken', result.refreshToken)
+      }
+      try {
+        this.user = await useMemberStore().fetchProfile()
+      } catch (error) {
+        this.clearSession()
+        throw error
       }
       return result
     },
@@ -38,10 +52,15 @@ export const useAuthStore = defineStore('auth', {
       const { data } = await authApi.kakaoLogin(code)
       const result = unwrapResult(data)
       this.accessToken = result.accessToken
-      this.user = result.user ?? null
       localStorage.setItem('accessToken', result.accessToken)
       if (result.refreshToken) {
         localStorage.setItem('refreshToken', result.refreshToken)
+      }
+      try {
+        this.user = await useMemberStore().fetchProfile()
+      } catch (error) {
+        this.clearSession()
+        throw error
       }
       return result
     },
@@ -51,8 +70,13 @@ export const useAuthStore = defineStore('auth', {
       return data
     },
 
-    async verifyEmail(email, code) {
-      const { data } = await authApi.verifyEmail(email, code)
+    async sendSignupCode(email) {
+      const { data } = await authApi.sendSignupCode(email)
+      return data
+    },
+
+    async verifySignupCode(email, verificationCode) {
+      const { data } = await authApi.verifySignupCode(email, verificationCode)
       return data
     },
 
@@ -70,15 +94,13 @@ export const useAuthStore = defineStore('auth', {
       return result
     },
 
-    logout() {
-      authApi.logout().catch(() => {})
-      this.clearSession()
-      router.push('/login')
-    },
-
-    async withdraw() {
-      await authApi.withdraw()
-      this.clearSession()
+    async logout() {
+      try {
+        await authApi.logout()
+      } finally {
+        this.clearSession()
+        await router.push('/login')
+      }
     },
   },
 })

@@ -15,6 +15,15 @@ const authStore = useAuthStore()
 const petStore = usePetStore()
 const errorMessage = ref('')
 
+const resolvePostLoginPath = async () => {
+  try {
+    const pets = await petStore.fetchPets()
+    return pets.length === 0 ? '/share/start' : '/home'
+  } catch {
+    return '/home'
+  }
+}
+
 /**
  * 카카오 OAuth 콜백을 검증하고 애월 로그인을 완료한다.
  * 로그인 화면에서 생성한 state가 일치할 때만 인증 코드를 서버에 전달한다.
@@ -63,7 +72,7 @@ const handleKakaoCallback = async () => {
   try {
     // 백엔드가 카카오 인증 코드를 교환하고 애월 토큰을 발급하도록 요청한다.
     await authStore.kakaoLogin(code)
-    await router.replace(petStore.pets.length === 0 ? '/share/start' : '/home')
+    await router.replace(await resolvePostLoginPath())
   } catch (error) {
     errorMessage.value =
       error.response?.data?.message ?? '카카오 로그인 처리에 실패했습니다.'

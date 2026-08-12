@@ -1,7 +1,5 @@
 import { defineStore } from 'pinia'
 import { memberApi } from '@/api/member'
-import { USE_MOCK_DATA } from '@/mocks/config'
-import { MOCK_MEMBER_PROFILE } from '@/mocks/member'
 import { repairKoreanMojibake } from '@/utils/text'
 
 const normalizeProfile = (profile) => ({
@@ -18,10 +16,6 @@ export const useMemberStore = defineStore('member', {
 
   actions: {
     async fetchProfile() {
-      if (USE_MOCK_DATA) {
-        this.profile = normalizeProfile(structuredClone(MOCK_MEMBER_PROFILE))
-        return this.profile
-      }
       const { data } = await memberApi.getProfile()
       this.profile = normalizeProfile(data.result ?? data)
       return this.profile
@@ -30,6 +24,24 @@ export const useMemberStore = defineStore('member', {
     async updateProfile(profileData) {
       await memberApi.updateProfile(profileData)
       return this.fetchProfile()
+    },
+
+    async verifyPassword(currentPassword) {
+      await memberApi.verifyPassword(currentPassword)
+    },
+
+    async changePassword(currentPassword, newPassword) {
+      await memberApi.changePassword(currentPassword, newPassword)
+    },
+
+    async withdraw(currentPassword) {
+      await memberApi.withdraw(currentPassword)
+      this.clearProfile()
+    },
+
+    clearProfile() {
+      this.profile = null
+      this.petProfilePhotoUrl = null
     },
 
     setPetProfilePhoto(url) {

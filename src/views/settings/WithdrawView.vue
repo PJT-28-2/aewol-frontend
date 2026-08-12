@@ -1,27 +1,33 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useMemberStore } from '@/stores/member'
 import PasswordInput from '@/components/common/PasswordInput.vue'
 import StatusVisual from '@/components/common/StatusVisual.vue'
 import AppButton from '@/components/common/AppButton.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const memberStore = useMemberStore()
 
 const password = ref('')
 const isProcessing = ref(false)
 const errorMessage = ref('')
 const canWithdraw = computed(
-  () => password.value.length > 0 && !isProcessing.value,
+  () =>
+    !isProcessing.value &&
+    (memberStore.profile?.provider === 'KAKAO' || password.value.length > 0),
 )
-const PROFILE_VERIFIED_KEY = 'profileEditPasswordVerified'
 const WITHDRAWAL_COMPLETED_KEY = 'withdrawalCompleted'
-import { MOCK_CURRENT_PASSWORD } from '@/mocks/settings'
+const isLocalProvider = computed(() => memberStore.profile?.provider === 'LOCAL')
+
+onMounted(async () => {
+  if (!memberStore.profile) await memberStore.fetchProfile()
+})
 
 const handleCancel = async () => {
-  window.sessionStorage.setItem(PROFILE_VERIFIED_KEY, 'true')
-  await router.push('/settings/profile')
+  await router.push('/settings')
 }
 
 const handleWithdraw = async () => {
@@ -31,16 +37,7 @@ const handleWithdraw = async () => {
   isProcessing.value = true
 
   try {
-    if (!import.meta.env.DEV) {
-      errorMessage.value = '회원탈퇴 API 연동 예정입니다.'
-      return
-    }
-
-    if (password.value !== MOCK_CURRENT_PASSWORD) {
-      errorMessage.value = '현재 비밀번호가 일치하지 않습니다.'
-      return
-    }
-
+    await memberStore.withdraw(isLocalProvider.value ? password.value : undefined)
     authStore.clearSession()
     window.sessionStorage.setItem(WITHDRAWAL_COMPLETED_KEY, 'true')
     await router.push('/withdraw/complete')
@@ -56,7 +53,7 @@ const handleWithdraw = async () => {
 <template>
   <main class="mx-auto min-h-screen w-full max-w-(--content-max-width) bg-(--color-app-bg) px-(--space-5) pt-(--space-5) pb-[calc(var(--bottom-nav-height)+var(--space-8))]">
     <StatusVisual
-      variant="warning"
+      variant="danger"
       size="96"
       class="mx-auto mt-(--space-4)"
     />
@@ -103,12 +100,14 @@ const handleWithdraw = async () => {
       @submit.prevent="handleWithdraw"
     >
       <label
+        v-if="isLocalProvider"
         class="mb-(--space-2) block text-(length:--font-sm) font-bold text-(color:--color-slate-dark)"
         for="withdraw-password"
       >
         본인 확인을 위해 비밀번호를 입력해주세요
       </label>
       <PasswordInput
+        v-if="isLocalProvider"
         id="withdraw-password"
         v-model="password"
         input-class="h-(--control-height-md) w-full rounded-(--radius-xl) border border-(--color-card-border) bg-(--color-white) px-(--space-4) text-(length:--font-md) text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-leaf-dark)"

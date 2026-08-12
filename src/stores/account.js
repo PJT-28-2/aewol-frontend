@@ -35,9 +35,6 @@ export const useAccountStore = defineStore('account', {
     // 이후 계좌 연동부터는 이 값으로 설정 단계 자체를 건너뛰어요.
     // 실제 비밀번호 값은 저장하지 않고, "설정된 적이 있는지" 여부만 남겨요.
     hasSimplePassword: localStorage.getItem('hasSimplePassword') === 'true',
-    // 완료 화면에서 "비밀번호 설정까지 완료됐어요" 문구를 이번 플로우에서만
-    // 보여주기 위한 1회성 플래그. resetLinkingState()에서 함께 초기화돼요.
-    justSetSimplePassword: false,
 
     // 계좌 연동 플로우 진행 중 상태
     linking: {
@@ -252,7 +249,6 @@ export const useAccountStore = defineStore('account', {
         password: '',
       };
       this.lastLinkedAccountId = null;
-      this.justSetSimplePassword = false;
     },
 
     // 비밀번호 설정 화면에서 입력한 값을 확인 화면에서 비교할 수 있도록 잠깐 보관
@@ -260,7 +256,7 @@ export const useAccountStore = defineStore('account', {
       this.linking.password = password;
     },
 
-    // POST /api/members/simple-password — 확인 화면에서 재입력한 값이 최초 입력값과
+    // POST /api/users/simple-password — 확인 화면에서 재입력한 값이 최초 입력값과
     // 일치할 때만 호출해요. 목데이터 모드에선 API 호출 없이 바로 통과시켜요.
     async confirmSimplePassword(password) {
       if (password !== this.linking.password) {
@@ -272,7 +268,6 @@ export const useAccountStore = defineStore('account', {
         });
       }
       this.hasSimplePassword = true;
-      this.justSetSimplePassword = true;
       localStorage.setItem('hasSimplePassword', 'true');
       this.linking.password = '';
       return true;

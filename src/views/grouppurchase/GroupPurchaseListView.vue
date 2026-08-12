@@ -10,6 +10,11 @@ import { MOCK_GROUP_PURCHASE_LIST } from '@/mocks/groupPurchase';
 import { USE_MOCK_DATA } from '@/mocks/config';
 import { groupPurchaseApi } from '@/api/groupPurchase';
 import { memberApi } from '@/api/member';
+import { useAuthStore } from '@/stores/auth';
+
+// 공동구매 게시글은 관리자(role=ADMIN)만 작성 가능 — 일반 유저에게는 글쓰기 버튼 자체를 숨긴다.
+// 실제 권한은 서버가 403으로 최종 판단하므로, 이건 UX용 방어일 뿐이다
+const authStore = useAuthStore();
 
 // 한 페이지에 몇 개씩 불러올지 — 스크롤이 바닥에 닿을 때마다 이 개수만큼 추가로 이어붙인다.
 // 백엔드 페이지네이션 계약(GET /api/group-purchase?page&size)의 size 기본값과 맞춰둔 값이라 값만 바꾸면 조절된다.
@@ -135,8 +140,9 @@ async function loadMore() {
 
 onMounted(resetAndLoad);
 
-// 카테고리 필터
-const categories = ['전체', '사료', '영양제', '장난감', '기타'];
+// 카테고리 필터 — 상품등록 화면(GroupPurchaseCreateStep1.vue)이 쓰는 백엔드 허용값과 동일하게 맞춤.
+// 다른 값으로 필터링하면 실제로 그 카테고리로 등록된 상품이 없어 항상 빈 목록만 나온다
+const categories = ['전체', '사료', '간식', '용품', '기타'];
 const selectedCategory = ref('전체');
 
 // 카테고리 칩 클릭 시 선택 상태를 바꾸고 첫 페이지부터 다시 조회
@@ -380,8 +386,9 @@ onBeforeUnmount(() => {
       </div>
     </template>
 
-    <!-- 글쓰기 버튼 -->
+    <!-- 글쓰기 버튼: 관리자만 노출 -->
     <router-link
+      v-if="authStore.isAdmin"
       to="/group-purchase/create/step1"
       class="fixed bottom-[calc(var(--bottom-nav-height)+var(--space-7))] left-(--space-4) right-(--space-4) flex items-center justify-center rounded-(--radius-xl) bg-(--color-leaf) p-(--space-4) text-(length:--font-base) font-bold text-(color:--color-navy) no-underline shadow-(--shadow-card)"
     >

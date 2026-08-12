@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import { useMemberStore } from '@/stores/member';
 import { useGroupPurchaseCreateStore } from '@/stores/groupPurchase';
 import { usePetStore } from '@/stores/pet';
 
@@ -93,13 +94,29 @@ const authRoutes = [
     path: '/account/link/password',
     name: 'AccountPasswordSetup',
     component: () => import('@/views/account/AccountPasswordSetupView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true, hideBottomNav: true },
   },
   {
     path: '/account/link/password/confirm',
     name: 'AccountPasswordConfirm',
     component: () => import('@/views/account/AccountPasswordConfirmView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true, hideBottomNav: true },
+  },
+  {
+    path: '/account/link/password/complete',
+    name: 'PasswordSetupComplete',
+    component: () => import('@/views/account/PasswordSetupComplete.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout', hideHeader: true },
+    beforeEnter: () => {
+      // 확인(confirm) API가 실제로 성공했을 때만 세팅되는 플래그 — 없으면 완료 화면에
+      // 직접 진입한 것이므로(예: URL 직접 접근, 뒤로가기 후 재접근) 계좌 관리로 돌려보낸다.
+      const completionKey = 'simplePasswordSetupCompleted';
+      const isCompleted = window.sessionStorage.getItem(completionKey) === 'true';
+
+      if (!isCompleted) return { name: 'AccountManagement' };
+
+      window.sessionStorage.removeItem(completionKey);
+    },
   },
   {
     path: '/account/link/complete',
@@ -256,6 +273,18 @@ const authRoutes = [
     meta: { requiresAuth: true, layout: 'DefaultLayout', hideHeader: true },
   },
   {
+    path: '/payment/recurring/:id',
+    name: 'RecurringDetail',
+    component: () => import('@/views/payment/RecurringDetailView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
+  },
+  {
+    path: '/payment/recurring/:id/edit',
+    name: 'RecurringEdit',
+    component: () => import('@/views/payment/RecurringRegisterView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
+  },
+  {
     path: '/payment/recurring/:id/cancel',
     name: 'RecurringCancel',
     component: () => import('@/views/payment/RecurringCancelView.vue'),
@@ -323,6 +352,18 @@ const authRoutes = [
     meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
+    path: '/share/diary',
+    name: 'ShareDiary',
+    component: () => import('@/views/share/ShareDiaryView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
+  },
+  {
+    path: '/share/diary/write',
+    name: 'ShareDiaryWrite',
+    component: () => import('@/views/share/ShareDiaryWriteView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
+  },
+  {
     path: '/group-purchase',
     name: 'GroupPurchaseList',
     component: () => import('@/views/grouppurchase/GroupPurchaseListView.vue'),
@@ -339,14 +380,14 @@ const authRoutes = [
     name: 'GroupPurchaseCreateStep1',
     component: () =>
       import('@/views/grouppurchase/GroupPurchaseCreateStep1.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
+    meta: { requiresAuth: true, requiresAdmin: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/group-purchase/create/step2',
     name: 'GroupPurchaseCreateStep2',
     component: () =>
       import('@/views/grouppurchase/GroupPurchaseCreateStep2.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
+    meta: { requiresAuth: true, requiresAdmin: true, layout: 'DefaultLayout', showBack: true },
     // URL 직접 입력/새로고침으로 1단계를 건너뛰고 들어오는 것을 막음
     beforeEnter: () => {
       if (!useGroupPurchaseCreateStore().isStep1Complete) {
@@ -359,7 +400,7 @@ const authRoutes = [
     name: 'GroupPurchaseCreateStep3',
     component: () =>
       import('@/views/grouppurchase/GroupPurchaseCreateStep3.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
+    meta: { requiresAuth: true, requiresAdmin: true, layout: 'DefaultLayout', showBack: true },
     // URL 직접 입력/새로고침으로 1~2단계를 건너뛰고 들어오는 것을 막음
     beforeEnter: () => {
       const store = useGroupPurchaseCreateStore();
@@ -495,8 +536,19 @@ const authRoutes = [
     name: 'ProfileEdit',
     component: () => import('@/views/settings/ProfileEditView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
-    beforeEnter: () => {
+    beforeEnter: async () => {
       const verificationKey = 'profileEditPasswordVerified';
+      const memberStore = useMemberStore();
+      if (!memberStore.profile) {
+        try {
+          await memberStore.fetchProfile();
+        } catch {
+          return '/settings';
+        }
+      }
+
+      if (memberStore.profile?.provider === 'KAKAO') return;
+
       const isVerified = window.sessionStorage.getItem(verificationKey) === 'true';
 
       if (!isVerified) return '/settings';
@@ -546,7 +598,7 @@ const PUBLIC_ROUTE_NAMES = new Set(
   publicRoutes.filter((r) => r.name).map((r) => r.name),
 );
 
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
   // 외부 링크를 복사하면서 슬래시가 중복되어도 빈 화면 대신 정상 경로로 보낸다.
   const normalizedPath = to.path.replace(/\/{2,}/g, '/');
   if (normalizedPath !== to.path) {
@@ -561,13 +613,24 @@ router.beforeEach((to) => {
   const authStore = useAuthStore();
 
   // 로그인 화면 구현 전까지 로컬 화면 개발을 위한 인증 우회
-  if (import.meta.env.DEV) {
-    return;
-  }
-
   // Redirect unauthenticated users to login
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     return { path: '/login', query: { redirect: to.fullPath } };
+  }
+
+  if (authStore.isAuthenticated && !useMemberStore().profile) {
+    try {
+      await useMemberStore().fetchProfile();
+    } catch {
+      authStore.clearSession();
+      return { path: '/login', query: { redirect: to.fullPath } };
+    }
+  }
+
+  // 공동구매 글쓰기 등 관리자 전용 화면을 URL 직접 입력으로 우회하는 것을 막음.
+  // 버튼은 숨겨져 있어도 라우트 자체는 막혀있지 않으면 그대로 진입할 수 있기 때문
+  if (to.meta.requiresAdmin && !authStore.isAdmin) {
+    return { path: '/group-purchase' };
   }
 
   // Redirect authenticated users away from public pages (except callback)

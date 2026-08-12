@@ -29,7 +29,7 @@ function goToAccountManagement() {
     v-if="!linkedAccount"
     title="연동 정보를 찾을 수 없어요"
     description="계좌 관리 화면에서 연동 상태를 다시 확인해주세요"
-    variant="warning"
+    variant="danger"
   >
     <template #action>
       <AppButton
@@ -45,7 +45,7 @@ function goToAccountManagement() {
 
   <CompletionPageLayout
     v-else
-    :title="store.justSetSimplePassword ? '계좌 연동과 비밀번호 설정 완료' : '계좌 연동 완료'"
+    title="계좌 연동 완료"
     description="연결된 계좌를 애월 지갑에서 사용할 수 있어요"
   >
     <AccountSummaryCard
@@ -61,7 +61,7 @@ function goToAccountManagement() {
         block
         @click="goToAccountManagement"
       >
-        계좌 목록으로
+        계좌 관리로
       </AppButton>
     </template>
   </CompletionPageLayout>
