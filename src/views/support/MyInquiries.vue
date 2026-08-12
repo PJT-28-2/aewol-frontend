@@ -8,6 +8,11 @@ import IconPaw from '@/components/common/icons/IconPaw.vue';
 const router = useRouter();
 const store = useSupportStore();
 const loadError = ref('');
+// "더보기" 실패 전용 에러 — loadError를 같이 쓰면 이미 불러온 목록이
+// <ul v-if="!loadError">에 걸려 통째로 사라지고, "다시 시도"가 loadInquiries()라
+// page 0으로 리셋돼버려요. 초기 로딩 실패와 추가 로딩 실패는 복구 방법이 달라서
+// 상태를 분리해요(리뷰 지적, PR #202).
+const loadMoreError = ref('');
 
 async function loadInquiries() {
   loadError.value = '';
@@ -19,10 +24,11 @@ async function loadInquiries() {
 }
 
 async function loadMore() {
+  loadMoreError.value = '';
   try {
     await store.loadMoreInquiries();
   } catch {
-    loadError.value = '문의 내역을 더 불러오지 못했어요. 다시 시도해주세요';
+    loadMoreError.value = '문의 내역을 더 불러오지 못했어요';
   }
 }
 
@@ -138,12 +144,19 @@ function goToInquiryDetail(inquiryId) {
 
     <button
       v-if="!store.isLoading && !loadError && store.inquiriesHasNext"
-      class="w-full mb-4 rounded-(--radius-xl) border border-(--color-card-border) bg-(--color-white) py-3 text-(length:--font-sm) font-semibold text-(color:--color-gray-700) disabled:opacity-50"
+      class="w-full mb-2 rounded-(--radius-xl) border border-(--color-card-border) bg-(--color-white) py-3 text-(length:--font-sm) font-semibold text-(color:--color-gray-700) disabled:opacity-50"
       :disabled="store.isLoadingMoreInquiries"
       @click="loadMore"
     >
       {{ store.isLoadingMoreInquiries ? '불러오는 중…' : '더보기' }}
     </button>
+
+    <p
+      v-if="loadMoreError"
+      class="mb-4 text-center text-(length:--font-xs) text-(color:--color-danger-strong)"
+    >
+      {{ loadMoreError }}
+    </p>
 
     <button
       class="w-full rounded-(--radius-xl) bg-(--color-leaf) py-4 font-bold text-(color:--color-navy)"
