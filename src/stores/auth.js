@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { authApi } from '@/api/auth'
 import { useMemberStore } from '@/stores/member'
 import router from '@/router'
+import { decodeJwtPayload } from '@/utils/jwt'
 
 const unwrapResult = (data) => data.result ?? data
 
@@ -13,6 +14,10 @@ export const useAuthStore = defineStore('auth', {
 
   getters: {
     isAuthenticated: (state) => !!state.accessToken,
+    // 값은 ADMIN/USER로 확정됨. 클레임 키 이름("role")은 백엔드 JWT 스펙 확정 전 가정치라
+    // 실제 스펙이 다르면 이 부분만 맞춰서 수정하면 된다
+    role: (state) => decodeJwtPayload(state.accessToken)?.role ?? null,
+    isAdmin: (state) => decodeJwtPayload(state.accessToken)?.role === 'ADMIN',
   },
 
   actions: {

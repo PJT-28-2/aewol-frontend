@@ -380,14 +380,14 @@ const authRoutes = [
     name: 'GroupPurchaseCreateStep1',
     component: () =>
       import('@/views/grouppurchase/GroupPurchaseCreateStep1.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
+    meta: { requiresAuth: true, requiresAdmin: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/group-purchase/create/step2',
     name: 'GroupPurchaseCreateStep2',
     component: () =>
       import('@/views/grouppurchase/GroupPurchaseCreateStep2.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
+    meta: { requiresAuth: true, requiresAdmin: true, layout: 'DefaultLayout', showBack: true },
     // URL 직접 입력/새로고침으로 1단계를 건너뛰고 들어오는 것을 막음
     beforeEnter: () => {
       if (!useGroupPurchaseCreateStore().isStep1Complete) {
@@ -400,7 +400,7 @@ const authRoutes = [
     name: 'GroupPurchaseCreateStep3',
     component: () =>
       import('@/views/grouppurchase/GroupPurchaseCreateStep3.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
+    meta: { requiresAuth: true, requiresAdmin: true, layout: 'DefaultLayout', showBack: true },
     // URL 직접 입력/새로고침으로 1~2단계를 건너뛰고 들어오는 것을 막음
     beforeEnter: () => {
       const store = useGroupPurchaseCreateStore();
@@ -625,6 +625,12 @@ router.beforeEach(async (to) => {
       authStore.clearSession();
       return { path: '/login', query: { redirect: to.fullPath } };
     }
+  }
+
+  // 공동구매 글쓰기 등 관리자 전용 화면을 URL 직접 입력으로 우회하는 것을 막음.
+  // 버튼은 숨겨져 있어도 라우트 자체는 막혀있지 않으면 그대로 진입할 수 있기 때문
+  if (to.meta.requiresAdmin && !authStore.isAdmin) {
+    return { path: '/group-purchase' };
   }
 
   // Redirect authenticated users away from public pages (except callback)
