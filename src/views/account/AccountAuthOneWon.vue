@@ -359,7 +359,7 @@ async function submitVerification() {
           v-for="(digit, i) in digits"
           :key="i"
           class="pointer-events-none relative w-14 h-14 shrink-0 rounded-(--radius-lg) border-2 flex items-center justify-center text-center text-(length:--font-xl) font-bold text-(color:--color-navy)"
-          :class="digit ? 'border-(--color-navy)' : 'border-(--color-border)'"
+          :class="digit ? 'border-(--color-leaf)' : 'border-(--color-border)'"
         >
           <span
             v-if="!digit && isFocused && i === activeIndex"

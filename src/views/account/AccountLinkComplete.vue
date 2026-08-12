@@ -51,18 +51,17 @@ function goToAccountManagement() {
     <AccountSummaryCard
       :bank-code="linkedAccount.bankCode"
       :badge-size="36"
-      class="mt-(--space-6) w-full"
+      class="mt-(--space-6) w-full border border-(--color-leaf)"
     />
 
-    <template #action>
-      <AppButton
-        variant="primary"
-        size="lg"
-        block
-        @click="goToAccountManagement"
-      >
-        계좌 관리로
-      </AppButton>
-    </template>
+    <AppButton
+      variant="primary"
+      size="lg"
+      block
+      class="mt-(--space-6) !rounded-(--radius-2xl)"
+      @click="goToAccountManagement"
+    >
+      계좌 관리로
+    </AppButton>
   </CompletionPageLayout>
 </template>
