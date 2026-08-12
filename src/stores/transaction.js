@@ -38,6 +38,9 @@ function normalizeTransaction(transaction) {
   const subtitle = type === 'charge'
     ? transaction.memo || '애월지갑 충전'
     : [categoryLabel, transaction.memo].filter(Boolean).join(' · ')
+  const chargeMethod = transaction.txnType === 'DEPOSIT'
+    ? (transaction.memo?.includes('TossPayments') ? 'TossPayments' : '직접 충전')
+    : transaction.paymentMethod ?? '애월 통합 지갑'
 
   return {
     ...transaction,
@@ -51,7 +54,7 @@ function normalizeTransaction(transaction) {
     category,
     petId: transaction.petId ? String(transaction.petId) : null,
     paymentMethod: transaction.paymentMethod ?? '애월 통합 지갑',
-    chargeMethod: transaction.paymentMethod ?? '애월 통합 지갑',
+    chargeMethod,
     autoTagged: transaction.autoTagged === true || transaction.autoTagged === 'Y',
   }
 }
@@ -69,14 +72,14 @@ export const useTransactionStore = defineStore('transaction', {
   }),
 
   getters: {
-    monthWithdrawals: (state) => (year, month) =>
+    monthExpenses: (state) => (year, month) =>
       state.transactions.filter(
-        (tx) => tx.type === 'withdraw' && isSameMonth(tx.date, year, month),
+        (tx) => tx.txnType === 'PAYMENT' && isSameMonth(tx.date, year, month),
       ),
 
     monthlyExpenseTotal() {
       return (year, month) =>
-        this.monthWithdrawals(year, month).reduce(
+        this.monthExpenses(year, month).reduce(
           (sum, tx) => sum + Math.abs(tx.amount),
           0,
         )
@@ -84,18 +87,19 @@ export const useTransactionStore = defineStore('transaction', {
 
     petExpenseTotal() {
       return (petId, year, month) =>
-        this.monthWithdrawals(year, month)
+        this.monthExpenses(year, month)
           .filter((tx) => tx.petId === String(petId))
           .reduce((sum, tx) => sum + Math.abs(tx.amount), 0)
     },
 
-    // 이번 달 출금 내역을 category별로 합산 (표시 순서는 거래 발생 순서를 따름)
+    // 이번 달 소비(PAYMENT) 내역만 category별로 합산한다.
+    // 본인 계좌로 옮긴 WITHDRAW는 자금 이동이므로 지출 대시보드에서 제외한다.
     categoryBreakdown() {
       return (year, month) => {
         const breakdown = []
         const indexByKey = new Map()
 
-        this.monthWithdrawals(year, month).forEach((tx) => {
+        this.monthExpenses(year, month).forEach((tx) => {
           const amount = Math.abs(tx.amount)
           if (!indexByKey.has(tx.category)) {
             indexByKey.set(tx.category, breakdown.length)

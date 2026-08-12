@@ -204,7 +204,7 @@ function handleCharge() {
     query: { from: 'wallet' },
   });
 }
-function handleTransfer() {
+function handleWithdraw() {
   router.push('/wallet/transfer');
 }
 
@@ -226,7 +226,7 @@ onMounted(() => {
       </h1>
     </header>
 
-    <!-- 잔액 + 충전/송금 카드 -->
+    <!-- 잔액 + 충전/출금 카드 -->
     <div
       class="relative mb-(--space-4) overflow-hidden rounded-[28px] bg-(--color-navy) px-(--space-6) py-(--space-6) text-(color:--color-white) shadow-(--shadow-card)"
     >
@@ -254,9 +254,9 @@ onMounted(() => {
         <button
           type="button"
           class="rounded-(--radius-full) bg-(--color-leaf) px-(--space-5) py-[10px] text-(length:--font-sm) font-bold text-(color:--color-navy)"
-          @click="handleTransfer"
+          @click="handleWithdraw"
         >
-          송금
+          출금
         </button>
       </div>
     </div>
