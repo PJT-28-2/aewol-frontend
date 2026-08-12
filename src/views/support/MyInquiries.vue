@@ -18,6 +18,14 @@ async function loadInquiries() {
   }
 }
 
+async function loadMore() {
+  try {
+    await store.loadMoreInquiries();
+  } catch {
+    loadError.value = '문의 내역을 더 불러오지 못했어요. 다시 시도해주세요';
+  }
+}
+
 onMounted(() => {
   loadInquiries();
 });
@@ -127,6 +135,15 @@ function goToInquiryDetail(inquiryId) {
         </button>
       </li>
     </ul>
+
+    <button
+      v-if="!store.isLoading && !loadError && store.inquiriesHasNext"
+      class="w-full mb-4 rounded-(--radius-xl) border border-(--color-card-border) bg-(--color-white) py-3 text-(length:--font-sm) font-semibold text-(color:--color-gray-700) disabled:opacity-50"
+      :disabled="store.isLoadingMoreInquiries"
+      @click="loadMore"
+    >
+      {{ store.isLoadingMoreInquiries ? '불러오는 중…' : '더보기' }}
+    </button>
 
     <button
       class="w-full rounded-(--radius-xl) bg-(--color-leaf) py-4 font-bold text-(color:--color-navy)"
