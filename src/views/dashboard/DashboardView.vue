@@ -196,15 +196,14 @@ async function fetchDashboard() {
   loadError.value = false;
 
   try {
-    await Promise.all([
+    const [, categoryResult] = await Promise.allSettled([
       petStore.pets.length ? Promise.resolve() : petStore.fetchPets(),
       dashboardStore.fetchCategory({
         groupBy: 'CATEGORY',
         yearMonth: currentYearMonth,
       }),
     ]);
-  } catch {
-    loadError.value = true;
+    loadError.value = categoryResult.status === 'rejected';
   } finally {
     isLoading.value = false;
   }

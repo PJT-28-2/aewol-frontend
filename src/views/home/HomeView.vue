@@ -41,13 +41,12 @@ async function fetchHome() {
   loadError.value = false
 
   try {
-    await Promise.all([
+    const [, , summaryResult] = await Promise.allSettled([
       memberStore.profile ? Promise.resolve() : memberStore.fetchProfile(),
       petStore.pets.length ? Promise.resolve() : petStore.fetchPets(),
       dashboardStore.fetchSummary({ month: currentPeriod }),
     ])
-  } catch {
-    loadError.value = true
+    loadError.value = summaryResult.status === 'rejected'
   } finally {
     isLoading.value = false
   }
