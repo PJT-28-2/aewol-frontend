@@ -60,16 +60,12 @@ function dDayLabel(deadline) {
   return formatDDayLabel(deadline, new Date(midnightTick.value));
 }
 
-// 상태 필터 + 최신순(createdAt desc) 정렬을 함께 적용
-const filteredGroupPurchases = computed(() => {
-  const list = myGroupPurchases.value.filter(
+// 최신순 정렬은 백엔드가 ORDER BY created_at DESC로 보장해서 내려준다 (GET /group-purchase/my)
+const filteredGroupPurchases = computed(() =>
+  myGroupPurchases.value.filter(
     (gp) => selectedStatus.value === '전체' || gp.status === selectedStatus.value,
-  );
-
-  return [...list].sort(
-    (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
-  );
-});
+  ),
+);
 
 // 필터 때문에 안 보이는 것(선택한 상태만 없음)과 애초에 이력이 없는 것을 구분해서 안내
 const emptyStateMessage = computed(() =>
@@ -116,7 +112,6 @@ async function loadMyGroupPurchases() {
       currentQuantity: item.currentQuantity,
       targetQuantity: item.targetQuantity,
       deadline: item.deadline,
-      createdAt: item.createdAt,
     }));
   } catch {
     if (requestId === latestRequestId) isError.value = true;
