@@ -10,8 +10,6 @@ const normalizeProfile = (profile) => ({
 export const useMemberStore = defineStore('member', {
   state: () => ({
     profile: null,
-    // TODO(backend): AI 프로필 사진 변환 API 연동 전이라 로컬 상태로만 관리
-    petProfilePhotoUrl: null,
   }),
 
   actions: {
@@ -41,11 +39,6 @@ export const useMemberStore = defineStore('member', {
 
     clearProfile() {
       this.profile = null
-      this.petProfilePhotoUrl = null
-    },
-
-    setPetProfilePhoto(url) {
-      this.petProfilePhotoUrl = url
     },
   },
 })

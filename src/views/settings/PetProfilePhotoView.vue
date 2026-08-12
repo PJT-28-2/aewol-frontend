@@ -6,13 +6,11 @@ import AewolLogo from '@/components/common/AewolLogo.vue'
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 import IconImage from '@/components/common/icons/IconImage.vue'
 import IconPaw from '@/components/common/icons/IconPaw.vue'
-import { useMemberStore } from '@/stores/member'
 import { usePetStore } from '@/stores/pet'
 import { petApi } from '@/api/pet'
 
 const router = useRouter()
 const route = useRoute()
-const memberStore = useMemberStore()
 const petStore = usePetStore()
 const isEditMode = computed(() => route.query.mode === 'edit')
 const nextPath = computed(() => route.query.next || (isEditMode.value ? '/settings' : '/home'))
@@ -135,8 +133,15 @@ function handleReset() {
   step.value = 1
 }
 
-function handleApply() {
-  memberStore.setPetProfilePhoto(resultUrl.value)
+/**
+ * 생성 시점에 서버가 이미 pet.profile_img / character_img 를 갱신한다. 따로 저장할
+ * 것이 없으므로 펫 목록만 다시 받아 홈·마이페이지가 새 이미지를 쓰게 한다.
+ *
+ * <p>응답의 서명 URL을 그대로 들고 있지 않는 이유는 만료되기 때문이다. 조회 때마다
+ * 서버가 새 서명을 붙여주므로 저장하지 말고 매번 받은 값을 써야 한다.
+ */
+async function handleApply() {
+  await petStore.fetchPets().catch(() => {})
   router.replace(nextPath.value)
 }
 
