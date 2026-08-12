@@ -8,6 +8,7 @@ import PasswordInput from '@/components/common/PasswordInput.vue'
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 import IconCheck from '@/components/common/icons/IconCheck.vue'
 import { formatPhoneNumber } from '@/utils/phone'
+import { isValidPassword } from '@/utils/password'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -41,22 +42,7 @@ const isAllAgreed = computed(
   () => agreements.terms && agreements.privacy && agreements.marketing,
 )
 
-const isPasswordValid = computed(() => {
-  const value = form.password
-  if (!/^[\x21-\x7E]+$/.test(value)) return false
-
-  const categoryCount = [
-    /[A-Za-z]/.test(value),
-    /\d/.test(value),
-    /[!-/:-@[-`{-~]/.test(value),
-  ].filter(Boolean).length
-
-  return (
-    value.length <= 20 &&
-    ((categoryCount >= 3 && value.length >= 8) ||
-      (categoryCount >= 2 && value.length >= 10))
-  )
-})
+const isPasswordValid = computed(() => isValidPassword(form.password))
 
 const isPasswordConfirmed = computed(
   () => form.passwordConfirm === form.password,

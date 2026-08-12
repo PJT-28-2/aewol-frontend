@@ -7,6 +7,7 @@ import AddressSearchLayer from '@/components/common/AddressSearchLayer.vue'
 import AppButton from '@/components/common/AppButton.vue'
 import PasswordInput from '@/components/common/PasswordInput.vue'
 import { formatPhoneNumber } from '@/utils/phone'
+import { isValidPassword } from '@/utils/password'
 
 const memberStore = useMemberStore()
 const authStore = useAuthStore()
@@ -33,22 +34,7 @@ const isSaveSuccessVisible = ref(false)
 const isLocalProvider = computed(() => memberStore.profile?.provider === 'LOCAL')
 let saveSuccessTimer = null
 
-const isNewPasswordValid = computed(() => {
-  const value = form.newPassword
-  if (!/^[\x21-\x7E]+$/.test(value)) return false
-
-  const categoryCount = [
-    /[A-Za-z]/.test(value),
-    /\d/.test(value),
-    /[!-/:-@[-`{-~]/.test(value),
-  ].filter(Boolean).length
-
-  return (
-    value.length <= 20 &&
-    ((categoryCount >= 3 && value.length >= 8) ||
-      (categoryCount >= 2 && value.length >= 10))
-  )
-})
+const isNewPasswordValid = computed(() => isValidPassword(form.newPassword))
 
 const handlePhoneInput = (event) => {
   form.phone = formatPhoneNumber(event.target.value)

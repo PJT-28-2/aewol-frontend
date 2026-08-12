@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { authApi } from '@/api/auth'
 import { formatCountdown } from '@/utils/date'
+import { isValidPassword } from '@/utils/password'
 import PasswordInput from '@/components/common/PasswordInput.vue'
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 import StatusVisual from '@/components/common/StatusVisual.vue'
@@ -63,29 +64,6 @@ const startTimer = (expiresInSeconds) => {
  */
 const isValidEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
 
-/**
- * 새 비밀번호가 최소 길이와 문자 조합 규칙을 충족하는지 확인한다.
- * 문자 종류가 많을수록 요구 길이를 줄여 보안성과 입력 편의의 균형을 맞춘다.
- *
- * @param {string} value 검사할 비밀번호
- * @returns {boolean} 2종류 조합 10자 이상 또는 3종류 조합 8자 이상 충족 여부
- */
-const isValidPassword = (value) => {
-  if (!/^[\x21-\x7E]+$/.test(value)) return false
-
-  const categoryCount = [
-    /[A-Za-z]/.test(value),
-    /\d/.test(value),
-    /[!-/:-@[-`{-~]/.test(value),
-  ].filter(Boolean).length
-
-  return (
-    value.length <= 20 &&
-    ((categoryCount >= 3 && value.length >= 8) ||
-      (categoryCount >= 2 && value.length >= 10))
-  )
-}
-
 const isNewPasswordValid = computed(() =>
   isValidPassword(newPassword.value),
 )
@@ -114,7 +92,11 @@ const handleRequestCode = async () => {
     // 인증번호 발송 API 요청
     // =========================
     const { data } = await authApi.resetPasswordRequest(email.value)
-    const expiresInSeconds = data.result.expiresInSeconds
+    const expiresInSeconds = data?.result?.expiresInSeconds
+    if (typeof expiresInSeconds !== 'number' || !Number.isFinite(expiresInSeconds) || expiresInSeconds <= 0) {
+      emailMessage.value = { type: 'error', text: '인증번호 전송 결과를 확인할 수 없습니다' }
+      return
+    }
 
     // =========================
     // 화면 상태 업데이트
@@ -170,7 +152,12 @@ const handleVerifyCode = async () => {
     // 인증번호 검증 API 요청
     // =========================
     const { data } = await authApi.resetPasswordVerify(email.value, verificationCode.value)
-    resetToken.value = data.result.resetToken
+    const verifiedResetToken = data?.result?.resetToken
+    if (typeof verifiedResetToken !== 'string' || !verifiedResetToken.trim()) {
+      codeMessage.value = { type: 'error', text: '인증 결과를 확인할 수 없습니다. 다시 시도해주세요.' }
+      return
+    }
+    resetToken.value = verifiedResetToken
 
     // =========================
     // 화면 상태 업데이트
