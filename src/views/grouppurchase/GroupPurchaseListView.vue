@@ -146,7 +146,7 @@ function selectCategory(category) {
 }
 
 // 상태 드롭다운 필터: 미선택 시 "상태"로 표시(전체 노출)
-const statusOptions = ['전체', '진행중', '마감(성공)', '마감(미달)'];
+const statusOptions = ['전체', '진행중', '마감(성공)', '마감(미달)', '마감(취소)'];
 const selectedStatus = ref('');
 const isStatusOpen = ref(false);
 

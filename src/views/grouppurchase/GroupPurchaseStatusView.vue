@@ -72,8 +72,10 @@ const isFromMyPage = computed(() => route.query.from === 'my');
 const backTarget = computed(() => (isFromMyPage.value ? '/group-purchase/my' : '/group-purchase'));
 const backLabel = computed(() => (isFromMyPage.value ? '마이페이지로 돌아가기' : '리스트로 돌아가기'));
 
+// replace를 써서 히스토리에 status를 남기지 않는다 — push로 쌓으면 목록/마이페이지에서
+// 브라우저 뒤로가기를 눌렀을 때 이 status 화면으로 되돌아와버린다
 function goBack() {
-  router.push(backTarget.value);
+  router.replace(backTarget.value);
 }
 
 const STATUS_TITLE = {
@@ -179,7 +181,7 @@ async function handleCancelConfirm() {
 
 function confirmCancelSuccess() {
   isCancelSuccessSheetOpen.value = false;
-  router.push(backTarget.value);
+  router.replace(backTarget.value);
 }
 </script>
 
