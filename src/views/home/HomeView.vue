@@ -4,9 +4,14 @@ import AewolLogo from '@/components/common/AewolLogo.vue'
 import AppButton from '@/components/common/AppButton.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import IconNotificationBell from '@/components/common/icons/IconNotificationBell.vue'
+import IconPublicSupport from '@/components/common/icons/IconPublicSupport.vue'
+import IconWallet from '@/components/common/icons/IconWallet.vue'
+import IconPaw from '@/components/common/icons/IconPaw.vue'
+import IconSavings from '@/components/common/icons/IconSavings.vue'
 import { useDashboardStore } from '@/stores/dashboard'
 import { useMemberStore } from '@/stores/member'
 import { usePetStore } from '@/stores/pet'
+import { getHomeInsights } from '@/api/insight'
 import dogHero from '@/assets/images/pet-poodle-home-mascot-v2.png'
 import catHero from '@/assets/images/pet-siamese-home-mascot-v2.png'
 
@@ -15,6 +20,7 @@ const petStore = usePetStore()
 const dashboardStore = useDashboardStore()
 const isLoading = ref(true)
 const loadError = ref(false)
+const insights = ref([])
 const today = new Date()
 const currentPeriod = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`
 
@@ -49,6 +55,32 @@ async function fetchHome() {
     loadError.value = summaryResult.status === 'rejected'
   } finally {
     isLoading.value = false
+  }
+
+  // 카드는 홈의 부가 정보다. 위쪽(잔액·지출)을 먼저 그린 뒤 따로 불러와서
+  // 실패하거나 느려도 홈 전체가 기다리지 않게 한다.
+  fetchInsights()
+}
+
+// 카드 종류는 서버가 정한다. 모르는 종류가 와도 아이콘 없이 뜨지 않도록 기본값을 둔다.
+const INSIGHT_ICONS = {
+  SUPPORT: IconPublicSupport,
+  SPENDING: IconWallet,
+  CARE: IconPaw,
+  DONATION: IconSavings,
+}
+
+function insightIcon(type) {
+  return INSIGHT_ICONS[type] ?? IconPaw
+}
+
+async function fetchInsights() {
+  try {
+    const { data } = await getHomeInsights(primaryPet.value?.id)
+    insights.value = data.result ?? []
+  } catch {
+    // 카드가 없으면 그 영역만 비어 보인다. 홈은 그대로 동작한다.
+    insights.value = []
   }
 }
 
@@ -166,6 +198,32 @@ onMounted(fetchHome)
           <p class="mt-(--space-2) text-(length:--font-xl) font-bold text-(color:--color-navy)">
             {{ monthlyExpense.toLocaleString('ko-KR') }}원을 사용했어요
           </p>
+        </div>
+      </router-link>
+
+      <router-link
+        v-for="card in insights"
+        :key="card.type"
+        :to="card.ctaPath"
+        class="mt-(--space-3) block rounded-[22px] border border-(--color-leaf) bg-(--color-white) p-(--space-5) text-inherit no-underline"
+      >
+        <div class="flex items-start gap-(--space-3)">
+          <span class="mt-[2px] flex size-[26px] shrink-0 items-center justify-center rounded-(--radius-md) bg-(--color-leaf) text-(color:--color-navy)">
+            <component
+              :is="insightIcon(card.type)"
+              size="15"
+            />
+          </span>
+          <p class="min-w-0 flex-1 text-(length:--font-sm) font-bold text-(color:--color-navy)">
+            {{ card.headline }}
+          </p>
+        </div>
+        <p class="mt-(--space-3) text-(length:--font-sm) leading-[1.6] break-keep text-(color:--color-slate-dark)">
+          {{ card.body }}
+        </p>
+        <div class="mt-(--space-3) flex items-center justify-between border-t border-(--color-leaf-soft) pt-(--space-3)">
+          <span class="text-(length:--font-xs) font-bold text-(color:--color-leaf-dark)">AI 요약</span>
+          <span class="text-(length:--font-xs) font-bold text-(color:--color-leaf-dark)">{{ card.ctaLabel }} →</span>
         </div>
       </router-link>
     </template>
