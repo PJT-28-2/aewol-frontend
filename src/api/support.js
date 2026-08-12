@@ -33,12 +33,12 @@ export function submitInquiry(formData) {
 }
 
 /**
- * 문의 목록 조회
- * GET /api/support/inquiries
- * result: [{ inquiryId, title, status, createdAt }]
+ * 문의 목록 조회 — page는 0부터 시작(백엔드 InquiryController 기준), 한 페이지 10개 고정.
+ * GET /api/support/inquiries?page={page}
+ * result: { inquiries: [{ inquiryId, title, status, createdAt }], hasNext }
  */
-export function getMyInquiries() {
-  return api.get('/support/inquiries');
+export function getMyInquiries(page = 0) {
+  return api.get('/support/inquiries', { params: { page } });
 }
 
 /**

@@ -18,6 +18,11 @@ export const useSupportStore = defineStore('support', {
     // myInquiries.length로 판단하면, 문의를 하나 제출한 뒤(길이가 0이 아니게 됨)
     // 다음 조회에서 시드 데이터가 영영 안 채워지는 버그가 있어서 별도 플래그로 관리해요.
     myInquiriesSeeded: false,
+    // 백엔드가 한 번에 10개씩(page 0부터) 내려줘서, 11번째 이후 문의를 보려면
+    // page/hasNext를 직접 관리하고 "더보기"로 다음 페이지를 이어붙여야 해요.
+    inquiriesPage: 0,
+    inquiriesHasNext: false,
+    isLoadingMoreInquiries: false,
     lastSubmittedInquiry: null,
     isLoading: false,
     error: null,
@@ -130,25 +135,50 @@ export const useSupportStore = defineStore('support', {
     },
 
     // GET /api/support/inquiries — API 연동 전엔 USE_MOCK_DATA로 바로 목데이터 사용
+    // 화면 진입/새로고침 시 첫 페이지(0)부터 다시 불러와요 — 이어서 더 보려면
+    // loadMoreInquiries()를 따로 호출하세요.
     async fetchMyInquiries() {
       if (USE_MOCK_DATA) {
         this._ensureMockInquiriesSeeded();
+        this.inquiriesHasNext = false;
         return;
       }
       this.isLoading = true;
       this.error = null;
       try {
-        const { data } = await getMyInquiries();
+        const { data } = await getMyInquiries(0);
         // ⚠️ 백엔드 응답이 배열이 아니라 { inquiries: [...], hasNext } 객체예요
         // (InquiryListResponse, api_명세서.md 예시 기준). data.result를 그대로 배열에
         // 넣으면 Vue의 v-for가 객체 속성(inquiries 배열 자체, hasNext 불리언)을 각각
         // "항목"으로 순회해버려서 카드는 개수만 맞고 제목/날짜가 전부 비는 버그가 있었음(2026-08-11).
         this.myInquiries = data.result?.inquiries ?? [];
+        this.inquiriesHasNext = data.result?.hasNext ?? false;
+        this.inquiriesPage = 0;
       } catch (err) {
         this.error = err;
         throw err;
       } finally {
         this.isLoading = false;
+      }
+    },
+
+    // "더보기" — 다음 페이지를 이어붙여요. mock 모드에선 페이지네이션을 흉내내지 않고
+    // _ensureMockInquiriesSeeded로 이미 전부 들어있으니 hasNext가 항상 false라 호출될 일이 없어요.
+    async loadMoreInquiries() {
+      if (USE_MOCK_DATA || !this.inquiriesHasNext || this.isLoadingMoreInquiries) return;
+      this.isLoadingMoreInquiries = true;
+      this.error = null;
+      try {
+        const nextPage = this.inquiriesPage + 1;
+        const { data } = await getMyInquiries(nextPage);
+        this.myInquiries = [...this.myInquiries, ...(data.result?.inquiries ?? [])];
+        this.inquiriesHasNext = data.result?.hasNext ?? false;
+        this.inquiriesPage = nextPage;
+      } catch (err) {
+        this.error = err;
+        throw err;
+      } finally {
+        this.isLoadingMoreInquiries = false;
       }
     },
 
