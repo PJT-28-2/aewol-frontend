@@ -94,13 +94,29 @@ const authRoutes = [
     path: '/account/link/password',
     name: 'AccountPasswordSetup',
     component: () => import('@/views/account/AccountPasswordSetupView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true, hideBottomNav: true },
   },
   {
     path: '/account/link/password/confirm',
     name: 'AccountPasswordConfirm',
     component: () => import('@/views/account/AccountPasswordConfirmView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true, hideBottomNav: true },
+  },
+  {
+    path: '/account/link/password/complete',
+    name: 'PasswordSetupComplete',
+    component: () => import('@/views/account/PasswordSetupComplete.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout', hideHeader: true },
+    beforeEnter: () => {
+      // 확인(confirm) API가 실제로 성공했을 때만 세팅되는 플래그 — 없으면 완료 화면에
+      // 직접 진입한 것이므로(예: URL 직접 접근, 뒤로가기 후 재접근) 계좌 관리로 돌려보낸다.
+      const completionKey = 'simplePasswordSetupCompleted';
+      const isCompleted = window.sessionStorage.getItem(completionKey) === 'true';
+
+      if (!isCompleted) return { name: 'AccountManagement' };
+
+      window.sessionStorage.removeItem(completionKey);
+    },
   },
   {
     path: '/account/link/complete',

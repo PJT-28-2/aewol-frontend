@@ -45,7 +45,7 @@ function goToAccountManagement() {
 
   <CompletionPageLayout
     v-else
-    :title="store.justSetSimplePassword ? '계좌 연동과 비밀번호 설정 완료' : '계좌 연동 완료'"
+    title="계좌 연동 완료"
     description="연결된 계좌를 애월 지갑에서 사용할 수 있어요"
   >
     <AccountSummaryCard
@@ -61,7 +61,7 @@ function goToAccountManagement() {
         block
         @click="goToAccountManagement"
       >
-        계좌 목록으로
+        계좌 관리로
       </AppButton>
     </template>
   </CompletionPageLayout>
