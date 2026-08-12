@@ -1,11 +1,11 @@
 <script setup>
+import IconBarberShop from '@/components/common/icons/IconBarberShop.vue'
 import IconDocument from '@/components/common/icons/IconDocument.vue'
 import IconDogBowl from '@/components/common/icons/IconDogBowl.vue'
 import IconHospital from '@/components/common/icons/IconHospital.vue'
 import IconPetInsurance from '@/components/common/icons/IconPetInsurance.vue'
 import IconQrCode from '@/components/common/icons/IconQrCode.vue'
 import IconRecurring from '@/components/common/icons/IconRecurring.vue'
-import IconShowerGel from '@/components/common/icons/IconShowerGel.vue'
 import IconStats from '@/components/common/icons/IconStats.vue'
 import IconWallet from '@/components/common/icons/IconWallet.vue'
 
@@ -88,7 +88,7 @@ defineProps({
               <span class="text-[10px] font-bold text-(--color-navy)">31%</span>
             </div>
             <div class="flex items-center gap-(--space-2)">
-              <span class="flex size-[29px] items-center justify-center rounded-[10px] bg-(--color-icon-pink-soft) text-(--color-icon-pink)"><IconShowerGel :size="17" /></span>
+              <span class="flex size-[29px] items-center justify-center rounded-[10px] bg-(--color-icon-pink-soft) text-(--color-icon-pink)"><IconBarberShop :size="17" /></span>
               <span class="w-[38px] text-[10px] font-semibold text-(--color-slate-dark)">미용</span>
               <span class="h-[7px] flex-1 overflow-hidden rounded-full bg-(--color-gray-200)"><span class="block h-full w-[24%] rounded-full bg-(--color-chart-lilac)" /></span>
               <span class="text-[10px] font-bold text-(--color-navy)">15%</span>

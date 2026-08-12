@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import AppButton from '@/components/common/AppButton.vue';
 import BottomSheet from '@/components/common/BottomSheet.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import TransactionList from '@/components/common/TransactionList.vue';
@@ -14,20 +15,53 @@ import IconRecurring from '@/components/common/icons/IconRecurring.vue';
 import IconSavings from '@/components/common/icons/IconSavings.vue';
 import IconCat from '@/components/common/icons/IconCat.vue';
 import IconDog from '@/components/common/icons/IconDog.vue';
-import { mockWalletBalance } from '@/mocks/transaction';
+import { useMemberStore } from '@/stores/member';
 import { usePetStore } from '@/stores/pet';
 import { useTransactionStore } from '@/stores/transaction';
+import { useWalletStore } from '@/stores/wallet';
 
 const transactionStore = useTransactionStore();
+const memberStore = useMemberStore();
 const petStore = usePetStore();
+const walletStore = useWalletStore();
 
-// TODO: 백엔드 API 연동 후 mock 데이터 제거하고 실제 fetch로 교체
-const walletBalance = ref(mockWalletBalance);
-const transactions = computed(
-  () => transactionStore.transactions,
-);
+const memberName = computed(() => memberStore.profile?.name || '회원');
+const walletBalance = computed(() => walletStore.wallet?.totalBalance ?? 0);
+const transactions = computed(() => transactionStore.recentTransactions);
 
-const isLoading = ref(true);
+const walletLoading = ref(true);
+const loadError = ref(false);
+const transactionLoading = ref(true);
+const transactionLoadError = ref(false);
+
+async function fetchWallet() {
+  walletLoading.value = true;
+  loadError.value = false;
+
+  try {
+    await walletStore.fetchWallet();
+  } catch {
+    loadError.value = true;
+  } finally {
+    walletLoading.value = false;
+  }
+}
+
+async function fetchRecentTransactions() {
+  transactionLoading.value = true;
+  transactionLoadError.value = false;
+
+  try {
+    await transactionStore.fetchRecentTransactions({
+      type: activeFilter.value.toUpperCase(),
+      limit: 20,
+    });
+  } catch {
+    transactionLoadError.value = true;
+  } finally {
+    transactionLoading.value = false;
+  }
+}
 
 // 서브 메뉴 4종
 const subMenus = [
@@ -117,6 +151,7 @@ const activeFilterLabel = computed(() =>
 function selectType(key) {
   activeFilter.value = key;
   isTypeSheetOpen.value = false;
+  fetchRecentTransactions();
 }
 
 // 반려동물 선택 바텀시트
@@ -152,7 +187,8 @@ const filteredTransactions = computed(() => {
         activeFilter.value === 'all' ||
         tx.type === activeFilter.value;
       const matchesPet =
-        !petFilter.value || tx.petId === petFilter.value;
+        petFilter.value === null ||
+        (tx.petId !== null && String(tx.petId) === String(petFilter.value));
       return matchesMonth && matchesType && matchesPet;
     })
     .sort((a, b) =>
@@ -172,8 +208,11 @@ function handleTransfer() {
   router.push('/wallet/transfer');
 }
 
-onMounted(async () => {
-  isLoading.value = false;
+onMounted(() => {
+  fetchWallet();
+  fetchRecentTransactions();
+  if (!memberStore.profile) memberStore.fetchProfile().catch(() => {});
+  if (!petStore.pets.length) petStore.fetchPets().catch(() => {});
 });
 </script>
 
@@ -194,12 +233,15 @@ onMounted(async () => {
       <p
         class="text-(length:--font-sm) text-(color:--color-slate-light)"
       >
-        김애월님
+        {{ memberName }}님의 애월지갑
       </p>
       <p
         class="relative z-1 mt-(--space-2) text-[30px] font-bold tracking-[-0.03em] text-(color:--color-white)"
+        aria-live="polite"
       >
-        {{ walletBalance.toLocaleString() }}원
+        <span v-if="walletLoading">잔액 조회 중</span>
+        <span v-else-if="loadError">잔액 조회 실패</span>
+        <span v-else>{{ walletBalance.toLocaleString() }}원</span>
       </p>
       <div class="relative z-1 mt-(--space-2) flex justify-end gap-(--space-2)">
         <button
@@ -217,6 +259,23 @@ onMounted(async () => {
           송금
         </button>
       </div>
+    </div>
+
+    <div
+      v-if="loadError"
+      class="mb-(--space-4) flex items-center justify-between gap-(--space-3) rounded-(--radius-xl) bg-(--color-danger-soft) px-(--space-4) py-(--space-3)"
+      role="alert"
+    >
+      <p class="text-(length:--font-sm) text-(color:--color-danger-strong)">
+        지갑 잔액을 불러오지 못했어요.
+      </p>
+      <AppButton
+        variant="danger"
+        size="sm"
+        @click="fetchWallet"
+      >
+        다시 시도
+      </AppButton>
     </div>
 
     <!-- 지갑 빠른 메뉴 -->
@@ -239,7 +298,7 @@ onMounted(async () => {
     </nav>
 
     <div
-      v-if="isLoading"
+      v-if="transactionLoading"
       class="py-(--space-8)"
     >
       <LoadingSpinner />
@@ -249,8 +308,23 @@ onMounted(async () => {
       <h2 class="mb-(--space-3) px-(--space-1) text-(length:--font-lg) font-bold text-(color:--color-gray-900)">
         최근 거래
       </h2>
+      <div
+        v-if="transactionLoadError"
+        class="mb-(--space-4) flex flex-col items-center rounded-(--radius-2xl) bg-(--color-white) py-(--space-8) text-(color:--color-gray-500)"
+        role="alert"
+      >
+        <p>최근 거래를 불러오지 못했어요.</p>
+        <AppButton
+          class="mt-(--space-4)"
+          size="sm"
+          @click="fetchRecentTransactions"
+        >
+          다시 시도
+        </AppButton>
+      </div>
       <!-- 거래 리스트 카드 -->
       <div
+        v-else
         class="rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) px-(--space-4) py-(--space-4)"
       >
         <!-- 거래 필터 탭 -->
@@ -312,7 +386,10 @@ onMounted(async () => {
         </div>
 
         <!-- 거래 리스트 -->
-        <TransactionList :transactions="filteredTransactions" />
+        <TransactionList
+          :transactions="filteredTransactions"
+          :detail-query="{ from: 'wallet' }"
+        />
       </div>
     </template>
 

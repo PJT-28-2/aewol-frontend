@@ -1,6 +1,7 @@
 <script setup>
 import { computed, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 import AddressSearchLayer from '@/components/common/AddressSearchLayer.vue'
 import AppButton from '@/components/common/AppButton.vue'
 import PasswordInput from '@/components/common/PasswordInput.vue'
@@ -9,13 +10,16 @@ import IconCheck from '@/components/common/icons/IconCheck.vue'
 import { formatPhoneNumber } from '@/utils/phone'
 
 const router = useRouter()
+const authStore = useAuthStore()
 
-// 요청 body 명세 확정 전에는 개발 환경에서만 완료 화면 흐름을 검수한다.
-const isDevelopmentPreview = import.meta.env.DEV
 const isKakaoSignup = ref(false)
 const isLoading = ref(false)
+const isSendingCode = ref(false)
+const isVerifyingCode = ref(false)
+const isEmailVerified = ref(false)
 const isAddressSearchOpen = ref(false)
 const errorMessage = ref('')
+const verificationErrorMessage = ref('')
 const form = reactive({
   name: '',
   phone: '',
@@ -37,21 +41,9 @@ const isAllAgreed = computed(
   () => agreements.terms && agreements.privacy && agreements.marketing,
 )
 
-const passwordCategoryCount = computed(() => {
-  const categories = [
-    /[A-Za-z]/.test(form.password),
-    /\d/.test(form.password),
-    /[^A-Za-z0-9]/.test(form.password),
-  ]
-
-  return categories.filter(Boolean).length
-})
-
 const isPasswordValid = computed(() => {
   const length = form.password.length
-  const categoryCount = passwordCategoryCount.value
-
-  return (categoryCount >= 2 && length >= 10) || (categoryCount >= 3 && length >= 8)
+  return length >= 8 && length <= 20
 })
 
 const isPasswordConfirmed = computed(
@@ -67,20 +59,71 @@ const isAddressComplete = computed(
 const isSignupDisabled = computed(
   () =>
     isLoading.value ||
+    !isEmailVerified.value ||
+    !agreements.terms ||
+    !agreements.privacy ||
     !isAddressComplete.value ||
     (!isKakaoSignup.value &&
       (!isPasswordValid.value || !isPasswordConfirmed.value)),
 )
 
 const handleKakaoSignup = () => {
-  isKakaoSignup.value = true
-  form.name = '홍길동'
-  form.phone = '010-1234-5678'
-  form.email = 'kakao@example.com'
+  router.push('/login')
+}
+
+const handleEmailInput = () => {
+  isEmailVerified.value = false
   form.verificationCode = ''
-  form.password = ''
-  form.passwordConfirm = ''
   errorMessage.value = ''
+  verificationErrorMessage.value = ''
+}
+
+const sendVerificationCode = async () => {
+  errorMessage.value = ''
+  verificationErrorMessage.value = ''
+  isEmailVerified.value = false
+  form.verificationCode = ''
+  const requestedEmail = form.email.trim()
+  if (!requestedEmail) return
+  isSendingCode.value = true
+  try {
+    await authStore.sendSignupCode(requestedEmail)
+  } catch (error) {
+    if (requestedEmail === form.email.trim()) {
+      errorMessage.value = error.response?.data?.message ?? '인증번호 발송에 실패했습니다.'
+    }
+  } finally {
+    isSendingCode.value = false
+  }
+}
+
+const verifyCode = async () => {
+  errorMessage.value = ''
+  verificationErrorMessage.value = ''
+  if (!/^\d{6}$/.test(form.verificationCode)) return
+  const requestedEmail = form.email.trim()
+  const requestedCode = form.verificationCode
+  isVerifyingCode.value = true
+  try {
+    await authStore.verifySignupCode(requestedEmail, requestedCode)
+    if (
+      requestedEmail === form.email.trim() &&
+      requestedCode === form.verificationCode
+    ) {
+      isEmailVerified.value = true
+    }
+  } catch (error) {
+    if (
+      requestedEmail === form.email.trim() &&
+      requestedCode === form.verificationCode
+    ) {
+      isEmailVerified.value = false
+      verificationErrorMessage.value =
+        error.response?.data?.message ?? '인증번호를 확인해주세요.'
+    }
+  } finally {
+    isVerifyingCode.value = false
+  }
 }
 
 const handlePhoneInput = (event) => {
@@ -104,7 +147,7 @@ const handleSignup = async () => {
 
   if (!isKakaoSignup.value && !isPasswordValid.value) {
     errorMessage.value =
-      '영문·숫자·특수문자 중 2가지 조합은 10자리 이상, 3가지 조합은 8자리 이상 입력해 주세요.'
+      '비밀번호는 8자 이상 20자 이하로 입력해 주세요.'
     return
   }
 
@@ -118,12 +161,37 @@ const handleSignup = async () => {
     return
   }
 
-  if (!isDevelopmentPreview) {
-    errorMessage.value = '회원가입 API 연동이 필요합니다.'
+  if (!isEmailVerified.value) {
+    errorMessage.value = '이메일 인증을 완료해주세요.'
     return
   }
 
-  await router.push('/signup/complete')
+  if (!agreements.terms || !agreements.privacy) {
+    errorMessage.value = '필수 약관에 동의해주세요.'
+    return
+  }
+
+  isLoading.value = true
+  try {
+    await authStore.signup({
+      email: form.email.trim(),
+      verificationCode: form.verificationCode,
+      password: form.password,
+      name: form.name.trim(),
+      phone: form.phone.replace(/\D/g, ''),
+      zipCode: form.zipCode.trim(),
+      address: form.address.trim(),
+      addressDetail: form.addressDetail.trim(),
+      terms: agreements.terms,
+      privacy: agreements.privacy,
+      marketing: agreements.marketing,
+    })
+    await router.push('/signup/complete')
+  } catch (error) {
+    errorMessage.value = error.response?.data?.message ?? '회원가입에 실패했습니다.'
+  } finally {
+    isLoading.value = false
+  }
 }
 </script>
 
@@ -240,13 +308,16 @@ const handleSignup = async () => {
           placeholder="name@aewol.com"
           :readonly="isKakaoSignup"
           required
+          @input="handleEmailInput"
         >
         <button
           v-if="!isKakaoSignup"
           class="h-(--control-height-md) w-20 shrink-0 rounded-(--radius-lg) bg-(--color-leaf) text-[12.5px] font-(--font-bold) text-(color:--color-navy)"
           type="button"
+          :disabled="isSendingCode || !form.email.trim()"
+          @click="sendVerificationCode"
         >
-          인증하기
+          {{ isSendingCode ? '발송 중' : '인증하기' }}
         </button>
       </div>
 
@@ -257,16 +328,41 @@ const handleSignup = async () => {
         >
           인증번호
         </label>
-        <input
-          id="signup-code"
-          v-model="form.verificationCode"
-          class="h-(--control-height-md) rounded-(--radius-lg) border border-(--color-border) bg-(--color-white) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-leaf)"
-          type="text"
-          inputmode="numeric"
-          maxlength="6"
-          placeholder="6자리 숫자 입력"
-          required
+        <div class="flex gap-(--space-2)">
+          <input
+            id="signup-code"
+            v-model="form.verificationCode"
+            class="h-(--control-height-md) min-w-0 flex-1 rounded-(--radius-lg) border border-(--color-border) bg-(--color-white) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-leaf)"
+            type="text"
+            inputmode="numeric"
+            maxlength="6"
+            placeholder="6자리 숫자 입력"
+            required
+            @input="isEmailVerified = false; verificationErrorMessage = ''"
+          >
+          <button
+            class="h-(--control-height-md) w-20 shrink-0 rounded-(--radius-lg) bg-(--color-leaf) text-[12.5px] font-(--font-bold) text-(color:--color-navy) disabled:opacity-50"
+            type="button"
+            :disabled="isVerifyingCode || !/^\d{6}$/.test(form.verificationCode)"
+            @click="verifyCode"
+          >
+            {{ isEmailVerified ? '완료' : isVerifyingCode ? '확인 중' : '확인' }}
+          </button>
+        </div>
+        <p
+          v-if="isEmailVerified"
+          class="mt-1 text-[11px] text-(color:--color-olive)"
+          role="status"
         >
+          이메일 인증이 완료되었습니다.
+        </p>
+        <p
+          v-else-if="verificationErrorMessage"
+          class="mt-1 text-[11px] text-(color:--color-danger-strong)"
+          role="alert"
+        >
+          {{ verificationErrorMessage }}
+        </p>
 
         <label
           class="mt-[11px] mb-1 text-[12.5px] font-(--font-bold) text-(color:--color-slate-dark)"

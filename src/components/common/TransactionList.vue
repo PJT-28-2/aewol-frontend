@@ -4,6 +4,10 @@ defineProps({
     type: Array,
     required: true,
   },
+  detailQuery: {
+    type: Object,
+    default: () => ({}),
+  },
   emptyText: {
     type: String,
     default: '거래 내역이 없습니다',
@@ -34,7 +38,7 @@ function formatAmount(amount) {
         {{ formatDate(tx.date) }}
       </p>
       <router-link
-        :to="`/wallet/history/${tx.id}`"
+        :to="{ path: `/wallet/history/${tx.id}`, query: detailQuery }"
         class="flex items-center justify-between py-(--space-3) no-underline"
       >
         <div>

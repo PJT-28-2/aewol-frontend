@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { authApi } from '@/api/auth'
+import { useMemberStore } from '@/stores/member'
 import router from '@/router'
 
 const unwrapResult = (data) => data.result ?? data
@@ -20,16 +21,24 @@ export const useAuthStore = defineStore('auth', {
       this.user = null
       localStorage.removeItem('accessToken')
       localStorage.removeItem('refreshToken')
+      window.sessionStorage.removeItem('profileEditPasswordVerified')
+      window.sessionStorage.removeItem('kakaoOAuthState')
+      useMemberStore().clearProfile()
     },
 
     async login(email, password) {
       const { data } = await authApi.login(email, password)
       const result = unwrapResult(data)
       this.accessToken = result.accessToken
-      this.user = result.user ?? null
       localStorage.setItem('accessToken', result.accessToken)
       if (result.refreshToken) {
         localStorage.setItem('refreshToken', result.refreshToken)
+      }
+      try {
+        this.user = await useMemberStore().fetchProfile()
+      } catch (error) {
+        this.clearSession()
+        throw error
       }
       return result
     },
@@ -38,10 +47,15 @@ export const useAuthStore = defineStore('auth', {
       const { data } = await authApi.kakaoLogin(code)
       const result = unwrapResult(data)
       this.accessToken = result.accessToken
-      this.user = result.user ?? null
       localStorage.setItem('accessToken', result.accessToken)
       if (result.refreshToken) {
         localStorage.setItem('refreshToken', result.refreshToken)
+      }
+      try {
+        this.user = await useMemberStore().fetchProfile()
+      } catch (error) {
+        this.clearSession()
+        throw error
       }
       return result
     },
@@ -51,8 +65,13 @@ export const useAuthStore = defineStore('auth', {
       return data
     },
 
-    async verifyEmail(email, code) {
-      const { data } = await authApi.verifyEmail(email, code)
+    async sendSignupCode(email) {
+      const { data } = await authApi.sendSignupCode(email)
+      return data
+    },
+
+    async verifySignupCode(email, verificationCode) {
+      const { data } = await authApi.verifySignupCode(email, verificationCode)
       return data
     },
 
@@ -70,15 +89,13 @@ export const useAuthStore = defineStore('auth', {
       return result
     },
 
-    logout() {
-      authApi.logout().catch(() => {})
-      this.clearSession()
-      router.push('/login')
-    },
-
-    async withdraw() {
-      await authApi.withdraw()
-      this.clearSession()
+    async logout() {
+      try {
+        await authApi.logout()
+      } finally {
+        this.clearSession()
+        await router.push('/login')
+      }
     },
   },
 })
