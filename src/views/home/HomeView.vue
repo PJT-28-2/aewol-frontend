@@ -1,20 +1,20 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import AewolLogo from '@/components/common/AewolLogo.vue'
+import AppButton from '@/components/common/AppButton.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import IconNotificationBell from '@/components/common/icons/IconNotificationBell.vue'
+import { useDashboardStore } from '@/stores/dashboard'
 import { useMemberStore } from '@/stores/member'
 import { usePetStore } from '@/stores/pet'
-import { useTransactionStore } from '@/stores/transaction'
-import { useWalletStore } from '@/stores/wallet'
 import dogHero from '@/assets/images/pet-poodle-home-mascot-v2.png'
 import catHero from '@/assets/images/pet-siamese-home-mascot-v2.png'
 
 const memberStore = useMemberStore()
 const petStore = usePetStore()
-const transactionStore = useTransactionStore()
-const walletStore = useWalletStore()
+const dashboardStore = useDashboardStore()
 const isLoading = ref(true)
+const loadError = ref(false)
 const today = new Date()
 const currentPeriod = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`
 
@@ -27,23 +27,32 @@ const petName = computed(() => primaryPet.value?.name || '포리')
 const memberName = computed(() => memberStore.profile?.name || '회원')
 const heroImage = computed(() => primaryPet.value?.species === 'CAT' ? catHero : dogHero)
 const formattedBalance = computed(() =>
-  Number(walletStore.wallet?.totalBalance ?? 0).toLocaleString('ko-KR'),
+  Number(dashboardStore.summary?.walletBalance ?? 0).toLocaleString('ko-KR'),
 )
-const monthlyExpense = computed(() => transactionStore.monthlyExpenseTotal(today.getFullYear(), today.getMonth() + 1))
-
-onMounted(async () => {
-  await Promise.allSettled([
-    memberStore.profile ? Promise.resolve() : memberStore.fetchProfile(),
-    petStore.pets.length ? Promise.resolve() : petStore.fetchPets(),
-    walletStore.fetchWallet(),
-    transactionStore.fetchTransactions({
-      type: 'WITHDRAW',
-      period: currentPeriod,
-      size: 100,
-    }),
-  ])
-  isLoading.value = false
+const monthlyExpense = computed(() => Number(dashboardStore.summary?.monthlySpend?.totalAmount ?? 0))
+const changeRate = computed(() => Number(dashboardStore.summary?.monthlySpend?.changeRate ?? 0))
+const changeLabel = computed(() => {
+  if (changeRate.value === 0) return '전월과 동일'
+  return `전월보다 ${Math.abs(changeRate.value)}% ${changeRate.value > 0 ? '↑' : '↓'}`
 })
+
+async function fetchHome() {
+  isLoading.value = true
+  loadError.value = false
+
+  try {
+    const [, , summaryResult] = await Promise.allSettled([
+      memberStore.profile ? Promise.resolve() : memberStore.fetchProfile(),
+      petStore.pets.length ? Promise.resolve() : petStore.fetchPets(),
+      dashboardStore.fetchSummary({ month: currentPeriod }),
+    ])
+    loadError.value = summaryResult.status === 'rejected'
+  } finally {
+    isLoading.value = false
+  }
+}
+
+onMounted(fetchHome)
 </script>
 
 <template>
@@ -52,6 +61,22 @@ onMounted(async () => {
       v-if="isLoading"
       class="py-(--space-10)"
     />
+
+    <section
+      v-else-if="loadError"
+      class="flex flex-col items-center gap-(--space-4) py-(--space-10) text-center"
+    >
+      <p class="text-(length:--font-sm) text-(color:--color-slate-muted)">
+        홈 정보를 불러오지 못했어요.
+      </p>
+      <AppButton
+        variant="secondary"
+        size="sm"
+        @click="fetchHome"
+      >
+        다시 시도
+      </AppButton>
+    </section>
 
     <template v-else>
       <header>
@@ -134,9 +159,9 @@ onMounted(async () => {
         <div class="min-w-0 flex-1">
           <div class="flex items-center justify-between gap-(--space-2)">
             <p class="text-(length:--font-xs) font-medium text-(color:--color-slate-muted)">
-              이번 달 {{ petName }}에게
+              이번 달 총지출
             </p>
-            <span class="shrink-0 rounded-full bg-(--color-leaf-soft) px-(--space-3) py-(--space-2) text-(length:--font-xs) font-bold text-(color:--color-leaf-dark)">전월보다 12% ↓</span>
+            <span class="shrink-0 rounded-full bg-(--color-leaf-soft) px-(--space-3) py-(--space-2) text-(length:--font-xs) font-bold text-(color:--color-leaf-dark)">{{ changeLabel }}</span>
           </div>
           <p class="mt-(--space-2) text-(length:--font-xl) font-bold text-(color:--color-navy)">
             {{ monthlyExpense.toLocaleString('ko-KR') }}원을 사용했어요

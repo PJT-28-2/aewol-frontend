@@ -9,15 +9,25 @@ export const useDashboardStore = defineStore('dashboard', {
 
   actions: {
     async fetchSummary(params) {
-      const { data } = await dashboardApi.getSummary(params)
-      this.summary = data
-      return data
+      try {
+        const { data } = await dashboardApi.getSummary(params)
+        this.summary = data.result ?? data
+        return this.summary
+      } catch (error) {
+        this.summary = null
+        throw error
+      }
     },
 
     async fetchCategory(params) {
-      const { data } = await dashboardApi.getCategory(params)
-      this.category = data
-      return data
+      try {
+        const { data } = await dashboardApi.getCategory(params)
+        this.category = data.result ?? data
+        return this.category
+      } catch (error) {
+        this.category = null
+        throw error
+      }
     },
   },
 })

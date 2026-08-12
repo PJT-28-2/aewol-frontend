@@ -9,7 +9,7 @@ export const dashboardApi = {
   },
 
   // 카테고리별 지출
-  // params: { petId?: string }
+  // params: { groupBy?: 'CATEGORY' | 'PET', yearMonth?: 'yyyy-MM' }
   getCategory(params) {
     return api.get('/dashboard/category', { params })
   },
