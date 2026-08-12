@@ -34,8 +34,20 @@ const isLocalProvider = computed(() => memberStore.profile?.provider === 'LOCAL'
 let saveSuccessTimer = null
 
 const isNewPasswordValid = computed(() => {
-  const length = form.newPassword.length
-  return length >= 8 && length <= 20
+  const value = form.newPassword
+  if (!/^[\x21-\x7E]+$/.test(value)) return false
+
+  const categoryCount = [
+    /[A-Za-z]/.test(value),
+    /\d/.test(value),
+    /[!-/:-@[-`{-~]/.test(value),
+  ].filter(Boolean).length
+
+  return (
+    value.length <= 20 &&
+    ((categoryCount >= 3 && value.length >= 8) ||
+      (categoryCount >= 2 && value.length >= 10))
+  )
 })
 
 const handlePhoneInput = (event) => {
@@ -355,7 +367,8 @@ onBeforeUnmount(() => window.clearTimeout(saveSuccessTimer))
         v-model="form.newPassword"
         input-class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-white) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-leaf) disabled:cursor-not-allowed disabled:opacity-50"
         autocomplete="new-password"
-        placeholder="8자 이상 20자 이하"
+        placeholder="2가지 조합 10~20자 / 3가지 조합 8~20자"
+        maxlength="20"
         :disabled="!isCurrentPasswordVerified"
       />
       <p
@@ -363,7 +376,7 @@ onBeforeUnmount(() => window.clearTimeout(saveSuccessTimer))
         class="mt-1 text-[11px] text-(color:--color-danger-strong)"
         role="alert"
       >
-        비밀번호는 8자 이상 20자 이하로 입력해주세요.
+        영문, 숫자, 특수문자만 사용해 2가지 조합은 10~20자, 3가지 조합은 8~20자로 입력해주세요.
       </p>
       <p
         v-else-if="form.newPassword && isNewPasswordValid"
@@ -384,6 +397,7 @@ onBeforeUnmount(() => window.clearTimeout(saveSuccessTimer))
         input-class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-white) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-leaf) disabled:cursor-not-allowed disabled:opacity-50"
         autocomplete="new-password"
         placeholder="비밀번호를 한번 더 입력해주세요"
+        maxlength="20"
         :disabled="!isCurrentPasswordVerified"
       />
       <p
