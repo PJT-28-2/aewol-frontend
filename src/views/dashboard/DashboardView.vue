@@ -2,18 +2,20 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import ExpenseDonutChart from '@/components/dashboard/ExpenseDonutChart.vue';
+import AppButton from '@/components/common/AppButton.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import IconCat from '@/components/common/icons/IconCat.vue';
 import IconDog from '@/components/common/icons/IconDog.vue';
 import IconStats from '@/components/common/icons/IconStats.vue';
+import { CATEGORY_LABELS } from '@/mocks/transaction';
+import { useDashboardStore } from '@/stores/dashboard';
 import { usePetStore } from '@/stores/pet';
-import { useTransactionStore } from '@/stores/transaction';
 
 const router = useRouter();
 const route = useRoute();
 const petStore = usePetStore();
-const transactionStore = useTransactionStore();
+const dashboardStore = useDashboardStore();
 
 const pets = computed(() => petStore.pets);
 
@@ -25,16 +27,31 @@ const CATEGORY_COLOR_TOKENS = {
   ETC: '--color-chart-lilac',
 };
 
-// 이번 달 출금 내역을 category별로 합산한 값 (useTransactionStore가 단일 소스)
-// petBreakdown이 비어있으면 반려동물이 지정 안 된 지출 → 반려동물별 탭에는 집계되지 않는다
+const UI_CATEGORY_BY_API = {
+  HOSPITAL: 'MEDICAL',
+  FOOD: 'FOOD',
+  GROOMING: 'GROOMING',
+  TOY: 'SUPPLIES',
+  ETC: 'ETC',
+};
+
 const today = new Date();
+const currentYearMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
 const categories = computed(() =>
-  transactionStore
-    .categoryBreakdown(today.getFullYear(), today.getMonth() + 1)
-    .map((entry) => ({
-      ...entry,
-      colorToken: CATEGORY_COLOR_TOKENS[entry.key],
-    })),
+  (dashboardStore.category?.items ?? []).map((entry) => {
+    const key = UI_CATEGORY_BY_API[entry.category] ?? entry.category ?? 'ETC';
+    return {
+      key,
+      label: CATEGORY_LABELS[key] ?? '기타',
+      amount: Number(entry.amount ?? 0),
+      petBreakdown: (entry.petBreakdown ?? []).map((pet) => ({
+        petId: pet.petId == null ? null : String(pet.petId),
+        petName: pet.petName,
+        amount: Number(pet.amount ?? 0),
+      })),
+      colorToken: CATEGORY_COLOR_TOKENS[key] ?? CATEGORY_COLOR_TOKENS.ETC,
+    };
+  }),
 );
 
 function categoryDetail(category) {
@@ -42,16 +59,16 @@ function categoryDetail(category) {
 
   return category.petBreakdown
     .map((entry) => {
-      const pet = pets.value.find((p) => p.id === entry.petId);
-      return pet
-        ? `${pet.name} ${entry.amount.toLocaleString()}원`
-        : '';
+      const pet = pets.value.find((p) => String(p.id) === entry.petId);
+      const petName = pet?.name ?? entry.petName;
+      return petName ? `${petName} ${entry.amount.toLocaleString()}원` : '';
     })
     .filter(Boolean)
     .join(' · ');
 }
 
 const isLoading = ref(true);
+const loadError = ref(false);
 
 // 한 마리만 등록되어 있어도 반려동물별 지출을 확인할 수 있다.
 const showPetTab = computed(() => pets.value.length > 0);
@@ -124,7 +141,7 @@ const categoryItems = computed(() =>
 function petAmount(petId) {
   return categories.value.reduce((sum, category) => {
     const entry = category.petBreakdown.find(
-      (b) => b.petId === petId,
+      (b) => b.petId === String(petId),
     );
     return sum + (entry?.amount ?? 0);
   }, 0);
@@ -151,7 +168,9 @@ const activeItems = computed(() =>
 );
 
 const totalExpense = computed(() =>
-  categories.value.reduce((sum, item) => sum + item.amount, 0),
+  isPetTabActive.value
+    ? petItems.value.reduce((sum, item) => sum + item.amount, 0)
+    : Number(dashboardStore.category?.totalAmount ?? 0),
 );
 
 function petIcon(species) {
@@ -172,9 +191,26 @@ function goToPetHistory(petId) {
   });
 }
 
-onMounted(() => {
-  isLoading.value = false;
-});
+async function fetchDashboard() {
+  isLoading.value = true;
+  loadError.value = false;
+
+  try {
+    await Promise.all([
+      petStore.pets.length ? Promise.resolve() : petStore.fetchPets(),
+      dashboardStore.fetchCategory({
+        groupBy: 'CATEGORY',
+        yearMonth: currentYearMonth,
+      }),
+    ]);
+  } catch {
+    loadError.value = true;
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+onMounted(fetchDashboard);
 </script>
 
 <template>
@@ -200,6 +236,22 @@ onMounted(() => {
     >
       <LoadingSpinner />
     </div>
+
+    <section
+      v-else-if="loadError"
+      class="flex flex-col items-center gap-(--space-4) py-(--space-8) text-center"
+    >
+      <p class="text-(length:--font-sm) text-(color:--color-slate-muted)">
+        지출 정보를 불러오지 못했어요.
+      </p>
+      <AppButton
+        variant="secondary"
+        size="sm"
+        @click="fetchDashboard"
+      >
+        다시 시도
+      </AppButton>
+    </section>
 
     <template v-else>
       <div class="flex gap-(--space-2) mb-(--space-6)">
