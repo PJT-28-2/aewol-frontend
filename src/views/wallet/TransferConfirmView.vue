@@ -1,70 +1,117 @@
 <script setup>
-import { computed, ref } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import AppButton from '@/components/common/AppButton.vue';
-import BankBadge from '@/components/common/BankBadge.vue';
-import PinAuthSheet from '@/components/common/PinAuthSheet.vue';
-import { getBankMeta } from '@/utils/bankMeta';
+import { computed, onMounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import AppButton from '@/components/common/AppButton.vue'
+import BankBadge from '@/components/common/BankBadge.vue'
+import PinAuthSheet from '@/components/common/PinAuthSheet.vue'
+import { useAccountStore } from '@/stores/account'
+import { useTransactionStore } from '@/stores/transaction'
+import { useWalletStore } from '@/stores/wallet'
+import { getBankMeta } from '@/utils/bankMeta'
 
-const route = useRoute();
-const router = useRouter();
+const route = useRoute()
+const router = useRouter()
+const accountStore = useAccountStore()
+const transactionStore = useTransactionStore()
+const walletStore = useWalletStore()
 
-const bankCode = computed(() => route.query.bankCode || '');
-const accountNumber = computed(() => route.query.accountNumber || '');
-const amount = computed(() => Number(route.query.amount) || 0);
+onMounted(async () => {
+  if (!accountStore.accounts.length) {
+    await accountStore.fetchAccounts().catch(() => {})
+  }
+})
 
-const bankMeta = computed(() => (bankCode.value ? getBankMeta(bankCode.value) : null));
-
-// TODO: 실명조회(예금주 확인) API 연동 전이라 더미 이름으로 표시
-const depositorName = '홍길동';
-
+const accountId = computed(() => String(route.query.accountId ?? ''))
+const amount = computed(() => Number(route.query.amount) || 0)
+const account = computed(() => accountStore.accounts.find(
+  (item) => String(item.accountId) === accountId.value && item.status !== 'INACTIVE',
+) ?? null)
+const bankName = computed(() =>
+  account.value?.bankName
+  ?? (account.value ? getBankMeta(account.value.bankCode).name : ''),
+)
 const isInvalid = computed(
-  () => !bankCode.value || !accountNumber.value || amount.value <= 0,
-);
+  () => !accountId.value || amount.value <= 0 || !account.value,
+)
 
-const memo = ref('');
+const memo = ref('')
+const isPinSheetOpen = ref(false)
+const pinError = ref('')
+const requestError = ref('')
+const isSubmitting = ref(false)
 
 function goToTransfer() {
-  router.replace('/wallet/transfer');
+  router.replace('/wallet/transfer')
 }
-
-// 송금 비밀번호 인증 바텀시트
-const isPinSheetOpen = ref(false);
 
 function handleSend() {
-  if (isInvalid.value) return;
-  isPinSheetOpen.value = true;
+  if (isInvalid.value || isSubmitting.value) return
+  pinError.value = ''
+  requestError.value = ''
+  isPinSheetOpen.value = true
 }
 
-// TODO: 백엔드 송금 API 연동 후 실제 이체 처리로 교체
-function handlePinComplete() {
-  router.push({
-    path: '/wallet/transfer/complete',
-    query: {
-      bankCode: bankCode.value,
-      accountNumber: accountNumber.value,
+async function handlePinComplete(password) {
+  if (isSubmitting.value) return
+  isSubmitting.value = true
+  pinError.value = ''
+  requestError.value = ''
+
+  try {
+    const verified = await walletStore.verifySimplePassword(password)
+    if (!verified) {
+      pinError.value = '간편 비밀번호가 일치하지 않아요.'
+      isPinSheetOpen.value = true
+      return
+    }
+
+    const result = await walletStore.withdraw({
+      accountId: accountId.value,
       amount: amount.value,
-      myAccountId: route.query.myAccountId,
-    },
-  });
+      memo: memo.value,
+      password,
+    })
+
+    await transactionStore.fetchRecentTransactions({ limit: 20 }).catch(() => {})
+    await router.replace({
+      path: '/wallet/transfer/complete',
+      query: {
+        transactionId: result.transactionId,
+        accountId: result.accountId,
+        bankName: result.bankName,
+        accountNumberMasked: result.accountNumberMasked,
+        amount: amount.value,
+        withdrawnAt: result.withdrawnAt,
+      },
+    })
+  } catch (error) {
+    const status = error.response?.status
+    const message = error.response?.data?.message
+    if (status === 429) {
+      requestError.value = message || '간편 비밀번호 입력이 잠겼어요. 잠시 후 다시 시도해주세요.'
+    } else if (message?.includes('비밀번호')) {
+      pinError.value = message
+      isPinSheetOpen.value = true
+    } else {
+      requestError.value = message || '출금을 완료하지 못했어요. 다시 시도해주세요.'
+    }
+  } finally {
+    isSubmitting.value = false
+  }
 }
 </script>
 
 <template>
-  <div
-    class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+96px)] bg-(--color-app-bg) min-h-screen"
-  >
+  <div class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-[calc(var(--bottom-nav-height)+96px)]">
     <header class="mb-(--space-6)">
-      <h1
-        class="text-(length:--font-2xl) font-bold text-(color:--color-navy)"
-      >
-        보내기 전에 확인해주세요
+      <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">
+        출금 전에 확인해주세요
       </h1>
     </header>
 
     <template v-if="isInvalid">
-      <p class="text-(length:--font-sm) text-(color:--color-gray-500) mb-(--space-6)">
-        송금 정보를 찾을 수 없어요. 송금하기 화면에서 다시 시도해주세요.
+      <p class="mb-(--space-6) text-(length:--font-sm) text-(color:--color-gray-500)">
+        출금 정보를 찾을 수 없어요. 애월지갑에서 다시 시도해주세요.
       </p>
       <AppButton
         variant="navy"
@@ -72,73 +119,73 @@ function handlePinComplete() {
         block
         @click="goToTransfer"
       >
-        송금하기로 이동
+        출금 화면으로 이동
       </AppButton>
     </template>
 
     <template v-else>
-      <div
-        class="flex items-center gap-(--space-3) bg-(--color-surface) rounded-(--radius-xl) p-(--space-4) mb-(--space-6)"
-      >
+      <div class="mb-(--space-6) flex items-center gap-(--space-3) rounded-(--radius-xl) bg-(--color-surface) p-(--space-4)">
         <BankBadge
-          :bank-code="bankCode"
+          :bank-code="account.bankCode"
           :size="40"
         />
         <div class="flex-1">
-          <p
-            class="text-(length:--font-md) font-semibold text-(color:--color-navy)"
-          >
-            {{ bankMeta.name }}
+          <p class="text-(length:--font-md) font-semibold text-(color:--color-navy)">
+            {{ bankName }}
           </p>
-          <p
-            class="text-(length:--font-sm) text-(color:--color-slate-muted) mt-(--space-1)"
-          >
-            {{ accountNumber }} · {{ depositorName }}
+          <p class="mt-(--space-1) text-(length:--font-sm) text-(color:--color-slate-muted)">
+            {{ account.accountNumberMasked }}<span v-if="account.isPrimary"> · 주계좌</span>
           </p>
         </div>
       </div>
 
-      <div class="flex items-center justify-between mb-(--space-4)">
-        <span class="text-(length:--font-md) text-(color:--color-slate-dark)">
-          보낼 금액
-        </span>
-        <span
-          class="text-(length:--font-xl) font-bold text-(color:--color-navy)"
-        >
+      <div class="mb-(--space-4) flex items-center justify-between">
+        <span class="text-(length:--font-md) text-(color:--color-slate-dark)">출금 금액</span>
+        <span class="text-(length:--font-xl) font-bold text-(color:--color-navy)">
           {{ amount.toLocaleString() }}원
         </span>
       </div>
 
-      <div class="border-t border-(--color-border) mb-(--space-6)" />
+      <div class="mb-(--space-6) border-t border-(--color-border)" />
 
       <section class="mb-(--space-6)">
-        <h2
-          class="text-(length:--font-md) font-semibold text-(color:--color-navy) mb-(--space-2)"
-        >
-          메모 (선택)
-        </h2>
+        <label
+          for="withdraw-memo"
+          class="mb-(--space-2) block text-(length:--font-md) font-semibold text-(color:--color-navy)"
+        >메모 (선택)</label>
         <input
+          id="withdraw-memo"
           v-model="memo"
           type="text"
+          maxlength="200"
           placeholder="메모를 남겨보세요"
-          class="w-full p-4 rounded-(--radius-xl) bg-(--color-surface) border border-(--color-border) text-(length:--font-md) text-(color:--color-navy) outline-none"
+          class="w-full rounded-(--radius-xl) border border-(--color-border) bg-(--color-surface) p-4 text-(length:--font-md) text-(color:--color-navy) outline-none"
         >
       </section>
+
+      <p
+        v-if="requestError"
+        class="mb-(--space-4) rounded-(--radius-xl) bg-(--color-danger-soft) p-(--space-3) text-(length:--font-sm) text-(color:--color-danger-strong)"
+        role="alert"
+      >
+        {{ requestError }}
+      </p>
 
       <AppButton
         variant="primary"
         size="lg"
+        :loading="isSubmitting"
         class="fixed bottom-[calc(var(--bottom-nav-height)+var(--space-7))] left-(--space-4) right-(--space-4) rounded-(--radius-xl) shadow-(--shadow-md)"
         @click="handleSend"
       >
-        {{ amount.toLocaleString() }}원 보내기
+        {{ amount.toLocaleString() }}원 출금하기
       </AppButton>
     </template>
 
-    <!-- 송금 비밀번호 인증 바텀시트 -->
     <PinAuthSheet
       v-model="isPinSheetOpen"
-      :description="`${amount.toLocaleString()}원을 안전하게 보내기 위해 확인해요`"
+      :description="`${amount.toLocaleString()}원을 안전하게 출금하기 위해 확인해요`"
+      :error="pinError"
       @complete="handlePinComplete"
     />
   </div>

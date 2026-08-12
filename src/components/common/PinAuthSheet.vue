@@ -1,7 +1,7 @@
 <script setup>
 import { ref, watch } from 'vue'
 import BottomSheet from './BottomSheet.vue'
-import IconDelete from './icons/IconDelete.vue'
+import IconBackspace from './icons/IconBackspace.vue'
 
 const props = defineProps({
   modelValue: {
@@ -13,6 +13,10 @@ const props = defineProps({
     default: '비밀번호를 입력해주세요',
   },
   description: {
+    type: String,
+    default: '',
+  },
+  error: {
     type: String,
     default: '',
   },
@@ -64,6 +68,13 @@ function handleBackspace() {
       >
         {{ description }}
       </p>
+      <p
+        v-if="error"
+        class="text-(length:--font-sm) text-(color:--color-danger-strong) mt-(--space-2)"
+        role="alert"
+      >
+        {{ error }}
+      </p>
 
       <div class="flex items-center justify-center gap-(--space-2) mt-(--space-6)">
         <span
@@ -96,9 +107,9 @@ function handleBackspace() {
           :aria-label="key === '⌫' ? '지우기' : key"
           @click="key === '⌫' ? handleBackspace() : handleKeyPress(key)"
         >
-          <IconDelete
+          <IconBackspace
             v-if="key === '⌫'"
-            :size="20"
+            :size="22"
             color="var(--color-navy)"
             aria-hidden="true"
           />

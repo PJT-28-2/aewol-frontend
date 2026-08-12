@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import IconDelete from './icons/IconDelete.vue'
+import IconBackspace from './icons/IconBackspace.vue'
 
 const props = defineProps({
   modelValue: {
@@ -68,9 +68,9 @@ function handleBackspace() {
           :aria-label="key === '⌫' ? '지우기' : key"
           @click="key === '⌫' ? handleBackspace() : handleKeyPress(key)"
         >
-          <IconDelete
+          <IconBackspace
             v-if="key === '⌫'"
-            :size="20"
+            :size="22"
             color="var(--color-navy)"
             aria-hidden="true"
           />

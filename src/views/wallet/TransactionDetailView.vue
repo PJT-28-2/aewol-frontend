@@ -21,7 +21,8 @@ const transaction = computed(() => transactionStore.currentTxn);
 const isLoading = ref(true);
 const loadError = ref(false);
 const notFound = computed(() => !transaction.value);
-const isWithdraw = computed(() => transaction.value?.type === 'withdraw');
+const isPayment = computed(() => transaction.value?.txnType === 'PAYMENT');
+const isWalletWithdrawal = computed(() => transaction.value?.txnType === 'WITHDRAW');
 const returnPath = computed(() =>
   route.query.from === 'wallet' ? '/wallet' : '/wallet/history',
 );
@@ -83,7 +84,7 @@ const selectedCategoryOption = computed(() =>
 );
 
 const headerIcon = computed(() => {
-  if (!isWithdraw.value) return IconWallet;
+  if (!isPayment.value) return IconWallet;
   return selectedCategoryOption.value?.icon ?? getRecurringCategory('MEDICAL').icon;
 });
 
@@ -101,6 +102,23 @@ const formattedDateTime = computed(() => {
   const period = hour < 12 ? '오전' : '오후';
   const hour12 = hour % 12 === 0 ? 12 : hour % 12;
   return `${year}.${month}.${day} · ${period} ${hour12}:${String(minute).padStart(2, '0')}`;
+});
+
+const walletMovementDetails = computed(() => {
+  if (!transaction.value) return [];
+  const details = isWalletWithdrawal.value
+    ? [
+        { label: '출금 계좌', value: transaction.value.title },
+        { label: '출금 수단', value: transaction.value.paymentMethod },
+      ]
+    : [
+        { label: '충전 수단', value: transaction.value.chargeMethod },
+      ];
+
+  if (transaction.value.memo) {
+    details.push({ label: '메모', value: transaction.value.memo });
+  }
+  return details;
 });
 
 function selectCategory(key) {
@@ -184,7 +202,7 @@ onMounted(fetchTransaction);
         <FeatureIconTile
           class="mb-(--space-4)"
           :icon="headerIcon"
-          :tone="isWithdraw ? 'blue' : 'green'"
+          :tone="isPayment ? 'blue' : 'green'"
         />
         <p
           class="text-(length:--font-3xl) font-bold text-(color:--color-navy)"
@@ -203,14 +221,14 @@ onMounted(fetchTransaction);
         </p>
       </div>
 
-      <template v-if="isWithdraw">
+      <template v-if="isPayment">
         <div
-          class="bg-(--color-white) rounded-(--radius-lg) shadow-(--shadow-sm) p-(--space-4) mb-(--space-6)"
+          class="bg-(--color-white) rounded-(--radius-lg) shadow-(--shadow-sm) p-(--space-4) mb-(--space-4)"
         >
           <div class="mb-(--space-5)">
             <div class="flex items-center justify-between mb-(--space-2)">
               <p
-                class="text-(length:--font-sm) font-medium text-(color:--color-slate-dark)"
+                class="text-(length:--font-md) text-(color:--color-slate-muted)"
               >
                 카테고리
               </p>
@@ -246,7 +264,7 @@ onMounted(fetchTransaction);
 
           <div class="mb-(--space-5)">
             <p
-              class="text-(length:--font-sm) font-medium text-(color:--color-slate-dark) mb-(--space-2)"
+              class="text-(length:--font-md) text-(color:--color-slate-muted) mb-(--space-2)"
             >
               반려동물
             </p>
@@ -261,22 +279,20 @@ onMounted(fetchTransaction);
               />
             </div>
           </div>
-
-          <div
-            class="flex items-center justify-between pt-(--space-4) border-t border-(--color-border)"
-          >
-            <p
-              class="text-(length:--font-sm) text-(color:--color-slate-muted)"
-            >
-              결제 수단
-            </p>
-            <p
-              class="text-(length:--font-sm) font-medium text-(color:--color-gray-900)"
-            >
-              {{ transaction.paymentMethod }}
-            </p>
-          </div>
         </div>
+
+        <dl
+          class="mb-(--space-6) flex flex-col gap-(--space-4) rounded-(--radius-2xl) bg-(--color-white) p-(--space-5)"
+        >
+          <div class="flex items-start justify-between gap-(--space-4)">
+            <dt class="text-(length:--font-md) text-(color:--color-slate-muted)">
+              결제 수단
+            </dt>
+            <dd class="text-right text-(length:--font-md) font-semibold text-(color:--color-navy)">
+              {{ transaction.paymentMethod }}
+            </dd>
+          </div>
+        </dl>
 
         <AppButton
           type="button"
@@ -299,20 +315,22 @@ onMounted(fetchTransaction);
       </template>
 
       <template v-else>
-        <div
-          class="flex items-center justify-between bg-(--color-white) rounded-(--radius-lg) shadow-(--shadow-sm) p-(--space-4) mb-(--space-6)"
+        <dl
+          class="mb-(--space-6) flex flex-col gap-(--space-4) rounded-(--radius-2xl) bg-(--color-white) p-(--space-5)"
         >
-          <p
-            class="text-(length:--font-sm) text-(color:--color-slate-muted)"
+          <div
+            v-for="detail in walletMovementDetails"
+            :key="detail.label"
+            class="flex items-start justify-between gap-(--space-4)"
           >
-            충전 수단
-          </p>
-          <p
-            class="text-(length:--font-sm) font-medium text-(color:--color-gray-900)"
-          >
-            {{ transaction.chargeMethod }}
-          </p>
-        </div>
+            <dt class="text-(length:--font-md) text-(color:--color-slate-muted)">
+              {{ detail.label }}
+            </dt>
+            <dd class="text-right text-(length:--font-md) font-semibold text-(color:--color-navy)">
+              {{ detail.value }}
+            </dd>
+          </div>
+        </dl>
 
         <AppButton
           type="button"
