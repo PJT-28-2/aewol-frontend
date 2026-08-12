@@ -13,6 +13,11 @@ if (!store.linking.password) {
   router.replace({ name: 'AccountLinkSelect' });
 }
 
+// PasswordSetupComplete 라우터 가드가 확인하는 플래그 — 여기서 확인(confirm)까지
+// 실제로 성공했을 때만 세팅해요. URL 직접 접근 등으로 완료 화면에 바로 들어오는 걸
+// 막기 위한 용도라 sessionStorage(WithdrawalComplete와 동일 패턴)를 사용해요.
+const PASSWORD_SETUP_COMPLETED_KEY = 'simplePasswordSetupCompleted';
+
 const pin = ref('');
 const errorMessage = ref('');
 const isSubmitting = ref(false);
@@ -27,6 +32,7 @@ async function handleComplete(value) {
       pin.value = '';
       return;
     }
+    window.sessionStorage.setItem(PASSWORD_SETUP_COMPLETED_KEY, 'true');
     router.replace({ name: 'PasswordSetupComplete' });
   } catch {
     errorMessage.value = '비밀번호 설정에 실패했어요. 다시 시도해주세요';
