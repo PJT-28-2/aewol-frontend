@@ -118,10 +118,14 @@ const deadlineDisplayLabel = computed(() =>
 // raw delivery_date를 'M/D(요일) 도착 예정' 형식으로 변환 (DetailView.vue와 동일 계약)
 const arrivalDateLabel = computed(() => formatArrivalDateLabel(status.value?.deliveryDate));
 
-// 취소된 건에는 더 이상 배송이 진행되지 않으므로, 보류(waiting)/확정(confirmed) 상태에서만 노출.
+// 취소된 건에는 더 이상 배송이 진행되지 않으므로, 보류/확정 상태에서만 노출.
+// 'waiting'/'confirmed'를 별도로 다시 나열하면 STATUS_TITLE과 어긋날 위험이 있어,
+// STATUS_TITLE에 정의된 상태 중 'cancelled'만 제외하는 방식으로 단일 출처를 유지한다.
 // deliveryDate가 없는 경우(API 미반영 등)에도 빈 라벨 대신 행 자체를 숨긴다
 const showDeliveryDate = computed(() =>
-  ['waiting', 'confirmed'].includes(status.value?.status) && !!arrivalDateLabel.value,
+  Object.keys(STATUS_TITLE).includes(status.value?.status)
+  && status.value.status !== 'cancelled'
+  && !!arrivalDateLabel.value,
 );
 
 // 마감 기한이 지난 공동구매는 참여 취소/공동구매 취소 버튼을 비활성화.
