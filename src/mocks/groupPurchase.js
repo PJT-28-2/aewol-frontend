@@ -180,6 +180,8 @@ export const MOCK_GROUP_PURCHASE_STATUS = {
   targetQuantity: 5,
   // 참여/작성 취소 버튼(마감 전에만 활성화)을 mock에서 확인할 수 있도록 항상 미래 시각으로 유지
   deadline: '2026-08-10T23:59:59',
+  // 잠정(마감일+예상일수) 값. 목표 수량 달성 시 백엔드가 달성일+예상일수로 갱신함
+  deliveryDate: '2026-08-13',
   participantInfo: {
     participantId: 10523,
     purchaseQuantity: 1,

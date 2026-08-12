@@ -14,7 +14,7 @@ import {
 import { USE_MOCK_DATA } from '@/mocks/config';
 import { groupPurchaseApi } from '@/api/groupPurchase';
 import { memberApi } from '@/api/member';
-import { formatDDayLabel, getDeadlineTimestamp } from '@/utils/date';
+import { formatArrivalDateLabel, formatDDayLabel, getDeadlineTimestamp } from '@/utils/date';
 import { useDeadlineTimer } from '@/composables/useDeadlineTimer';
 import { useMidnightTick } from '@/composables/useMidnightTick';
 
@@ -111,6 +111,15 @@ const deadlineLabel = computed(() => formatDDayLabel(status.value.deadline, new 
 // 템플릿의 "마감 " 접두어와 결합했을 때 마감 지난 경우 "마감 마감"으로 겹쳐 보이지 않도록 분리
 const deadlineDisplayLabel = computed(() =>
   deadlineLabel.value === '마감' ? '마감' : `마감 ${deadlineLabel.value}`,
+);
+
+// raw delivery_date를 'M/D(요일) 도착 예정' 형식으로 변환 (DetailView.vue와 동일 계약)
+const arrivalDateLabel = computed(() => formatArrivalDateLabel(status.value?.deliveryDate));
+
+// 취소된 건에는 더 이상 배송이 진행되지 않으므로, 보류(waiting)/확정(confirmed) 상태에서만 노출.
+// deliveryDate가 없는 경우(API 미반영 등)에도 빈 라벨 대신 행 자체를 숨긴다
+const showDeliveryDate = computed(() =>
+  ['waiting', 'confirmed'].includes(status.value?.status) && !!arrivalDateLabel.value,
 );
 
 // 마감 기한이 지난 공동구매는 참여 취소/공동구매 취소 버튼을 비활성화.
@@ -273,6 +282,21 @@ function confirmCancelSuccess() {
             class="text-(length:--font-xs) font-bold text-(color:--color-gold-dark)"
           >
             {{ deadlineDisplayLabel }}
+          </p>
+        </div>
+      </section>
+
+      <!-- 배송 예정일: 취소된 건은 더 이상 배송이 진행되지 않으므로 보류/확정 상태에서만 노출 -->
+      <section
+        v-if="showDeliveryDate"
+        class="mb-(--space-5) rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-(--space-4) shadow-(--shadow-card)"
+      >
+        <div class="flex items-center justify-between">
+          <p class="text-(length:--font-xs) text-(color:--color-slate-muted)">
+            배송 예정일
+          </p>
+          <p class="text-(length:--font-xs) font-bold text-(color:--color-navy)">
+            {{ arrivalDateLabel }}
           </p>
         </div>
       </section>
