@@ -130,26 +130,34 @@ function goToFaqDetail(faqId) {
       class="grid grid-cols-2 gap-3 mb-7"
     >
       <button
-        class="flex flex-col items-start gap-2 rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-4 text-left shadow-(--shadow-card)"
+        class="flex items-center gap-3 rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-4 text-left shadow-(--shadow-card)"
         @click="router.push({ name: 'InquiryForm' })"
       >
-        <IconChatBubble
-          :size="22"
-          color="var(--color-navy)"
-        />
-        <span class="font-semibold text-(color:--color-navy) text-(length:--font-md)">1:1 문의하기</span>
-        <span class="text-(length:--font-xs) text-(color:--color-gray-500)">문의를 남겨주세요</span>
+        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-(--color-leaf-surface)">
+          <IconChatBubble
+            :size="20"
+            color="var(--color-leaf-dark)"
+          />
+        </span>
+        <span class="flex min-w-0 flex-col">
+          <span class="font-semibold text-(color:--color-navy) text-(length:--font-md)">1:1 문의하기</span>
+          <span class="text-(length:--font-xs) text-(color:--color-gray-500)">문의를 남겨주세요</span>
+        </span>
       </button>
       <button
-        class="flex flex-col items-start gap-2 rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-4 text-left shadow-(--shadow-card)"
+        class="flex items-center gap-3 rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-4 text-left shadow-(--shadow-card)"
         @click="router.push({ name: 'MyInquiries' })"
       >
-        <IconDocument
-          :size="22"
-          color="var(--color-navy)"
-        />
-        <span class="font-semibold text-(color:--color-navy) text-(length:--font-md)">내 문의 내역</span>
-        <span class="text-(length:--font-xs) text-(color:--color-gray-500)">답변 상태 확인</span>
+        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-(--color-leaf-surface)">
+          <IconDocument
+            :size="20"
+            color="var(--color-leaf-dark)"
+          />
+        </span>
+        <span class="flex min-w-0 flex-col">
+          <span class="font-semibold text-(color:--color-navy) text-(length:--font-md)">내 문의 내역</span>
+          <span class="text-(length:--font-xs) text-(color:--color-gray-500)">답변 상태 확인</span>
+        </span>
       </button>
     </div>
 
@@ -249,7 +257,12 @@ function goToFaqDetail(faqId) {
         <li
           v-for="faq in filteredFaqs"
           :key="faq.faqId"
-          class="overflow-hidden rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) shadow-(--shadow-card)"
+          class="overflow-hidden rounded-(--radius-2xl) border shadow-(--shadow-card)"
+          :class="
+            expandedFaqId === faq.faqId
+              ? 'border-(--color-leaf) bg-(--color-leaf-surface)'
+              : 'border-(--color-card-border) bg-(--color-white)'
+          "
         >
           <button
             class="w-full flex items-center justify-between gap-3 p-4 text-left"
@@ -267,6 +280,7 @@ function goToFaqDetail(faqId) {
             v-if="expandedFaqId === faq.faqId"
             class="px-4 pb-4"
           >
+            <div class="h-px bg-(--color-leaf) opacity-30 mb-3" />
             <p
               v-if="isLoadingAnswer && !faq.answer"
               class="text-(length:--font-sm) text-(color:--color-gray-500)"
