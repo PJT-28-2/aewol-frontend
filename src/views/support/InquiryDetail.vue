@@ -16,10 +16,11 @@ function statusLabel(status) {
   return status === 'ANSWERED' ? '답변완료' : '답변대기';
 }
 
+// 내 문의 내역 목록(MyInquiries.vue)과 동일한 색상 규칙 — 한쪽만 고치지 않도록 주의.
 function statusClass(status) {
   return status === 'ANSWERED'
-    ? 'bg-(--color-gold) text-(color:--color-navy)'
-    : 'bg-(--color-gray-200) text-(color:--color-gray-700)';
+    ? 'bg-(--color-leaf-surface) text-(color:--color-leaf-dark)'
+    : 'bg-(--color-icon-yellow-soft) text-(color:--color-icon-yellow)';
 }
 
 function formatDate(dateString) {
