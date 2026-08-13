@@ -99,8 +99,10 @@ const radiusTokenMap = {
 
 const radiusClass = computed(() => {
   if (props.pill) return 'rounded-(--radius-full)'
-  if (props.radius) return radiusTokenMap[props.radius]
-  return radiusClasses[props.size]
+  // validator는 dev 모드에서만 경고하고 prod 빌드에선 잘못된 값이 그냥 통과돼요.
+  // radiusTokenMap에 없는 값이 들어와도 조용히 radius가 안 붙는 대신 size 기본값으로
+  // 폴백해요 (PR #227 리뷰 지적, 2026-08-13).
+  return props.radius ? (radiusTokenMap[props.radius] ?? radiusClasses[props.size]) : radiusClasses[props.size]
 })
 
 const spinnerColor = ['secondary', 'neutral', 'ghost', 'primary', 'white'].includes(props.variant)
