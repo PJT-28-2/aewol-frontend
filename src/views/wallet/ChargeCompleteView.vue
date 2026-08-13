@@ -6,6 +6,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import CompletionPageLayout from '@/components/common/CompletionPageLayout.vue';
 import { useAccountStore } from '@/stores/account';
 import { getBankMeta } from '@/utils/bankMeta';
+import { MOCK_ACCOUNTS } from '@/mocks/account';
 
 const route = useRoute();
 const router = useRouter();
@@ -39,9 +40,10 @@ onMounted(async () => {
     try {
       await accountStore.fetchAccounts();
     } catch {
-      // 계좌 조회가 실패하면 accounts가 비어서 chargedAccount가 null이 되고,
-      // 아래에서 showInvalidState 처리로 자연스럽게 빠져요(예전엔 여기서
-      // MOCK_ACCOUNTS로 조용히 채워서 실패가 화면에 안 보였어요).
+      // 계좌 연동 API 연동 전이라 조회가 실패할 수 있어요. 결제 수단은 최소 하나 보이도록 폴백
+    }
+    if (!accountStore.accounts.length) {
+      accountStore.accounts = structuredClone(MOCK_ACCOUNTS);
     }
   }
   if (amount.value <= 0 || !chargedAccount.value) {
