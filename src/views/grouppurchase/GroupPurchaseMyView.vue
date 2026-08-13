@@ -24,19 +24,19 @@ const myGroupPurchases = ref([]);
 // CANCELLED: 작성자가 직접 취소, FAILED: 마감 시점까지 목표 수량 미달로 자동 취소
 const STATUS_LABEL = {
   OPEN: '진행중',
-  COMPLETED: '마감(성공)',
+  COMPLETED: '달성',
   CANCELLED: '마감(취소)',
   FAILED: '마감(미달)',
 };
 const STATUS_CODE = {
   진행중: 'OPEN',
-  '마감(성공)': 'COMPLETED',
+  달성: 'COMPLETED',
   '마감(미달)': 'FAILED',
   '마감(취소)': 'CANCELLED',
 };
 
 // 상태 필터: 마감 여부와 무관하게 전부 조회 가능
-const statusOptions = ['전체', '진행중', '마감(성공)', '마감(미달)', '마감(취소)'];
+const statusOptions = ['전체', '진행중', '달성', '마감(미달)', '마감(취소)'];
 const selectedStatus = ref('전체');
 const isStatusSheetOpen = ref(false);
 
@@ -45,10 +45,10 @@ function selectStatus(option) {
   isStatusSheetOpen.value = false;
 }
 
-// 상태 배지 색상: 진행중은 올리브, 마감(성공)은 중립 그레이, 마감(미달)/마감(취소)는 danger 톤으로 구분
+// 상태 배지 색상: 진행중은 올리브, 달성은 중립 그레이, 마감(미달)/마감(취소)는 danger 톤으로 구분
 const STATUS_BADGE_CLASS = {
   진행중: 'bg-(--color-olive-surface) text-(color:--color-olive)',
-  '마감(성공)': 'bg-(--color-gray-200) text-(color:--color-gray-600)',
+  달성: 'bg-(--color-gray-200) text-(color:--color-gray-600)',
   '마감(미달)': 'bg-(--color-danger-soft) text-(color:--color-danger-strong)',
   '마감(취소)': 'bg-(--color-danger-soft) text-(color:--color-danger-strong)',
 };
