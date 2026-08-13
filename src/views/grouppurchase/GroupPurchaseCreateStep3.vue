@@ -121,10 +121,8 @@ async function handleSubmit() {
       deadline: `${deadline.value}T23:59:59`,
       deliveryMethod: deliveryMethod.value,
       deliveryFee: parsePrice(deliveryFee.value),
-      // TODO(backend): 배송 예정일을 "목표 수량 달성일 + 예상 일수"로 계산하기로 했으나,
-      // 현재 백엔드에는 이 계산에 필요한 달성 시각 기록(confirmed_at 등)과
-      // deliveryEstimateDays 요청 필드 자체가 없어(GroupPurchaseCreateRequest.deliveryDate만 존재)
-      // 이 값은 아직 백엔드에 전달되지 않는다. 백엔드 변경 후 deliveryDate 필드로 교체할 것
+      // delivery_date는 백엔드가 계산: 등록 시 deadline + deliveryEstimateDays로 잠정 저장하고,
+      // 목표 수량 달성 시점에 달성일 + deliveryEstimateDays로 갱신한다. 프론트는 예상일수만 전달
       deliveryEstimateDays: Number(deliveryEstimateDays.value),
       description: description.value,
     }

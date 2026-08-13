@@ -92,6 +92,24 @@ export function formatDateTimeDot(isoDateTime) {
   return timePart ? `${formatDateDot(datePart)} ${timePart.slice(0, 5)}` : formatDateDot(datePart)
 }
 
+const WEEKDAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
+
+/**
+ * "YYYY-MM-DD" 형식의 배송 예정일 문자열을 "M/D(요일) 도착 예정" 라벨로 변환한다.
+ * 등록 직후(잠정: 마감일+예상일수)와 목표 수량 달성 이후(확정: 달성일+예상일수) 모두
+ * delivery_date 값 자체는 백엔드가 계산해 내려주므로, 프론트는 값을 그대로 포맷팅만 한다.
+ * UTC 파싱으로 인한 날짜 밀림을 피하기 위해 로컬 자정 Date로 변환해서 사용한다.
+ *
+ * @param {string | null | undefined} deliveryDate `YYYY-MM-DD` 형식의 배송 예정일
+ * @returns {string} `M/D(요일) 도착 예정` 형식의 문자열, 값이 없으면(API 에러 등) 빈 문자열
+ */
+export function formatArrivalDateLabel(deliveryDate) {
+  if (!deliveryDate) return ''
+  const [year, month, day] = deliveryDate.slice(0, 10).split('-').map(Number)
+  const date = new Date(year, month - 1, day)
+  return `${date.getMonth() + 1}/${date.getDate()}(${WEEKDAY_LABELS[date.getDay()]}) 도착 예정`
+}
+
 /**
  * 생년월일 문자열로 만 나이를 계산한다. 올해 생일이 아직 지나지 않았으면 1을 뺀다.
  *

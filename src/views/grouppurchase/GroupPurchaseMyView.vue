@@ -20,20 +20,23 @@ const isError = ref(false);
 
 const myGroupPurchases = ref([]);
 
-// 백엔드 상태 코드(OPEN/COMPLETED/CANCELLED) ↔ 화면 라벨 매핑
+// 백엔드 상태 코드(OPEN/COMPLETED/CANCELLED/FAILED) ↔ 화면 라벨 매핑
+// CANCELLED: 작성자가 직접 취소, FAILED: 마감 시점까지 목표 수량 미달로 자동 취소
 const STATUS_LABEL = {
   OPEN: '진행중',
   COMPLETED: '마감(성공)',
-  CANCELLED: '마감(미달)',
+  CANCELLED: '마감(취소)',
+  FAILED: '마감(미달)',
 };
 const STATUS_CODE = {
   진행중: 'OPEN',
   '마감(성공)': 'COMPLETED',
-  '마감(미달)': 'CANCELLED',
+  '마감(미달)': 'FAILED',
+  '마감(취소)': 'CANCELLED',
 };
 
 // 상태 필터: 마감 여부와 무관하게 전부 조회 가능
-const statusOptions = ['전체', '진행중', '마감(성공)', '마감(미달)'];
+const statusOptions = ['전체', '진행중', '마감(성공)', '마감(미달)', '마감(취소)'];
 const selectedStatus = ref('전체');
 const isStatusSheetOpen = ref(false);
 
@@ -42,11 +45,12 @@ function selectStatus(option) {
   isStatusSheetOpen.value = false;
 }
 
-// 상태 배지 색상: 진행중은 올리브, 마감(성공)은 중립 그레이, 마감(미달)은 danger 톤으로 구분
+// 상태 배지 색상: 진행중은 올리브, 마감(성공)은 중립 그레이, 마감(미달)/마감(취소)는 danger 톤으로 구분
 const STATUS_BADGE_CLASS = {
   진행중: 'bg-(--color-olive-surface) text-(color:--color-olive)',
   '마감(성공)': 'bg-(--color-gray-200) text-(color:--color-gray-600)',
   '마감(미달)': 'bg-(--color-danger-soft) text-(color:--color-danger-strong)',
+  '마감(취소)': 'bg-(--color-danger-soft) text-(color:--color-danger-strong)',
 };
 
 // dDay는 목록 조회 시점의 문자열로 고정하지 않고 deadline 원본을 보관해뒀다가 렌더링 시점에
@@ -56,16 +60,12 @@ function dDayLabel(deadline) {
   return formatDDayLabel(deadline, new Date(midnightTick.value));
 }
 
-// 상태 필터 + 최신순(createdAt desc) 정렬을 함께 적용
-const filteredGroupPurchases = computed(() => {
-  const list = myGroupPurchases.value.filter(
+// 최신순 정렬은 백엔드가 ORDER BY created_at DESC로 보장해서 내려준다 (GET /group-purchase/my)
+const filteredGroupPurchases = computed(() =>
+  myGroupPurchases.value.filter(
     (gp) => selectedStatus.value === '전체' || gp.status === selectedStatus.value,
-  );
-
-  return [...list].sort(
-    (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
-  );
-});
+  ),
+);
 
 // 필터 때문에 안 보이는 것(선택한 상태만 없음)과 애초에 이력이 없는 것을 구분해서 안내
 const emptyStateMessage = computed(() =>
@@ -112,7 +112,6 @@ async function loadMyGroupPurchases() {
       currentQuantity: item.currentQuantity,
       targetQuantity: item.targetQuantity,
       deadline: item.deadline,
-      createdAt: item.createdAt,
     }));
   } catch {
     if (requestId === latestRequestId) isError.value = true;
