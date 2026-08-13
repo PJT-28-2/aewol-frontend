@@ -31,16 +31,15 @@ function goToAccountManagement() {
     description="계좌 관리 화면에서 연동 상태를 다시 확인해주세요"
     variant="danger"
   >
-    <template #action>
-      <AppButton
-        variant="primary"
-        size="lg"
-        block
-        @click="goToAccountManagement"
-      >
-        계좌 관리로 이동
-      </AppButton>
-    </template>
+    <AppButton
+      variant="primary"
+      size="lg"
+      block
+      class="mt-(--space-4) !rounded-(--radius-2xl)"
+      @click="goToAccountManagement"
+    >
+      계좌 관리로 이동
+    </AppButton>
   </CompletionPageLayout>
 
   <CompletionPageLayout
@@ -58,7 +57,7 @@ function goToAccountManagement() {
       variant="primary"
       size="lg"
       block
-      class="mt-(--space-6) !rounded-(--radius-2xl)"
+      class="mt-(--space-4) !rounded-(--radius-2xl)"
       @click="goToAccountManagement"
     >
       계좌 관리로
