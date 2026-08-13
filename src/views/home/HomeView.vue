@@ -75,17 +75,42 @@ const INSIGHT_ICONS = {
 }
 
 function insightIcon(type) {
-  return INSIGHT_ICONS[type] ?? IconPaw
+  const icon = INSIGHT_ICONS[type]
+  if (!icon && import.meta.env.DEV) {
+    // 조용히 기본 아이콘으로 대체되면 서버가 새 카드를 추가한 걸 놓치기 쉽다.
+    console.warn(`[home] 아이콘이 정의되지 않은 인사이트 카드 종류: ${type}`)
+  }
+  return icon ?? IconPaw
 }
 
+// 다시 시도 버튼 등으로 fetchHome이 겹쳐 호출되면 늦게 보낸 요청이 먼저 끝날 수 있다.
+// 마지막 요청의 결과만 반영한다.
+let insightRequestId = 0
+
 async function fetchInsights() {
+  const requestId = ++insightRequestId
   try {
     const { data } = await getHomeInsights(primaryPet.value?.id)
-    insights.value = data.result ?? []
-  } catch {
-    // 카드가 없으면 그 영역만 비어 보인다. 홈은 그대로 동작한다.
+    if (requestId !== insightRequestId) return
+    insights.value = dedupeByType(data.result ?? [])
+  } catch (error) {
+    if (requestId !== insightRequestId) return
+    // 카드는 부가 정보라 사용자에게 오류를 띄우지 않는다. 다만 조용히 사라지면
+    // 운영 중 장애를 알 방법이 없으므로 로그는 남긴다.
+    console.error('[home] 인사이트 카드를 불러오지 못했습니다.', error)
     insights.value = []
   }
+}
+
+// type은 서버에서 회원·카드종류별 유니크 키다. 그래도 중복이 오면 Vue key가 겹쳐
+// 렌더링이 어긋나므로 먼저 온 것만 남긴다.
+function dedupeByType(cards) {
+  const seen = new Set()
+  return cards.filter((card) => {
+    if (!card?.type || seen.has(card.type)) return false
+    seen.add(card.type)
+    return true
+  })
 }
 
 onMounted(fetchHome)
@@ -205,10 +230,11 @@ onMounted(fetchHome)
         </div>
       </router-link>
 
-      <router-link
+      <component
+        :is="card.ctaPath ? 'router-link' : 'div'"
         v-for="card in insights"
         :key="card.type"
-        :to="card.ctaPath"
+        v-bind="card.ctaPath ? { to: card.ctaPath } : {}"
         class="mt-(--space-3) block rounded-[22px] border border-(--color-leaf) bg-(--color-white) p-(--space-5) text-inherit no-underline"
       >
         <div class="flex items-start gap-(--space-3)">
@@ -226,10 +252,19 @@ onMounted(fetchHome)
           {{ card.body }}
         </p>
         <div class="mt-(--space-3) flex items-center justify-between border-t border-(--color-leaf-soft) pt-(--space-3)">
-          <span class="text-(length:--font-xs) font-bold text-(color:--color-leaf-dark)">AI 요약</span>
-          <span class="text-(length:--font-xs) font-bold text-(color:--color-leaf-dark)">{{ card.ctaLabel }} →</span>
+          <!-- fallback이면 LLM 생성이 아니라 서버가 데이터로 조립한 문구다.
+               그때도 'AI 요약'이라고 달면 사실과 다르다. -->
+          <span
+            v-if="!card.fallback"
+            class="text-(length:--font-xs) font-bold text-(color:--color-leaf-dark)"
+          >AI 요약</span>
+          <span v-else />
+          <span
+            v-if="card.ctaPath"
+            class="text-(length:--font-xs) font-bold text-(color:--color-leaf-dark)"
+          >{{ card.ctaLabel }} →</span>
         </div>
-      </router-link>
+      </component>
     </template>
   </div>
 </template>
