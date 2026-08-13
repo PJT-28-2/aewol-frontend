@@ -9,12 +9,12 @@ import AppButton from '@/components/common/AppButton.vue';
 import { MOCK_GROUP_PURCHASE_LIST } from '@/mocks/groupPurchase';
 import { USE_MOCK_DATA } from '@/mocks/config';
 import { groupPurchaseApi } from '@/api/groupPurchase';
-import { memberApi } from '@/api/member';
 import { useAuthStore } from '@/stores/auth';
 import { GROUP_PURCHASE_STATUS_CODE, getGroupPurchaseStatusLabel } from '@/utils/groupPurchaseStatus';
 
 // 공동구매 게시글은 관리자(role=ADMIN)만 작성 가능 — 일반 유저에게는 글쓰기 버튼 자체를 숨긴다.
-// 실제 권한은 서버가 403으로 최종 판단하므로, 이건 UX용 방어일 뿐이다
+// 관리자는 작성자 여부와 무관하게 모든 게시글에 관리 권한을 가지므로(2026-08-10 정책 확정),
+// 목록의 '확인하기' 버튼 분기에도 memberId 비교 대신 이 role만 그대로 사용한다
 const authStore = useAuthStore();
 
 // 한 페이지에 몇 개씩 불러올지 — 스크롤이 바닥에 닿을 때마다 이 개수만큼 추가로 이어붙인다.
@@ -27,21 +27,6 @@ const hasNext = ref(false);
 const isLoading = ref(true);
 const isLoadingMore = ref(false);
 const isError = ref(false);
-
-// 로그인 유저 memberId는 페이지마다 다시 조회할 필요가 없어 최초 1회만 받아 캐시해둔다.
-// isOwner 계산에만 쓰이는 부가 정보라, 조회 실패(비로그인, 프로필 API 일시 장애 등)로 목록 자체가
-// 안 보이면 안 되므로 여기서 예외를 삼킨다 — 실패하면 myMemberId가 null로 남아 이번 페이지의
-// isOwner는 전부 false 처리되고, 다음 페이지 로드 때 다시 시도된다
-const myMemberId = ref(null);
-async function ensureProfile() {
-  if (myMemberId.value !== null) return;
-  try {
-    const { data: profileData } = await memberApi.getProfile();
-    myMemberId.value = (profileData.result ?? profileData)?.memberId;
-  } catch {
-    // 무시 — isOwner가 false로 처리될 뿐, 목록 조회 자체는 계속 진행된다
-  }
-}
 
 // 카테고리 · 상태 · 검색어를 쿼리 파라미터로 함께 보내 서버가 필터링 + 페이지네이션을 함께 처리하도록 한다.
 // '전체'/빈 값은 "필터 없음"을 의미하므로 파라미터 자체를 보내지 않는다
@@ -78,19 +63,18 @@ async function fetchPage(pageToLoad) {
     };
   }
 
-  await ensureProfile();
   const { data } = await groupPurchaseApi.getList({
     page: pageToLoad,
     size: PAGE_SIZE,
     ...buildFilterParams(),
   });
   const result = data.result ?? { items: [], hasNext: false };
-  // 작성자 본인 글이면 진행중일 때 '참여하기' 대신 '확인하기'로 상태 화면 바로 이동
+  // 관리자면 진행중일 때 '참여하기' 대신 '확인하기'로 상태 화면 바로 이동
   // isParticipating(로그인 유저의 참여 여부)은 응답에 없을 수 있어 기본값 false로 방어
   // TODO: 백엔드 API 계약 변경(로그인 유저 기준 참여 여부 포함) 후 item.isParticipating으로 교체
   const items = (result.items ?? []).map((item) => ({
     ...item,
-    isOwner: item.memberId === myMemberId.value,
+    isOwner: authStore.isAdmin,
     isParticipating: item.isParticipating ?? false,
   }));
   return { items, hasNext: result.hasNext ?? false };

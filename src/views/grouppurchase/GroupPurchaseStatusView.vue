@@ -13,19 +13,21 @@ import {
 } from '@/mocks/groupPurchase';
 import { USE_MOCK_DATA } from '@/mocks/config';
 import { groupPurchaseApi } from '@/api/groupPurchase';
-import { memberApi } from '@/api/member';
 import { formatArrivalDateLabel, formatDDayLabel, getDeadlineTimestamp } from '@/utils/date';
 import { useDeadlineTimer } from '@/composables/useDeadlineTimer';
 import { useMidnightTick } from '@/composables/useMidnightTick';
+import { useAuthStore } from '@/stores/auth';
 
 const route = useRoute();
 const router = useRouter();
+const authStore = useAuthStore();
 
 const status = ref(null);
 const isLoading = ref(true);
 const isError = ref(false);
 // 작성자 본인 글이면 참여 취소 대신 공동구매 취소 버튼을 보여준다.
-// 상태 API 응답의 작성자 memberId와 로그인 유저 memberId를 비교해서 판정
+// 관리자는 작성자 여부와 무관하게 모든 게시글에 관리 권한을 가지므로(2026-08-10 정책 확정),
+// memberId 비교가 아니라 로그인 유저의 role(JWT 클레임, authStore.isAdmin)만으로 판정한다
 const isOwner = ref(false);
 
 async function loadStatus() {
@@ -37,17 +39,13 @@ async function loadStatus() {
       status.value = { gpId: route.params.gpId, ...MOCK_GROUP_PURCHASE_STATUS };
       isOwner.value = MOCK_GROUP_PURCHASE_STATUS_OWNER_BY_GP_ID[route.params.gpId] ?? false;
     } else {
-      const [{ data }, { data: profileData }] = await Promise.all([
-        groupPurchaseApi.getStatus(route.params.gpId),
-        memberApi.getProfile(),
-      ]);
+      const { data } = await groupPurchaseApi.getStatus(route.params.gpId);
       status.value = data.result ?? null;
       if (!status.value) {
         isError.value = true;
         return;
       }
-      const myMemberId = (profileData.result ?? profileData)?.memberId;
-      isOwner.value = status.value.memberId === myMemberId;
+      isOwner.value = authStore.isAdmin;
     }
 
     // API 응답 경계에서 deadline 유효성을 검증한다. 잘못된 deadline은 getDeadlineTimestamp가

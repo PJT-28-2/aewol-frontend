@@ -8,22 +8,23 @@ import IconMinus from '@/components/common/icons/IconMinus.vue';
 import { MOCK_GROUP_PURCHASE_DETAIL } from '@/mocks/groupPurchase';
 import { USE_MOCK_DATA } from '@/mocks/config';
 import { groupPurchaseApi } from '@/api/groupPurchase';
-import { memberApi } from '@/api/member';
 import { formatArrivalDateLabel, formatDDayLabel } from '@/utils/date';
 import { useDeadlineTimer } from '@/composables/useDeadlineTimer';
 import { useMidnightTick } from '@/composables/useMidnightTick';
+import { useAuthStore } from '@/stores/auth';
 
 const route = useRoute();
 const router = useRouter();
+const authStore = useAuthStore();
 
 const groupPurchase = ref(null);
 const isLoading = ref(true);
 const isError = ref(false);
 
-// 목록/마이페이지는 작성자를 상세 화면 대신 상태 화면으로 바로 보내지만, 그 라우팅을 거치지 않고
-// (URL 직접 입력, 뒤로가기, 공유 링크 등) 이 화면에 온 경우까지 대비해 작성자면 여기서도
-// 참여 UI를 그리지 않고 상태 화면으로 리다이렉트한다. 상세 API 응답의 작성자 memberId와
-// 로그인 회원 memberId를 비교해서 판정
+// 목록/마이페이지는 관리자를 상세 화면 대신 상태 화면으로 바로 보내지만, 그 라우팅을 거치지 않고
+// (URL 직접 입력, 뒤로가기, 공유 링크 등) 이 화면에 온 경우까지 대비해 여기서도 참여 UI를 그리지
+// 않고 상태 화면으로 리다이렉트한다. 관리자는 작성자 여부와 무관하게 모든 게시글에 관리 권한을
+// 가지므로(2026-08-10 정책 확정), memberId 비교가 아니라 로그인 유저의 role만으로 판정한다
 async function loadDetail() {
   isLoading.value = true;
   isError.value = false;
@@ -36,17 +37,13 @@ async function loadDetail() {
       groupPurchase.value = MOCK_GROUP_PURCHASE_DETAIL;
       return;
     }
-    const [{ data }, { data: profileData }] = await Promise.all([
-      groupPurchaseApi.getDetail(route.params.gpId),
-      memberApi.getProfile(),
-    ]);
+    const { data } = await groupPurchaseApi.getDetail(route.params.gpId);
     const detail = data.result ?? null;
     if (!detail) {
       isError.value = true;
       return;
     }
-    const myMemberId = (profileData.result ?? profileData)?.memberId;
-    if (detail.memberId === myMemberId) {
+    if (authStore.isAdmin) {
       router.replace(`/group-purchase/${route.params.gpId}/status`);
       return;
     }
