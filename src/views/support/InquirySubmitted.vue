@@ -14,18 +14,19 @@ function goToMyInquiries() {
 
 <template>
   <CompletionPageLayout
-    title="문의 접수 완료"
-    description="평균 5분 이내에 답변드릴게요"
+    title="문의 등록 완료"
+    description="답변이 등록되면 알림으로 알려드릴게요."
   >
     <div
       v-if="store.lastSubmittedInquiry"
-      class="mt-(--space-6) flex w-full items-center justify-center rounded-(--radius-xl) bg-(--color-white) p-(--space-4)"
+      class="mt-(--space-6) flex w-full items-center justify-center gap-(--space-3) rounded-(--radius-xl) bg-(--color-white) p-(--space-4)"
     >
       <span class="text-(length:--font-sm) text-(color:--color-gray-600)">
-        문의번호&nbsp;
-        <span class="font-semibold text-(color:--color-navy)">
-          {{ store.lastSubmittedInquiry.inquiryNumber }}
-        </span>
+        문의번호
+      </span>
+      <span class="h-4 w-px bg-(--color-border)" />
+      <span class="font-semibold text-(color:--color-navy)">
+        {{ store.lastSubmittedInquiry.inquiryNumber }}
       </span>
     </div>
 
@@ -36,7 +37,7 @@ function goToMyInquiries() {
         block
         @click="goToMyInquiries"
       >
-        문의 내역 확인하기
+        내 문의 보기
       </AppButton>
     </template>
   </CompletionPageLayout>

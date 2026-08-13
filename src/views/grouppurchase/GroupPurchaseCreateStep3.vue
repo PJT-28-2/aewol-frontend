@@ -106,9 +106,11 @@ async function handleSubmit() {
     const imageFormData = new FormData()
     imageFormData.append('image', image.value)
     const { data: uploadData } = await groupPurchaseApi.uploadImage(imageFormData)
-    const imageUrl = uploadData.result
+    const imageUrl = uploadData.result.imageUrl
 
-    // 백엔드가 POST /api/group-purchase에서 JSON(Map<String, Object>)으로 받음
+    // 백엔드(GroupPurchaseCreateRequest)가 JSON으로 받으며 필드는 camelCase, deadline은
+    // LocalDateTime(@Future)이라 날짜만 보내면 파싱에 실패함 — 앱 전역에서 날짜만 있는
+    // deadline은 23:59:59를 마감 시각으로 취급하므로(getDeadlineTimestamp) 그 규칙을 그대로 붙인다
     const payload = {
       image: imageUrl,
       productName: productName.value,
@@ -116,7 +118,7 @@ async function handleSubmit() {
       unitPrice: parsePrice(unitPrice.value),
       groupPrice: parsePrice(groupPrice.value),
       targetQuantity: Number(targetQuantity.value),
-      deadline: deadline.value,
+      deadline: `${deadline.value}T23:59:59`,
       deliveryMethod: deliveryMethod.value,
       deliveryFee: parsePrice(deliveryFee.value),
       // delivery_date는 백엔드가 계산: 등록 시 deadline + deliveryEstimateDays로 잠정 저장하고,
@@ -128,8 +130,14 @@ async function handleSubmit() {
     await groupPurchaseApi.create(payload)
     groupPurchaseCreateStore.reset()
     router.push('/group-purchase/my')
-  } catch {
-    submitError.value = '등록에 실패했어요. 다시 시도해주세요.'
+  } catch (err) {
+    // 403(관리자 아님)은 Spring Security 기본 응답이라 바디가 비어있어 별도 문구로 처리하고,
+    // 그 외 실패는 백엔드가 ApiResponse로 내려주는 실제 사유(이미지 확장자 등)를 그대로 보여준다
+    if (err.response?.status === 403) {
+      submitError.value = '관리자만 등록할 수 있어요.'
+    } else {
+      submitError.value = err.response?.data?.message ?? '등록에 실패했어요. 다시 시도해주세요.'
+    }
   } finally {
     isSubmitting.value = false
   }

@@ -15,7 +15,8 @@ const { image, productName, category, unitPrice, groupPrice } = storeToRefs(
   groupPurchaseCreateStore,
 )
 
-const categoryOptions = ['사료', '간식', '영양제', '용품', '기타']
+// 백엔드 검증 규칙(GroupPurchaseCreateRequest: 사료|간식|용품|기타)과 동일하게 맞춤 — 다른 값은 등록 시 400 에러
+const categoryOptions = ['사료', '간식', '용품', '기타']
 const isCategorySheetOpen = ref(false)
 function selectCategory(option) {
   category.value = option
@@ -24,6 +25,10 @@ function selectCategory(option) {
 
 const imageError = ref('')
 
+// 백엔드(GroupPurchaseServiceImpl.uploadImage)가 이 확장자만 허용 — 다르면 최종 제출 시점에야
+// 400으로 실패하므로, 사진을 고르는 시점에 미리 걸러서 안내한다
+const ALLOWED_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp']
+
 function handleImageChange(event) {
   const file = event.target.files?.[0]
   event.target.value = ''
@@ -31,6 +36,11 @@ function handleImageChange(event) {
 
   if (!file.type.startsWith('image/')) {
     imageError.value = '이미지 파일만 업로드할 수 있어요.'
+    return
+  }
+  const extension = file.name.includes('.') ? file.name.split('.').pop().toLowerCase() : ''
+  if (!ALLOWED_IMAGE_EXTENSIONS.includes(extension)) {
+    imageError.value = 'jpg, jpeg, png, webp 파일만 업로드할 수 있어요.'
     return
   }
   if (file.size > 10 * 1024 * 1024) {
@@ -120,7 +130,7 @@ function goToNextStep() {
       >
         <input
           type="file"
-          accept="image/*"
+          accept="image/jpeg,image/png,image/webp"
           class="hidden"
           @change="handleImageChange"
         >
