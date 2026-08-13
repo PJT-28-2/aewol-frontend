@@ -14,7 +14,8 @@ import { GROUP_PURCHASE_STATUS_CODE, getGroupPurchaseStatusLabel } from '@/utils
 
 // 공동구매 게시글은 관리자(role=ADMIN)만 작성 가능 — 일반 유저에게는 글쓰기 버튼 자체를 숨긴다.
 // 관리자는 작성자 여부와 무관하게 모든 게시글에 관리 권한을 가지므로(2026-08-10 정책 확정),
-// 목록의 '확인하기' 버튼 분기에도 memberId 비교 대신 이 role만 그대로 사용한다
+// 목록의 '확인하기' 버튼 분기에도 memberId 비교 대신 이 role만 그대로 사용한다.
+// 실제 권한은 서버가 403으로 최종 판단하므로, 이건 어디까지나 UX용 방어일 뿐이다
 const authStore = useAuthStore();
 
 // 한 페이지에 몇 개씩 불러올지 — 스크롤이 바닥에 닿을 때마다 이 개수만큼 추가로 이어붙인다.
@@ -74,7 +75,7 @@ async function fetchPage(pageToLoad) {
   // TODO: 백엔드 API 계약 변경(로그인 유저 기준 참여 여부 포함) 후 item.isParticipating으로 교체
   const items = (result.items ?? []).map((item) => ({
     ...item,
-    isOwner: authStore.isAdmin,
+    isAdmin: authStore.isAdmin,
     isParticipating: item.isParticipating ?? false,
   }));
   return { items, hasNext: result.hasNext ?? false };
@@ -349,10 +350,10 @@ onBeforeUnmount(() => {
           <!-- 진행중: 작성자('확인하기')/이미 참여('참여중')는 상세 없이 상태 화면으로, 미참여('참여하기')는 참여 플로우로 이동 -->
           <router-link
             v-if="gp.status === 'OPEN'"
-            :to="gp.isOwner || gp.isParticipating ? `/group-purchase/${gp.id}/status` : `/group-purchase/${gp.id}`"
+            :to="gp.isAdmin || gp.isParticipating ? `/group-purchase/${gp.id}/status` : `/group-purchase/${gp.id}`"
             class="shrink-0 whitespace-nowrap rounded-full bg-(--color-leaf) px-(--space-4) py-(--space-2) text-(length:--font-sm) font-semibold text-(color:--color-navy) no-underline"
           >
-            {{ gp.isOwner ? '확인하기' : gp.isParticipating ? '참여중' : '참여하기' }}
+            {{ gp.isAdmin ? '확인하기' : gp.isParticipating ? '참여중' : '참여하기' }}
           </router-link>
           <!-- 마감된 게시글은 새로 참여할 수 없어 비활성화 표시만 함 -->
           <span

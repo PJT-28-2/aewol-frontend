@@ -1,9 +1,10 @@
 import productImage from '@/assets/images/mock-product-dogfood.png'
 
 // 공동구매 목록 화면(GroupPurchaseListView) 목데이터
-// isOwner: 로그인 유저가 이 글의 작성자인지 여부. isParticipating: 로그인 유저가 이미 참여(결제 완료)한 글인지 여부.
-// 진행중 글에서 '확인하기'(작성자) / '참여중'(이미 참여) / '참여하기'(미참여) 3분기 버튼에 사용
-// 실 API에서는 item.memberId와 로그인 유저 memberId를 비교해 isOwner를 판정 (GroupPurchaseMyView와 동일 방식).
+// isAdmin: 로그인 유저가 관리자인지 여부(관리자는 작성자 여부와 무관하게 모든 글에 관리 권한을 가짐).
+// isParticipating: 로그인 유저가 이미 참여(결제 완료)한 글인지 여부.
+// 진행중 글에서 '확인하기'(관리자) / '참여중'(이미 참여) / '참여하기'(미참여) 3분기 버튼에 사용
+// 실 API에서는 authStore.isAdmin(JWT role 클레임)으로 판정 (GroupPurchaseStatusView/DetailView와 동일 방식).
 // isParticipating은 GET /group-purchase 응답에 로그인 유저 기준으로 계산된 필드가 필요함
 // (요청한 회원의 memberId로 group_purchase_participant를 조회해서 참여 row가 있으면 true) —
 // 목록 API가 현재 group_purchase만 조회하고 로그인 유저를 참조하지 않아 백엔드 계약/조회 로직 변경이 선행돼야 함
@@ -21,7 +22,7 @@ export const MOCK_GROUP_PURCHASE_LIST = [
     groupPrice: 28000,
     badgeText: '30% 할인',
     viewCount: 386,
-    isOwner: false,
+    isAdmin: false,
     isParticipating: false,
   },
   {
@@ -36,7 +37,7 @@ export const MOCK_GROUP_PURCHASE_LIST = [
     groupPrice: 24000,
     badgeText: '20% 할인',
     viewCount: 214,
-    isOwner: true,
+    isAdmin: true,
     isParticipating: false,
   },
   {
@@ -51,7 +52,7 @@ export const MOCK_GROUP_PURCHASE_LIST = [
     groupPrice: 17000,
     badgeText: '15% 할인',
     viewCount: 428,
-    isOwner: false,
+    isAdmin: false,
     isParticipating: true,
   },
   {
@@ -66,7 +67,7 @@ export const MOCK_GROUP_PURCHASE_LIST = [
     groupPrice: 30000,
     badgeText: '25% 할인',
     viewCount: 97,
-    isOwner: true,
+    isAdmin: true,
     isParticipating: false,
   },
   {
@@ -81,19 +82,19 @@ export const MOCK_GROUP_PURCHASE_LIST = [
     groupPrice: 27000,
     badgeText: '25% 할인',
     viewCount: 301,
-    isOwner: false,
+    isAdmin: false,
     isParticipating: true,
   },
 ]
 
 // 공동구매 상세 화면(GroupPurchaseDetailView) 목데이터
 // 필드명은 group_purchase 테이블 컬럼(gp_id, delivery_method, delivery_fee, delivery_date, deadline 등) 기준
-// memberId는 작성자 member_id (실 API 응답 형태 맞춤). isOwner는 mock 전용 필드로, 작성자가 이 화면에
+// memberId는 작성자 member_id (실 API 응답 형태 맞춤). isAdmin은 mock 전용 필드로, 관리자가 이 화면에
 // 직접 진입했을 때 상태 화면으로 리다이렉트되는지 확인용 — true로 바꾸면 리다이렉트 동작을 볼 수 있음
 // TODO: 백엔드 API 연동 후 제거하고 groupPurchaseApi.getDetail(id)로 교체 (상세 데이터 연동은 별도 작업에서 진행)
 export const MOCK_GROUP_PURCHASE_DETAIL = {
   memberId: 1,
-  isOwner: false,
+  isAdmin: false,
   productName: '프리미엄 사료 15kg',
   image: productImage,
   groupPrice: 28000,
@@ -157,10 +158,10 @@ export const MOCK_MY_GROUP_PURCHASES = [
   },
 ]
 
-// gpId별 작성자 여부 mock — MOCK_GROUP_PURCHASE_LIST/MOCK_MY_GROUP_PURCHASES의 역할과 동일하게 맞춤
-// (1: 참여, 2: 작성, 3: 참여, 4: 작성). 실 API에서는 상태 응답의 memberId와 로그인 유저 memberId를
-// 비교해서 자연히 정해지는 값이라, gpId 무관하게 단일 객체인 mock에서만 따로 gpId로 찾아줘야 함
-export const MOCK_GROUP_PURCHASE_STATUS_OWNER_BY_GP_ID = {
+// gpId별 관리자 여부 mock — MOCK_GROUP_PURCHASE_LIST/MOCK_MY_GROUP_PURCHASES의 역할과 동일하게 맞춤
+// (1: 참여, 2: 작성, 3: 참여, 4: 작성). 실 API에서는 authStore.isAdmin(JWT role 클레임)으로
+// gpId와 무관하게 정해지는 값이라, gpId별로 다양한 케이스를 보고 싶은 mock에서만 따로 gpId로 찾아줘야 함
+export const MOCK_GROUP_PURCHASE_STATUS_ADMIN_BY_GP_ID = {
   1: false,
   2: true,
   3: false,

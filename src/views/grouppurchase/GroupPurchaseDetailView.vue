@@ -30,7 +30,7 @@ async function loadDetail() {
   isError.value = false;
   try {
     if (USE_MOCK_DATA) {
-      if (MOCK_GROUP_PURCHASE_DETAIL.isOwner) {
+      if (MOCK_GROUP_PURCHASE_DETAIL.isAdmin) {
         router.replace(`/group-purchase/${route.params.gpId}/status`);
         return;
       }

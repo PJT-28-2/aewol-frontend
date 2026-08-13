@@ -9,7 +9,7 @@ import PinAuthSheet from '@/components/common/PinAuthSheet.vue';
 import StatusVisual from '@/components/common/StatusVisual.vue';
 import {
   MOCK_GROUP_PURCHASE_STATUS,
-  MOCK_GROUP_PURCHASE_STATUS_OWNER_BY_GP_ID,
+  MOCK_GROUP_PURCHASE_STATUS_ADMIN_BY_GP_ID,
 } from '@/mocks/groupPurchase';
 import { USE_MOCK_DATA } from '@/mocks/config';
 import { groupPurchaseApi } from '@/api/groupPurchase';
@@ -25,10 +25,11 @@ const authStore = useAuthStore();
 const status = ref(null);
 const isLoading = ref(true);
 const isError = ref(false);
-// 작성자 본인 글이면 참여 취소 대신 공동구매 취소 버튼을 보여준다.
-// 관리자는 작성자 여부와 무관하게 모든 게시글에 관리 권한을 가지므로(2026-08-10 정책 확정),
-// memberId 비교가 아니라 로그인 유저의 role(JWT 클레임, authStore.isAdmin)만으로 판정한다
-const isOwner = ref(false);
+// 관리자면 참여 취소 대신 공동구매 취소 버튼을 보여준다. 관리자는 작성자 여부와 무관하게
+// 모든 게시글에 관리 권한을 가지므로(2026-08-10 정책 확정), memberId 비교가 아니라 로그인
+// 유저의 role(JWT 클레임, authStore.isAdmin)만으로 판정한다. 실제 권한은 서버가 403으로
+// 최종 판단하므로, 이건 어디까지나 UX용 방어일 뿐이다
+const isAdmin = ref(false);
 
 async function loadStatus() {
   isLoading.value = true;
@@ -37,7 +38,7 @@ async function loadStatus() {
   try {
     if (USE_MOCK_DATA) {
       status.value = { gpId: route.params.gpId, ...MOCK_GROUP_PURCHASE_STATUS };
-      isOwner.value = MOCK_GROUP_PURCHASE_STATUS_OWNER_BY_GP_ID[route.params.gpId] ?? false;
+      isAdmin.value = MOCK_GROUP_PURCHASE_STATUS_ADMIN_BY_GP_ID[route.params.gpId] ?? false;
     } else {
       const { data } = await groupPurchaseApi.getStatus(route.params.gpId);
       status.value = data.result ?? null;
@@ -45,7 +46,7 @@ async function loadStatus() {
         isError.value = true;
         return;
       }
-      isOwner.value = authStore.isAdmin;
+      isAdmin.value = authStore.isAdmin;
     }
 
     // API 응답 경계에서 deadline 유효성을 검증한다. 잘못된 deadline은 getDeadlineTimestamp가
@@ -143,13 +144,13 @@ const isCancelling = ref(false);
 const cancelError = ref('');
 
 const pinSheetDescription = computed(() =>
-  isOwner.value
+  isAdmin.value
     ? '공동구매를 취소하고 참여자 전원에게 환불하기 위해 확인해요'
     : '참여를 취소하고 환불받기 위해 확인해요',
 );
 
 const cancelSuccessMessage = computed(() =>
-  isOwner.value
+  isAdmin.value
     ? '참여자 전원에게 결제 금액이 환불 처리돼요'
     : '결제 금액은 환불 처리돼요',
 );
@@ -168,7 +169,7 @@ async function handleCancelConfirm() {
   cancelError.value = '';
   isCancelling.value = true;
   try {
-    if (isOwner.value) {
+    if (isAdmin.value) {
       await groupPurchaseApi.cancel(route.params.gpId);
     } else {
       await groupPurchaseApi.leave(route.params.gpId);
@@ -177,7 +178,7 @@ async function handleCancelConfirm() {
     status.value = { ...status.value, status: 'CANCELLED' };
     isCancelSuccessSheetOpen.value = true;
   } catch {
-    cancelError.value = isOwner.value
+    cancelError.value = isAdmin.value
       ? '공동구매 취소에 실패했어요. 다시 시도해주세요.'
       : '참여 취소에 실패했어요. 다시 시도해주세요.';
   } finally {
@@ -369,7 +370,7 @@ function confirmCancelSuccess() {
         :loading="isCancelling"
         @click="isPinSheetOpen = true"
       >
-        {{ isOwner ? '공동구매 취소' : '참여 취소하기' }}
+        {{ isAdmin ? '공동구매 취소' : '참여 취소하기' }}
       </AppButton>
       <p
         v-if="cancelError"
