@@ -78,21 +78,23 @@ function goBack() {
   router.replace(backTarget.value);
 }
 
+// 백엔드 enum(OPEN/COMPLETED/FAILED/CANCELLED)을 그대로 키로 쓴다 — 별도 내부 어휘를 두지 않아서
+// 값(enum)은 백엔드가 소유하고 이 화면은 그 값에 대한 표시(문구/아이콘)만 담당한다
 const STATUS_TITLE = {
-  waiting: '구매가 보류 중이에요',
-  confirmed: '구매가 확정됐어요',
-  failed: '목표 인원 미달로 취소됐어요',
-  cancelled: '작성자가 취소한 공동구매예요',
+  OPEN: '구매가 보류 중이에요',
+  COMPLETED: '구매가 확정됐어요',
+  FAILED: '목표 인원 미달로 취소됐어요',
+  CANCELLED: '작성자가 취소한 공동구매예요',
 };
 const statusTitle = computed(
   () => STATUS_TITLE[status.value.status] ?? '구매가 보류 중이에요',
 );
 
 const statusVisualVariant = computed(() => ({
-  waiting: 'info',
-  confirmed: 'success',
-  failed: 'cancel',
-  cancelled: 'cancel',
+  OPEN: 'info',
+  COMPLETED: 'success',
+  FAILED: 'cancel',
+  CANCELLED: 'cancel',
 }[status.value.status] ?? 'info'));
 
 const progressPercent = computed(() =>
@@ -121,13 +123,13 @@ const deadlineDisplayLabel = computed(() =>
 const arrivalDateLabel = computed(() => formatArrivalDateLabel(status.value?.deliveryDate));
 
 // 취소·미달 건에는 더 이상 배송이 진행되지 않으므로, 보류/확정 상태에서만 노출.
-// 'waiting'/'confirmed'를 별도로 다시 나열하면 STATUS_TITLE과 어긋날 위험이 있어,
-// STATUS_TITLE에 정의된 상태 중 'cancelled'(작성자 취소)/'failed'(목표 미달)만 제외하는
+// 'OPEN'/'COMPLETED'를 별도로 다시 나열하면 STATUS_TITLE과 어긋날 위험이 있어,
+// STATUS_TITLE에 정의된 상태 중 'CANCELLED'(작성자 취소)/'FAILED'(목표 미달)만 제외하는
 // 방식으로 단일 출처를 유지한다.
 // deliveryDate가 없는 경우(API 미반영 등)에도 빈 라벨 대신 행 자체를 숨긴다
 const showDeliveryDate = computed(() =>
   Object.keys(STATUS_TITLE).includes(status.value?.status)
-  && !['cancelled', 'failed'].includes(status.value?.status)
+  && !['CANCELLED', 'FAILED'].includes(status.value?.status)
   && !!arrivalDateLabel.value,
 );
 
@@ -160,7 +162,7 @@ const cancelSuccessMessage = computed(() =>
 async function handleCancelConfirm() {
   if (USE_MOCK_DATA) {
     isPinSheetOpen.value = false;
-    status.value = { ...status.value, status: 'cancelled' };
+    status.value = { ...status.value, status: 'CANCELLED' };
     isCancelSuccessSheetOpen.value = true;
     return;
   }
@@ -173,8 +175,8 @@ async function handleCancelConfirm() {
     } else {
       await groupPurchaseApi.leave(route.params.gpId);
     }
-    // 취소 버튼이 계속 보이지 않도록 이전 상태(waiting)를 취소 완료로 갱신
-    status.value = { ...status.value, status: 'cancelled' };
+    // 취소 버튼이 계속 보이지 않도록 이전 상태(OPEN)를 취소 완료로 갱신
+    status.value = { ...status.value, status: 'CANCELLED' };
     isCancelSuccessSheetOpen.value = true;
   } catch {
     cancelError.value = isOwner.value
@@ -365,7 +367,7 @@ function confirmCancelSuccess() {
         variant="danger"
         size="lg"
         block
-        :disabled="status.status !== 'waiting' || isDeadlinePassed"
+        :disabled="status.status !== 'OPEN' || isDeadlinePassed"
         :loading="isCancelling"
         @click="isPinSheetOpen = true"
       >

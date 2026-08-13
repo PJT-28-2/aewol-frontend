@@ -11,6 +11,7 @@ import { USE_MOCK_DATA } from '@/mocks/config';
 import { groupPurchaseApi } from '@/api/groupPurchase';
 import { memberApi } from '@/api/member';
 import { useAuthStore } from '@/stores/auth';
+import { GROUP_PURCHASE_STATUS_CODE, getGroupPurchaseStatusLabel } from '@/utils/groupPurchaseStatus';
 
 // 공동구매 게시글은 관리자(role=ADMIN)만 작성 가능 — 일반 유저에게는 글쓰기 버튼 자체를 숨긴다.
 // 실제 권한은 서버가 403으로 최종 판단하므로, 이건 UX용 방어일 뿐이다
@@ -47,7 +48,10 @@ async function ensureProfile() {
 function buildFilterParams() {
   const params = {};
   if (selectedCategory.value !== '전체') params.category = selectedCategory.value;
-  if (selectedStatus.value && selectedStatus.value !== '전체') params.status = selectedStatus.value;
+  // selectedStatus는 드롭다운에 보여주는 한글 라벨이라, 백엔드로는 enum(OPEN/COMPLETED/...)으로 변환해서 보낸다
+  if (selectedStatus.value && selectedStatus.value !== '전체') {
+    params.status = GROUP_PURCHASE_STATUS_CODE[selectedStatus.value];
+  }
   const keyword = searchKeyword.value.trim();
   if (keyword) params.keyword = keyword;
   return params;
@@ -61,7 +65,7 @@ async function fetchPage(pageToLoad) {
       list = list.filter((gp) => gp.category === selectedCategory.value);
     }
     if (selectedStatus.value && selectedStatus.value !== '전체') {
-      list = list.filter((gp) => gp.status === selectedStatus.value);
+      list = list.filter((gp) => gp.status === GROUP_PURCHASE_STATUS_CODE[selectedStatus.value]);
     }
     const keyword = searchKeyword.value.trim().toLowerCase();
     if (keyword) {
@@ -344,7 +348,7 @@ onBeforeUnmount(() => {
               {{ gp.productName }}
             </h3>
             <p class="text-(length:--font-xs) text-(color:--color-gray-500) mb-(--space-1)">
-              {{ gp.currentQuantity }}/{{ gp.targetQuantity }}개 참여 · {{ gp.status === '진행중' ? gp.dDay : gp.status }}
+              {{ gp.currentQuantity }}/{{ gp.targetQuantity }}개 참여 · {{ gp.status === 'OPEN' ? gp.dDay : getGroupPurchaseStatusLabel(gp.status) }}
             </p>
             <div class="flex items-center gap-(--space-2) mb-(--space-1)">
               <p class="text-(length:--font-xs) font-bold text-(color:--color-navy)">
@@ -360,7 +364,7 @@ onBeforeUnmount(() => {
           </div>
           <!-- 진행중: 작성자('확인하기')/이미 참여('참여중')는 상세 없이 상태 화면으로, 미참여('참여하기')는 참여 플로우로 이동 -->
           <router-link
-            v-if="gp.status === '진행중'"
+            v-if="gp.status === 'OPEN'"
             :to="gp.isOwner || gp.isParticipating ? `/group-purchase/${gp.id}/status` : `/group-purchase/${gp.id}`"
             class="shrink-0 whitespace-nowrap rounded-full bg-(--color-leaf) px-(--space-4) py-(--space-2) text-(length:--font-sm) font-semibold text-(color:--color-navy) no-underline"
           >
