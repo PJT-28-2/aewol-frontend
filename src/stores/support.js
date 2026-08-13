@@ -47,10 +47,8 @@ export const useSupportStore = defineStore('support', {
       this.error = null;
       try {
         const { data } = await getFaqs();
-        // ⚠️ 백엔드 faqId는 String이에요(memberId/accountId/inquiryId 등 이 앱은 ID를
-        // 전부 String으로 다루는 컨벤션 — 여기서 Number로 바꾸지 않아요). fetchFaqDetail에서
-        // 섣불리 Number(faqId)로 비교했다가 실제 API 모드에서 전부 매칭 실패했던 회귀가
-        // 있었어요(2026-08-12) — 그 쪽에서 mock/real 모드를 나눠 처리해요.
+        // ⚠️ 백엔드 faqId는 String이에요 — 여기서 Number로 바꾸지 않아요.
+        // 자세한 이유는 fetchFaqDetail() 위 주석 참고.
         this.faqs = (data.result ?? []).map((faq) => ({ ...faq, answer: faq.answer ?? null }));
       } catch (err) {
         this.error = err;
@@ -86,10 +84,11 @@ export const useSupportStore = defineStore('support', {
      * fetchFaqs/ensureFaqAnswer가 실패하면 그대로 throw돼서 여기서 따로 안 잡음 —
      * 호출하는 화면(FaqDetail.vue)에서 try/catch로 처리해요.
      *
-     * ⚠️ route.params.faqId는 항상 String이에요. mock 데이터(mocks/support.js)는
-     * faqId를 숫자 리터럴로 두고 있어서 mock 모드에서만 Number로 맞춰 비교해요.
-     * 실제 API는 faqId를 String으로 내려줘서(이 앱 전체 ID 컨벤션) 그대로 비교하면 돼요 —
-     * 여기서 Number(faqId)로 통일해버리면 실제 API 모드에서 전부 매칭 실패해요(2026-08-12 회귀).
+     * ⚠️ ID 타입 관련 설명(fetchFaqs()에서도 참조): route.params.faqId는 항상 String이에요.
+     * mock 데이터(mocks/support.js)는 faqId를 숫자 리터럴로 두고 있어서 mock 모드에서만
+     * Number로 맞춰 비교해요. 실제 API는 faqId를 String으로 내려줘서(이 앱 전체 ID 컨벤션)
+     * 그대로 비교하면 돼요 — 여기서 Number(faqId)로 통일해버리면 실제 API 모드에서
+     * 전부 매칭 실패해요(2026-08-12 회귀).
      */
     async fetchFaqDetail(faqId) {
       if (this.faqs.length === 0) {
