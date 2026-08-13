@@ -14,26 +14,18 @@ import { groupPurchaseApi } from '@/api/groupPurchase';
 import { memberApi } from '@/api/member';
 import { formatDDayLabel } from '@/utils/date';
 import { useMidnightTick } from '@/composables/useMidnightTick';
+import {
+  GROUP_PURCHASE_STATUS_BADGE_CLASS,
+  GROUP_PURCHASE_STATUS_CODE,
+  getGroupPurchaseStatusLabel,
+} from '@/utils/groupPurchaseStatus';
 
 const isLoading = ref(true);
 const isError = ref(false);
 
+// gp.status는 백엔드 enum(OPEN/COMPLETED/FAILED/CANCELLED)을 그대로 보관한다.
+// 한글 라벨/배지 색상은 표시할 때만 groupPurchaseStatus 유틸로 변환한다
 const myGroupPurchases = ref([]);
-
-// 백엔드 상태 코드(OPEN/COMPLETED/CANCELLED/FAILED) ↔ 화면 라벨 매핑
-// CANCELLED: 작성자가 직접 취소, FAILED: 마감 시점까지 목표 수량 미달로 자동 취소
-const STATUS_LABEL = {
-  OPEN: '진행중',
-  COMPLETED: '달성',
-  CANCELLED: '마감(취소)',
-  FAILED: '마감(미달)',
-};
-const STATUS_CODE = {
-  진행중: 'OPEN',
-  달성: 'COMPLETED',
-  '마감(미달)': 'FAILED',
-  '마감(취소)': 'CANCELLED',
-};
 
 // 상태 필터: 마감 여부와 무관하게 전부 조회 가능
 const statusOptions = ['전체', '진행중', '달성', '마감(미달)', '마감(취소)'];
@@ -45,14 +37,6 @@ function selectStatus(option) {
   isStatusSheetOpen.value = false;
 }
 
-// 상태 배지 색상: 진행중은 올리브, 달성은 중립 그레이, 마감(미달)/마감(취소)는 danger 톤으로 구분
-const STATUS_BADGE_CLASS = {
-  진행중: 'bg-(--color-olive-surface) text-(color:--color-olive)',
-  달성: 'bg-(--color-gray-200) text-(color:--color-gray-600)',
-  '마감(미달)': 'bg-(--color-danger-soft) text-(color:--color-danger-strong)',
-  '마감(취소)': 'bg-(--color-danger-soft) text-(color:--color-danger-strong)',
-};
-
 // dDay는 목록 조회 시점의 문자열로 고정하지 않고 deadline 원본을 보관해뒀다가 렌더링 시점에
 // 계산한다. midnightTick을 읽어서 자정이 지나면 다시 계산되도록 한다
 const midnightTick = useMidnightTick();
@@ -63,7 +47,7 @@ function dDayLabel(deadline) {
 // 최신순 정렬은 백엔드가 ORDER BY created_at DESC로 보장해서 내려준다 (GET /group-purchase/my)
 const filteredGroupPurchases = computed(() =>
   myGroupPurchases.value.filter(
-    (gp) => selectedStatus.value === '전체' || gp.status === selectedStatus.value,
+    (gp) => selectedStatus.value === '전체' || gp.status === GROUP_PURCHASE_STATUS_CODE[selectedStatus.value],
   ),
 );
 
@@ -98,7 +82,7 @@ async function loadMyGroupPurchases() {
     const myMemberId = (profileData.result ?? profileData)?.memberId;
 
     // '전체'는 상태 필터 없이 조회, 그 외에는 백엔드 상태 코드로 변환해서 전달
-    const params = selectedStatus.value === '전체' ? {} : { status: STATUS_CODE[selectedStatus.value] };
+    const params = selectedStatus.value === '전체' ? {} : { status: GROUP_PURCHASE_STATUS_CODE[selectedStatus.value] };
     const { data } = await groupPurchaseApi.getMyList(params);
     const items = data.result ?? [];
 
@@ -108,7 +92,7 @@ async function loadMyGroupPurchases() {
       gpId: item.gpId,
       productName: item.productName,
       role: item.memberId === myMemberId ? '작성' : '참여',
-      status: STATUS_LABEL[item.status] ?? item.status,
+      status: item.status,
       currentQuantity: item.currentQuantity,
       targetQuantity: item.targetQuantity,
       deadline: item.deadline,
@@ -233,13 +217,13 @@ watch(selectedStatus, loadMyGroupPurchases);
               {{ gp.productName }}
             </h3>
             <p class="text-(length:--font-xs) text-(color:--color-gray-500) mb-(--space-2)">
-              {{ gp.role }} · {{ gp.currentQuantity }}/{{ gp.targetQuantity }}개 · {{ gp.status === '진행중' ? dDayLabel(gp.deadline) : '마감됨' }}
+              {{ gp.role }} · {{ gp.currentQuantity }}/{{ gp.targetQuantity }}개 · {{ gp.status === 'OPEN' ? dDayLabel(gp.deadline) : '마감됨' }}
             </p>
             <span
               class="inline-block px-(--space-2) py-(--space-1) rounded-full text-(length:--font-xs) font-semibold"
-              :class="STATUS_BADGE_CLASS[gp.status]"
+              :class="GROUP_PURCHASE_STATUS_BADGE_CLASS[gp.status]"
             >
-              {{ gp.status }}
+              {{ getGroupPurchaseStatusLabel(gp.status) }}
             </span>
           </div>
           <IconChevronRight
