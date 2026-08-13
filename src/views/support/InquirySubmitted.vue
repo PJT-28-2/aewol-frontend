@@ -34,7 +34,8 @@ function goToMyInquiries() {
       variant="primary"
       size="lg"
       block
-      class="mt-(--space-4) !rounded-(--radius-2xl)"
+      radius="2xl"
+      class="mt-(--space-4)"
       @click="goToMyInquiries"
     >
       내 문의 보기

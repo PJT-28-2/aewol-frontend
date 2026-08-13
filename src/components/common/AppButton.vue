@@ -40,6 +40,15 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  // size에 따른 기본 radius를 화면별로 다르게 써야 할 때만 명시적으로 지정해요.
+  // 지정하지 않으면 기존처럼 size 기반 기본값을 그대로 써요 — 다른 화면들의
+  // 기존 radius에는 영향 없어요. (PR #221 리뷰 지적: 완료 화면들에서
+  // !rounded-(--radius-2xl)로 매번 !important 오버라이드하던 것 대신 이 prop을 씀)
+  radius: {
+    type: String,
+    default: null,
+    validator: (value) => value === null || ['md', 'lg', 'xl', '2xl', 'full'].includes(value),
+  },
   iconOnly: {
     type: Boolean,
     default: false,
@@ -80,9 +89,19 @@ const radiusClasses = {
   lg: 'rounded-(--radius-xl)',
 }
 
-const radiusClass = computed(() =>
-  props.pill ? 'rounded-(--radius-full)' : radiusClasses[props.size],
-)
+const radiusTokenMap = {
+  md: 'rounded-(--radius-md)',
+  lg: 'rounded-(--radius-lg)',
+  xl: 'rounded-(--radius-xl)',
+  '2xl': 'rounded-(--radius-2xl)',
+  full: 'rounded-(--radius-full)',
+}
+
+const radiusClass = computed(() => {
+  if (props.pill) return 'rounded-(--radius-full)'
+  if (props.radius) return radiusTokenMap[props.radius]
+  return radiusClasses[props.size]
+})
 
 const spinnerColor = ['secondary', 'neutral', 'ghost', 'primary', 'white'].includes(props.variant)
   ? 'navy'

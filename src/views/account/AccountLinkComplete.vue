@@ -35,7 +35,8 @@ function goToAccountManagement() {
       variant="primary"
       size="lg"
       block
-      class="mt-(--space-4) !rounded-(--radius-2xl)"
+      radius="2xl"
+      class="mt-(--space-4)"
       @click="goToAccountManagement"
     >
       계좌 관리로 이동
@@ -57,7 +58,8 @@ function goToAccountManagement() {
       variant="primary"
       size="lg"
       block
-      class="mt-(--space-4) !rounded-(--radius-2xl)"
+      radius="2xl"
+      class="mt-(--space-4)"
       @click="goToAccountManagement"
     >
       계좌 관리로
