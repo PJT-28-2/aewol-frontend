@@ -9,4 +9,16 @@ export const walletApi = {
   charge(amount) {
     return api.post('/wallet/deposit', null, { params: { amount } })
   },
+
+  verifySimplePassword(password) {
+    return api.post('/users/simple-password/verify', { password })
+  },
+
+  withdraw({ accountId, amount, memo, password, idempotencyKey }) {
+    return api.post(
+      '/wallet/withdraw',
+      { accountId: String(accountId), amount, memo, password },
+      { headers: { 'Idempotency-Key': idempotencyKey } },
+    )
+  },
 }

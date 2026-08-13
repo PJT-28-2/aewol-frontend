@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import AppButton from '@/components/common/AppButton.vue';
 import BankBadge from '@/components/common/BankBadge.vue';
@@ -31,22 +31,27 @@ onMounted(() => {
   loadAccounts();
 });
 
-const pendingAccountId = ref(Number(route.query.myAccountId) || undefined);
+const pendingAccountId = ref(
+  route.query.accountId ? String(route.query.accountId) : undefined,
+);
+const activeAccounts = computed(() =>
+  accountStore.accounts.filter((account) => account.status !== 'INACTIVE'),
+);
 
-// route.query.myAccountId가 없을 때, 계좌 목록이 비동기로 로드된 뒤에도
+// route.query.accountId가 없을 때, 계좌 목록이 비동기로 로드된 뒤에도
 // 주계좌를 기본 선택값으로 반영하기 위한 watch (accounts는 onMounted에서 채워짐)
 watch(
   () => accountStore.accounts.length,
   () => {
     if (pendingAccountId.value != null) return;
     pendingAccountId.value =
-      accountStore.primaryAccount?.accountId ?? accountStore.accounts[0]?.accountId;
+      accountStore.primaryAccount?.accountId ?? activeAccounts.value[0]?.accountId;
   },
   { immediate: true },
 );
 
 function isSelected(account) {
-  return account.accountId === pendingAccountId.value;
+  return String(account.accountId) === String(pendingAccountId.value);
 }
 
 function selectAccount(account) {
@@ -56,7 +61,7 @@ function selectAccount(account) {
 function confirmChange() {
   router.replace({
     path: '/wallet/transfer',
-    query: { ...route.query, myAccountId: pendingAccountId.value },
+    query: { ...route.query, accountId: pendingAccountId.value },
   });
 }
 </script>
@@ -69,12 +74,12 @@ function confirmChange() {
       <h1
         class="text-(length:--font-2xl) font-bold text-(color:--color-navy)"
       >
-        내 계좌 선택
+        출금 계좌 선택
       </h1>
       <p
         class="text-(length:--font-md) text-(color:--color-slate-muted) mt-(--space-1)"
       >
-        송금에 사용할 계좌를 선택해주세요
+        애월지갑의 돈을 받을 본인 계좌를 선택해주세요
       </p>
     </header>
 
@@ -102,7 +107,7 @@ function confirmChange() {
     </div>
 
     <p
-      v-else-if="!accountStore.accounts.length"
+      v-else-if="!activeAccounts.length"
       class="text-(length:--font-sm) text-(color:--color-gray-500)"
     >
       연동된 계좌가 없어요
@@ -113,7 +118,7 @@ function confirmChange() {
       class="flex flex-col gap-(--space-3)"
     >
       <li
-        v-for="account in accountStore.accounts"
+        v-for="account in activeAccounts"
         :key="account.accountId"
       >
         <button

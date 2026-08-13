@@ -92,6 +92,7 @@ describe('useTransactionStore', () => {
           txnType: 'DEPOSIT',
           amount: 100000,
           category: null,
+          memo: '지갑 충전 (TossPayments)',
         }],
       },
     })
@@ -103,6 +104,60 @@ describe('useTransactionStore', () => {
       id: '18',
       type: 'charge',
       amount: 100000,
+      chargeMethod: 'TossPayments',
+    })
+  })
+
+  it('기존 직접 충전 거래은 충전 수단을 직접 충전으로 표시한다', async () => {
+    transactionApi.getTransaction.mockResolvedValue({
+      data: {
+        result: {
+          ...backendTransaction,
+          transactionId: '19',
+          txnType: 'DEPOSIT',
+          amount: 30000,
+          category: null,
+          memo: '지갑 충전',
+        },
+      },
+    })
+
+    const store = useTransactionStore()
+    await store.fetchTransaction('19')
+
+    expect(store.currentTxn.chargeMethod).toBe('직접 충전')
+  })
+
+  it('본인 계좌 출금은 월 지출과 카테고리 집계에서 제외한다', async () => {
+    transactionApi.getTransactions.mockResolvedValue({
+      data: {
+        result: {
+          transactions: [
+            backendTransaction,
+            {
+              ...backendTransaction,
+              transactionId: '20',
+              txnType: 'WITHDRAW',
+              amount: 10000,
+              category: null,
+              petId: null,
+              merchantName: 'KB국민은행',
+              memo: '내 계좌로 출금',
+            },
+          ],
+          nextCursor: null,
+        },
+      },
+    })
+
+    const store = useTransactionStore()
+    await store.fetchTransactions({ period: '2026-08' })
+
+    expect(store.monthlyExpenseTotal(2026, 8)).toBe(42000)
+    expect(store.categoryBreakdown(2026, 8)).toHaveLength(1)
+    expect(store.categoryBreakdown(2026, 8)[0]).toMatchObject({
+      key: 'MEDICAL',
+      amount: 42000,
     })
   })
 
