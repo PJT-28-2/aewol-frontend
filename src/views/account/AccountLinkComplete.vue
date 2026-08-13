@@ -31,16 +31,16 @@ function goToAccountManagement() {
     description="계좌 관리 화면에서 연동 상태를 다시 확인해주세요"
     variant="danger"
   >
-    <template #action>
-      <AppButton
-        variant="primary"
-        size="lg"
-        block
-        @click="goToAccountManagement"
-      >
-        계좌 관리로 이동
-      </AppButton>
-    </template>
+    <AppButton
+      variant="primary"
+      size="lg"
+      block
+      radius="2xl"
+      class="mt-(--space-4)"
+      @click="goToAccountManagement"
+    >
+      계좌 관리로 이동
+    </AppButton>
   </CompletionPageLayout>
 
   <CompletionPageLayout
@@ -51,18 +51,18 @@ function goToAccountManagement() {
     <AccountSummaryCard
       :bank-code="linkedAccount.bankCode"
       :badge-size="36"
-      class="mt-(--space-6) w-full"
+      class="mt-(--space-6) w-full border border-(--color-leaf)"
     />
 
-    <template #action>
-      <AppButton
-        variant="primary"
-        size="lg"
-        block
-        @click="goToAccountManagement"
-      >
-        계좌 관리로
-      </AppButton>
-    </template>
+    <AppButton
+      variant="primary"
+      size="lg"
+      block
+      radius="2xl"
+      class="mt-(--space-4)"
+      @click="goToAccountManagement"
+    >
+      계좌 관리로
+    </AppButton>
   </CompletionPageLayout>
 </template>

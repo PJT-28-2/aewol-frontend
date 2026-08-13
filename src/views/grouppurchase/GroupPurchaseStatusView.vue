@@ -14,7 +14,7 @@ import {
 import { USE_MOCK_DATA } from '@/mocks/config';
 import { groupPurchaseApi } from '@/api/groupPurchase';
 import { memberApi } from '@/api/member';
-import { formatDDayLabel, getDeadlineTimestamp } from '@/utils/date';
+import { formatArrivalDateLabel, formatDDayLabel, getDeadlineTimestamp } from '@/utils/date';
 import { useDeadlineTimer } from '@/composables/useDeadlineTimer';
 import { useMidnightTick } from '@/composables/useMidnightTick';
 
@@ -72,14 +72,17 @@ const isFromMyPage = computed(() => route.query.from === 'my');
 const backTarget = computed(() => (isFromMyPage.value ? '/group-purchase/my' : '/group-purchase'));
 const backLabel = computed(() => (isFromMyPage.value ? '마이페이지로 돌아가기' : '리스트로 돌아가기'));
 
+// replace를 써서 히스토리에 status를 남기지 않는다 — push로 쌓으면 목록/마이페이지에서
+// 브라우저 뒤로가기를 눌렀을 때 이 status 화면으로 되돌아와버린다
 function goBack() {
-  router.push(backTarget.value);
+  router.replace(backTarget.value);
 }
 
 const STATUS_TITLE = {
   waiting: '구매가 보류 중이에요',
   confirmed: '구매가 확정됐어요',
-  cancelled: '목표 인원 미달로 취소됐어요',
+  failed: '목표 인원 미달로 취소됐어요',
+  cancelled: '작성자가 취소한 공동구매예요',
 };
 const statusTitle = computed(
   () => STATUS_TITLE[status.value.status] ?? '구매가 보류 중이에요',
@@ -88,6 +91,7 @@ const statusTitle = computed(
 const statusVisualVariant = computed(() => ({
   waiting: 'info',
   confirmed: 'success',
+  failed: 'cancel',
   cancelled: 'cancel',
 }[status.value.status] ?? 'info'));
 
@@ -111,6 +115,20 @@ const deadlineLabel = computed(() => formatDDayLabel(status.value.deadline, new 
 // 템플릿의 "마감 " 접두어와 결합했을 때 마감 지난 경우 "마감 마감"으로 겹쳐 보이지 않도록 분리
 const deadlineDisplayLabel = computed(() =>
   deadlineLabel.value === '마감' ? '마감' : `마감 ${deadlineLabel.value}`,
+);
+
+// raw delivery_date를 'M/D(요일) 도착 예정' 형식으로 변환 (DetailView.vue와 동일 계약)
+const arrivalDateLabel = computed(() => formatArrivalDateLabel(status.value?.deliveryDate));
+
+// 취소·미달 건에는 더 이상 배송이 진행되지 않으므로, 보류/확정 상태에서만 노출.
+// 'waiting'/'confirmed'를 별도로 다시 나열하면 STATUS_TITLE과 어긋날 위험이 있어,
+// STATUS_TITLE에 정의된 상태 중 'cancelled'(작성자 취소)/'failed'(목표 미달)만 제외하는
+// 방식으로 단일 출처를 유지한다.
+// deliveryDate가 없는 경우(API 미반영 등)에도 빈 라벨 대신 행 자체를 숨긴다
+const showDeliveryDate = computed(() =>
+  Object.keys(STATUS_TITLE).includes(status.value?.status)
+  && !['cancelled', 'failed'].includes(status.value?.status)
+  && !!arrivalDateLabel.value,
 );
 
 // 마감 기한이 지난 공동구매는 참여 취소/공동구매 취소 버튼을 비활성화.
@@ -170,7 +188,7 @@ async function handleCancelConfirm() {
 
 function confirmCancelSuccess() {
   isCancelSuccessSheetOpen.value = false;
-  router.push(backTarget.value);
+  router.replace(backTarget.value);
 }
 </script>
 
@@ -273,6 +291,21 @@ function confirmCancelSuccess() {
             class="text-(length:--font-xs) font-bold text-(color:--color-gold-dark)"
           >
             {{ deadlineDisplayLabel }}
+          </p>
+        </div>
+      </section>
+
+      <!-- 배송 예정일: 취소된 건은 더 이상 배송이 진행되지 않으므로 보류/확정 상태에서만 노출 -->
+      <section
+        v-if="showDeliveryDate"
+        class="mb-(--space-5) rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-(--space-4) shadow-(--shadow-card)"
+      >
+        <div class="flex items-center justify-between">
+          <p class="text-(length:--font-xs) text-(color:--color-slate-muted)">
+            배송 예정일
+          </p>
+          <p class="text-(length:--font-xs) font-bold text-(color:--color-navy)">
+            {{ arrivalDateLabel }}
           </p>
         </div>
       </section>

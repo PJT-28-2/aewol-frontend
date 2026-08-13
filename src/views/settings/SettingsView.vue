@@ -31,10 +31,14 @@ const PROFILE_VERIFIED_KEY = 'profileEditPasswordVerified'
 
 const memberName = computed(() => memberStore.profile?.name ?? '')
 const memberEmail = computed(() => memberStore.profile?.email ?? '')
-const petName = computed(() => petStore.pets[0]?.name ?? '포리')
-const profileImage = computed(() =>
-  memberStore.profile?.profileImg || memberStore.petProfilePhotoUrl || profileMascot,
+// 홈 화면과 같은 기준으로 대표 반려동물을 고른다.
+const representativePet = computed(() =>
+  petStore.pets.find((pet) => pet.id === petStore.representativePetId) ?? petStore.pets[0] ?? null,
 )
+const petName = computed(() => representativePet.value?.name ?? '포리')
+// 이 자리는 회원 사진이 아니라 반려동물 아바타다(수정 버튼도 캐릭터 생성 화면으로 간다).
+// AI로 만든 얼굴 클로즈업을 쓰고, 없으면 기본 마스코트로 대체한다.
+const profileImage = computed(() => representativePet.value?.profileImg || profileMascot)
 
 onMounted(async () => {
   await Promise.allSettled([

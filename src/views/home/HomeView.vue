@@ -31,7 +31,11 @@ const primaryPet = computed(() =>
 )
 const petName = computed(() => primaryPet.value?.name || '포리')
 const memberName = computed(() => memberStore.profile?.name || '회원')
-const heroImage = computed(() => primaryPet.value?.species === 'CAT' ? catHero : dogHero)
+// AI로 만든 전신 캐릭터가 있으면 그것을 쓴다. 이 이미지는 홈 화면 히어로 용도로
+// 생성된 것이다(prompts/pet-character-fullbody.txt). 아직 만들지 않았거나 생성에
+// 실패한 반려동물은 종별 기본 마스코트로 대체한다.
+const defaultHero = computed(() => (primaryPet.value?.species === 'CAT' ? catHero : dogHero))
+const heroImage = computed(() => primaryPet.value?.characterImg || defaultHero.value)
 const formattedBalance = computed(() =>
   Number(dashboardStore.summary?.walletBalance ?? 0).toLocaleString('ko-KR'),
 )

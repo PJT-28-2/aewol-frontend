@@ -152,7 +152,10 @@ function selectCategory(category) {
 }
 
 // 상태 드롭다운 필터: 미선택 시 "상태"로 표시(전체 노출)
-const statusOptions = ['전체', '진행중', '마감(성공)', '마감(미달)'];
+// 공개 목록은 백엔드 쿼리(GroupPurchaseMapper.xml)가 최상단 WHERE절에서 status != 'CANCELLED'로
+// 취소 건을 항상 제외하므로, 여기 '마감(취소)' 옵션을 추가하면 선택해도 항상 빈 목록만 나온다.
+// 취소 건은 마이페이지(본인 글 전체 조회, GroupPurchaseMyView.vue)에서만 필터링 가능
+const statusOptions = ['전체', '진행중', '달성', '마감(미달)'];
 const selectedStatus = ref('');
 const isStatusOpen = ref(false);
 

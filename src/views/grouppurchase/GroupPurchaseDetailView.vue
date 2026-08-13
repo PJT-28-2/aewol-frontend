@@ -9,7 +9,7 @@ import { MOCK_GROUP_PURCHASE_DETAIL } from '@/mocks/groupPurchase';
 import { USE_MOCK_DATA } from '@/mocks/config';
 import { groupPurchaseApi } from '@/api/groupPurchase';
 import { memberApi } from '@/api/member';
-import { formatDDayLabel } from '@/utils/date';
+import { formatArrivalDateLabel, formatDDayLabel } from '@/utils/date';
 import { useDeadlineTimer } from '@/composables/useDeadlineTimer';
 import { useMidnightTick } from '@/composables/useMidnightTick';
 
@@ -59,22 +59,6 @@ async function loadDetail() {
 }
 
 onMounted(loadDetail);
-
-const WEEKDAY_LABELS = [
-  '일',
-  '월',
-  '화',
-  '수',
-  '목',
-  '금',
-  '토',
-];
-
-// 'YYYY-MM-DD' 문자열을 UTC 파싱으로 인한 날짜 밀림 없이 로컬 자정 Date로 변환
-function toLocalDate(dateString) {
-  const [year, month, day] = dateString.split('-').map(Number);
-  return new Date(year, month - 1, day);
-}
 
 const quantity = ref(1);
 const quantityError = ref('');
@@ -173,11 +157,9 @@ const shippingSummaryLabel = computed(() => {
   return `${groupPurchase.value.deliveryMethod} · ${feeSuffix}`;
 });
 
-// raw delivery_date를 'M/D(요일) 도착 보장' 형식으로 변환
-const arrivalDateLabel = computed(() => {
-  const date = toLocalDate(groupPurchase.value.deliveryDate);
-  return `${date.getMonth() + 1}/${date.getDate()}(${WEEKDAY_LABELS[date.getDay()]}) 도착 보장`;
-});
+// raw delivery_date를 'M/D(요일) 도착 예정' 형식으로 변환. 잠정(마감일 기준)/확정(달성일 기준)
+// 값 계산은 백엔드가 처리해 delivery_date에 반영하므로 프론트는 포맷팅만 담당
+const arrivalDateLabel = computed(() => formatArrivalDateLabel(groupPurchase.value.deliveryDate));
 
 function goToPaymentPreview() {
   // CTA는 disabled로 이미 막지만, 결제 미리보기로 넘어가기 전에도 같은 조건을 한 번 더 검증

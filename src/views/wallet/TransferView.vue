@@ -1,266 +1,205 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import AppButton from '@/components/common/AppButton.vue';
-import BankBadge from '@/components/common/BankBadge.vue';
-import BottomSheet from '@/components/common/BottomSheet.vue';
-import IconCheck from '@/components/common/icons/IconCheck.vue';
-import IconChevronDown from '@/components/common/icons/IconChevronDown.vue';
-import { useAccountStore } from '@/stores/account';
-import { formatWon, getBankMeta } from '@/utils/bankMeta';
-import { ENABLED_BANK_CODES, MOCK_ACCOUNTS, MOCK_BANKS } from '@/mocks/account';
+import { computed, onMounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import AppButton from '@/components/common/AppButton.vue'
+import BankBadge from '@/components/common/BankBadge.vue'
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
+import { useAccountStore } from '@/stores/account'
+import { useWalletStore } from '@/stores/wallet'
+import { getBankMeta } from '@/utils/bankMeta'
 
-const route = useRoute();
-const router = useRouter();
-const accountStore = useAccountStore();
+const route = useRoute()
+const router = useRouter()
+const accountStore = useAccountStore()
+const walletStore = useWalletStore()
+
+const isLoading = ref(true)
+const loadError = ref('')
 
 onMounted(async () => {
-  if (accountStore.accounts.length) return;
-  try {
-    await accountStore.fetchAccounts();
-  } catch {
-    // 계좌 연동 API 연동 전이라 조회가 실패할 수 있어요. 내 계좌는 최소 하나 보이도록 폴백
+  const requests = [walletStore.fetchWallet()]
+  if (!accountStore.accounts.length) requests.push(accountStore.fetchAccounts())
+
+  const results = await Promise.allSettled(requests)
+  if (results.some((result) => result.status === 'rejected')) {
+    loadError.value = '출금 정보를 불러오지 못했어요.'
   }
-  if (!accountStore.accounts.length) {
-    accountStore.accounts = structuredClone(MOCK_ACCOUNTS);
-  }
-});
+  isLoading.value = false
+})
 
-// 실제 송금 가능한 은행은 KB/토스뿐이라 받는 은행 선택지도 동일하게 제한
-const receivingBanks = MOCK_BANKS.filter((bank) =>
-  ENABLED_BANK_CODES.includes(bank.bankCode),
-);
-
-const receivingBankCode = ref(
-  route.query.bankCode || receivingBanks[0]?.bankCode || '',
-);
-const receivingAccountNumber = ref(route.query.accountNumber || '');
-
-const receivingBankName = computed(
-  () => receivingBanks.find((bank) => bank.bankCode === receivingBankCode.value)?.bankName,
-);
-
-const isBankSheetOpen = ref(false);
-
-function selectReceivingBank(bank) {
-  receivingBankCode.value = bank.bankCode;
-  isBankSheetOpen.value = false;
-}
-
-const quickAmounts = [10000, 30000, 50000, 100000];
-const amount = ref(Number(route.query.amount) || 0);
+const amount = ref(Number(route.query.amount) || 0)
+const amountInput = computed({
+  get: () => (amount.value > 0 ? amount.value.toLocaleString('ko-KR') : ''),
+  set: (value) => {
+    amount.value = Number(String(value).replace(/\D/g, '').slice(0, 13)) || 0
+  },
+})
+const quickAmounts = [10000, 30000, 50000, 100000]
 
 function addAmount(value) {
-  amount.value += value;
+  amount.value += value
 }
 
-const myAccount = computed(() => {
-  const queryId = Number(route.query.myAccountId);
-  return (
-    accountStore.accounts.find((account) => account.accountId === queryId) ??
-    accountStore.primaryAccount ??
-    accountStore.accounts[0] ??
-    null
-  );
-});
-
-const myAccountBankMeta = computed(() =>
-  myAccount.value ? getBankMeta(myAccount.value.bankCode) : null,
-);
-
+const walletBalance = computed(() => walletStore.wallet?.totalBalance ?? 0)
+const activeAccounts = computed(() =>
+  accountStore.accounts.filter((account) => account.status !== 'INACTIVE'),
+)
+const selectedAccount = computed(() => {
+  const queryId = String(route.query.accountId ?? '')
+  return activeAccounts.value.find(
+    (account) => String(account.accountId) === queryId,
+  ) ?? activeAccounts.value.find((account) => account.isPrimary)
+    ?? activeAccounts.value[0]
+    ?? null
+})
+const selectedBankName = computed(() =>
+  selectedAccount.value?.bankName
+  ?? (selectedAccount.value ? getBankMeta(selectedAccount.value.bankCode).name : ''),
+)
 const isInsufficientBalance = computed(
-  () => !!myAccount.value && amount.value > myAccount.value.balance,
-);
-
+  () => amount.value > walletBalance.value,
+)
 const canProceed = computed(
-  () =>
-    !!receivingBankCode.value &&
-    !!receivingAccountNumber.value.trim() &&
-    amount.value > 0 &&
-    !!myAccount.value &&
-    !isInsufficientBalance.value,
-);
+  () => !!selectedAccount.value && amount.value > 0 && !isInsufficientBalance.value,
+)
 
 function currentQuery() {
   return {
-    bankCode: receivingBankCode.value,
-    accountNumber: receivingAccountNumber.value,
-    amount: amount.value,
-    myAccountId: myAccount.value?.accountId,
-  };
+    accountId: selectedAccount.value?.accountId,
+    amount: amount.value || undefined,
+  }
 }
 
-function goToMyAccountSelect() {
+function goToAccountSelect() {
   router.push({
     path: '/wallet/transfer/account-select',
     query: currentQuery(),
-  });
+  })
 }
 
 function handleNext() {
-  if (!canProceed.value) return;
+  if (!canProceed.value) return
   router.push({
     path: '/wallet/transfer/confirm',
     query: currentQuery(),
-  });
+  })
 }
 </script>
 
 <template>
-  <div
-    class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+96px)] bg-(--color-app-bg) min-h-screen"
-  >
+  <div class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-[calc(var(--bottom-nav-height)+96px)]">
     <header class="mb-(--space-5)">
-      <h1
-        class="text-(length:--font-2xl) font-bold text-(color:--color-navy)"
-      >
-        얼마를 보낼까요?
+      <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">
+        얼마를 출금할까요?
       </h1>
-      <p
-        class="text-(length:--font-md) text-(color:--color-slate-muted) mt-(--space-1)"
-      >
-        받는 계좌로 보낼 금액을 입력해주세요
+      <p class="mt-(--space-1) text-(length:--font-md) text-(color:--color-slate-muted)">
+        애월지갑에서 내 연결 계좌로 출금해요
       </p>
     </header>
 
-    <section class="mb-(--space-4)">
-      <h2
-        class="text-(length:--font-md) font-semibold text-(color:--color-navy) mb-(--space-2)"
-      >
-        받는 은행
-      </h2>
-      <button
-        type="button"
-        class="w-full flex items-center justify-between p-4 rounded-(--radius-xl) bg-(--color-surface) border border-(--color-border) text-(length:--font-md) font-semibold text-(color:--color-navy)"
-        @click="isBankSheetOpen = true"
-      >
-        {{ receivingBankName }}
-        <IconChevronDown
-          size="16"
-          color="var(--color-slate-muted)"
-        />
-      </button>
-    </section>
-
-    <section class="mb-(--space-6)">
-      <h2
-        class="text-(length:--font-md) font-semibold text-(color:--color-navy) mb-(--space-2)"
-      >
-        계좌번호
-      </h2>
-      <input
-        v-model="receivingAccountNumber"
-        type="text"
-        inputmode="numeric"
-        placeholder="123456-12-123456"
-        class="w-full p-4 rounded-(--radius-xl) bg-(--color-surface) border border-(--color-border) text-(length:--font-md) text-(color:--color-navy) outline-none"
-      >
-    </section>
-
-    <p
-      class="text-center text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-4)"
+    <div
+      v-if="isLoading"
+      class="flex justify-center py-(--space-9)"
     >
-      {{ amount.toLocaleString() }}원
-    </p>
-
-    <div class="grid grid-cols-4 gap-(--space-2) mb-(--space-6)">
-      <button
-        v-for="value in quickAmounts"
-        :key="value"
-        type="button"
-        class="h-[36px] rounded-[10px] border border-(--color-border) text-(length:--font-sm) font-semibold text-(color:--color-slate-dark)"
-        @click="addAmount(value)"
-      >
-        +{{ value / 10000 }}만원
-      </button>
+      <LoadingSpinner />
     </div>
 
-    <section class="mb-(--space-6)">
-      <h2
-        class="text-(length:--font-md) font-semibold text-(color:--color-navy) mb-(--space-3)"
-      >
-        내 계좌
-      </h2>
-      <button
-        v-if="myAccount"
-        type="button"
-        class="w-full flex items-center gap-(--space-3) bg-(--color-white) border border-(--color-border) rounded-(--radius-icon) p-(--space-4)"
-        @click="goToMyAccountSelect"
-      >
-        <BankBadge
-          :bank-code="myAccount.bankCode"
-          :size="40"
-        />
-        <div class="flex-1 text-left">
-          <p
-            class="text-(length:--font-md) font-semibold text-(color:--color-navy)"
+    <div
+      v-else-if="loadError"
+      class="rounded-(--radius-xl) bg-(--color-danger-soft) p-(--space-4) text-(length:--font-sm) text-(color:--color-danger-strong)"
+      role="alert"
+    >
+      {{ loadError }} 지갑 화면으로 돌아갔다가 다시 시도해주세요.
+    </div>
+
+    <template v-else>
+      <section class="mb-(--space-6) rounded-(--radius-xl) bg-(--color-navy) p-(--space-5) text-(color:--color-white)">
+        <p class="text-(length:--font-sm) text-(color:--color-slate-light)">
+          출금 가능한 애월지갑 잔액
+        </p>
+        <p class="mt-(--space-2) text-(length:--font-2xl) font-bold">
+          {{ walletBalance.toLocaleString() }}원
+        </p>
+      </section>
+
+      <section class="mb-(--space-5)">
+        <label
+          for="withdraw-amount"
+          class="mb-(--space-2) block text-(length:--font-md) font-semibold text-(color:--color-navy)"
+        >출금 금액</label>
+        <div class="relative">
+          <input
+            id="withdraw-amount"
+            v-model="amountInput"
+            type="text"
+            inputmode="numeric"
+            placeholder="0"
+            class="w-full rounded-(--radius-xl) border border-(--color-border) bg-(--color-surface) p-4 pr-10 text-right text-(length:--font-xl) font-bold text-(color:--color-navy) outline-none"
           >
-            {{ myAccountBankMeta.name }}
-          </p>
-          <p
-            class="text-(length:--font-sm) text-(color:--color-slate-muted) mt-(--space-1)"
-          >
-            {{ myAccount.accountNumberMasked }} · {{ formatWon(myAccount.balance) }}
-          </p>
+          <span class="absolute right-4 top-1/2 -translate-y-1/2 text-(length:--font-md) text-(color:--color-slate-muted)">원</span>
         </div>
-        <span
-          class="text-(length:--font-xl) text-(color:--color-gray-400)"
-        >&rsaquo;</span>
-      </button>
-      <p
-        v-if="isInsufficientBalance"
-        class="text-(length:--font-sm) text-(color:--color-danger-strong) mt-(--space-2)"
-      >
-        잔액이 부족해요
-      </p>
-    </section>
-
-    <AppButton
-      variant="primary"
-      size="lg"
-      :disabled="!canProceed"
-      class="fixed bottom-[calc(var(--bottom-nav-height)+var(--space-7))] left-(--space-4) right-(--space-4) rounded-(--radius-xl) shadow-(--shadow-md)"
-      @click="handleNext"
-    >
-      다음
-    </AppButton>
-
-    <BottomSheet
-      v-model="isBankSheetOpen"
-      title="받는 은행 선택"
-    >
-      <ul>
-        <li
-          v-for="bank in receivingBanks"
-          :key="bank.bankCode"
+        <p
+          v-if="isInsufficientBalance"
+          class="mt-(--space-2) text-(length:--font-sm) text-(color:--color-danger-strong)"
+          role="alert"
         >
-          <button
-            type="button"
-            class="w-full flex items-center gap-(--space-3) py-(--space-3)"
-            @click="selectReceivingBank(bank)"
-          >
-            <BankBadge
-              :bank-code="bank.bankCode"
-              :size="32"
-            />
-            <span
-              class="flex-1 text-left text-(length:--font-base)"
-              :class="
-                bank.bankCode === receivingBankCode
-                  ? 'text-(color:--color-gold) font-bold'
-                  : 'text-(color:--color-slate-dark)'
-              "
-            >
-              {{ bank.bankName }}
-            </span>
-            <IconCheck
-              v-if="bank.bankCode === receivingBankCode"
-              size="18"
-              color="var(--color-gold)"
-            />
-          </button>
-        </li>
-      </ul>
-    </BottomSheet>
+          애월지갑 잔액이 부족해요
+        </p>
+      </section>
+
+      <div class="mb-(--space-6) grid grid-cols-4 gap-(--space-2)">
+        <button
+          v-for="value in quickAmounts"
+          :key="value"
+          type="button"
+          class="h-[36px] rounded-[10px] border border-(--color-border) text-(length:--font-sm) font-semibold text-(color:--color-slate-dark)"
+          @click="addAmount(value)"
+        >
+          +{{ value / 10000 }}만원
+        </button>
+      </div>
+
+      <section class="mb-(--space-6)">
+        <h2 class="mb-(--space-3) text-(length:--font-md) font-semibold text-(color:--color-navy)">
+          출금받을 내 계좌
+        </h2>
+        <button
+          v-if="selectedAccount"
+          type="button"
+          class="flex w-full items-center gap-(--space-3) rounded-(--radius-icon) border border-(--color-border) bg-(--color-white) p-(--space-4)"
+          @click="goToAccountSelect"
+        >
+          <BankBadge
+            :bank-code="selectedAccount.bankCode"
+            :size="40"
+          />
+          <div class="flex-1 text-left">
+            <p class="text-(length:--font-md) font-semibold text-(color:--color-navy)">
+              {{ selectedBankName }}
+            </p>
+            <p class="mt-(--space-1) text-(length:--font-sm) text-(color:--color-slate-muted)">
+              {{ selectedAccount.accountNumberMasked }}<span v-if="selectedAccount.isPrimary"> · 주계좌</span>
+            </p>
+          </div>
+          <span class="text-(length:--font-xl) text-(color:--color-gray-400)">&rsaquo;</span>
+        </button>
+        <p
+          v-else
+          class="text-(length:--font-sm) text-(color:--color-gray-500)"
+        >
+          출금받을 연결 계좌가 없어요
+        </p>
+      </section>
+
+      <AppButton
+        variant="primary"
+        size="lg"
+        :disabled="!canProceed"
+        class="fixed bottom-[calc(var(--bottom-nav-height)+var(--space-7))] left-(--space-4) right-(--space-4) rounded-(--radius-xl) shadow-(--shadow-md)"
+        @click="handleNext"
+      >
+        다음
+      </AppButton>
+    </template>
   </div>
 </template>
