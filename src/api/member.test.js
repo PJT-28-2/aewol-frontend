@@ -26,10 +26,19 @@ describe('memberApi notification settings', () => {
 
   it('변경할 알림 설정만 부분 수정한다', async () => {
     const payload = { communityEnabled: false }
-    api.patch.mockResolvedValue({ data: { result: payload } })
+    const settings = {
+      paymentEnabled: true,
+      recurringPaymentEnabled: true,
+      familyShareEnabled: true,
+      communityEnabled: false,
+      marketingEnabled: false,
+    }
+    api.patch.mockResolvedValue({ data: { result: settings } })
 
-    await memberApi.updateNotificationSettings(payload)
+    const response = await memberApi.updateNotificationSettings(payload)
 
     expect(api.patch).toHaveBeenCalledWith('/users/me/settings/notifications', payload)
+    expect(api.patch.mock.calls[0][1]).toEqual({ communityEnabled: false })
+    expect(response.data.result).toEqual(settings)
   })
 })
