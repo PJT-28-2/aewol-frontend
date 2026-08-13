@@ -47,6 +47,10 @@ export const useSupportStore = defineStore('support', {
       this.error = null;
       try {
         const { data } = await getFaqs();
+        // ⚠️ 백엔드 faqId는 String이에요(memberId/accountId/inquiryId 등 이 앱은 ID를
+        // 전부 String으로 다루는 컨벤션 — 여기서 Number로 바꾸지 않아요). fetchFaqDetail에서
+        // 섣불리 Number(faqId)로 비교했다가 실제 API 모드에서 전부 매칭 실패했던 회귀가
+        // 있었어요(2026-08-12) — 그 쪽에서 mock/real 모드를 나눠 처리해요.
         this.faqs = (data.result ?? []).map((faq) => ({ ...faq, answer: faq.answer ?? null }));
       } catch (err) {
         this.error = err;
@@ -81,16 +85,21 @@ export const useSupportStore = defineStore('support', {
      * ⚠️ relatedFaqIds는 현재 API 명세에 없어서 mock에서만 채워짐 — 실제 연동 시 상세 API 응답에 추가 필요.
      * fetchFaqs/ensureFaqAnswer가 실패하면 그대로 throw돼서 여기서 따로 안 잡음 —
      * 호출하는 화면(FaqDetail.vue)에서 try/catch로 처리해요.
+     *
+     * ⚠️ route.params.faqId는 항상 String이에요. mock 데이터(mocks/support.js)는
+     * faqId를 숫자 리터럴로 두고 있어서 mock 모드에서만 Number로 맞춰 비교해요.
+     * 실제 API는 faqId를 String으로 내려줘서(이 앱 전체 ID 컨벤션) 그대로 비교하면 돼요 —
+     * 여기서 Number(faqId)로 통일해버리면 실제 API 모드에서 전부 매칭 실패해요(2026-08-12 회귀).
      */
     async fetchFaqDetail(faqId) {
-      const numericId = Number(faqId);
       if (this.faqs.length === 0) {
         await this.fetchFaqs();
       }
-      await this.ensureFaqAnswer(numericId);
+      const lookupId = USE_MOCK_DATA ? Number(faqId) : faqId;
+      await this.ensureFaqAnswer(lookupId);
 
-      const faq = this.faqs.find((f) => f.faqId === numericId);
-      const relatedIds = USE_MOCK_DATA ? MOCK_FAQ_RELATED[numericId] ?? [] : [];
+      const faq = this.faqs.find((f) => f.faqId === lookupId);
+      const relatedIds = USE_MOCK_DATA ? MOCK_FAQ_RELATED[lookupId] ?? [] : [];
       const relatedFaqs = relatedIds
         .map((id) => this.faqs.find((f) => f.faqId === id))
         .filter(Boolean);
