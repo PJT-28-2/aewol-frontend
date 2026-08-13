@@ -4,16 +4,25 @@ import { useRoute, useRouter } from 'vue-router';
 import AppButton from '@/components/common/AppButton.vue';
 import BankBadge from '@/components/common/BankBadge.vue';
 import IconCheck from '@/components/common/icons/IconCheck.vue';
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import { useAccountStore } from '@/stores/account';
+import { useAccountsLoader } from '@/composables/useAccountsLoader';
 import { getBankMeta } from '@/utils/bankMeta';
 
 const route = useRoute();
 const router = useRouter();
 const accountStore = useAccountStore();
 
-onMounted(async () => {
+// 실패와 "진짜 연동 계좌 없음"을 구분해서 보여줘요.
+// (예전엔 실패해도 에러를 삼키고 MOCK_ACCOUNTS로 조용히 폴백했어서
+//  연동 실패가 화면에 전혀 안 보이는 문제가 있었어요.)
+const { loadError, isLoadingAccounts, loadAccounts } = useAccountsLoader(() =>
+  accountStore.fetchAccounts(),
+);
+
+onMounted(() => {
   if (accountStore.accounts.length) return;
-  await accountStore.fetchAccounts().catch(() => {});
+  loadAccounts();
 });
 
 const pendingAccountId = ref(
@@ -68,8 +77,32 @@ function confirmChange() {
       </p>
     </header>
 
+    <div
+      v-if="accountStore.isLoading"
+      class="py-(--space-8)"
+    >
+      <LoadingSpinner />
+    </div>
+
+    <div
+      v-else-if="loadError"
+      class="rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-(--space-4) text-center shadow-(--shadow-card)"
+    >
+      <p class="text-(length:--font-sm) text-(color:--color-danger-strong) mb-(--space-3)">
+        {{ loadError }}
+      </p>
+      <AppButton
+        variant="primary"
+        size="sm"
+        :disabled="isLoadingAccounts"
+        @click="loadAccounts"
+      >
+        다시 시도
+      </AppButton>
+    </div>
+
     <p
-      v-if="!activeAccounts.length"
+      v-else-if="!activeAccounts.length"
       class="text-(length:--font-sm) text-(color:--color-gray-500)"
     >
       연동된 계좌가 없어요

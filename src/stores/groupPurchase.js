@@ -13,7 +13,8 @@ export const useGroupPurchaseCreateStore = defineStore('groupPurchaseCreate', {
     deadline: '',
     deliveryMethod: '택배 배송',
     deliveryFee: '',
-    // DB의 delivery_date(실제 날짜)는 deadline + deliveryEstimateDays로 백엔드에서 계산한다고 가정. 프론트는 일수만 보관
+    // delivery_date는 백엔드가 계산: 등록 시 deadline + deliveryEstimateDays로 잠정 저장하고,
+    // 목표 수량 달성 시점에 달성일 + deliveryEstimateDays로 갱신한다. 프론트는 예상일수만 보관
     deliveryEstimateDays: '3',
     description: '',
   }),
