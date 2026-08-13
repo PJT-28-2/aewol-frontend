@@ -81,7 +81,8 @@ function goBack() {
 const STATUS_TITLE = {
   waiting: '구매가 보류 중이에요',
   confirmed: '구매가 확정됐어요',
-  cancelled: '목표 인원 미달로 취소됐어요',
+  failed: '목표 인원 미달로 취소됐어요',
+  cancelled: '작성자가 취소한 공동구매예요',
 };
 const statusTitle = computed(
   () => STATUS_TITLE[status.value.status] ?? '구매가 보류 중이에요',
@@ -90,6 +91,7 @@ const statusTitle = computed(
 const statusVisualVariant = computed(() => ({
   waiting: 'info',
   confirmed: 'success',
+  failed: 'cancel',
   cancelled: 'cancel',
 }[status.value.status] ?? 'info'));
 
