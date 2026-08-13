@@ -6,25 +6,19 @@ import BankBadge from '@/components/common/BankBadge.vue';
 import IconCheck from '@/components/common/icons/IconCheck.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import { useAccountStore } from '@/stores/account';
+import { useAccountsLoader } from '@/composables/useAccountsLoader';
 import { getBankMeta } from '@/utils/bankMeta';
 
 const route = useRoute();
 const router = useRouter();
 const accountStore = useAccountStore();
 
-const loadError = ref('');
-
 // 실패와 "진짜 연동 계좌 없음"을 구분해서 보여줘요.
 // (예전엔 실패해도 에러를 삼키고 MOCK_ACCOUNTS로 조용히 폴백했어서
 //  연동 실패가 화면에 전혀 안 보이는 문제가 있었어요.)
-async function loadAccounts() {
-  loadError.value = '';
-  try {
-    await accountStore.fetchAccounts();
-  } catch {
-    loadError.value = '계좌 목록을 불러오지 못했어요. 다시 시도해주세요';
-  }
-}
+const { loadError, isLoadingAccounts, loadAccounts } = useAccountsLoader(() =>
+  accountStore.fetchAccounts(),
+);
 
 onMounted(() => {
   if (accountStore.accounts.length) return;
@@ -100,6 +94,7 @@ function confirmChange() {
       <AppButton
         variant="primary"
         size="sm"
+        :disabled="isLoadingAccounts"
         @click="loadAccounts"
       >
         다시 시도
