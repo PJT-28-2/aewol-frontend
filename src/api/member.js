@@ -11,6 +11,14 @@ export const memberApi = {
     return api.patch('/users/me', data)
   },
 
+  getNotificationSettings() {
+    return api.get('/users/me/settings/notifications')
+  },
+
+  updateNotificationSettings(data) {
+    return api.patch('/users/me/settings/notifications', data)
+  },
+
   verifyPassword(currentPassword) {
     return api.post('/users/me/password/verify', { currentPassword })
   },

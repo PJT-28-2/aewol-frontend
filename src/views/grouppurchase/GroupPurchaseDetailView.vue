@@ -8,45 +8,42 @@ import IconMinus from '@/components/common/icons/IconMinus.vue';
 import { MOCK_GROUP_PURCHASE_DETAIL } from '@/mocks/groupPurchase';
 import { USE_MOCK_DATA } from '@/mocks/config';
 import { groupPurchaseApi } from '@/api/groupPurchase';
-import { memberApi } from '@/api/member';
-import { formatDDayLabel } from '@/utils/date';
+import { formatArrivalDateLabel, formatDDayLabel } from '@/utils/date';
 import { useDeadlineTimer } from '@/composables/useDeadlineTimer';
 import { useMidnightTick } from '@/composables/useMidnightTick';
+import { useAuthStore } from '@/stores/auth';
 
 const route = useRoute();
 const router = useRouter();
+const authStore = useAuthStore();
 
 const groupPurchase = ref(null);
 const isLoading = ref(true);
 const isError = ref(false);
 
-// 목록/마이페이지는 작성자를 상세 화면 대신 상태 화면으로 바로 보내지만, 그 라우팅을 거치지 않고
-// (URL 직접 입력, 뒤로가기, 공유 링크 등) 이 화면에 온 경우까지 대비해 작성자면 여기서도
-// 참여 UI를 그리지 않고 상태 화면으로 리다이렉트한다. 상세 API 응답의 작성자 memberId와
-// 로그인 회원 memberId를 비교해서 판정
+// 목록/마이페이지는 관리자를 상세 화면 대신 상태 화면으로 바로 보내지만, 그 라우팅을 거치지 않고
+// (URL 직접 입력, 뒤로가기, 공유 링크 등) 이 화면에 온 경우까지 대비해 여기서도 참여 UI를 그리지
+// 않고 상태 화면으로 리다이렉트한다. 관리자는 작성자 여부와 무관하게 모든 게시글에 관리 권한을
+// 가지므로(2026-08-10 정책 확정), memberId 비교가 아니라 로그인 유저의 role만으로 판정한다
 async function loadDetail() {
   isLoading.value = true;
   isError.value = false;
   try {
     if (USE_MOCK_DATA) {
-      if (MOCK_GROUP_PURCHASE_DETAIL.isOwner) {
+      if (MOCK_GROUP_PURCHASE_DETAIL.isAdmin) {
         router.replace(`/group-purchase/${route.params.gpId}/status`);
         return;
       }
       groupPurchase.value = MOCK_GROUP_PURCHASE_DETAIL;
       return;
     }
-    const [{ data }, { data: profileData }] = await Promise.all([
-      groupPurchaseApi.getDetail(route.params.gpId),
-      memberApi.getProfile(),
-    ]);
+    const { data } = await groupPurchaseApi.getDetail(route.params.gpId);
     const detail = data.result ?? null;
     if (!detail) {
       isError.value = true;
       return;
     }
-    const myMemberId = (profileData.result ?? profileData)?.memberId;
-    if (detail.memberId === myMemberId) {
+    if (authStore.isAdmin) {
       router.replace(`/group-purchase/${route.params.gpId}/status`);
       return;
     }
@@ -59,22 +56,6 @@ async function loadDetail() {
 }
 
 onMounted(loadDetail);
-
-const WEEKDAY_LABELS = [
-  '일',
-  '월',
-  '화',
-  '수',
-  '목',
-  '금',
-  '토',
-];
-
-// 'YYYY-MM-DD' 문자열을 UTC 파싱으로 인한 날짜 밀림 없이 로컬 자정 Date로 변환
-function toLocalDate(dateString) {
-  const [year, month, day] = dateString.split('-').map(Number);
-  return new Date(year, month - 1, day);
-}
 
 const quantity = ref(1);
 const quantityError = ref('');
@@ -173,11 +154,9 @@ const shippingSummaryLabel = computed(() => {
   return `${groupPurchase.value.deliveryMethod} · ${feeSuffix}`;
 });
 
-// raw delivery_date를 'M/D(요일) 도착 보장' 형식으로 변환
-const arrivalDateLabel = computed(() => {
-  const date = toLocalDate(groupPurchase.value.deliveryDate);
-  return `${date.getMonth() + 1}/${date.getDate()}(${WEEKDAY_LABELS[date.getDay()]}) 도착 보장`;
-});
+// raw delivery_date를 'M/D(요일) 도착 예정' 형식으로 변환. 잠정(마감일 기준)/확정(달성일 기준)
+// 값 계산은 백엔드가 처리해 delivery_date에 반영하므로 프론트는 포맷팅만 담당
+const arrivalDateLabel = computed(() => formatArrivalDateLabel(groupPurchase.value.deliveryDate));
 
 function goToPaymentPreview() {
   // CTA는 disabled로 이미 막지만, 결제 미리보기로 넘어가기 전에도 같은 조건을 한 번 더 검증

@@ -46,11 +46,36 @@ export const authApi = {
   },
 
   resetPasswordRequest(email) {
-    return api.post('/auth/password/reset-request', { email })
+    return api.post(
+      '/auth/password/reset-request',
+      { email },
+      {
+        skipAuth: true,
+        skipAuthRefresh: true,
+      },
+    )
   },
 
-  resetPassword(data) {
-    return api.post('/auth/password/reset', data)
+  resetPasswordVerify(email, verificationCode) {
+    return api.post(
+      '/auth/password/reset-verify',
+      { email, verificationCode },
+      {
+        skipAuth: true,
+        skipAuthRefresh: true,
+      },
+    )
+  },
+
+  resetPassword(resetToken, newPassword) {
+    return api.post(
+      '/auth/password/reset',
+      { resetToken, newPassword },
+      {
+        skipAuth: true,
+        skipAuthRefresh: true,
+      },
+    )
   },
 
 }

@@ -1,48 +1,107 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { memberApi } from '@/api/member'
 
 const notificationSettings = ref([
   {
     id: 'payment',
+    field: 'paymentEnabled',
     title: '결제 알림',
     description: '결제 시 알림을 보내드려요',
-    isEnabled: true,
+    isEnabled: false,
   },
   {
     id: 'recurring-payment',
+    field: 'recurringPaymentEnabled',
     title: '정기 결제 알림',
     description: '정기결제일 3일 전에 미리 알려드려요',
-    isEnabled: true,
+    isEnabled: false,
   },
   {
     id: 'family-share',
+    field: 'familyShareEnabled',
     title: '가족 공유 알림',
     description: '공동양육 가족의 입출금·버킷 변경 알림',
-    isEnabled: true,
+    isEnabled: false,
   },
   {
     id: 'community',
+    field: 'communityEnabled',
     title: '커뮤니티 알림',
     description: '공동구매 마감·참여 현황 알림',
     isEnabled: false,
   },
   {
     id: 'marketing',
+    field: 'marketingEnabled',
     title: '마케팅 정보 수신',
     description: '혜택 · 이벤트 소식을 보내드려요',
     isEnabled: false,
   },
 ])
 
-const isAllEnabled = computed({
-  get: () => notificationSettings.value.every((setting) => setting.isEnabled),
-  set: (isEnabled) => {
-    notificationSettings.value.forEach((setting) => {
-      setting.isEnabled = isEnabled
-    })
-  },
-})
+const isLoading = ref(true)
+const isSaving = ref(false)
+const hasLoadedSettings = ref(false)
+const errorMessage = ref('')
+const isAllEnabled = computed(() =>
+  notificationSettings.value.every((setting) => setting.isEnabled),
+)
+const isInteractionDisabled = computed(
+  () => isLoading.value || isSaving.value || !hasLoadedSettings.value,
+)
 
+const applySettings = (settings) => {
+  notificationSettings.value.forEach((setting) => {
+    setting.isEnabled = settings[setting.field] === true
+  })
+}
+
+const fetchNotificationSettings = async () => {
+  errorMessage.value = ''
+  isLoading.value = true
+
+  try {
+    const { data } = await memberApi.getNotificationSettings()
+    applySettings(data.result ?? data)
+    hasLoadedSettings.value = true
+  } catch (error) {
+    errorMessage.value =
+      error.response?.data?.message ?? '알림 설정을 불러오지 못했어요. 다시 시도해 주세요.'
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const updateSettings = async (payload) => {
+  if (isInteractionDisabled.value) return
+
+  errorMessage.value = ''
+  isSaving.value = true
+
+  try {
+    const { data } = await memberApi.updateNotificationSettings(payload)
+    applySettings(data.result ?? data)
+  } catch (error) {
+    errorMessage.value =
+      error.response?.data?.message ?? '알림 설정을 변경하지 못했어요. 다시 시도해 주세요.'
+  } finally {
+    isSaving.value = false
+  }
+}
+
+const handleSettingChange = (setting, event) => {
+  updateSettings({ [setting.field]: event.target.checked })
+}
+
+const handleAllChange = (event) => {
+  const isEnabled = event.target.checked
+  updateSettings(
+    Object.fromEntries(notificationSettings.value.map((setting) => [setting.field, isEnabled])),
+  )
+}
+
+onMounted(fetchNotificationSettings)
 </script>
 
 <template>
@@ -85,11 +144,13 @@ const isAllEnabled = computed({
           class="cursor-pointer"
         >
           <input
-            v-model="isAllEnabled"
+            :checked="isAllEnabled"
+            :disabled="isInteractionDisabled"
             class="peer sr-only"
             type="checkbox"
             role="switch"
             aria-label="전체 알림"
+            @change="handleAllChange"
           >
           <span
             class="block relative h-[24px] w-[44px] shrink-0 rounded-full bg-(--color-border) transition-colors after:absolute after:top-[2px] after:left-[2px] after:size-5 after:rounded-full after:bg-(--color-white) after:shadow-(--shadow-sm) after:transition-transform peer-checked:bg-(--color-leaf) peer-checked:after:translate-x-5 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-(--color-leaf-dark)"
@@ -136,11 +197,13 @@ const isAllEnabled = computed({
             class="cursor-pointer"
           >
             <input
-              v-model="setting.isEnabled"
+              :checked="setting.isEnabled"
+              :disabled="isInteractionDisabled"
               class="peer sr-only"
               type="checkbox"
               role="switch"
               :aria-label="setting.title"
+              @change="handleSettingChange(setting, $event)"
             >
             <span
               class="block relative h-[24px] w-[44px] shrink-0 rounded-full bg-(--color-border) transition-colors after:absolute after:top-[2px] after:left-[2px] after:size-5 after:rounded-full after:bg-(--color-white) after:shadow-(--shadow-sm) after:transition-transform peer-checked:bg-(--color-leaf) peer-checked:after:translate-x-5 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-(--color-leaf-dark)"
@@ -150,5 +213,36 @@ const isAllEnabled = computed({
         </div>
       </div>
     </section>
+
+    <p
+      v-if="isLoading"
+      class="mt-(--space-4) text-center text-(length:--font-sm) text-(color:--color-slate-muted)"
+      role="status"
+    >
+      알림 설정을 불러오는 중이에요.
+    </p>
+    <div
+      v-else-if="errorMessage"
+      class="mt-(--space-4) text-center"
+      role="alert"
+    >
+      <p class="text-(length:--font-sm) text-(color:--color-danger-strong)">
+        {{ errorMessage }}
+      </p>
+      <button
+        type="button"
+        class="mt-(--space-2) rounded-(--radius-md) px-(--space-3) py-(--space-2) text-(length:--font-sm) font-(--font-bold) text-(color:--color-navy) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-navy)"
+        @click="fetchNotificationSettings"
+      >
+        다시 시도
+      </button>
+    </div>
+    <p
+      v-else-if="isSaving"
+      class="mt-(--space-4) text-center text-(length:--font-sm) text-(color:--color-slate-muted)"
+      role="status"
+    >
+      알림 설정을 저장하는 중이에요.
+    </p>
   </main>
 </template>

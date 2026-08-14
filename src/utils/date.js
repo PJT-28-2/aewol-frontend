@@ -58,11 +58,16 @@ export function formatDDayLabel(deadline, now = new Date()) {
  * 로컬 시각으로 해석하고, 날짜만 있으면(캘린더에서 날짜만 선택하는 마감일 등) 그날
  * 23:59:59.999까지 유효한 것으로 해석한다.
  *
+ * new Date(...)에 연/월/일을 그대로 넘기면 "2026-02-31"처럼 존재하지 않는 날짜를 3월 3일로
+ * 자동 보정해버려 API가 잘못된 값을 내려도 그럴듯한 타임스탬프가 나온다. isValidCalendarDate로
+ * 먼저 걸러서, 존재하지 않는 날짜는 보정 없이 NaN을 반환하도록 한다.
+ *
  * @param {string | null | undefined} deadline `YYYY-MM-DD` 또는 `YYYY-MM-DDTHH:mm:ss` 형식의 마감 문자열
  * @returns {number} 마감 시각의 epoch 밀리초 (값이 없거나 유효하지 않으면 NaN)
  */
 export function getDeadlineTimestamp(deadline) {
   if (!deadline) return NaN
+  if (!isValidCalendarDate(deadline.slice(0, 10))) return NaN
   if (deadline.includes('T')) {
     return new Date(deadline).getTime()
   }
@@ -90,6 +95,24 @@ export function formatDateDot(isoDate) {
 export function formatDateTimeDot(isoDateTime) {
   const [datePart, timePart] = isoDateTime.split('T')
   return timePart ? `${formatDateDot(datePart)} ${timePart.slice(0, 5)}` : formatDateDot(datePart)
+}
+
+const WEEKDAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
+
+/**
+ * "YYYY-MM-DD" 형식의 배송 예정일 문자열을 "M/D(요일) 도착 예정" 라벨로 변환한다.
+ * 등록 직후(잠정: 마감일+예상일수)와 목표 수량 달성 이후(확정: 달성일+예상일수) 모두
+ * delivery_date 값 자체는 백엔드가 계산해 내려주므로, 프론트는 값을 그대로 포맷팅만 한다.
+ * UTC 파싱으로 인한 날짜 밀림을 피하기 위해 로컬 자정 Date로 변환해서 사용한다.
+ *
+ * @param {string | null | undefined} deliveryDate `YYYY-MM-DD` 형식의 배송 예정일
+ * @returns {string} `M/D(요일) 도착 예정` 형식의 문자열, 값이 없으면(API 에러 등) 빈 문자열
+ */
+export function formatArrivalDateLabel(deliveryDate) {
+  if (!deliveryDate) return ''
+  const [year, month, day] = deliveryDate.slice(0, 10).split('-').map(Number)
+  const date = new Date(year, month - 1, day)
+  return `${date.getMonth() + 1}/${date.getDate()}(${WEEKDAY_LABELS[date.getDay()]}) 도착 예정`
 }
 
 /**

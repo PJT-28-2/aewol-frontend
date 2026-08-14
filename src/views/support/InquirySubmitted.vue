@@ -30,15 +30,15 @@ function goToMyInquiries() {
       </span>
     </div>
 
-    <template #action>
-      <AppButton
-        variant="primary"
-        size="lg"
-        block
-        @click="goToMyInquiries"
-      >
-        내 문의 보기
-      </AppButton>
-    </template>
+    <AppButton
+      variant="primary"
+      size="lg"
+      block
+      radius="2xl"
+      class="mt-(--space-4)"
+      @click="goToMyInquiries"
+    >
+      내 문의 보기
+    </AppButton>
   </CompletionPageLayout>
 </template>

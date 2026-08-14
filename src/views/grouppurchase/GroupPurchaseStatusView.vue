@@ -9,24 +9,27 @@ import PinAuthSheet from '@/components/common/PinAuthSheet.vue';
 import StatusVisual from '@/components/common/StatusVisual.vue';
 import {
   MOCK_GROUP_PURCHASE_STATUS,
-  MOCK_GROUP_PURCHASE_STATUS_OWNER_BY_GP_ID,
+  MOCK_GROUP_PURCHASE_STATUS_ADMIN_BY_GP_ID,
 } from '@/mocks/groupPurchase';
 import { USE_MOCK_DATA } from '@/mocks/config';
 import { groupPurchaseApi } from '@/api/groupPurchase';
-import { memberApi } from '@/api/member';
-import { formatDDayLabel, getDeadlineTimestamp } from '@/utils/date';
+import { formatArrivalDateLabel, formatDDayLabel, getDeadlineTimestamp } from '@/utils/date';
 import { useDeadlineTimer } from '@/composables/useDeadlineTimer';
 import { useMidnightTick } from '@/composables/useMidnightTick';
+import { useAuthStore } from '@/stores/auth';
 
 const route = useRoute();
 const router = useRouter();
+const authStore = useAuthStore();
 
 const status = ref(null);
 const isLoading = ref(true);
 const isError = ref(false);
-// 작성자 본인 글이면 참여 취소 대신 공동구매 취소 버튼을 보여준다.
-// 상태 API 응답의 작성자 memberId와 로그인 유저 memberId를 비교해서 판정
-const isOwner = ref(false);
+// 관리자면 참여 취소 대신 공동구매 취소 버튼을 보여준다. 관리자는 작성자 여부와 무관하게
+// 모든 게시글에 관리 권한을 가지므로(2026-08-10 정책 확정), memberId 비교가 아니라 로그인
+// 유저의 role(JWT 클레임, authStore.isAdmin)만으로 판정한다. 실제 권한은 서버가 403으로
+// 최종 판단하므로, 이건 어디까지나 UX용 방어일 뿐이다
+const isAdmin = ref(false);
 
 async function loadStatus() {
   isLoading.value = true;
@@ -35,19 +38,15 @@ async function loadStatus() {
   try {
     if (USE_MOCK_DATA) {
       status.value = { gpId: route.params.gpId, ...MOCK_GROUP_PURCHASE_STATUS };
-      isOwner.value = MOCK_GROUP_PURCHASE_STATUS_OWNER_BY_GP_ID[route.params.gpId] ?? false;
+      isAdmin.value = MOCK_GROUP_PURCHASE_STATUS_ADMIN_BY_GP_ID[route.params.gpId] ?? false;
     } else {
-      const [{ data }, { data: profileData }] = await Promise.all([
-        groupPurchaseApi.getStatus(route.params.gpId),
-        memberApi.getProfile(),
-      ]);
+      const { data } = await groupPurchaseApi.getStatus(route.params.gpId);
       status.value = data.result ?? null;
       if (!status.value) {
         isError.value = true;
         return;
       }
-      const myMemberId = (profileData.result ?? profileData)?.memberId;
-      isOwner.value = status.value.memberId === myMemberId;
+      isAdmin.value = authStore.isAdmin;
     }
 
     // API 응답 경계에서 deadline 유효성을 검증한다. 잘못된 deadline은 getDeadlineTimestamp가
@@ -72,23 +71,29 @@ const isFromMyPage = computed(() => route.query.from === 'my');
 const backTarget = computed(() => (isFromMyPage.value ? '/group-purchase/my' : '/group-purchase'));
 const backLabel = computed(() => (isFromMyPage.value ? '마이페이지로 돌아가기' : '리스트로 돌아가기'));
 
+// replace를 써서 히스토리에 status를 남기지 않는다 — push로 쌓으면 목록/마이페이지에서
+// 브라우저 뒤로가기를 눌렀을 때 이 status 화면으로 되돌아와버린다
 function goBack() {
-  router.push(backTarget.value);
+  router.replace(backTarget.value);
 }
 
+// 백엔드 enum(OPEN/COMPLETED/FAILED/CANCELLED)을 그대로 키로 쓴다 — 별도 내부 어휘를 두지 않아서
+// 값(enum)은 백엔드가 소유하고 이 화면은 그 값에 대한 표시(문구/아이콘)만 담당한다
 const STATUS_TITLE = {
-  waiting: '구매가 보류 중이에요',
-  confirmed: '구매가 확정됐어요',
-  cancelled: '목표 인원 미달로 취소됐어요',
+  OPEN: '구매가 보류 중이에요',
+  COMPLETED: '구매가 확정됐어요',
+  FAILED: '목표 인원 미달로 취소됐어요',
+  CANCELLED: '작성자가 취소한 공동구매예요',
 };
 const statusTitle = computed(
   () => STATUS_TITLE[status.value.status] ?? '구매가 보류 중이에요',
 );
 
 const statusVisualVariant = computed(() => ({
-  waiting: 'info',
-  confirmed: 'success',
-  cancelled: 'cancel',
+  OPEN: 'info',
+  COMPLETED: 'success',
+  FAILED: 'cancel',
+  CANCELLED: 'cancel',
 }[status.value.status] ?? 'info'));
 
 const progressPercent = computed(() =>
@@ -113,6 +118,20 @@ const deadlineDisplayLabel = computed(() =>
   deadlineLabel.value === '마감' ? '마감' : `마감 ${deadlineLabel.value}`,
 );
 
+// raw delivery_date를 'M/D(요일) 도착 예정' 형식으로 변환 (DetailView.vue와 동일 계약)
+const arrivalDateLabel = computed(() => formatArrivalDateLabel(status.value?.deliveryDate));
+
+// 취소·미달 건에는 더 이상 배송이 진행되지 않으므로, 보류/확정 상태에서만 노출.
+// 'OPEN'/'COMPLETED'를 별도로 다시 나열하면 STATUS_TITLE과 어긋날 위험이 있어,
+// STATUS_TITLE에 정의된 상태 중 'CANCELLED'(작성자 취소)/'FAILED'(목표 미달)만 제외하는
+// 방식으로 단일 출처를 유지한다.
+// deliveryDate가 없는 경우(API 미반영 등)에도 빈 라벨 대신 행 자체를 숨긴다
+const showDeliveryDate = computed(() =>
+  Object.keys(STATUS_TITLE).includes(status.value?.status)
+  && !['CANCELLED', 'FAILED'].includes(status.value?.status)
+  && !!arrivalDateLabel.value,
+);
+
 // 마감 기한이 지난 공동구매는 참여 취소/공동구매 취소 버튼을 비활성화.
 // deadlineLabel은 마감 '당일 00:00'부터 '마감'을 반환해 실제 마감 시각(예: 23:59:59) 이전까지도
 // 취소를 막아버리므로, 여기서는 deadline의 실제 시각과 현재 시각을 직접 비교한다
@@ -125,13 +144,13 @@ const isCancelling = ref(false);
 const cancelError = ref('');
 
 const pinSheetDescription = computed(() =>
-  isOwner.value
+  isAdmin.value
     ? '공동구매를 취소하고 참여자 전원에게 환불하기 위해 확인해요'
     : '참여를 취소하고 환불받기 위해 확인해요',
 );
 
 const cancelSuccessMessage = computed(() =>
-  isOwner.value
+  isAdmin.value
     ? '참여자 전원에게 결제 금액이 환불 처리돼요'
     : '결제 금액은 환불 처리돼요',
 );
@@ -142,7 +161,7 @@ const cancelSuccessMessage = computed(() =>
 async function handleCancelConfirm() {
   if (USE_MOCK_DATA) {
     isPinSheetOpen.value = false;
-    status.value = { ...status.value, status: 'cancelled' };
+    status.value = { ...status.value, status: 'CANCELLED' };
     isCancelSuccessSheetOpen.value = true;
     return;
   }
@@ -150,16 +169,16 @@ async function handleCancelConfirm() {
   cancelError.value = '';
   isCancelling.value = true;
   try {
-    if (isOwner.value) {
+    if (isAdmin.value) {
       await groupPurchaseApi.cancel(route.params.gpId);
     } else {
       await groupPurchaseApi.leave(route.params.gpId);
     }
-    // 취소 버튼이 계속 보이지 않도록 이전 상태(waiting)를 취소 완료로 갱신
-    status.value = { ...status.value, status: 'cancelled' };
+    // 취소 버튼이 계속 보이지 않도록 이전 상태(OPEN)를 취소 완료로 갱신
+    status.value = { ...status.value, status: 'CANCELLED' };
     isCancelSuccessSheetOpen.value = true;
   } catch {
-    cancelError.value = isOwner.value
+    cancelError.value = isAdmin.value
       ? '공동구매 취소에 실패했어요. 다시 시도해주세요.'
       : '참여 취소에 실패했어요. 다시 시도해주세요.';
   } finally {
@@ -170,7 +189,7 @@ async function handleCancelConfirm() {
 
 function confirmCancelSuccess() {
   isCancelSuccessSheetOpen.value = false;
-  router.push(backTarget.value);
+  router.replace(backTarget.value);
 }
 </script>
 
@@ -277,6 +296,21 @@ function confirmCancelSuccess() {
         </div>
       </section>
 
+      <!-- 배송 예정일: 취소된 건은 더 이상 배송이 진행되지 않으므로 보류/확정 상태에서만 노출 -->
+      <section
+        v-if="showDeliveryDate"
+        class="mb-(--space-5) rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-(--space-4) shadow-(--shadow-card)"
+      >
+        <div class="flex items-center justify-between">
+          <p class="text-(length:--font-xs) text-(color:--color-slate-muted)">
+            배송 예정일
+          </p>
+          <p class="text-(length:--font-xs) font-bold text-(color:--color-navy)">
+            {{ arrivalDateLabel }}
+          </p>
+        </div>
+      </section>
+
       <!-- 안내 사항 -->
       <section
         class="mb-(--space-5) rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-(--space-4) shadow-(--shadow-card)"
@@ -332,11 +366,11 @@ function confirmCancelSuccess() {
         variant="danger"
         size="lg"
         block
-        :disabled="status.status !== 'waiting' || isDeadlinePassed"
+        :disabled="status.status !== 'OPEN' || isDeadlinePassed"
         :loading="isCancelling"
         @click="isPinSheetOpen = true"
       >
-        {{ isOwner ? '공동구매 취소' : '참여 취소하기' }}
+        {{ isAdmin ? '공동구매 취소' : '참여 취소하기' }}
       </AppButton>
       <p
         v-if="cancelError"

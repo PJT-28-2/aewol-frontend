@@ -8,6 +8,7 @@ import PasswordInput from '@/components/common/PasswordInput.vue'
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 import IconCheck from '@/components/common/icons/IconCheck.vue'
 import { formatPhoneNumber } from '@/utils/phone'
+import { isValidPassword } from '@/utils/password'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -41,10 +42,7 @@ const isAllAgreed = computed(
   () => agreements.terms && agreements.privacy && agreements.marketing,
 )
 
-const isPasswordValid = computed(() => {
-  const length = form.password.length
-  return length >= 8 && length <= 20
-})
+const isPasswordValid = computed(() => isValidPassword(form.password))
 
 const isPasswordConfirmed = computed(
   () => form.passwordConfirm === form.password,
@@ -147,7 +145,7 @@ const handleSignup = async () => {
 
   if (!isKakaoSignup.value && !isPasswordValid.value) {
     errorMessage.value =
-      '비밀번호는 8자 이상 20자 이하로 입력해 주세요.'
+      '영문, 숫자, 특수문자만 사용해 2가지 조합은 10~20자, 3가지 조합은 8~20자로 입력해 주세요.'
     return
   }
 
@@ -375,7 +373,8 @@ const handleSignup = async () => {
           v-model="form.password"
           input-class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-white) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-leaf)"
           autocomplete="new-password"
-          placeholder="2가지 조합 10자리 / 3가지 조합 8자리 이상"
+          placeholder="2가지 조합 10~20자 / 3가지 조합 8~20자"
+          maxlength="20"
           required
         />
         <p
@@ -383,7 +382,7 @@ const handleSignup = async () => {
           class="mt-1 text-[11px] text-(color:--color-danger-strong)"
           role="alert"
         >
-          영문·숫자·특수문자 중 2가지 조합은 10자리, 3가지 조합은 8자리 이상 입력해 주세요.
+          영문, 숫자, 특수문자만 사용해 2가지 조합은 10~20자, 3가지 조합은 8~20자로 입력해 주세요.
         </p>
         <p
           v-else-if="form.password && isPasswordValid"
@@ -404,6 +403,7 @@ const handleSignup = async () => {
           input-class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-white) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-leaf)"
           autocomplete="new-password"
           placeholder="비밀번호를 한번 더 입력해주세요"
+          maxlength="20"
           required
         />
         <p
