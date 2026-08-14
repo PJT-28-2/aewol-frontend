@@ -81,6 +81,10 @@
   --color-danger-strong: #c24d4d;
   --color-danger-muted: #8a5252;
   --color-warning: #ffc107;
+  /* 주의 계열 배지용 surface/text 쌍. --color-warning(#ffc107)은 밝아서 옅은 배경 위
+     본문 색으로 쓰면 대비가 부족하다. danger-soft/danger-strong과 같은 역할 구성이다. */
+  --color-warning-soft: #fbeed9;
+  --color-warning-strong: #8a6a2f;
   --color-info: #17a2b8;
   --color-status-info-bg: #e3f2fd;
   --color-status-success-bg: #e8f5e9;
