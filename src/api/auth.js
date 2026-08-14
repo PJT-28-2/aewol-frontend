@@ -78,4 +78,18 @@ export const authApi = {
     )
   },
 
+  requestFindAccountCode(name, phone) {
+    return api.post('/auth/account/find/send-code', { name, phone }, {
+      skipAuth: true,
+      skipAuthRefresh: true,
+    })
+  },
+
+  verifyFindAccountCode(requestId, verificationCode) {
+    return api.post('/auth/account/find/verify-code', { requestId, verificationCode }, {
+      skipAuth: true,
+      skipAuthRefresh: true,
+    })
+  },
+
 }
