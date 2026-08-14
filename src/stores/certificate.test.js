@@ -146,6 +146,24 @@ describe('useCertificateStore - 문서 목록 및 상세 조회', () => {
     expect(certificatesApi.getList).toHaveBeenCalledWith('pet-2')
   })
 
+  it('selectedPetId를 먼저 맞추지 않고 fetchCertificates()만 호출하면 응답이 버려진다 — 목록 화면을 거치지 않고 상세 화면에 직접 진입(새로고침 등)하는 화면은 fetchCertificates 대신 selectPet()을 써야 한다', async () => {
+    certificatesApi.getList.mockResolvedValue({
+      data: { result: [{ docId: 'doc-1', petId: 'pet-1', docType: 'REGISTRATION' }] },
+    })
+
+    const store = useCertificateStore()
+    // 목록 화면을 거치지 않은 최초 진입 상태를 흉내 — selectedPetId가 아직 petId와 동기화되지 않음
+    expect(store.selectedPetId).toBeNull()
+
+    await store.fetchCertificates('pet-1')
+    expect(store.documents).toHaveLength(0)
+
+    // selectPet()은 selectedPetId 설정 + fetchCertificates 호출을 함께 처리하므로 정상 반영된다
+    await store.selectPet('pet-1')
+    expect(store.selectedPetId).toBe('pet-1')
+    expect(store.documents).toHaveLength(1)
+  })
+
   it('deleteDocument() 호출 후 증명서 목록을 다시 조회한다', async () => {
     certificatesApi.deleteDocument.mockResolvedValue({ data: { success: true } })
     certificatesApi.getList.mockResolvedValue({ data: { result: [] } })

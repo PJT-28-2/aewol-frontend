@@ -30,9 +30,8 @@ onMounted(async () => {
   // 목록 화면을 거치지 않고 이 화면으로 바로 진입(새로고침·직접 접속 등)한 경우
   // selectedPetId가 route의 petId와 다를 수 있어, fetchCertificates의 응답 역전 방지 가드
   // (selectedPetId !== petId 이면 결과를 버림)에 걸려 documents가 비어버린다.
-  // selectPet()과 동일하게 먼저 selectedPetId를 맞춰준 뒤 조회한다.
-  certificateStore.selectedPetId = route.params.petId
-  await certificateStore.fetchCertificates(route.params.petId)
+  // selectPet()이 "selectedPetId 설정 + fetchCertificates 호출"을 함께 처리하므로 그대로 사용한다.
+  await certificateStore.selectPet(route.params.petId)
 
   currentDoc.value = certificateStore.documents.find((doc) => doc.docId === route.params.docId) ?? null
 
