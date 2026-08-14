@@ -13,19 +13,36 @@ const router = useRouter()
 const accountStore = useAccountStore()
 const walletStore = useWalletStore()
 
-const isLoading = ref(true)
+const isLoading = ref(false)
 const loadError = ref('')
 
-onMounted(async () => {
-  const requests = [walletStore.fetchWallet()]
-  if (!accountStore.accounts.length) requests.push(accountStore.fetchAccounts())
+async function loadTransferData() {
+  if (isLoading.value) return
 
-  const results = await Promise.allSettled(requests)
-  if (results.some((result) => result.status === 'rejected')) {
-    loadError.value = '출금 정보를 불러오지 못했어요.'
+  isLoading.value = true
+  loadError.value = ''
+
+  const shouldLoadAccounts = !accountStore.accounts.length
+  const [walletResult, accountResult] = await Promise.allSettled([
+    walletStore.fetchWallet(),
+    shouldLoadAccounts ? accountStore.fetchAccounts() : Promise.resolve(),
+  ])
+
+  const walletFailed = walletResult.status === 'rejected'
+  const accountsFailed = accountResult.status === 'rejected'
+
+  if (walletFailed && accountsFailed) {
+    loadError.value = '지갑과 계좌 정보를 불러오지 못했어요.'
+  } else if (walletFailed) {
+    loadError.value = '지갑 정보를 불러오지 못했어요.'
+  } else if (accountsFailed) {
+    loadError.value = '계좌 목록을 불러오지 못했어요.'
   }
+
   isLoading.value = false
-})
+}
+
+onMounted(loadTransferData)
 
 const amount = ref(Number(route.query.amount) || 0)
 const amountInput = computed({
@@ -106,10 +123,20 @@ function handleNext() {
 
     <div
       v-else-if="loadError"
-      class="rounded-(--radius-xl) bg-(--color-danger-soft) p-(--space-4) text-(length:--font-sm) text-(color:--color-danger-strong)"
+      class="rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-(--space-4) text-center shadow-(--shadow-card)"
       role="alert"
     >
-      {{ loadError }} 지갑 화면으로 돌아갔다가 다시 시도해주세요.
+      <p class="mb-(--space-3) text-(length:--font-sm) text-(color:--color-danger-strong)">
+        {{ loadError }} 다시 시도해주세요.
+      </p>
+      <AppButton
+        variant="primary"
+        size="sm"
+        :disabled="isLoading"
+        @click="loadTransferData"
+      >
+        다시 시도
+      </AppButton>
     </div>
 
     <template v-else>
