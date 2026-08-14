@@ -30,23 +30,11 @@ export const certificatesApi = {
     return api.delete(`/pets/${petId}/documents/${docId}`)
   },
 
-  // 동물등록증 조회 — 동물등록번호 + 신청인(보호자) 이름/생년월일로 국가동물보호정보시스템(APMS)에서
-  // 조회. 인증키(serviceKey)는 비공개 값이라 백엔드가 붙여서 대신 호출하고, 프론트는 결과 후보
-  // 목록만 받는다.
-  // 응답: { result: [{ petId, regNumber, name, breed, gender, neutered, birthDate,
-  //   rfidCd, rfidGubun, orgNm, officeTel, aprGbnNm, regTm, aprTm }] }
-  syncRegistration({ regNumber, userName, birthDate }) {
-    return api.post('/certificates/registration/sync', { regNumber, userName, birthDate })
-  },
-
-  // 동물등록증 연동 확정 — 매칭 화면에서 사용자가 선택한 후보(candidate)들을 저장.
-  // candidates 배열의 각 항목은 syncRegistration이 돌려준 candidate 그대로(petId 포함)
-  saveRegistrationLinks(candidates) {
-    return api.post('/certificates/registration/confirm', { candidates })
-  },
-
-  // 동물등록증 재동기화 — 이미 연동된 등록증을 재인증 없이 다시 조회
-  resyncRegistration(petId, docId) {
-    return api.post(`/pets/${petId}/documents/${docId}/resync`)
+  // 동물등록증 인증 — 이미 존재하는 반려동물(petId) 하나를 대상으로, 동물등록번호 + 신청인(보호자)
+  // 이름/생년월일로 국가동물보호정보시스템(APMS)을 검증하고 성공 시 그 자리에서 바로 저장까지 됨
+  // (조회 전용 API 없음 — 호출 = 검증 + 저장). 이미 연동된 반려동물에 다시 호출하면 재동기화(갱신)로 동작한다.
+  // 인증키(serviceKey)는 비공개 값이라 백엔드가 붙여서 대신 호출한다.
+  verifyRegistration(petId, { regNumber, userName, birthDate }) {
+    return api.post(`/pets/${petId}/verify`, { regNumber, userName, birthDate })
   },
 }
