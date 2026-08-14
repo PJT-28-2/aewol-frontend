@@ -215,8 +215,10 @@ onBeforeUnmount(() => {
           함께 사면 더 저렴해요
         </p>
       </div>
-      <!-- 마이페이지 진입 버튼: 텍스트 없이 프로필 아이콘만 표시 -->
+      <!-- 마이페이지 진입 버튼: 텍스트 없이 프로필 아이콘만 표시. GET /api/group-purchase/my가
+           role=USER 전용이라(관리자의 작성글 관리는 별도 기능으로 분리 예정) 관리자에게는 숨긴다 -->
       <router-link
+        v-if="!authStore.isAdmin"
         to="/group-purchase/my"
         aria-label="마이페이지"
         class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-(--color-leaf-soft) no-underline"
