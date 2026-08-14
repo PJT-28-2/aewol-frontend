@@ -111,7 +111,7 @@ describe('useCertificateStore - 문서 목록 및 상세 조회', () => {
     expect(store.documents).toHaveLength(0)
   })
 
-  it('uploadVaccination() 업로드 처리 도중 사용자가 다른 펫 탭으로 전환하면 fetchCertificates 가드에 걸려 목록 갱신이 조용히 무시된다 — 이 액션은 항상 "현재 선택된 펫 탭"에서 호출된다는 전제에 의존하므로, 그 전제가 깨지는 경우를 문서화해둔다', async () => {
+  it('uploadVaccination() 업로드 처리 도중 사용자가 다른 펫 탭으로 전환하면 _addUploadedDocument의 petId 체크에 걸려 목록에 반영되지 않는다 — 이 액션은 항상 "현재 선택된 펫 탭"에서 호출된다는 전제에 의존하므로, 그 전제가 깨지는 경우를 문서화해둔다', async () => {
     certificatesApi.uploadVaccination.mockResolvedValue({
       data: { result: { docId: 'doc-vac-1', petId: 'pet-1', docType: 'VACCINATION', docName: '광견병' } },
     })
@@ -134,8 +134,10 @@ describe('useCertificateStore - 문서 목록 및 상세 조회', () => {
 
     await uploadPromise
 
-    // pet-1 업로드는 서버에는 성공했지만, 재조회 응답이 도착했을 때 selectedPetId가 이미
-    // pet-2라 가드에 걸려 store에는 반영되지 않는다
+    // POST 응답이 돌아온 시점(uploadPromise 내부)에 _addUploadedDocument가 doc.petId('pet-1')와
+    // this.selectedPetId('pet-2')를 직접 비교해 반영을 건너뛴다 — 뒤이어 백그라운드로 도는
+    // fetchCertificates('pet-1')의 자체 가드도 나중에 같은 이유로 한 번 더 막지만,
+    // vaccinationDocs가 비어있는 결과는 이미 이 시점에 확정된다
     expect(store.vaccinationDocs).toHaveLength(0)
 
     // 하지만 영구 유실은 아니다 — 사용자가 pet-1 탭으로 다시 돌아오면 selectPet()이
@@ -144,6 +146,38 @@ describe('useCertificateStore - 문서 목록 및 상세 조회', () => {
     await store.selectPet('pet-1')
     expect(store.vaccinationDocs).toHaveLength(1)
     expect(store.vaccinationDocs[0].docId).toBe('doc-vac-1')
+  })
+
+  it('uploadVaccination()은 펫 탭을 유지한 정상 케이스에서 재조회(getList) 완료를 기다리지 않고 업로드 직후 바로 vaccinationDocs에 반영한다', async () => {
+    certificatesApi.uploadVaccination.mockResolvedValue({
+      data: { result: { docId: 'doc-vac-2', petId: 'pet-1', docType: 'VACCINATION', docName: '광견병' } },
+    })
+    // getList를 의도적으로 응답하지 않는 상태로 묶어둔다 — 이 promise가 아직 안 풀렸는데도
+    // uploadVaccination이 끝나 있어야 "재조회를 기다리지 않는다"가 증명된다
+    certificatesApi.getList.mockImplementation(() => new Promise(() => {}))
+
+    const store = useCertificateStore()
+    store.selectedPetId = 'pet-1'
+
+    await store.uploadVaccination('pet-1', new File([], 'vaccine.png'))
+
+    expect(store.vaccinationDocs).toHaveLength(1)
+    expect(store.vaccinationDocs[0].docId).toBe('doc-vac-2')
+  })
+
+  it('uploadVaccination()은 POST가 성공했다면 뒤이은 fetchCertificates(재조회)가 실패해도 reject하지 않는다 — 재조회 실패를 업로드 실패로 취급하면 사용자가 재시도해 서버에 문서가 중복 저장될 수 있기 때문', async () => {
+    certificatesApi.uploadVaccination.mockResolvedValue({
+      data: { result: { docId: 'doc-vac-3', petId: 'pet-1', docType: 'VACCINATION', docName: '광견병' } },
+    })
+    certificatesApi.getList.mockRejectedValue(new Error('network error'))
+
+    const store = useCertificateStore()
+    store.selectedPetId = 'pet-1'
+
+    await expect(
+      store.uploadVaccination('pet-1', new File([], 'vaccine.png')),
+    ).resolves.toMatchObject({ docId: 'doc-vac-3' })
+    expect(store.vaccinationDocs).toHaveLength(1)
   })
 
   it('fetchCertificateDetail()은 상세 정보를 조회하고 8자리 birthDate(20230512)를 YYYY-MM-DD 포맷으로 정규화한다', async () => {
