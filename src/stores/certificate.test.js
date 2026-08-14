@@ -137,6 +137,13 @@ describe('useCertificateStore - 문서 목록 및 상세 조회', () => {
     // pet-1 업로드는 서버에는 성공했지만, 재조회 응답이 도착했을 때 selectedPetId가 이미
     // pet-2라 가드에 걸려 store에는 반영되지 않는다
     expect(store.vaccinationDocs).toHaveLength(0)
+
+    // 하지만 영구 유실은 아니다 — 사용자가 pet-1 탭으로 다시 돌아오면 selectPet()이
+    // fetchCertificates를 새로 호출하고, 이번엔 selectedPetId가 다시 일치하므로
+    // 서버에 이미 저장돼있던 업로드 결과가 정상적으로 반영된다
+    await store.selectPet('pet-1')
+    expect(store.vaccinationDocs).toHaveLength(1)
+    expect(store.vaccinationDocs[0].docId).toBe('doc-vac-1')
   })
 
   it('fetchCertificateDetail()은 상세 정보를 조회하고 8자리 birthDate(20230512)를 YYYY-MM-DD 포맷으로 정규화한다', async () => {
