@@ -1,103 +1,103 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import AppButton from '@/components/common/AppButton.vue';
-import BankBadge from '@/components/common/BankBadge.vue';
-import { useAccountStore } from '@/stores/account';
-import { formatWon, getBankMeta } from '@/utils/bankMeta';
-import { MOCK_ACCOUNTS } from '@/mocks/account';
+import { computed, ref } from 'vue'
+import { loadTossPayments } from '@tosspayments/tosspayments-sdk'
+import { useRoute, useRouter } from 'vue-router'
+import AppButton from '@/components/common/AppButton.vue'
+import { useWalletStore } from '@/stores/wallet'
+import { getTossCustomerKey } from '@/utils/tossPayments'
 
-const route = useRoute();
-const router = useRouter();
-const accountStore = useAccountStore();
+const route = useRoute()
+const router = useRouter()
+const walletStore = useWalletStore()
 
-onMounted(async () => {
-  if (accountStore.accounts.length) return;
-  try {
-    await accountStore.fetchAccounts();
-  } catch {
-    // 계좌 연동 API 연동 전이라 조회가 실패할 수 있어요. 결제 수단은 최소 하나 보이도록 폴백
-  }
-  if (!accountStore.accounts.length) {
-    accountStore.accounts = structuredClone(MOCK_ACCOUNTS);
-  }
-});
+const amount = ref(Number(route.query.amount) || 0)
+const isSubmitting = ref(false)
+const requestError = ref('')
+const quickAmounts = [10000, 30000, 50000, 100000]
 
-const selectedAccount = computed(() => {
-  const queryId = Number(route.query.accountId);
-  return (
-    accountStore.accounts.find((account) => account.accountId === queryId) ??
-    accountStore.primaryAccount ??
-    accountStore.accounts[0] ??
-    null
-  );
-});
+const amountInput = computed({
+  get: () => (amount.value > 0 ? amount.value.toLocaleString('ko-KR') : ''),
+  set: (value) => {
+    amount.value = Number(String(value).replace(/\D/g, '').slice(0, 13)) || 0
+  },
+})
 
-const selectedBankMeta = computed(() =>
-  selectedAccount.value ? getBankMeta(selectedAccount.value.bankCode) : null,
-);
-
-const quickAmounts = [10000, 30000, 50000, 100000];
-
-const amount = ref(Number(route.query.amount) || 0);
+const canCharge = computed(() => amount.value > 0 && !isSubmitting.value)
 
 function addAmount(value) {
-  amount.value += value;
+  amount.value = Math.min(amount.value + value, 9_999_999_999_999)
 }
 
-function goToAccountSelect() {
-  router.push({
-    path: '/wallet/charge/account-select',
-    query: {
-      from: route.query.from,
-      amount: amount.value,
-      accountId: selectedAccount.value?.accountId,
-    },
-  });
+function callbackUrl(name) {
+  return new URL(router.resolve({ name }).href, window.location.origin).toString()
 }
 
-function handleCharge() {
-  if (!amount.value || !selectedAccount.value) return;
-  // TODO: 백엔드 충전 API 연동 후 실제 잔액 반영으로 교체
-  router.push({
-    path: '/wallet/charge/complete',
-    query: {
-      from: route.query.from,
+async function handleCharge() {
+  if (!canCharge.value) return
+
+  const clientKey = import.meta.env.VITE_TOSS_CLIENT_KEY?.trim()
+  if (!clientKey || clientKey.includes('_sk_')) {
+    requestError.value = 'TossPayments 클라이언트 키가 설정되지 않았어요.'
+    return
+  }
+
+  isSubmitting.value = true
+  requestError.value = ''
+  try {
+    const order = await walletStore.prepareTossCharge({
       amount: amount.value,
-      accountId: selectedAccount.value.accountId,
-    },
-  });
+      returnTo: route.query.from === 'home' ? 'home' : 'wallet',
+    })
+    const tossPayments = await loadTossPayments(clientKey)
+    const payment = tossPayments.payment({ customerKey: getTossCustomerKey() })
+
+    await payment.requestPayment({
+      method: 'CARD',
+      amount: { currency: 'KRW', value: order.amount },
+      orderId: order.orderId,
+      orderName: '애월지갑 충전',
+      successUrl: callbackUrl('TossChargeSuccess'),
+      failUrl: callbackUrl('TossChargeFail'),
+    })
+  } catch (error) {
+    walletStore.clearPendingTossCharge()
+    requestError.value = error.response?.data?.message
+      || (error.code === 'USER_CANCEL' ? '결제가 취소되었어요.' : '결제창을 열지 못했어요. 다시 시도해주세요.')
+    isSubmitting.value = false
+  }
 }
 </script>
 
 <template>
-  <div
-    class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+96px)] bg-(--color-app-bg) min-h-screen"
-  >
-    <header class="mb-(--space-5)">
-      <h1
-        class="text-(length:--font-2xl) font-bold text-(color:--color-navy)"
-      >
+  <div class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-[calc(var(--bottom-nav-height)+96px)]">
+    <header class="mb-(--space-6)">
+      <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">
         충전하기
       </h1>
-      <p
-        class="text-(length:--font-md) text-(color:--color-slate-muted) mt-(--space-1)"
-      >
-        애월지갑에 충전할 금액을 입력해주세요
+      <p class="mt-(--space-1) text-(length:--font-md) text-(color:--color-slate-muted)">
+        카드·간편결제로 애월지갑을 충전해요
       </p>
     </header>
 
-    <section
-      class="flex items-center justify-center bg-(--color-surface) rounded-(--radius-xl) py-(--space-7) mb-(--space-4)"
-    >
-      <p
-        class="text-(length:--font-2xl) font-bold text-(color:--color-navy)"
-      >
-        {{ amount.toLocaleString() }}원
-      </p>
+    <section class="mb-(--space-5)">
+      <label
+        for="charge-amount"
+        class="mb-(--space-2) block text-(length:--font-md) font-semibold text-(color:--color-navy)"
+      >충전 금액</label>
+      <div class="relative">
+        <input
+          id="charge-amount"
+          v-model="amountInput"
+          type="text"
+          inputmode="numeric"
+          placeholder="0"
+          class="w-full rounded-(--radius-xl) border border-(--color-border) bg-(--color-surface) p-4 pr-10 text-right text-(length:--font-xl) font-bold text-(color:--color-navy) outline-none"
+        >
+        <span class="absolute right-4 top-1/2 -translate-y-1/2 text-(length:--font-md) text-(color:--color-slate-muted)">원</span>
+      </div>
     </section>
 
-    <div class="grid grid-cols-4 gap-(--space-2) mb-(--space-6)">
+    <div class="mb-(--space-6) grid grid-cols-4 gap-(--space-2)">
       <button
         v-for="value in quickAmounts"
         :key="value"
@@ -109,51 +109,32 @@ function handleCharge() {
       </button>
     </div>
 
-    <section class="mb-(--space-6)">
-      <h2
-        class="text-(length:--font-md) font-semibold text-(color:--color-navy) mb-(--space-3)"
-      >
-        결제 수단
+    <section class="rounded-(--radius-2xl) bg-(--color-white) p-(--space-5)">
+      <h2 class="text-(length:--font-md) font-semibold text-(color:--color-navy)">
+        TossPayments로 안전하게 결제해요
       </h2>
-      <button
-        v-if="selectedAccount"
-        type="button"
-        class="w-full flex items-center gap-(--space-3) bg-(--color-white) border border-(--color-border) rounded-(--radius-icon) p-(--space-4)"
-        @click="goToAccountSelect"
-      >
-        <BankBadge
-          :bank-code="selectedAccount.bankCode"
-          :size="40"
-        />
-        <div class="flex-1 text-left">
-          <div class="flex items-baseline gap-1.5">
-            <span class="text-(length:--font-md) font-semibold text-(color:--color-navy)">
-              {{ selectedBankMeta.name }}
-            </span>
-            <span class="text-(length:--font-sm) text-(color:--color-gray-500)">
-              {{ selectedAccount.accountNumberMasked }}
-            </span>
-          </div>
-          <p
-            class="text-(length:--font-sm) text-(color:--color-slate-muted) mt-(--space-1)"
-          >
-            {{ formatWon(selectedAccount.balance) }}<span v-if="selectedAccount.isPrimary"> · 주계좌</span>
-          </p>
-        </div>
-        <span
-          class="text-(length:--font-xl) text-(color:--color-gray-400)"
-        >&rsaquo;</span>
-      </button>
+      <p class="mt-(--space-2) text-(length:--font-sm) leading-relaxed text-(color:--color-slate-muted)">
+        결제창에서 카드 또는 간편결제를 선택할 수 있어요. 결제가 승인된 뒤 애월지갑 잔액에 반영돼요.
+      </p>
     </section>
+
+    <p
+      v-if="requestError"
+      class="mt-(--space-4) rounded-(--radius-xl) bg-(--color-danger-soft) p-(--space-3) text-(length:--font-sm) text-(color:--color-danger-strong)"
+      role="alert"
+    >
+      {{ requestError }}
+    </p>
 
     <AppButton
       variant="primary"
       size="lg"
-      :disabled="!amount"
+      :disabled="!canCharge"
+      :loading="isSubmitting"
       class="fixed bottom-[calc(var(--bottom-nav-height)+var(--space-7))] left-(--space-4) right-(--space-4) rounded-(--radius-xl) shadow-(--shadow-md)"
       @click="handleCharge"
     >
-      충전하기
+      {{ amount > 0 ? `${amount.toLocaleString()}원 충전하기` : '충전하기' }}
     </AppButton>
   </div>
 </template>

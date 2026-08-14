@@ -28,6 +28,10 @@ export const useAuthStore = defineStore('auth', {
       localStorage.removeItem('refreshToken')
       window.sessionStorage.removeItem('profileEditPasswordVerified')
       window.sessionStorage.removeItem('kakaoOAuthState')
+      window.sessionStorage.removeItem('tossCustomerKey')
+      window.sessionStorage.removeItem('pendingTossCharge')
+      window.sessionStorage.removeItem('completedTossCharge')
+      window.sessionStorage.removeItem('pendingWalletWithdrawal')
       useMemberStore().clearProfile()
     },
 
