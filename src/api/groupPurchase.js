@@ -43,8 +43,8 @@ export const groupPurchaseApi = {
     return api.post(`/group-purchase/${id}/leave`)
   },
 
-  // 작성자가 공동구매 자체를 취소(판매취소)할 때 사용. 참여자 전원 환불은 백엔드가 처리.
-  // TODO: 백엔드에 해당 엔드포인트가 아직 없음 — 실제 경로/응답 형식은 API 명세 확정 후 맞출 것
+  // 관리자가 공동구매 자체를 취소(판매취소)할 때 사용 — 작성자 본인 여부와 무관하게 관리자면 누구나
+  // 호출 가능(2026-08-10 정책 확정). 참여자 전원 환불은 백엔드가 처리.
   cancel(id) {
     return api.post(`/group-purchase/${id}/cancel`)
   },

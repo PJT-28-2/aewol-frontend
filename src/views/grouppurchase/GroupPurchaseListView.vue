@@ -347,7 +347,7 @@ onBeforeUnmount(() => {
               {{ gp.badgeText }}
             </span>
           </div>
-          <!-- 진행중: 작성자('확인하기')/이미 참여('참여중')는 상세 없이 상태 화면으로, 미참여('참여하기')는 참여 플로우로 이동 -->
+          <!-- 진행중: 관리자('확인하기')/이미 참여('참여중')는 상세 없이 상태 화면으로, 미참여('참여하기')는 참여 플로우로 이동 -->
           <router-link
             v-if="gp.status === 'OPEN'"
             :to="gp.isAdmin || gp.isParticipating ? `/group-purchase/${gp.id}/status` : `/group-purchase/${gp.id}`"
