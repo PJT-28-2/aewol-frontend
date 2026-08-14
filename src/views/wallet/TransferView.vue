@@ -13,12 +13,14 @@ const router = useRouter()
 const accountStore = useAccountStore()
 const walletStore = useWalletStore()
 
-const isLoading = ref(false)
+const isLoading = ref(true)
 const loadError = ref('')
+let isLoadRequestInFlight = false
 
 async function loadTransferData() {
-  if (isLoading.value) return
+  if (isLoadRequestInFlight) return
 
+  isLoadRequestInFlight = true
   isLoading.value = true
   loadError.value = ''
 
@@ -40,6 +42,7 @@ async function loadTransferData() {
   }
 
   isLoading.value = false
+  isLoadRequestInFlight = false
 }
 
 onMounted(loadTransferData)
