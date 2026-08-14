@@ -66,8 +66,9 @@ async function loadStatus() {
 onMounted(loadStatus);
 
 // 목록/마이페이지 중 어디서 이 화면으로 왔는지에 따라 "돌아가기" 목적지가 달라짐
-// (마이페이지는 상태 화면으로 이동할 때 ?from=my를 붙여서 표시함)
-const isFromMyPage = computed(() => route.query.from === 'my');
+// (마이페이지는 상태 화면으로 이동할 때 ?from=my를 붙여서 표시함). /group-purchase/my는
+// requiresNonAdmin이라 관리자는 목적지가 될 수 없음 — 관리자라면 from=my가 붙어있어도 리스트로 보낸다
+const isFromMyPage = computed(() => route.query.from === 'my' && !authStore.isAdmin);
 const backTarget = computed(() => (isFromMyPage.value ? '/group-purchase/my' : '/group-purchase'));
 const backLabel = computed(() => (isFromMyPage.value ? '마이페이지로 돌아가기' : '리스트로 돌아가기'));
 

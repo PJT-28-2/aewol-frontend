@@ -95,7 +95,9 @@ async function handleSubmit() {
 
   if (USE_MOCK_DATA) {
     groupPurchaseCreateStore.reset()
-    router.push('/group-purchase/my')
+    // 이 플로우는 requiresAdmin이라 여기 도달하는 사람은 항상 관리자 — /group-purchase/my는
+    // requiresNonAdmin이라 관리자를 다시 튕겨내므로 목적지가 될 수 없다
+    router.push('/group-purchase')
     return
   }
 
@@ -129,7 +131,9 @@ async function handleSubmit() {
 
     await groupPurchaseApi.create(payload)
     groupPurchaseCreateStore.reset()
-    router.push('/group-purchase/my')
+    // 이 플로우는 requiresAdmin이라 여기 도달하는 사람은 항상 관리자 — /group-purchase/my는
+    // requiresNonAdmin이라 관리자를 다시 튕겨내므로 목적지가 될 수 없다
+    router.push('/group-purchase')
   } catch (err) {
     // 403(관리자 아님)은 Spring Security 기본 응답이라 바디가 비어있어 별도 문구로 처리하고,
     // 그 외 실패는 백엔드가 ApiResponse로 내려주는 실제 사유(이미지 확장자 등)를 그대로 보여준다

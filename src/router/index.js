@@ -420,7 +420,9 @@ const authRoutes = [
     name: 'GroupPurchasePayment',
     component: () =>
       import('@/views/grouppurchase/GroupPurchasePaymentPreview.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
+    // join()이 role=USER 전용이라 관리자는 애초에 참여자가 될 수 없음 — URL 직접 입력으로
+    // 이 결제 화면에 들어와 참여자로 등록되는 경로를 막는다(#237 리뷰 HIGH 항목)
+    meta: { requiresAuth: true, requiresNonAdmin: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/group-purchase/:gpId/status',
