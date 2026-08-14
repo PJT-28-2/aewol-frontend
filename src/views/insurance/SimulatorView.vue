@@ -53,18 +53,29 @@ const verdictColorClasses = {
   UNFAVORABLE: 'text-(color:--color-danger-strong)',
 }
 
-// 환급률 확인 배지 표시 텍스트/색상. reimbursementRatePct 하나만 보고 파생한다 —
-// rate가 null이면 confidence 값과 무관하게 "미확인"으로 고정해, 한 카드에
-// "배지=추정 + 본문=미확인"이 동시에 뜨는 상황을 막는다.
-const reimbursementBadgeClasses = {
-  확인: 'bg-(--color-leaf-surface) text-(color:--color-leaf-dark)',
-  추정: 'bg-(--color-gray-100) text-(color:--color-gray-700)',
-  미확인: 'bg-(--color-danger-soft) text-(color:--color-danger-strong)',
+// 환급률 확인 배지. 상태값(enum)과 표시 문구를 분리해, 문구를 바꾸거나 다국어를
+// 붙여도 스타일 매핑이 깨지지 않게 한다.
+//
+// 상태는 reimbursementRatePct 하나만 보고 파생한다 — rate가 null이면 confidence
+// 값과 무관하게 UNKNOWN으로 고정해, 한 카드에 "배지=추정 + 본문=미확인"이
+// 동시에 뜨는 상황을 막는다.
+const reimbursementStatusLabels = {
+  CONFIRMED: '확인',
+  ESTIMATED: '추정',
+  UNKNOWN: '미확인',
 }
 
-function reimbursementBadgeLabel(product) {
-  if (product.reimbursementRatePct == null) return '미확인'
-  return product.reimbursementConfidence === 'CONFIRMED_OWN_COVERAGE_NAME' ? '확인' : '추정'
+const reimbursementStatusClasses = {
+  CONFIRMED: 'bg-(--color-leaf-surface) text-(color:--color-leaf-dark)',
+  ESTIMATED: 'bg-(--color-gray-100) text-(color:--color-gray-700)',
+  UNKNOWN: 'bg-(--color-danger-soft) text-(color:--color-danger-strong)',
+}
+
+function reimbursementStatus(product) {
+  if (product.reimbursementRatePct == null) return 'UNKNOWN'
+  return product.reimbursementConfidence === 'CONFIRMED_OWN_COVERAGE_NAME'
+    ? 'CONFIRMED'
+    : 'ESTIMATED'
 }
 
 function breakEvenRowClass(isFavorable) {
@@ -80,29 +91,48 @@ const medicalCostDraft = ref(MEDICAL_COST_MIN)
 const isAdjustingCost = ref(false)
 let medicalCostDebounceTimer = null
 
+// 마지막으로 시작한 시뮬레이션 요청의 순번. 응답을 반영하기 전에 이 값과 대조해,
+// 늦게 도착한 이전 요청이 최신 결과를 덮어쓰지 않게 한다. 슬라이더를 빠르게
+// 여러 번 조정하면 요청이 겹칠 수 있고, '다시 계산하기'로 입력 화면에 돌아온
+// 뒤에 응답이 도착하면 결과 화면이 저절로 다시 뜨는 문제가 있었다.
+let latestRequestSeq = 0
+
+function isStale(seq) {
+  return seq !== latestRequestSeq
+}
+
+function simulationPayload(extra) {
+  return {
+    petId: selectedPet.value.id,
+    medicalHistoryCodes: medicalTags.value.length > 0
+      ? medicalTags.value.map((tag) => tag.code)
+      : ['NONE'],
+    ...extra,
+  }
+}
+
 async function handleSimulate() {
   if (!selectedPet.value) {
     errorMessage.value = '반려동물을 선택해주세요.'
     return
   }
 
+  const seq = ++latestRequestSeq
   isLoading.value = true
   errorMessage.value = ''
 
   try {
-    result.value = await insuranceStore.simulate({
-      petId: selectedPet.value.id,
-      medicalHistoryCodes: medicalTags.value.length > 0
-        ? medicalTags.value.map((tag) => tag.code)
-        : ['NONE'],
-    })
+    const response = await insuranceStore.simulate(simulationPayload())
+    if (isStale(seq)) return
+    result.value = response
     medicalCostDraft.value = clampMedicalCost(
-      result.value.assumptions.annualExpectedVetCostKrw,
+      response.assumptions.annualExpectedVetCostKrw,
     )
   } catch {
+    if (isStale(seq)) return
     errorMessage.value = '시뮬레이션에 실패했어요. 잠시 후 다시 시도해주세요.'
   } finally {
-    isLoading.value = false
+    if (!isStale(seq)) isLoading.value = false
   }
 }
 
@@ -131,28 +161,47 @@ function onMedicalCostChange(event) {
 async function commitMedicalCostAdjustment(value) {
   if (!selectedPet.value) return
 
+  const seq = ++latestRequestSeq
   isAdjustingCost.value = true
   errorMessage.value = ''
 
   try {
-    result.value = await insuranceStore.simulate({
-      petId: selectedPet.value.id,
-      medicalHistoryCodes: medicalTags.value.length > 0
-        ? medicalTags.value.map((tag) => tag.code)
-        : ['NONE'],
-      annualMedicalCostKrw: value,
-    })
+    const response = await insuranceStore.simulate(
+      simulationPayload({ annualMedicalCostKrw: value }),
+    )
+    if (isStale(seq)) return
+    result.value = response
     medicalCostDraft.value = clampMedicalCost(
-      result.value.assumptions.annualExpectedVetCostKrw ?? value,
+      response.assumptions.annualExpectedVetCostKrw ?? value,
     )
   } catch {
+    if (isStale(seq)) return
+    // 재계산에 실패하면 result는 이전 값 그대로다. 슬라이더 숫자만 새 값으로
+    // 남겨두면 "예상 연 의료비 200만원"인데 아래 표는 51만원 기준으로 계산된
+    // 화면이 되므로, 화면에 실제로 반영된 값으로 되돌린다.
+    medicalCostDraft.value = clampMedicalCost(
+      result.value?.assumptions?.annualExpectedVetCostKrw,
+    )
     errorMessage.value = '의료비 조정 재계산에 실패했어요. 잠시 후 다시 시도해주세요.'
   } finally {
-    isAdjustingCost.value = false
+    if (!isStale(seq)) isAdjustingCost.value = false
   }
 }
 
+// 입력 화면으로 돌아간다. 아직 실행되지 않은 디바운스 타이머를 반드시 제거해야
+// 한다 — 슬라이더를 조정하고 500ms 안에 이 버튼을 누르면, 남아 있던 타이머가
+// 뒤늦게 서버를 호출해 결과 화면이 저절로 다시 뜬다.
+// 이미 날아간 요청은 취소할 수 없으므로 순번을 올려 그 응답을 무효화하고,
+// 그 응답이 finally에서 끄지 못하게 된 로딩 플래그는 여기서 직접 내린다.
 function handleReset() {
+  if (medicalCostDebounceTimer) {
+    clearTimeout(medicalCostDebounceTimer)
+    medicalCostDebounceTimer = null
+  }
+  latestRequestSeq += 1
+  isLoading.value = false
+  isAdjustingCost.value = false
+  errorMessage.value = ''
   result.value = null
   medicalTags.value = []
 }
@@ -389,9 +438,9 @@ function handleReset() {
                 </div>
                 <span
                   class="shrink-0 inline-block py-(--space-1) px-(--space-2) rounded-(--radius-full) text-(length:--font-xs) font-semibold"
-                  :class="reimbursementBadgeClasses[reimbursementBadgeLabel(product)]"
+                  :class="reimbursementStatusClasses[reimbursementStatus(product)]"
                 >
-                  {{ reimbursementBadgeLabel(product) }}
+                  {{ reimbursementStatusLabels[reimbursementStatus(product)] }}
                 </span>
               </div>
 
@@ -400,6 +449,18 @@ function handleReset() {
                 {{ product.reimbursementRatePct != null
                   ? `환급률 ${product.reimbursementRatePct}%`
                   : '보장비율 미확인' }}
+              </p>
+
+              <!--
+                담보별 환급률이 다른 상품(예: 통원 50% / 입원 70%)에서 위 환급률은
+                대표값 하나일 뿐이다. 손익분기 계산 가능 여부와 무관하게 항상 함께
+                보여줘야, 계산된 상품이 전 담보 50%인 것처럼 오해되지 않는다.
+              -->
+              <p
+                v-if="product.reimbursementRateNote"
+                class="mt-(--space-1) text-(length:--font-xs) text-(color:--color-slate-muted)"
+              >
+                {{ product.reimbursementRateNote }}
               </p>
 
               <p
@@ -485,11 +546,8 @@ function handleReset() {
                 <p class="text-(length:--font-sm) font-medium text-(color:--color-gray-700)">
                   보장비율 미확인
                 </p>
-                <p
-                  v-if="product.reimbursementRateNote"
-                  class="mt-(--space-1) text-(length:--font-xs) text-(color:--color-slate-muted)"
-                >
-                  {{ product.reimbursementRateNote }}
+                <p class="mt-(--space-1) text-(length:--font-xs) text-(color:--color-slate-muted)">
+                  약관에서 환급률을 확인하지 못해 손익분기를 계산하지 않았어요.
                 </p>
               </div>
             </li>
