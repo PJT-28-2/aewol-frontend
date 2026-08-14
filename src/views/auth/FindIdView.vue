@@ -160,6 +160,15 @@ const handleVerifyCode = async () => {
   }
 }
 
+const handleSubmit = () => {
+  if (requestId.value) {
+    handleVerifyCode()
+    return
+  }
+
+  handleRequestCode()
+}
+
 onBeforeUnmount(() => window.clearInterval(timerId))
 </script>
 
@@ -236,7 +245,7 @@ onBeforeUnmount(() => window.clearInterval(timerId))
 
       <form
         class="mt-[22px] flex flex-col"
-        @submit.prevent="handleVerifyCode"
+        @submit.prevent="handleSubmit"
       >
         <label
           class="mb-1 text-[12.5px] leading-[1.3] font-(--font-bold) text-(color:--color-slate-dark)"
