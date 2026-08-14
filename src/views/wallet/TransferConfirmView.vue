@@ -3,7 +3,9 @@ import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppButton from '@/components/common/AppButton.vue'
 import BankBadge from '@/components/common/BankBadge.vue'
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import PinAuthSheet from '@/components/common/PinAuthSheet.vue'
+import { useAccountsLoader } from '@/composables/useAccountsLoader'
 import { useAccountStore } from '@/stores/account'
 import { useTransactionStore } from '@/stores/transaction'
 import { useWalletStore } from '@/stores/wallet'
@@ -15,10 +17,13 @@ const accountStore = useAccountStore()
 const transactionStore = useTransactionStore()
 const walletStore = useWalletStore()
 
-onMounted(async () => {
-  if (!accountStore.accounts.length) {
-    await accountStore.fetchAccounts().catch(() => {})
-  }
+const { loadError, isLoadingAccounts, loadAccounts } = useAccountsLoader(() =>
+  accountStore.fetchAccounts(),
+)
+
+onMounted(() => {
+  if (accountStore.accounts.length) return
+  loadAccounts()
 })
 
 const accountId = computed(() => String(route.query.accountId ?? ''))
@@ -109,7 +114,32 @@ async function handlePinComplete(password) {
       </h1>
     </header>
 
-    <template v-if="isInvalid">
+    <div
+      v-if="isLoadingAccounts"
+      class="flex justify-center py-(--space-9)"
+    >
+      <LoadingSpinner />
+    </div>
+
+    <div
+      v-else-if="loadError"
+      class="rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-(--space-4) text-center shadow-(--shadow-card)"
+      role="alert"
+    >
+      <p class="mb-(--space-3) text-(length:--font-sm) text-(color:--color-danger-strong)">
+        {{ loadError }}
+      </p>
+      <AppButton
+        variant="primary"
+        size="sm"
+        :disabled="isLoadingAccounts"
+        @click="loadAccounts"
+      >
+        다시 시도
+      </AppButton>
+    </div>
+
+    <template v-else-if="isInvalid">
       <p class="mb-(--space-6) text-(length:--font-sm) text-(color:--color-gray-500)">
         출금 정보를 찾을 수 없어요. 애월지갑에서 다시 시도해주세요.
       </p>
