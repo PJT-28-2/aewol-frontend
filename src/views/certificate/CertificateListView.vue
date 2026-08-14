@@ -179,6 +179,7 @@ async function handleMedicalSelect(event) {
 
     <!-- 반려동물 탭 -->
     <div
+      v-if="certificateStore.pets.length > 0"
       class="mb-(--space-6) flex items-center gap-(--space-2) overflow-x-auto whitespace-nowrap pb-(--space-1) [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       role="tablist"
       aria-label="반려동물 선택"
