@@ -93,6 +93,7 @@ export function formatDateDot(isoDate) {
  * @returns {string} `YYYY.MM.DD HH:mm` 형식의 문자열
  */
 export function formatDateTimeDot(isoDateTime) {
+  if (!isoDateTime) return ''
   const [datePart, timePart] = isoDateTime.split('T')
   return timePart ? `${formatDateDot(datePart)} ${timePart.slice(0, 5)}` : formatDateDot(datePart)
 }
