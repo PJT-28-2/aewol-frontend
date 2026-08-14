@@ -1,10 +1,12 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import IconPaw from '@/components/common/icons/IconPaw.vue'
+import IconPetInsurance from '@/components/common/icons/IconPetInsurance.vue'
 import AppButton from '@/components/common/AppButton.vue'
 import PetSelectorChip from '@/components/common/PetSelectorChip.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import MedicalHistoryPicker from '@/components/insurance/MedicalHistoryPicker.vue'
 import { usePetStore } from '@/stores/pet'
 import { useInsuranceStore } from '@/stores/insurance'
@@ -21,6 +23,10 @@ onMounted(async () => {
   } catch {
     petLoadError.value = '반려동물 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요.'
   }
+})
+
+onUnmounted(() => {
+  if (medicalCostDebounceTimer) clearTimeout(medicalCostDebounceTimer)
 })
 
 const selectedPetId = ref(null)
@@ -47,6 +53,33 @@ const verdictColorClasses = {
   UNFAVORABLE: 'text-(color:--color-danger-strong)',
 }
 
+// 환급률 확인 배지 표시 텍스트/색상. reimbursementRatePct 하나만 보고 파생한다 —
+// rate가 null이면 confidence 값과 무관하게 "미확인"으로 고정해, 한 카드에
+// "배지=추정 + 본문=미확인"이 동시에 뜨는 상황을 막는다.
+const reimbursementBadgeClasses = {
+  확인: 'bg-(--color-leaf-surface) text-(color:--color-leaf-dark)',
+  추정: 'bg-(--color-gray-100) text-(color:--color-gray-700)',
+  미확인: 'bg-(--color-danger-soft) text-(color:--color-danger-strong)',
+}
+
+function reimbursementBadgeLabel(product) {
+  if (product.reimbursementRatePct == null) return '미확인'
+  return product.reimbursementConfidence === 'CONFIRMED_OWN_COVERAGE_NAME' ? '확인' : '추정'
+}
+
+function breakEvenRowClass(isFavorable) {
+  return isFavorable ? verdictColorClasses.FAVORABLE : verdictColorClasses.UNFAVORABLE
+}
+
+// 예상 연 의료비 조정 슬라이더 범위. 백엔드 @Max(S8)가 확정되면 맞춰서 조정한다.
+const MEDICAL_COST_MIN = 100_000
+const MEDICAL_COST_MAX = 3_000_000
+const MEDICAL_COST_STEP = 10_000
+
+const medicalCostDraft = ref(MEDICAL_COST_MIN)
+const isAdjustingCost = ref(false)
+let medicalCostDebounceTimer = null
+
 async function handleSimulate() {
   if (!selectedPet.value) {
     errorMessage.value = '반려동물을 선택해주세요.'
@@ -59,17 +92,63 @@ async function handleSimulate() {
   try {
     result.value = await insuranceStore.simulate({
       petId: selectedPet.value.id,
-      species: selectedPet.value.species,
-      breed: selectedPet.value.breed,
-      age: calcAgeFromBirthDate(selectedPet.value.birthDate),
       medicalHistoryCodes: medicalTags.value.length > 0
         ? medicalTags.value.map((tag) => tag.code)
         : ['NONE'],
     })
+    medicalCostDraft.value = clampMedicalCost(
+      result.value.assumptions.annualExpectedVetCostKrw,
+    )
   } catch {
     errorMessage.value = '시뮬레이션에 실패했어요. 잠시 후 다시 시도해주세요.'
   } finally {
     isLoading.value = false
+  }
+}
+
+function clampMedicalCost(value) {
+  if (typeof value !== 'number' || Number.isNaN(value)) return MEDICAL_COST_MIN
+  return Math.min(MEDICAL_COST_MAX, Math.max(MEDICAL_COST_MIN, value))
+}
+
+// 드래그 중(input)에는 숫자 표시만 갱신한다. 예상보장금 계산은 서버 한 곳에서만
+// 하므로, 여기서 프리뷰 값을 계산하지 않는다.
+function onMedicalCostInput(event) {
+  medicalCostDraft.value = Number(event.target.value)
+}
+
+// 슬라이더를 놓는 순간(change)에만 500ms 디바운스 후 서버를 재호출한다.
+function onMedicalCostChange(event) {
+  const value = Number(event.target.value)
+  medicalCostDraft.value = value
+
+  if (medicalCostDebounceTimer) clearTimeout(medicalCostDebounceTimer)
+  medicalCostDebounceTimer = setTimeout(() => {
+    commitMedicalCostAdjustment(value)
+  }, 500)
+}
+
+async function commitMedicalCostAdjustment(value) {
+  if (!selectedPet.value) return
+
+  isAdjustingCost.value = true
+  errorMessage.value = ''
+
+  try {
+    result.value = await insuranceStore.simulate({
+      petId: selectedPet.value.id,
+      medicalHistoryCodes: medicalTags.value.length > 0
+        ? medicalTags.value.map((tag) => tag.code)
+        : ['NONE'],
+      annualMedicalCostKrw: value,
+    })
+    medicalCostDraft.value = clampMedicalCost(
+      result.value.assumptions.annualExpectedVetCostKrw ?? value,
+    )
+  } catch {
+    errorMessage.value = '의료비 조정 재계산에 실패했어요. 잠시 후 다시 시도해주세요.'
+  } finally {
+    isAdjustingCost.value = false
   }
 }
 
@@ -196,20 +275,22 @@ function handleReset() {
             {{ result.insuranceAdvice.message }}
           </p>
 
-          <div class="flex justify-between mt-(--space-5) pt-(--space-4) border-t border-white/15">
-            <div class="flex flex-col gap-(--space-1)">
-              <span class="text-(length:--font-xs) opacity-70">예상 연 의료비</span>
-              <span class="text-(length:--font-lg) font-bold text-(color:--color-gold-light)">
-                {{ result.assumptions.annualExpectedVetCostKrw.toLocaleString() }}원
-              </span>
-            </div>
-            <div class="flex flex-col gap-(--space-1) text-right">
-              <span class="text-(length:--font-xs) opacity-70">연 예상 진료 횟수</span>
-              <span class="text-(length:--font-lg) font-bold">
-                {{ result.assumptions.annualClaimCount }}회
-              </span>
-            </div>
+          <div class="flex flex-col gap-(--space-1) mt-(--space-5) pt-(--space-4) border-t border-white/15">
+            <span class="text-(length:--font-xs) opacity-70">예상 연 의료비</span>
+            <span class="text-(length:--font-lg) font-bold text-(color:--color-gold-light)">
+              {{ result.assumptions.annualExpectedVetCostKrw.toLocaleString() }}원
+            </span>
           </div>
+
+          <p
+            v-if="result.assumptions.assumptionSource"
+            class="mt-(--space-3) text-(length:--font-xs) opacity-70"
+          >
+            가정 근거: {{ result.assumptions.assumptionSource }}
+            <template v-if="result.assumptions.isUserAdjusted">
+              · 직접 조정한 값이에요
+            </template>
+          </p>
 
           <p
             v-if="result.preExistingConditionWarning"
@@ -218,6 +299,47 @@ function handleReset() {
             {{ result.preExistingConditionWarning }}
           </p>
         </div>
+
+        <div class="flex flex-col gap-(--space-3) rounded-(--radius-xl) bg-(--color-white) p-(--space-4) shadow-(--shadow-md)">
+          <div class="flex items-center justify-between gap-(--space-2)">
+            <label
+              for="medical-cost-range"
+              class="text-(length:--font-sm) font-medium text-(color:--color-gray-700)"
+            >
+              예상 연 의료비 조정
+            </label>
+            <LoadingSpinner
+              v-if="isAdjustingCost"
+              size="sm"
+            />
+          </div>
+          <input
+            id="medical-cost-range"
+            type="range"
+            :min="MEDICAL_COST_MIN"
+            :max="MEDICAL_COST_MAX"
+            :step="MEDICAL_COST_STEP"
+            :value="medicalCostDraft"
+            class="w-full accent-(--color-leaf)"
+            :aria-valuetext="`${medicalCostDraft.toLocaleString()}원`"
+            @input="onMedicalCostInput"
+            @change="onMedicalCostChange"
+          >
+          <div class="flex justify-between items-center text-(length:--font-xs) text-(color:--color-slate-muted)">
+            <span>{{ MEDICAL_COST_MIN.toLocaleString() }}원</span>
+            <span class="text-(length:--font-md) font-bold text-(color:--color-navy)">
+              {{ medicalCostDraft.toLocaleString() }}원
+            </span>
+            <span>{{ MEDICAL_COST_MAX.toLocaleString() }}원</span>
+          </div>
+        </div>
+
+        <p
+          v-if="errorMessage"
+          class="text-(color:--color-danger-strong) text-(length:--font-sm)"
+        >
+          {{ errorMessage }}
+        </p>
 
         <AppButton
           type="button"
@@ -234,31 +356,142 @@ function handleReset() {
           <h2 class="text-(length:--font-lg) font-semibold text-(color:--color-navy)">
             추천 보험
           </h2>
-          <p class="text-(length:--font-sm) text-(color:--color-gray-500) mt-(--space-1) mb-(--space-4)">
+          <p class="text-(length:--font-sm) text-(color:--color-gray-500) mt-(--space-1)">
             이 프로필에 맞는 상품이에요
           </p>
+          <p class="text-(length:--font-xs) text-(color:--color-slate-muted) mt-(--space-1) mb-(--space-4)">
+            갱신 시 보험료 상승은 반영되지 않았어요.
+          </p>
 
-          <ul class="flex flex-col gap-(--space-4)">
+          <EmptyState
+            v-if="result.recommendedProducts.length === 0"
+            :icon="IconPetInsurance"
+            message="조건에 맞는 추천 상품이 아직 없어요. 나중에 다시 확인해주세요."
+          />
+
+          <ul
+            v-else
+            class="flex flex-col gap-(--space-4)"
+          >
             <li
               v-for="product in result.recommendedProducts"
               :key="product.productId"
               class="bg-(--color-white) rounded-(--radius-lg) p-(--space-4) shadow-(--shadow-md)"
             >
-              <p class="text-(length:--font-sm) text-(color:--color-gray-500)">
-                {{ product.companyName }}
-              </p>
-              <p class="text-(length:--font-base) font-semibold text-(color:--color-gray-900) mt-(--space-1)">
-                {{ product.productName }}
-              </p>
+              <div class="flex items-start justify-between gap-(--space-2)">
+                <div class="min-w-0">
+                  <p class="text-(length:--font-sm) text-(color:--color-gray-500)">
+                    {{ product.companyName }}
+                  </p>
+                  <p class="text-(length:--font-base) font-semibold text-(color:--color-gray-900) mt-(--space-1)">
+                    {{ product.productName }}
+                  </p>
+                </div>
+                <span
+                  class="shrink-0 inline-block py-(--space-1) px-(--space-2) rounded-(--radius-full) text-(length:--font-xs) font-semibold"
+                  :class="reimbursementBadgeClasses[reimbursementBadgeLabel(product)]"
+                >
+                  {{ reimbursementBadgeLabel(product) }}
+                </span>
+              </div>
+
               <p class="text-(length:--font-md) font-bold text-(color:--color-navy) mt-(--space-2)">
-                월 {{ product.monthlyPremiumKrw.toLocaleString() }}원 · 환급률 {{ product.reimbursementRatePct }}%
+                월 {{ product.monthlyPremiumKrw.toLocaleString() }}원 ·
+                {{ product.reimbursementRatePct != null
+                  ? `환급률 ${product.reimbursementRatePct}%`
+                  : '보장비율 미확인' }}
               </p>
+
+              <p
+                v-if="product.annualLimitKrw != null"
+                class="mt-(--space-1) text-(length:--font-xs) text-(color:--color-slate-muted)"
+              >
+                연간 보장한도 {{ product.annualLimitKrw.toLocaleString() }}원
+              </p>
+
+              <p
+                v-if="!product.deductibleApplied"
+                class="mt-(--space-1) text-(length:--font-xs) text-(color:--color-slate-muted)"
+              >
+                자기부담금 미반영
+              </p>
+
               <p
                 v-if="product.regulatoryCapWarning"
                 class="mt-(--space-2) text-(length:--font-xs) text-(color:--color-slate-muted)"
               >
                 {{ product.regulatoryCapWarning }}
               </p>
+
+              <div
+                v-if="product.breakEvenAvailable"
+                class="mt-(--space-3) overflow-x-auto"
+              >
+                <table class="w-full min-w-[420px] text-(length:--font-xs) text-left border-collapse">
+                  <thead>
+                    <tr class="text-(color:--color-gray-500) border-b border-(--color-border)">
+                      <th class="py-(--space-2) pr-(--space-2) font-medium">
+                        기간
+                      </th>
+                      <th class="py-(--space-2) pr-(--space-2) font-medium">
+                        누적보험료
+                      </th>
+                      <th class="py-(--space-2) pr-(--space-2) font-medium">
+                        예상보장금
+                      </th>
+                      <th class="py-(--space-2) pr-(--space-2) font-medium">
+                        차액
+                      </th>
+                      <th class="py-(--space-2) font-medium">
+                        유불리
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr
+                      v-for="scenario in product.breakEvenScenarios"
+                      :key="scenario.years"
+                      class="border-b border-(--color-border) last:border-0"
+                    >
+                      <td class="py-(--space-2) pr-(--space-2) text-(color:--color-gray-800)">
+                        {{ scenario.years }}년
+                      </td>
+                      <td class="py-(--space-2) pr-(--space-2) text-(color:--color-gray-800)">
+                        {{ scenario.cumulativePremiumKrw.toLocaleString() }}원
+                      </td>
+                      <td class="py-(--space-2) pr-(--space-2) text-(color:--color-gray-800)">
+                        {{ scenario.expectedReimbursementKrw.toLocaleString() }}원
+                      </td>
+                      <td
+                        class="py-(--space-2) pr-(--space-2)"
+                        :class="breakEvenRowClass(scenario.isFavorable)"
+                      >
+                        {{ scenario.differenceKrw >= 0 ? '+' : '' }}{{ scenario.differenceKrw.toLocaleString() }}원
+                      </td>
+                      <td
+                        class="py-(--space-2)"
+                        :class="breakEvenRowClass(scenario.isFavorable)"
+                      >
+                        {{ scenario.isFavorable ? '유리' : '불리' }}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div
+                v-else
+                class="mt-(--space-3) rounded-(--radius-md) bg-(--color-gray-100) p-(--space-3)"
+              >
+                <p class="text-(length:--font-sm) font-medium text-(color:--color-gray-700)">
+                  보장비율 미확인
+                </p>
+                <p
+                  v-if="product.reimbursementRateNote"
+                  class="mt-(--space-1) text-(length:--font-xs) text-(color:--color-slate-muted)"
+                >
+                  {{ product.reimbursementRateNote }}
+                </p>
+              </div>
             </li>
           </ul>
         </div>
