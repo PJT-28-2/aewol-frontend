@@ -2,9 +2,8 @@ import { ref } from 'vue';
 
 /**
  * 계좌 목록 로딩 상태(loadError)/loadAccounts 함수를 표준화한 컴포저블.
- * ChargeAccountSelectView.vue / TransferAccountSelectView.vue에 거의 동일하게
- * 복사돼 있던 로직을 하나로 모았어요 (PR #215 리뷰 지적, 2026-08-13) —
- * 나중에 한쪽만 고치고 다른 쪽을 놓치기 쉬운 중복을 방지해요.
+ * 계좌 선택 화면에 반복되던 로딩·오류 처리 로직을 하나로 모았어요
+ * (PR #215 리뷰 지적, 2026-08-13).
  *
  * isLoadingAccounts로 재시도 버튼 연타 시 fetchFn이 동시에 여러 번
  * 호출되는 걸 막아요 — 클릭 핸들러 안에서 await 이전에 동기적으로 체크하기 때문에

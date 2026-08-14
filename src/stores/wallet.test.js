@@ -4,7 +4,8 @@ import { createPinia, setActivePinia } from 'pinia'
 vi.mock('@/api/wallet', () => ({
   walletApi: {
     getWallet: vi.fn(),
-    charge: vi.fn(),
+    prepareTossCharge: vi.fn(),
+    confirmTossCharge: vi.fn(),
     verifySimplePassword: vi.fn(),
     withdraw: vi.fn(),
   },
@@ -60,6 +61,107 @@ describe('useWalletStore', () => {
 
     await expect(store.fetchWallet()).rejects.toBe(requestError)
     expect(store.wallet).toBeNull()
+  })
+
+  it('Toss 충전 주문을 생성하고 화면 복원용 정보를 보관한다', async () => {
+    walletApi.prepareTossCharge.mockResolvedValue({
+      data: { result: { orderId: 'order-123456', amount: 30000 } },
+    })
+    const store = useWalletStore()
+
+    await expect(store.prepareTossCharge({ amount: 30000, returnTo: 'home' }))
+      .resolves.toEqual({ orderId: 'order-123456', amount: 30000, returnTo: 'home' })
+    expect(walletApi.prepareTossCharge).toHaveBeenCalledWith(30000)
+    expect(JSON.parse(sessionStorage.getItem('pendingTossCharge'))).toMatchObject({
+      orderId: 'order-123456',
+      amount: 30000,
+    })
+  })
+
+  it('Toss 승인 성공 후 지갑 잔액과 완료 정보를 갱신한다', async () => {
+    walletApi.prepareTossCharge.mockResolvedValue({
+      data: { result: { orderId: 'order-123456', amount: 30000 } },
+    })
+    walletApi.confirmTossCharge.mockResolvedValue({
+      data: { result: { walletId: 'wallet-1', walletBalance: 150000 } },
+    })
+    const store = useWalletStore()
+    await store.prepareTossCharge({ amount: 30000 })
+
+    await expect(store.confirmTossCharge({
+      paymentKey: 'payment-key',
+      orderId: 'order-123456',
+      amount: 30000,
+    })).resolves.toMatchObject({ totalBalance: 150000 })
+
+    expect(store.pendingTossCharge).toBeNull()
+    expect(store.completedTossCharge).toMatchObject({
+      orderId: 'order-123456',
+      amount: 30000,
+      walletBalance: 150000,
+    })
+  })
+
+  it('진행 중인 다른 주문이 있어도 콜백 주문을 서버에서 승인하고 기존 주문 상태를 보존한다', async () => {
+    walletApi.confirmTossCharge.mockResolvedValue({
+      data: { result: { walletId: 'wallet-1', walletBalance: 140000 } },
+    })
+    const store = useWalletStore()
+    store.pendingTossCharge = {
+      orderId: 'new-order-654321',
+      amount: 20000,
+      returnTo: 'home',
+    }
+    sessionStorage.setItem('pendingTossCharge', JSON.stringify(store.pendingTossCharge))
+
+    await expect(store.confirmTossCharge({
+      paymentKey: 'payment-key',
+      orderId: 'original-order-123456',
+      amount: 10000,
+    })).resolves.toMatchObject({ totalBalance: 140000 })
+
+    expect(walletApi.confirmTossCharge).toHaveBeenCalledWith({
+      paymentKey: 'payment-key',
+      orderId: 'original-order-123456',
+      amount: 10000,
+    })
+    expect(store.pendingTossCharge).toMatchObject({
+      orderId: 'new-order-654321',
+      amount: 20000,
+      returnTo: 'home',
+    })
+    expect(JSON.parse(sessionStorage.getItem('pendingTossCharge'))).toMatchObject({
+      orderId: 'new-order-654321',
+    })
+    expect(store.completedTossCharge).toMatchObject({
+      orderId: 'original-order-123456',
+      amount: 10000,
+      returnTo: 'wallet',
+    })
+  })
+
+  it('화면 복원 상태가 없어도 Toss 콜백을 서버 승인 API로 전달한다', async () => {
+    walletApi.confirmTossCharge.mockResolvedValue({
+      data: { result: { walletId: 'wallet-1', walletBalance: 110000 } },
+    })
+    const store = useWalletStore()
+
+    await expect(store.confirmTossCharge({
+      paymentKey: 'payment-key',
+      orderId: 'order-without-client-state',
+      amount: 10000,
+    })).resolves.toMatchObject({ totalBalance: 110000 })
+
+    expect(walletApi.confirmTossCharge).toHaveBeenCalledWith({
+      paymentKey: 'payment-key',
+      orderId: 'order-without-client-state',
+      amount: 10000,
+    })
+    expect(store.completedTossCharge).toMatchObject({
+      orderId: 'order-without-client-state',
+      amount: 10000,
+      returnTo: 'wallet',
+    })
   })
 
   it('간편 비밀번호 검증 결과를 boolean으로 반환한다', async () => {

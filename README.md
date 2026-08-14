@@ -139,7 +139,11 @@ npm run build
 ```
 VITE_KAKAO_JS_KEY=카카오_JS_키
 VITE_API_BASE_URL=http://localhost:8080
+VITE_TOSS_CLIENT_KEY=TossPayments_클라이언트_키
 ```
+
+`VITE_TOSS_CLIENT_KEY`에는 브라우저용 API 개별 연동 클라이언트 키만 설정합니다.
+TossPayments 시크릿 키는 백엔드에서만 관리하며 프론트 환경변수에 넣지 않습니다.
 
 ### 백엔드 API 프록시
 

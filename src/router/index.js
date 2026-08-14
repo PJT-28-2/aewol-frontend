@@ -207,10 +207,16 @@ const authRoutes = [
     meta: { requiresAuth: true, layout: 'DefaultLayout', hideHeader: true },
   },
   {
-    path: '/wallet/charge/account-select',
-    name: 'ChargeAccountSelect',
-    component: () => import('@/views/wallet/ChargeAccountSelectView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
+    path: '/wallet/charge/success',
+    name: 'TossChargeSuccess',
+    component: () => import('@/views/wallet/TossChargeSuccessView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout', hideHeader: true, hideBottomNav: true },
+  },
+  {
+    path: '/wallet/charge/fail',
+    name: 'TossChargeFail',
+    component: () => import('@/views/wallet/TossChargeFailView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout', hideHeader: true, hideBottomNav: true },
   },
   {
     path: '/wallet/transfer',
