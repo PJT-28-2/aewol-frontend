@@ -52,7 +52,21 @@ const handleVerificationCodeInput = (event) => {
   verificationCode.value = event.target.value.replace(/\D/g, '').slice(0, 6)
 }
 
+const resetVerificationSession = () => {
+  window.clearInterval(timerId)
+  requestId.value = ''
+  verificationCode.value = ''
+  isCodeSent.value = false
+  remainingSeconds.value = 0
+  codeMessage.value = { type: 'error', text: '' }
+  resultProvider.value = ''
+  maskedEmail.value = ''
+  isResultVisible.value = false
+}
+
 const handleRequestCode = async () => {
+  if (isSending.value || isVerifying.value) return
+
   nameMessage.value = { type: 'error', text: '' }
   phoneMessage.value = { type: 'error', text: '' }
 
@@ -60,12 +74,12 @@ const handleRequestCode = async () => {
     nameMessage.value = { type: 'error', text: '이름을 입력해주세요' }
     return
   }
-  if (!/^01[016789]-?\d{3,4}-?\d{4}$/.test(phone.value)) {
+  if (!/^010-?\d{4}-?\d{4}$/.test(phone.value)) {
     phoneMessage.value = { type: 'error', text: '올바른 전화번호 형식이 아닙니다' }
     return
   }
-  if (isSending.value) return
 
+  resetVerificationSession()
   isSending.value = true
   try {
     const phoneDigits = phone.value.replace(/\D/g, '')
@@ -102,6 +116,8 @@ const handleRequestCode = async () => {
 }
 
 const handleVerifyCode = async () => {
+  if (isSending.value || isVerifying.value) return
+
   codeMessage.value = { type: 'error', text: '' }
   if (!requestId.value) {
     codeMessage.value = { type: 'error', text: '인증번호를 먼저 받아주세요' }
@@ -115,8 +131,6 @@ const handleVerifyCode = async () => {
     codeMessage.value = { type: 'error', text: '인증번호가 만료되었습니다. 다시 받아주세요' }
     return
   }
-  if (isVerifying.value) return
-
   isVerifying.value = true
   try {
     const { data } = await authApi.verifyFindAccountCode(requestId.value, verificationCode.value)
@@ -235,7 +249,7 @@ onBeforeUnmount(() => window.clearInterval(timerId))
           type="text"
           autocomplete="name"
           placeholder="홍길동"
-          :disabled="isSending"
+          :disabled="isSending || isVerifying"
         >
         <p
           v-if="nameMessage.text"
@@ -257,13 +271,13 @@ onBeforeUnmount(() => window.clearInterval(timerId))
             type="tel"
             autocomplete="tel"
             placeholder="010-1234-5678"
-            :disabled="isSending"
+            :disabled="isSending || isVerifying"
             @input="handlePhoneInput"
           >
           <button
             class="h-(--control-height-md) w-20 shrink-0 rounded-(--radius-lg) bg-(--color-leaf) text-[11.5px] font-(--font-bold) text-(color:--color-navy) disabled:cursor-not-allowed disabled:opacity-55"
             type="button"
-            :disabled="isSending"
+            :disabled="isSending || isVerifying"
             @click="handleRequestCode"
           >
             {{ isSending ? '전송 중...' : isCodeSent ? '다시 받기' : '인증번호 받기' }}
@@ -304,7 +318,7 @@ onBeforeUnmount(() => window.clearInterval(timerId))
           <button
             class="h-(--control-height-md) w-20 shrink-0 rounded-(--radius-lg) bg-(--color-leaf) text-[12.5px] font-(--font-bold) text-(color:--color-navy) disabled:cursor-not-allowed disabled:opacity-55"
             type="submit"
-            :disabled="!requestId || verificationCode.length !== 6 || remainingSeconds === 0 || isVerifying"
+            :disabled="!requestId || verificationCode.length !== 6 || remainingSeconds === 0 || isSending || isVerifying"
           >
             {{ isVerifying ? '확인 중...' : '확인' }}
           </button>
