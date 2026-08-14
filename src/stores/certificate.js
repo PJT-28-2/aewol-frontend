@@ -244,6 +244,20 @@ export const useCertificateStore = defineStore('certificate', {
       })
     },
 
+    // 업로드 POST 응답을 목록에 낙관적으로 반영 — 재조회(fetchCertificates) 없이도
+    // 화면에 바로 보이게 한다. 업로드 도중 다른 펫 탭으로 전환된 경우(petId !== selectedPetId)는
+    // 지금 보이는 목록이 다른 펫 것이므로 반영하지 않는다 — 이후 그 펫 탭으로 다시 돌아오면
+    // selectPet()의 재조회가 서버에 이미 저장된 문서를 정상적으로 가져온다
+    _addUploadedDocument(doc) {
+      if (doc.petId !== this.selectedPetId) return
+      this.documents = [doc, ...this.documents]
+      if (doc.docType === 'VACCINATION') {
+        this.vaccinationDocs = [doc, ...this.vaccinationDocs]
+      } else if (doc.docType === 'MEDICAL_CONFIRMATION') {
+        this.medicalDocs = [doc, ...this.medicalDocs]
+      }
+    },
+
     // POST /api/pets/{petId}/documents — file 필수, issuedDate 선택
     async uploadVaccination(petId, file, issuedDate) {
       if (USE_MOCK_DATA) {
@@ -264,11 +278,20 @@ export const useCertificateStore = defineStore('certificate', {
       }
       return this._withRequestState(async () => {
         const { data } = await certificatesApi.uploadVaccination(petId, file, issuedDate)
-        await this.fetchCertificates(petId)
-        // data.result는 POST 응답 그대로라 docName이 비어있을 수 있음(목록 화면은 어차피
-        // fetchCertificates가 다시 채우므로 문제없지만, 이 반환값을 직접 표시용으로 쓰려면
-        // file.name 폴백을 다시 고려할 것)
-        return data.result
+        // data.result는 POST 응답 그대로라 docName 등이 비어있을 수 있어 폴백을 먼저 깔고 덮어쓴다
+        const newDoc = {
+          petId,
+          docType: 'VACCINATION',
+          docName: file.name,
+          issuedDate: issuedDate || new Date().toISOString().slice(0, 10),
+          createdAt: new Date().toISOString(),
+          ...data.result,
+        }
+        this._addUploadedDocument(newDoc)
+        // 재조회는 최신 상태로 보정하기 위한 보조 작업일 뿐, POST는 이미 성공했으므로 이 실패를
+        // 업로드 실패로 취급하지 않는다 — 그렇지 않으면 사용자가 재시도해 서버에 중복 저장된다
+        this.fetchCertificates(petId).catch(() => {})
+        return newDoc
       })
     },
 
@@ -293,8 +316,18 @@ export const useCertificateStore = defineStore('certificate', {
         formData.append('file', file)
         formData.append('docType', 'MEDICAL_CONFIRMATION')
         const { data } = await certificatesApi.uploadDocument(petId, formData)
-        await this.fetchCertificates(petId)
-        return data.result
+        const newDoc = {
+          petId,
+          docType: 'MEDICAL_CONFIRMATION',
+          docName: file.name,
+          issuedDate: new Date().toISOString().slice(0, 10),
+          createdAt: new Date().toISOString(),
+          ...data.result,
+        }
+        this._addUploadedDocument(newDoc)
+        // 접종증명서와 동일한 이유로 재조회 실패를 업로드 실패로 전파하지 않는다
+        this.fetchCertificates(petId).catch(() => {})
+        return newDoc
       })
     },
 
