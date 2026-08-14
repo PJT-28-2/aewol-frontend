@@ -264,18 +264,8 @@ export const useCertificateStore = defineStore('certificate', {
       }
       return this._withRequestState(async () => {
         const { data } = await certificatesApi.uploadVaccination(petId, file, issuedDate)
-        const uploaded = {
-          ...data.result,
-          docName: data.result?.docName || file.name,
-        }
-        const isUploadedDocument = (doc) =>
-          doc.docId === uploaded.docId || (doc.petId === petId && doc.docType === 'VACCINATION')
-        this.documents = [uploaded, ...this.documents.filter((doc) => !isUploadedDocument(doc))]
-        this.vaccinationDocs = [
-          uploaded,
-          ...this.vaccinationDocs.filter((doc) => !isUploadedDocument(doc)),
-        ]
-        return uploaded
+        await this.fetchCertificates(petId)
+        return data.result
       })
     },
 
