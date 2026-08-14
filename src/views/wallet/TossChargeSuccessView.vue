@@ -21,12 +21,6 @@ const isValidCallback = computed(
   () => paymentKey.value && orderId.value && amount.value > 0,
 )
 
-function isAlreadyCompleted(error) {
-  const message = error.response?.data?.message
-  return error.response?.status === 409
-    && ['이미 처리된 주문입니다.', '이미 처리된 충전입니다.'].includes(message)
-}
-
 async function refreshWalletData() {
   await transactionStore.fetchRecentTransactions({ limit: 20 }).catch(() => {})
 }
@@ -57,17 +51,6 @@ async function approveCharge() {
     await refreshWalletData()
     await router.replace({ name: 'ChargeComplete' })
   } catch (error) {
-    if (isAlreadyCompleted(error) && walletStore.pendingTossCharge?.orderId === orderId.value) {
-      try {
-        await walletStore.fetchWallet()
-        walletStore.finishTossCharge({ orderId: orderId.value, amount: amount.value })
-        await refreshWalletData()
-        await router.replace({ name: 'ChargeComplete' })
-        return
-      } catch {
-        // 최신 지갑을 확인하지 못하면 완료로 간주하지 않고 재시도 안내를 유지한다.
-      }
-    }
     approvalError.value = error.response?.data?.message
       || error.message
       || '충전 승인을 완료하지 못했어요. 다시 시도해주세요.'
