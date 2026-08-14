@@ -335,10 +335,12 @@ function handleReset() {
             v-if="result.assumptions.assumptionSource"
             class="mt-(--space-3) text-(length:--font-xs) opacity-70"
           >
+            <!--
+              assumptionSource는 사용자가 의료비를 직접 조정하면 통계 출처 대신
+              "사용자가 직접 입력한 값"으로 내려온다. 여기에 "· 직접 조정한 값이에요"를
+              덧붙이면 같은 말이 두 번 나오므로 붙이지 않는다.
+            -->
             가정 근거: {{ result.assumptions.assumptionSource }}
-            <template v-if="result.assumptions.isUserAdjusted">
-              · 직접 조정한 값이에요
-            </template>
           </p>
 
           <p
