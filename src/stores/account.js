@@ -34,6 +34,12 @@ export const useAccountStore = defineStore('account', {
     // 간편 비밀번호는 계정당 하나만 존재해요. 최초 계좌 연동 때 한 번만 설정하고
     // 이후 계좌 연동부터는 이 값으로 설정 단계 자체를 건너뛰어요.
     // 실제 비밀번호 값은 저장하지 않고, "설정된 적이 있는지" 여부만 남겨요.
+    // ⚠️ 이 초기값은 새로고침 사이 깜빡임을 줄이기 위한 임시값일 뿐이에요 — 진짜 기준은
+    // 서버(GET /api/users/me의 hasSimplePassword)예요. member.js의 fetchProfile()이
+    // 로그인/새로고침마다 setHasSimplePassword()로 이 값을 서버 기준으로 덮어써요.
+    // localStorage만 믿으면 새 기기·새 브라우저나 같은 브라우저에서 다른 계정으로
+    // 로그인했을 때 서버 상태와 어긋나서, 이미 PIN이 있는데도 설정 화면으로 보내려다
+    // 백엔드가 기존 PIN 확인을 요구하며 막는 문제가 있었다(2026-08-13 코드리뷰 지적).
     hasSimplePassword: localStorage.getItem('hasSimplePassword') === 'true',
 
     // 계좌 연동 플로우 진행 중 상태
@@ -83,6 +89,18 @@ export const useAccountStore = defineStore('account', {
         throw err;
       } finally {
         this.pendingRequestCount -= 1;
+      }
+    },
+
+    // member.js의 fetchProfile()(로그인 시 + 새로고침 후 첫 진입 시)과 auth.js의
+    // clearSession()(로그아웃 시)에서 호출해서, PIN 설정 여부를 항상 서버 기준으로
+    // 맞춘다. localStorage는 새로고침 사이 깜빡임 방지용 캐시일 뿐이라 여기서 같이 갱신한다.
+    setHasSimplePassword(value) {
+      this.hasSimplePassword = !!value;
+      if (this.hasSimplePassword) {
+        localStorage.setItem('hasSimplePassword', 'true');
+      } else {
+        localStorage.removeItem('hasSimplePassword');
       }
     },
 
@@ -258,6 +276,11 @@ export const useAccountStore = defineStore('account', {
 
     // POST /api/users/simple-password — 확인 화면에서 재입력한 값이 최초 입력값과
     // 일치할 때만 호출해요. 목데이터 모드에선 API 호출 없이 바로 통과시켜요.
+    // ⚠️ 이 액션은 hasSimplePassword가 false일 때(=최초 설정)만 호출돼요
+    // (AccountAuthOneWon.vue가 hasSimplePassword가 true면 이 화면 자체를 건너뛰어요).
+    // 그래서 서버가 기존 PIN 재설정 시 요구하는 currentPassword는 여기서 보낼 필요가
+    // 없어요 — hasSimplePassword가 서버와 어긋나 있지 않은 한(그래서 setHasSimplePassword로
+    // 항상 서버 값과 동기화하는 게 중요함).
     async confirmSimplePassword(password) {
       if (password !== this.linking.password) {
         return false;
@@ -267,8 +290,7 @@ export const useAccountStore = defineStore('account', {
           await setSimplePassword(password);
         });
       }
-      this.hasSimplePassword = true;
-      localStorage.setItem('hasSimplePassword', 'true');
+      this.setHasSimplePassword(true);
       this.linking.password = '';
       return true;
     },
