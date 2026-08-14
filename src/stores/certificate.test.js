@@ -111,6 +111,34 @@ describe('useCertificateStore - 문서 목록 및 상세 조회', () => {
     expect(store.documents).toHaveLength(0)
   })
 
+  it('uploadVaccination() 업로드 처리 도중 사용자가 다른 펫 탭으로 전환하면 fetchCertificates 가드에 걸려 목록 갱신이 조용히 무시된다 — 이 액션은 항상 "현재 선택된 펫 탭"에서 호출된다는 전제에 의존하므로, 그 전제가 깨지는 경우를 문서화해둔다', async () => {
+    certificatesApi.uploadVaccination.mockResolvedValue({
+      data: { result: { docId: 'doc-vac-1', petId: 'pet-1', docType: 'VACCINATION', docName: '광견병' } },
+    })
+    certificatesApi.getList.mockImplementation(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50))
+      return {
+        data: {
+          result: [{ docId: 'doc-vac-1', petId: 'pet-1', docType: 'VACCINATION', docName: '광견병' }],
+        },
+      }
+    })
+
+    const store = useCertificateStore()
+    store.selectedPetId = 'pet-1'
+
+    const uploadPromise = store.uploadVaccination('pet-1', new File([], 'vaccine.png'))
+
+    // 업로드 완료 전 사용자가 펫 2 탭으로 전환
+    store.selectedPetId = 'pet-2'
+
+    await uploadPromise
+
+    // pet-1 업로드는 서버에는 성공했지만, 재조회 응답이 도착했을 때 selectedPetId가 이미
+    // pet-2라 가드에 걸려 store에는 반영되지 않는다
+    expect(store.vaccinationDocs).toHaveLength(0)
+  })
+
   it('fetchCertificateDetail()은 상세 정보를 조회하고 8자리 birthDate(20230512)를 YYYY-MM-DD 포맷으로 정규화한다', async () => {
     certificatesApi.getDetail.mockResolvedValue({
       data: {

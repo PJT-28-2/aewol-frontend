@@ -265,6 +265,9 @@ export const useCertificateStore = defineStore('certificate', {
       return this._withRequestState(async () => {
         const { data } = await certificatesApi.uploadVaccination(petId, file, issuedDate)
         await this.fetchCertificates(petId)
+        // data.result는 POST 응답 그대로라 docName이 비어있을 수 있음(목록 화면은 어차피
+        // fetchCertificates가 다시 채우므로 문제없지만, 이 반환값을 직접 표시용으로 쓰려면
+        // file.name 폴백을 다시 고려할 것)
         return data.result
       })
     },
