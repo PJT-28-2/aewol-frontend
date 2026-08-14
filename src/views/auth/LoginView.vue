@@ -221,7 +221,7 @@ const handleKakaoLogin = () => {
           </router-link>
           <span aria-hidden="true">|</span>
           <router-link to="/id/find">
-            아이디 찾기
+            계정 찾기
           </router-link>
           <span aria-hidden="true">|</span>
           <router-link to="/password/reset">
@@ -325,7 +325,7 @@ const handleKakaoLogin = () => {
         </router-link>
         <span aria-hidden="true">|</span>
         <router-link to="/id/find">
-          아이디 찾기
+          계정 찾기
         </router-link>
         <span aria-hidden="true">|</span>
         <router-link to="/password/reset">
