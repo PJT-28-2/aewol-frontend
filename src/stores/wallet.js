@@ -82,14 +82,10 @@ export const useWalletStore = defineStore('wallet', {
     async confirmTossCharge({ paymentKey, orderId, amount }) {
       const normalizedOrderId = String(orderId)
       const normalizedAmount = Number(amount)
-      if (
-        !this.pendingTossCharge
-        || this.pendingTossCharge.orderId !== normalizedOrderId
-        || this.pendingTossCharge.amount !== normalizedAmount
-      ) {
-        throw new Error('충전 주문 정보가 일치하지 않습니다.')
-      }
 
+      // pendingTossCharge는 결제 화면 복원용 상태일 뿐 승인 여부의 신뢰 원천이 아니다.
+      // 재시도나 저장소 유실로 값이 없거나 다른 주문으로 바뀌어도, 백엔드가 주문 소유권과
+      // 금액을 검증하므로 Toss 콜백은 항상 서버 승인 API로 전달한다.
       const { data } = await walletApi.confirmTossCharge({
         paymentKey,
         orderId: normalizedOrderId,
@@ -102,16 +98,23 @@ export const useWalletStore = defineStore('wallet', {
     },
 
     finishTossCharge({ orderId, amount }) {
+      const normalizedOrderId = String(orderId)
+      const matchingPending = this.pendingTossCharge?.orderId === normalizedOrderId
+        ? this.pendingTossCharge
+        : null
       const completedCharge = {
-        orderId: String(orderId),
+        orderId: normalizedOrderId,
         amount: Number(amount),
         walletBalance: Number(this.wallet?.totalBalance ?? 0),
-        returnTo: this.pendingTossCharge?.returnTo ?? 'wallet',
+        returnTo: matchingPending?.returnTo ?? 'wallet',
       }
       this.completedTossCharge = completedCharge
-      this.pendingTossCharge = null
       sessionStorage.setItem(COMPLETED_TOSS_CHARGE_KEY, JSON.stringify(completedCharge))
-      sessionStorage.removeItem(PENDING_TOSS_CHARGE_KEY)
+      // 다른 주문이 진행 중이면 그 주문의 복원 상태를 지우지 않는다.
+      if (matchingPending) {
+        this.pendingTossCharge = null
+        sessionStorage.removeItem(PENDING_TOSS_CHARGE_KEY)
+      }
       return completedCharge
     },
 
