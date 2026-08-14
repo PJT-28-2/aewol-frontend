@@ -338,7 +338,9 @@ async function handlePhotoDelete() {
         </button>
         <div class="flex-1">
           <p class="text-(length:--font-sm) font-semibold text-(color:--color-navy)">
-            APMS 정보 다시 확인하기
+            {{ certificateStore.detail.lastSyncedAt
+              ? `마지막 동기화: ${formatDateTimeDot(certificateStore.detail.lastSyncedAt)}`
+              : 'APMS 정보 다시 확인하기' }}
           </p>
           <p class="text-(length:--font-xs) text-(color:--color-gray-600) mt-(--space-1)">
             정보가 바뀌었다면 눌러서 최신 상태로 갱신해요
