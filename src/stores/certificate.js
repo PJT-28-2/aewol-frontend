@@ -4,6 +4,18 @@ import { petApi } from '@/api/pet'
 import { USE_MOCK_DATA } from '@/mocks/config'
 import { MOCK_PET_DOCUMENTS, MOCK_REGISTRATION_DETAIL } from '@/mocks/certificate'
 
+// 백엔드가 birthDate를 digits(...)로 저장·응답해 "20230512"처럼 구분자 없는 8자리 숫자로 내려온다.
+// 화면에서 쓰는 formatDateDot은 '-'만 '.'로 치환할 뿐이라 구분자가 없으면 그대로 노출돼버리므로,
+// 응답을 받는 시점에 ISO(YYYY-MM-DD)로 정규화해서 저장해둔다
+function normalizeRegistrationDetail(detail) {
+  if (!detail?.birthDate || !/^\d{8}$/.test(detail.birthDate)) return detail
+  const { birthDate } = detail
+  return {
+    ...detail,
+    birthDate: `${birthDate.slice(0, 4)}-${birthDate.slice(4, 6)}-${birthDate.slice(6, 8)}`,
+  }
+}
+
 // mock 모드의 펫 탭 목록은 MOCK_REGISTRATION_DETAIL에서 뽑아 쓴다(등록증 연동 여부와 무관하게
 // 모든 펫이 하나씩 항목을 가지고 있음). 문서 상세 전용 필드(docId, rfidCd 등)는 제외한다
 function toPetSummary(detail) {
@@ -143,7 +155,7 @@ export const useCertificateStore = defineStore('certificate', {
       }
       return this._withRequestState(async () => {
         const { data } = await certificatesApi.getDetail(petId, docId)
-        this.detail = data.result ?? null
+        this.detail = normalizeRegistrationDetail(data.result ?? null)
         return this.detail
       })
     },
@@ -202,7 +214,7 @@ export const useCertificateStore = defineStore('certificate', {
 
       return this._withRequestState(async () => {
         const { data } = await certificatesApi.verifyRegistration(petId, { regNumber, userName, birthDate })
-        this.detail = data.result ?? null
+        this.detail = normalizeRegistrationDetail(data.result ?? null)
         await this.fetchCertificates(petId)
         return this.detail
       })

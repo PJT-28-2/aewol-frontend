@@ -51,6 +51,10 @@ const authError = ref('')
 const isSubmittingAuth = ref(false)
 
 async function openLinkFlow() {
+  // 등록된 반려동물이 없으면 selectedPetId가 null이라 verify(petId, ...)가 POST /pets/null/verify로
+  // 나가버린다 — 버튼을 숨겨도(v-if="certificateStore.pets.length > 0") 여기서 한 번 더 방어한다
+  if (!certificateStore.selectedPetId) return
+
   authForm.value = {
     regNumber: certificateStore.selectedPet?.regNumber ?? '',
     userName: '',
@@ -194,6 +198,15 @@ async function handleMedicalSelect(event) {
     <LoadingSpinner
       v-if="certificateStore.isLoading"
       class="my-(--space-8)"
+    />
+
+    <!-- 등록된 반려동물이 없으면 동물등록증/접종증명서/진료확인서 섹션 전체를 비우고 등록부터 유도 -->
+    <EmptyState
+      v-else-if="certificateStore.pets.length === 0"
+      :icon="IconRegistrationPaper"
+      message="반려동물을 먼저 등록해주세요"
+      action-text="반려동물 등록하기"
+      action-route="/pets/register"
     />
 
     <template v-else>
