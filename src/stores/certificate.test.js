@@ -9,6 +9,7 @@ vi.mock('@/api/certificates', () => ({
     uploadDocument: vi.fn(),
     deleteDocument: vi.fn(),
     verifyRegistration: vi.fn(),
+    resyncRegistration: vi.fn(),
   },
 }))
 
@@ -201,6 +202,29 @@ describe('useCertificateStore - 문서 목록 및 상세 조회', () => {
     expect(certificatesApi.getDetail).toHaveBeenCalledWith('pet-1', 'doc-reg-1')
     expect(detail.birthDate).toBe('2023-05-12')
     expect(store.detail?.birthDate).toBe('2023-05-12')
+  })
+
+  it('resyncRegistration()은 저장된 문서 식별자로 재동기화하고 상세 상태를 갱신한다', async () => {
+    certificatesApi.resyncRegistration.mockResolvedValue({
+      data: {
+        result: {
+          docId: 'doc-reg-1',
+          petId: 'pet-1',
+          regNumber: '410000012345678',
+          name: '소로',
+          birthDate: '20230512',
+          lastSyncedAt: '2026-08-15T14:30:00',
+        },
+      },
+    })
+
+    const store = useCertificateStore()
+    const detail = await store.resyncRegistration('pet-1', 'doc-reg-1')
+
+    expect(certificatesApi.resyncRegistration).toHaveBeenCalledWith('pet-1', 'doc-reg-1')
+    expect(detail.birthDate).toBe('2023-05-12')
+    expect(store.detail?.lastSyncedAt).toBe('2026-08-15T14:30:00')
+    expect(certificatesApi.verifyRegistration).not.toHaveBeenCalled()
   })
 
   it('selectPet()은 선택된 펫 ID를 바꾸고 해당 펫의 증명서 목록을 요청한다', async () => {

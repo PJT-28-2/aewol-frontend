@@ -220,6 +220,31 @@ export const useCertificateStore = defineStore('certificate', {
       })
     },
 
+    // 이미 연동된 등록증은 저장된 등록번호로 APMS를 다시 조회한다.
+    // 최초 검증 때 입력한 소유자가 로그인 회원과 다를 수 있으므로 회원 프로필을 재사용하지 않는다.
+    async resyncRegistration(petId, docId) {
+      if (USE_MOCK_DATA) {
+        await new Promise((resolve) => setTimeout(resolve, 800))
+        const current = this.registrationDetails[docId]
+        if (!current || current.petId !== petId) {
+          throw new Error('동물등록정보를 찾을 수 없습니다.')
+        }
+        const detail = {
+          ...current,
+          lastSyncedAt: new Date().toISOString().slice(0, 19),
+        }
+        this.registrationDetails = { ...this.registrationDetails, [docId]: detail }
+        this.detail = detail
+        return detail
+      }
+
+      return this._withRequestState(async () => {
+        const { data } = await certificatesApi.resyncRegistration(petId, docId)
+        this.detail = normalizeRegistrationDetail(data.result ?? null)
+        return this.detail
+      })
+    },
+
     // 동물등록증 연동 해제(삭제)
     async deleteRegistration(petId, docId) {
       if (USE_MOCK_DATA) {

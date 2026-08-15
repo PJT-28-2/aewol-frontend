@@ -32,9 +32,13 @@ export const certificatesApi = {
 
   // 동물등록증 인증 — 이미 존재하는 반려동물(petId) 하나를 대상으로, 동물등록번호 + 신청인(보호자)
   // 이름/생년월일로 국가동물보호정보시스템(APMS)을 검증하고 성공 시 그 자리에서 바로 저장까지 됨
-  // (조회 전용 API 없음 — 호출 = 검증 + 저장). 이미 연동된 반려동물에 다시 호출하면 재동기화(갱신)로 동작한다.
+  // (조회 전용 API 없음 — 호출 = 검증 + 저장). 이후 갱신은 아래 전용 재동기화 API를 사용한다.
   // 인증키(serviceKey)는 비공개 값이라 백엔드가 붙여서 대신 호출한다.
   verifyRegistration(petId, { regNumber, userName, birthDate }) {
     return api.post(`/pets/${petId}/verify`, { regNumber, userName, birthDate })
+  },
+
+  resyncRegistration(petId, docId) {
+    return api.post(`/pets/${petId}/documents/${docId}/resync`)
   },
 }
