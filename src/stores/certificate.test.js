@@ -227,6 +227,18 @@ describe('useCertificateStore - 문서 목록 및 상세 조회', () => {
     expect(certificatesApi.verifyRegistration).not.toHaveBeenCalled()
   })
 
+  it('resyncRegistration() 응답에 상세가 없으면 기존 상세를 보존하고 실패로 처리한다', async () => {
+    certificatesApi.resyncRegistration.mockResolvedValue({ data: { result: null } })
+
+    const store = useCertificateStore()
+    store.detail = { docId: 'doc-reg-1', petId: 'pet-1', name: '소로' }
+
+    await expect(store.resyncRegistration('pet-1', 'doc-reg-1'))
+      .rejects.toThrow('동물등록정보를 다시 불러오지 못했습니다.')
+
+    expect(store.detail).toEqual({ docId: 'doc-reg-1', petId: 'pet-1', name: '소로' })
+  })
+
   it('selectPet()은 선택된 펫 ID를 바꾸고 해당 펫의 증명서 목록을 요청한다', async () => {
     certificatesApi.getList.mockResolvedValue({
       data: { result: [] },

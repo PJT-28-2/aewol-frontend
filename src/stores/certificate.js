@@ -240,7 +240,10 @@ export const useCertificateStore = defineStore('certificate', {
 
       return this._withRequestState(async () => {
         const { data } = await certificatesApi.resyncRegistration(petId, docId)
-        this.detail = normalizeRegistrationDetail(data.result ?? null)
+        if (!data.result) {
+          throw new Error('동물등록정보를 다시 불러오지 못했습니다.')
+        }
+        this.detail = normalizeRegistrationDetail(data.result)
         return this.detail
       })
     },
