@@ -1,11 +1,14 @@
 <script setup>
-import { useRouter } from 'vue-router';
+import { computed } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { useAccountStore } from '@/stores/account';
 import CompletionPageLayout from '@/components/common/CompletionPageLayout.vue';
 import AppButton from '@/components/common/AppButton.vue';
 
 const router = useRouter();
+const route = useRoute();
 const store = useAccountStore();
+const returnToCharge = computed(() => route.query.next === '/wallet/charge');
 
 // 이 화면은 최초 계좌 연동 때만 보여요(간편비밀번호를 이번에 처음 설정한 경우).
 // 계좌 등록 자체는 PIN 설정 화면 진입 전에 이미 끝나 있어서, 여기서는 바로
@@ -14,7 +17,7 @@ const store = useAccountStore();
 // 다음 계좌 연동 시도에 이전 verificationId/bankCode가 남아있지 않게 해요.
 function goToAccountManagement() {
   store.resetLinkingState();
-  router.replace({ name: 'AccountManagement' });
+  router.replace(returnToCharge.value ? '/wallet/charge' : { name: 'AccountManagement' });
 }
 </script>
 
@@ -27,7 +30,7 @@ function goToAccountManagement() {
       class="mt-(--space-8) rounded-(--radius-2xl)"
       @click="goToAccountManagement"
     >
-      계좌 관리로 이동
+      {{ returnToCharge ? '충전 화면으로 돌아가기' : '계좌 관리로 이동' }}
     </AppButton>
   </CompletionPageLayout>
 </template>

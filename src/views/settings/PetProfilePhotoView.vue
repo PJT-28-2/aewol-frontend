@@ -14,11 +14,13 @@ const route = useRoute()
 const petStore = usePetStore()
 const isEditMode = computed(() => route.query.mode === 'edit')
 const nextPath = computed(() => route.query.next || (isEditMode.value ? '/settings' : '/home'))
-const targetPet = computed(() =>
-  petStore.pets.find(({ id }) => id === String(route.query.petId))
-    ?? petStore.pets.find(({ id }) => id === petStore.representativePetId)
-    ?? petStore.pets[0],
-)
+const requestedPetId = computed(() => route.query.petId ? String(route.query.petId) : null)
+const targetPet = computed(() => {
+  if (requestedPetId.value) {
+    return petStore.pets.find(({ id }) => String(id) === requestedPetId.value)
+  }
+  return petStore.pets.find(({ id }) => id === petStore.representativePetId) ?? petStore.pets[0]
+})
 const petName = computed(() => targetPet.value?.name ?? '포리')
 
 const step = ref(1)
@@ -41,6 +43,10 @@ const stepTitle = computed(() => ({
 }[step.value] ?? ''))
 
 function openGallery() {
+  if (!targetPet.value) {
+    errorMessage.value = '대상 반려동물 정보를 찾지 못했어요. 반려동물 목록에서 다시 시도해 주세요.'
+    return
+  }
   fileInput.value?.click()
 }
 
@@ -170,6 +176,11 @@ onMounted(async () => {
     await petStore.fetchPets().catch(() => {})
   }
 
+  if (requestedPetId.value && !targetPet.value) {
+    errorMessage.value = '대상 반려동물 정보를 찾지 못했어요. 반려동물 목록에서 다시 시도해 주세요.'
+    return
+  }
+
   const existingCharacter = targetPet.value?.profileImg || targetPet.value?.characterImg
   if (isEditMode.value && existingCharacter) {
     resultUrl.value = existingCharacter
@@ -226,6 +237,14 @@ onBeforeUnmount(() => {
           저장된 사진 중 얼굴과 몸통이 함께 나온 사진을 골라<br>{{ petName }}만의 홈 캐릭터를 만들어요.
         </p>
 
+        <p
+          v-if="errorMessage"
+          class="mt-(--space-4) text-center text-(length:--font-sm) font-semibold text-(color:--color-danger-strong)"
+          role="alert"
+        >
+          {{ errorMessage }}
+        </p>
+
         <button
           type="button"
           class="mt-(--space-7) flex h-[296px] w-full flex-col items-center justify-center rounded-[26px] bg-(--color-white) px-(--space-4)"
@@ -251,6 +270,7 @@ onBeforeUnmount(() => {
           variant="navy"
           size="lg"
           block
+          :disabled="!targetPet"
           @click="openGallery"
         >
           사진 한 장 업로드

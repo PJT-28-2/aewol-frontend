@@ -1,16 +1,18 @@
 <script setup>
 import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useAccountStore } from '@/stores/account';
 import PinKeypad from '@/components/common/PinKeypad.vue';
 import PinDots from '@/components/common/PinDots.vue';
 import IconLock from '@/components/common/icons/IconLock.vue';
 
 const router = useRouter();
+const route = useRoute();
 const store = useAccountStore();
+const nextQuery = route.query.next === '/wallet/charge' ? { next: '/wallet/charge' } : {};
 
 if (!store.linking.password) {
-  router.replace({ name: 'AccountLinkSelect' });
+  router.replace({ name: 'AccountLinkSelect', query: nextQuery });
 }
 
 // PasswordSetupComplete 라우터 가드가 확인하는 플래그 — 여기서 확인(confirm)까지
@@ -33,7 +35,7 @@ async function handleComplete(value) {
       return;
     }
     window.sessionStorage.setItem(PASSWORD_SETUP_COMPLETED_KEY, 'true');
-    router.replace({ name: 'PasswordSetupComplete' });
+    router.replace({ name: 'PasswordSetupComplete', query: nextQuery });
   } catch {
     errorMessage.value = '비밀번호 설정에 실패했어요. 다시 시도해주세요';
     pin.value = '';

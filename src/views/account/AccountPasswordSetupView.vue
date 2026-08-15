@@ -1,16 +1,18 @@
 <script setup>
 import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useAccountStore } from '@/stores/account';
 import PinKeypad from '@/components/common/PinKeypad.vue';
 import PinDots from '@/components/common/PinDots.vue';
 import IconLock from '@/components/common/icons/IconLock.vue';
 
 const router = useRouter();
+const route = useRoute();
 const store = useAccountStore();
+const nextQuery = route.query.next === '/wallet/charge' ? { next: '/wallet/charge' } : {};
 
 if (!store.linking.verificationId) {
-  router.replace({ name: 'AccountLinkSelect' });
+  router.replace({ name: 'AccountLinkSelect', query: nextQuery });
 }
 
 const pin = ref('');
@@ -81,7 +83,7 @@ function handleComplete(value) {
     return;
   }
   store.setPendingPassword(value);
-  router.push({ name: 'AccountPasswordConfirm' });
+  router.push({ name: 'AccountPasswordConfirm', query: nextQuery });
 }
 
 // 생체인증 등록/전환은 별도 기능이라 아직 실제 동작은 없어요 — 디자인에 맞춰 진입점만
