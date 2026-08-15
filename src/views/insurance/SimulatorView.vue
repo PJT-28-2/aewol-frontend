@@ -11,6 +11,13 @@ import MedicalHistoryPicker from '@/components/insurance/MedicalHistoryPicker.vu
 import { usePetStore } from '@/stores/pet'
 import { useInsuranceStore } from '@/stores/insurance'
 import { calcAgeFromBirthDate } from '@/utils/date'
+import {
+  breakEvenVerdict,
+  breakEvenVerdictHeader,
+  isRegulatoryBound,
+  reimbursementRateText,
+  reimbursementStatus,
+} from '@/utils/reimbursement'
 
 const petStore = usePetStore()
 const insuranceStore = useInsuranceStore()
@@ -53,36 +60,46 @@ const verdictColorClasses = {
   UNFAVORABLE: 'text-(color:--color-danger-strong)',
 }
 
-// 환급률 확인 배지. 상태값(enum)과 표시 문구를 분리해, 문구를 바꾸거나 다국어를
-// 붙여도 스타일 매핑이 깨지지 않게 한다.
-//
-// 상태는 reimbursementRatePct 하나만 보고 파생한다 — rate가 null이면 confidence
-// 값과 무관하게 UNKNOWN으로 고정해, 한 카드에 "배지=추정 + 본문=미확인"이
-// 동시에 뜨는 상황을 막는다.
+// 환급률 표시 판정은 src/utils/reimbursement.js가 단일 원천이다. 여기서는
+// 그 결과(상태값·톤)를 클래스에 매핑하는 일만 한다 — 판정 규칙이 화면에만
+// 있으면 회귀가 곧바로 거짓 표시가 되는데 검증할 방법이 없기 때문이다.
 const reimbursementStatusLabels = {
   CONFIRMED: '확인',
   ESTIMATED: '추정',
+  REGULATORY_BOUND: '규제 상한',
   UNKNOWN: '미확인',
 }
 
 const reimbursementStatusClasses = {
   CONFIRMED: 'bg-(--color-leaf-surface) text-(color:--color-leaf-dark)',
   ESTIMATED: 'bg-(--color-gray-100) text-(color:--color-gray-700)',
+  REGULATORY_BOUND: 'bg-(--color-warning-soft) text-(color:--color-warning-strong)',
   UNKNOWN: 'bg-(--color-danger-soft) text-(color:--color-danger-strong)',
 }
 
-function reimbursementStatus(product) {
-  if (product.reimbursementRatePct == null) return 'UNKNOWN'
-  return product.reimbursementConfidence === 'CONFIRMED_OWN_COVERAGE_NAME'
-    ? 'CONFIRMED'
-    : 'ESTIMATED'
+// 손익분기 행의 톤 → 색. BOUND는 "상한 기준으로만 유리"라 유리색(초록)을 쓰지 않는다.
+const breakEvenToneClasses = {
+  FAVORABLE: verdictColorClasses.FAVORABLE,
+  UNFAVORABLE: verdictColorClasses.UNFAVORABLE,
+  BOUND: 'text-(color:--color-warning-strong)',
 }
 
-function breakEvenRowClass(isFavorable) {
-  return isFavorable ? verdictColorClasses.FAVORABLE : verdictColorClasses.UNFAVORABLE
+function breakEvenVerdictClass(product, scenario) {
+  return breakEvenToneClasses[breakEvenVerdict(product, scenario).tone]
 }
 
-// 예상 연 의료비 조정 슬라이더 범위. 백엔드 @Max(S8)가 확정되면 맞춰서 조정한다.
+function breakEvenVerdictText(product, scenario) {
+  return breakEvenVerdict(product, scenario).label
+}
+
+// 예상 연 의료비 조정 슬라이더 범위.
+//
+// 백엔드 검증 경계는 10,000~10,000,000원이고, 슬라이더는 그보다 좁은 흔한 구간만
+// 다룬다(더 넓히면 눈금 한 칸이 지나치게 커져 조작이 어려워진다). 좁은 것은 의도된
+// 설계이며, 범위 밖 값은 API를 직접 쓰는 경우에만 들어온다.
+//
+// 기본 가정치 444,000원(농식품부 2025 조사, 마리당 월 병원비 37,000원 × 12)이
+// 구간 안에 들어오고, 같은 조사의 사고·상해·질병 치료비만 따진 168,000원도 포함된다.
 const MEDICAL_COST_MIN = 100_000
 const MEDICAL_COST_MAX = 3_000_000
 const MEDICAL_COST_STEP = 10_000
@@ -448,9 +465,19 @@ function handleReset() {
 
               <p class="text-(length:--font-md) font-bold text-(color:--color-navy) mt-(--space-2)">
                 월 {{ product.monthlyPremiumKrw.toLocaleString() }}원 ·
-                {{ product.reimbursementRatePct != null
-                  ? `환급률 ${product.reimbursementRatePct}%`
-                  : '보장비율 미확인' }}
+                {{ reimbursementRateText(product) }}
+              </p>
+
+              <!--
+                규제 상한으로 채운 상품은 "왜 이 숫자인지"를 카드 안에서 설명해야 한다.
+                배지만으로는 70%가 확인값이 아니라는 걸 알 수 없다.
+              -->
+              <p
+                v-if="isRegulatoryBound(product)"
+                class="mt-(--space-1) text-(length:--font-xs) text-(color:--color-warning-strong)"
+              >
+                약관에서 환급률을 확인하지 못해 금융감독원 규제 상한으로 계산했어요.
+                실제 환급률은 이보다 낮을 수 있어요.
               </p>
 
               <!--
@@ -506,7 +533,7 @@ function handleReset() {
                         차액
                       </th>
                       <th class="py-(--space-2) font-medium">
-                        유불리
+                        {{ breakEvenVerdictHeader(product) }}
                       </th>
                     </tr>
                   </thead>
@@ -527,15 +554,15 @@ function handleReset() {
                       </td>
                       <td
                         class="py-(--space-2) pr-(--space-2)"
-                        :class="breakEvenRowClass(scenario.isFavorable)"
+                        :class="breakEvenVerdictClass(product, scenario)"
                       >
                         {{ scenario.differenceKrw >= 0 ? '+' : '' }}{{ scenario.differenceKrw.toLocaleString() }}원
                       </td>
                       <td
                         class="py-(--space-2)"
-                        :class="breakEvenRowClass(scenario.isFavorable)"
+                        :class="breakEvenVerdictClass(product, scenario)"
                       >
-                        {{ scenario.isFavorable ? '유리' : '불리' }}
+                        {{ breakEvenVerdictText(product, scenario) }}
                       </td>
                     </tr>
                   </tbody>

@@ -12,7 +12,12 @@ export const insuranceApi = {
   //     insuranceAdvice: { verdict: 'FAVORABLE'|'NEUTRAL'|'UNFAVORABLE', message },
   //     recommendedProducts: [{
   //       productId, companyName, productName, monthlyPremiumKrw,
-  //       reimbursementStructure, reimbursementRatePct, reimbursementConfidence,
+  //       reimbursementStructure, reimbursementRatePct,
+  //       reimbursementConfidence:
+  //         'CONFIRMED_OWN_COVERAGE_NAME' | 'ASSUMED_FROM_RESEARCH'
+  //         | 'REGULATORY_BOUND'   ← rate가 확인값이 아니라 금감원 규제 상한(70%)이다.
+  //                                  화면에서 확정 환급률처럼 단언하면 거짓 표시가 된다.
+  //         | 'UNVERIFIED',
   //       reimbursementRateNote, reimbursementSourceUrl,
   //       deductibleKrw, deductibleBasis, deductibleApplied, annualLimitKrw,
   //       regulatoryCapWarning, breakEvenAvailable,
