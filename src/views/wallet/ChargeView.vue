@@ -1,19 +1,34 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { loadTossPayments } from '@tosspayments/tosspayments-sdk'
 import { useRoute, useRouter } from 'vue-router'
 import AppButton from '@/components/common/AppButton.vue'
+import AppModal from '@/components/common/AppModal.vue'
 import { useWalletStore } from '@/stores/wallet'
+import { useAccountStore } from '@/stores/account'
 import { getTossCustomerKey } from '@/utils/tossPayments'
 
 const route = useRoute()
 const router = useRouter()
 const walletStore = useWalletStore()
+const accountStore = useAccountStore()
 
 const amount = ref(Number(route.query.amount) || 0)
 const isSubmitting = ref(false)
 const requestError = ref('')
+const showAccountLinkModal = ref(false)
 const quickAmounts = [10000, 30000, 50000, 100000]
+
+onMounted(async () => {
+  try {
+    await accountStore.fetchAccounts()
+    if (accountStore.accounts.length === 0) {
+      showAccountLinkModal.value = true
+    }
+  } catch {
+    requestError.value = '계좌 정보를 확인하지 못했어요. 다시 시도해주세요.'
+  }
+})
 
 const amountInput = computed({
   get: () => (amount.value > 0 ? amount.value.toLocaleString('ko-KR') : ''),
@@ -22,10 +37,20 @@ const amountInput = computed({
   },
 })
 
-const canCharge = computed(() => amount.value > 0 && !isSubmitting.value)
+const canCharge = computed(() =>
+  accountStore.accounts.length > 0 && amount.value > 0 && !isSubmitting.value,
+)
 
 function addAmount(value) {
   amount.value = Math.min(amount.value + value, 9_999_999_999_999)
+}
+
+function goToAccountLink() {
+  router.push({ path: '/account/link', query: { next: '/wallet/charge' } })
+}
+
+function goToWallet() {
+  router.replace('/wallet')
 }
 
 function callbackUrl(name) {
@@ -136,5 +161,35 @@ async function handleCharge() {
     >
       {{ amount > 0 ? `${amount.toLocaleString()}원 충전하기` : '충전하기' }}
     </AppButton>
+
+    <AppModal
+      v-model="showAccountLinkModal"
+      title="연결된 계좌가 없어요"
+      :divider="false"
+      :show-close="false"
+      center-title
+    >
+      <p class="text-center text-(length:--font-sm) leading-relaxed text-(color:--color-slate-muted)">
+        애월지갑을 충전하려면<br>먼저 사용할 계좌를 연결해주세요.
+      </p>
+      <template #footer>
+        <AppButton
+          variant="neutral"
+          size="lg"
+          class="flex-1"
+          @click="goToWallet"
+        >
+          나중에
+        </AppButton>
+        <AppButton
+          variant="primary"
+          size="lg"
+          class="flex-1"
+          @click="goToAccountLink"
+        >
+          계좌 연결하기
+        </AppButton>
+      </template>
+    </AppModal>
   </div>
 </template>

@@ -7,12 +7,10 @@ import AppInput from '@/components/common/AppInput.vue';
 import FeatureIconTile from '@/components/common/FeatureIconTile.vue';
 import ConfirmDeleteModal from '@/components/common/ConfirmDeleteModal.vue';
 import IconClose from '@/components/common/icons/IconClose.vue';
-import { mockPetsById } from '@/mocks/pet';
-import { USE_MOCK_DATA } from '@/mocks/config';
 import { petApi } from '@/api/pet';
 import { usePetStore } from '@/stores/pet';
 import { useMemberStore } from '@/stores/member';
-import { isValidCalendarDate } from '@/utils/date';
+import { formatBirthDateInput, isValidCalendarDate } from '@/utils/date';
 import IconDog from '@/components/common/icons/IconDog.vue';
 import IconCat from '@/components/common/icons/IconCat.vue';
 
@@ -22,7 +20,7 @@ const petStore = usePetStore();
 const memberStore = useMemberStore();
 const petId = computed(() => route.params.petId);
 
-const pet = ref(USE_MOCK_DATA ? mockPetsById[petId.value] : null);
+const pet = ref(null);
 const notFound = computed(() => !pet.value);
 
 const form = ref({
@@ -53,6 +51,12 @@ const memberName = ref('');
 
 const BIRTH_DATE_PATTERN = /^\d{4}\.\d{2}\.\d{2}$/;
 const REG_NUMBER_PATTERN = /^(\d{12}|\d{15})$/;
+const birthDateInput = computed({
+  get: () => form.value.birthDate,
+  set: (value) => {
+    form.value.birthDate = formatBirthDateInput(value);
+  },
+});
 
 function getDocumentFileName(document) {
   if (!document) return '';
@@ -75,7 +79,6 @@ onBeforeRouteLeave(() => {
 });
 
 onMounted(async () => {
-  if (USE_MOCK_DATA) return;
   isSaving.value = true;
   try {
     try {
@@ -141,9 +144,6 @@ watch(
       neutered: newPet.neutered === true || newPet.neutered === 'Y',
       medicalHistory: newPet.medicalHistory,
     };
-    if (USE_MOCK_DATA) {
-      existingVaccinationFileName.value = newPet.vaccinationFileName;
-    }
     vaccinationFile.value = null;
   },
   { immediate: true },
@@ -435,7 +435,7 @@ function handleDocumentDelete() {
         />
 
         <AppInput
-          v-model="form.birthDate"
+          v-model="birthDateInput"
           variant="soft"
           type="text"
           label="생년월일"

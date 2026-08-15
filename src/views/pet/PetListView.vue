@@ -13,8 +13,8 @@ import IconEmergencyCross from '@/components/common/icons/IconEmergencyCross.vue
 import IconFamilyCare from '@/components/common/icons/IconFamilyCare.vue'
 import IconPetInsurance from '@/components/common/icons/IconPetInsurance.vue'
 import IconImage from '@/components/common/icons/IconImage.vue'
-import dogHero from '@/assets/images/pet-poodle-home-mascot-v2.png'
-import catHero from '@/assets/images/pet-siamese-home-mascot-v2.png'
+import dogHero from '@/assets/images/pet-dog-default-home-v3.png'
+import catHero from '@/assets/images/pet-cat-default-home-v3.png'
 import { usePetStore } from '@/stores/pet'
 
 const petStore = usePetStore()
@@ -28,6 +28,15 @@ const unverifiedPetId = ref(route.query.petId)
 const primaryPet = computed(() =>
   pets.value.find((pet) => pet.id === activePetId.value) ?? pets.value[0] ?? null,
 )
+const orderedPets = computed(() => {
+  const representativeId = petStore.representativePetId
+  if (representativeId == null) return pets.value
+  return [...pets.value].sort((a, b) => {
+    if (a.id === representativeId) return -1
+    if (b.id === representativeId) return 1
+    return 0
+  })
+})
 const isRepresentativePet = computed(() =>
   primaryPet.value?.id === (petStore.representativePetId ?? pets.value[0]?.id),
 )
@@ -54,8 +63,8 @@ function getAge(birthDate) {
   return age
 }
 
-function petHero(species) {
-  return species === 'CAT' ? catHero : dogHero
+function petHero(pet) {
+  return pet.characterImg || pet.profileImg || (pet.species === 'CAT' ? catHero : dogHero)
 }
 
 function setRepresentativePet() {
@@ -65,7 +74,7 @@ function setRepresentativePet() {
 onMounted(async () => {
   try {
     await petStore.fetchPets()
-    activePetId.value = pets.value[0]?.id ?? null
+    activePetId.value = petStore.representativePetId ?? pets.value[0]?.id ?? null
   } finally {
     isLoading.value = false
   }
@@ -126,7 +135,7 @@ onMounted(async () => {
         aria-label="반려동물 선택"
       >
         <PetSelectorChip
-          v-for="pet in pets"
+          v-for="pet in orderedPets"
           :key="pet.id"
           :label="pet.name"
           :species="pet.species"
@@ -137,17 +146,22 @@ onMounted(async () => {
       </nav>
 
       <article class="relative h-[278px] overflow-hidden rounded-[28px] bg-(--color-leaf-soft) p-(--space-5)">
-        <span
-          v-if="isRepresentativePet"
-          class="inline-flex rounded-full bg-(--color-white) px-(--space-3) py-(--space-2) text-(length:--font-xs) font-bold text-(color:--color-leaf-dark)"
-        >대표 반려동물</span>
-        <h2 class="mt-(--space-4) text-[28px] font-bold text-(color:--color-navy)">
-          {{ primaryPet.name }}
-        </h2>
-        <p class="mt-(--space-1) text-(length:--font-sm) text-(color:--color-slate-dark)">
-          {{ primaryPet.breed }} · {{ getAge(primaryPet.birthDate) }}살 · 중성화 {{ primaryPet.neutered ? '완료' : '미완료' }}
-        </p>
-        <div class="relative left-[-4px] mt-(--space-4) flex items-center gap-(--space-2)">
+        <div
+          class="relative z-10 min-w-0"
+          :class="primaryPet.species === 'CAT' ? 'w-[calc(100%-196px)]' : 'w-[calc(100%-226px)]'"
+        >
+          <span
+            v-if="isRepresentativePet"
+            class="inline-flex rounded-full bg-(--color-white) px-(--space-3) py-(--space-2) text-(length:--font-xs) font-bold text-(color:--color-leaf-dark)"
+          >대표 반려동물</span>
+          <h2 class="mt-(--space-4) line-clamp-2 break-words text-[28px] leading-[1.15] font-bold text-(color:--color-navy)">
+            {{ primaryPet.name }}
+          </h2>
+          <p class="mt-(--space-1) break-words text-(length:--font-sm) leading-[1.45] text-(color:--color-slate-dark)">
+            <span class="block">{{ primaryPet.breed }} · {{ getAge(primaryPet.birthDate) }}살</span>
+            <span class="block">중성화 {{ primaryPet.neutered ? '완료' : '미완료' }}</span>
+          </p>
+          <div class="relative left-[-4px] mt-(--space-4) flex w-max flex-nowrap items-center gap-(--space-2) whitespace-nowrap">
           <router-link
             :to="`/pets/${primaryPet.id}/edit`"
             class="inline-flex rounded-full bg-(--color-white) px-(--space-3) py-(--space-2) text-(length:--font-xs) font-semibold text-(color:--color-navy) no-underline"
@@ -162,11 +176,13 @@ onMounted(async () => {
           >
             대표로 설정
           </button>
+          </div>
         </div>
         <img
-          :src="petHero(primaryPet.species)"
+          :src="petHero(primaryPet)"
           :alt="primaryPet.name"
-          class="absolute right-(--space-2) bottom-[-8px] h-[208px] w-[208px] object-contain"
+          class="absolute right-(--space-2) bottom-0 object-contain"
+          :class="primaryPet.species === 'CAT' ? 'h-[208px] w-[208px]' : 'h-[238px] w-[238px]'"
         >
       </article>
 

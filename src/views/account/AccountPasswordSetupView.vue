@@ -94,8 +94,14 @@ function handleBiometricSwitch() {
 
 <template>
   <div class="min-h-[calc(100svh-var(--header-height))] flex flex-col bg-(--color-app-bg)">
-    <div class="mx-auto w-full max-w-(--content-max-width) px-(--space-5) pt-(--space-9) text-center">
+    <div class="mx-auto w-full max-w-(--content-max-width) px-(--space-5) pt-(--space-7) text-center">
       <header class="mb-(--space-4)">
+        <span class="mx-auto mb-(--space-4) flex size-[52px] items-center justify-center rounded-[18px] bg-(--color-leaf-soft)">
+          <IconLock
+            :size="22"
+            color="var(--color-leaf-dark)"
+          />
+        </span>
         <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) leading-snug">
           간편 비밀번호를 설정해주세요
         </h1>
@@ -119,7 +125,7 @@ function handleBiometricSwitch() {
       </div>
     </div>
 
-    <div class="mt-auto w-full bg-(--color-olive) pt-(--space-5) pb-(--space-8) px-(--space-7)">
+    <div class="mx-auto mt-auto w-full max-w-(--content-max-width) rounded-t-[32px] border-x border-t border-(--color-card-border) bg-(--color-leaf-soft) px-(--space-7) pt-(--space-5) pb-(--space-7) shadow-[0_-10px_30px_color-mix(in_srgb,var(--color-navy)_6%,transparent)]">
       <PinKeypad
         v-model="pin"
         @complete="handleComplete"
@@ -127,12 +133,12 @@ function handleBiometricSwitch() {
 
       <button
         type="button"
-        class="mx-auto mt-(--space-5) flex items-center gap-(--space-1) text-(length:--font-sm) text-(color:--color-navy)"
+        class="mx-auto mt-(--space-5) flex items-center gap-(--space-2) rounded-full bg-(--color-white) px-(--space-4) py-(--space-2) text-(length:--font-sm) font-medium text-(color:--color-slate-dark)"
         @click="handleBiometricSwitch"
       >
         <IconLock
           :size="14"
-          color="var(--color-navy)"
+          color="var(--color-leaf-dark)"
         />
         생체인증으로 전환
       </button>
