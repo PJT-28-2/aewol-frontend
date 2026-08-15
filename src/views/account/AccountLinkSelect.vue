@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted, computed, ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useAccountStore } from '@/stores/account';
 import { ENABLED_BANK_CODES } from '@/mocks/account';
 import AppButton from '@/components/common/AppButton.vue';
@@ -8,7 +8,9 @@ import BankBadge from '@/components/common/BankBadge.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 
 const router = useRouter();
+const route = useRoute();
 const store = useAccountStore();
+const nextQuery = computed(() => route.query.next === '/wallet/charge' ? { next: '/wallet/charge' } : {});
 
 const loadError = ref('');
 
@@ -41,7 +43,7 @@ function isEnabled(bankCode) {
 function selectBank(bankCode) {
   if (!isEnabled(bankCode)) return;
   store.selectBankToLink(bankCode);
-  router.push({ name: 'AccountAuthOneWon' });
+  router.push({ name: 'AccountAuthOneWon', query: nextQuery.value });
 }
 </script>
 

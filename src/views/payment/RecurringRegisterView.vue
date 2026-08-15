@@ -8,15 +8,17 @@ import PetSelectorChip from '@/components/common/PetSelectorChip.vue';
 import IconCheck from '@/components/common/icons/IconCheck.vue';
 import IconChevronDown from '@/components/common/icons/IconChevronDown.vue';
 import IconInfo from '@/components/common/icons/IconInfo.vue';
-import { mockWalletBalance } from '@/mocks/transaction';
 import { usePaymentStore } from '@/stores/payment';
 import { usePetStore } from '@/stores/pet';
+import { useWalletStore } from '@/stores/wallet';
 import { RECURRING_CATEGORIES } from '@/utils/recurringCategory';
 
 const route = useRoute();
 const router = useRouter();
 const paymentStore = usePaymentStore();
 const petStore = usePetStore();
+const walletStore = useWalletStore();
+const walletBalance = computed(() => Number(walletStore.wallet?.totalBalance ?? 0));
 
 // 라우트에 id가 있으면(/payment/recurring/:id/edit) 변경(수정) 모드, 없으면 등록 모드.
 const editId = computed(() => route.params.id ?? null);
@@ -35,7 +37,7 @@ onMounted(async () => {
   isLoading.value = true;
   try {
     // 반려동물 선택은 필수이므로 등록/변경 모두 반려동물 목록이 필요하다.
-    await petStore.fetchPets();
+    await Promise.all([petStore.fetchPets(), walletStore.fetchWallet()]);
     if (!isEditMode.value) return;
     // 변경 모드: 기존 정기결제 값을 폼에 채워둔다.
     await paymentStore.fetchRecurringPayments();
@@ -279,7 +281,7 @@ async function handleSubmit() {
         <p
           class="text-(length:--font-sm) text-(color:--color-slate-muted) mt-(--space-1)"
         >
-          잔액 {{ mockWalletBalance.toLocaleString() }}원
+          잔액 {{ walletBalance.toLocaleString() }}원
         </p>
       </div>
     </section>

@@ -14,10 +14,14 @@ const route = useRoute()
 const petStore = usePetStore()
 const isEditMode = computed(() => route.query.mode === 'edit')
 const nextPath = computed(() => route.query.next || (isEditMode.value ? '/settings' : '/home'))
-const representativePet = computed(() =>
-  petStore.pets.find(({ id }) => id === petStore.representativePetId) ?? petStore.pets[0],
-)
-const petName = computed(() => representativePet.value?.name ?? '포리')
+const requestedPetId = computed(() => route.query.petId ? String(route.query.petId) : null)
+const targetPet = computed(() => {
+  if (requestedPetId.value) {
+    return petStore.pets.find(({ id }) => String(id) === requestedPetId.value)
+  }
+  return petStore.pets.find(({ id }) => id === petStore.representativePetId) ?? petStore.pets[0]
+})
+const petName = computed(() => targetPet.value?.name ?? '포리')
 
 const step = ref(1)
 const photoFile = ref(null)
@@ -29,6 +33,7 @@ const progress = ref(0)
 const fileInput = ref(null)
 const errorMessage = ref('')
 const remainingToday = ref(null)
+const isShowingExistingCharacter = ref(false)
 let progressTimer
 
 const stepTitle = computed(() => ({
@@ -38,6 +43,10 @@ const stepTitle = computed(() => ({
 }[step.value] ?? ''))
 
 function openGallery() {
+  if (!targetPet.value) {
+    errorMessage.value = '대상 반려동물 정보를 찾지 못했어요. 반려동물 목록에서 다시 시도해 주세요.'
+    return
+  }
   fileInput.value?.click()
 }
 
@@ -67,6 +76,10 @@ function handleBack() {
     router.back()
     return
   }
+  if (step.value === 4 && isShowingExistingCharacter.value) {
+    router.back()
+    return
+  }
   step.value = step.value === 4 ? 2 : step.value - 1
 }
 
@@ -88,7 +101,7 @@ function stopProgress() {
 }
 
 async function handleConvert() {
-  const petId = representativePet.value?.id
+  const petId = targetPet.value?.id
   if (!petId) {
     errorMessage.value = '반려동물 정보를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.'
     return
@@ -106,11 +119,21 @@ async function handleConvert() {
     resultUrl.value = result.profileImg || result.characterImg || ''
     remainingToday.value = result.remainingToday ?? null
 
+    const targetIndex = petStore.pets.findIndex(({ id }) => id === String(petId))
+    if (targetIndex !== -1) {
+      petStore.pets[targetIndex] = {
+        ...petStore.pets[targetIndex],
+        profileImg: result.profileImg ?? petStore.pets[targetIndex].profileImg,
+        characterImg: result.characterImg ?? petStore.pets[targetIndex].characterImg,
+      }
+    }
+
     if (!resultUrl.value) {
       throw new Error('생성된 이미지가 없습니다.')
     }
 
     progress.value = 100
+    isShowingExistingCharacter.value = false
     step.value = 4
   } catch (error) {
     errorMessage.value =
@@ -128,6 +151,7 @@ function handleReset() {
   if (photoPreviewUrl.value) URL.revokeObjectURL(photoPreviewUrl.value)
   photoPreviewUrl.value = ''
   resultUrl.value = ''
+  isShowingExistingCharacter.value = false
   errorMessage.value = ''
   progress.value = 0
   step.value = 1
@@ -146,7 +170,23 @@ async function handleApply() {
 }
 
 onMounted(async () => {
-  if (!petStore.pets.length) await petStore.fetchPets().catch(() => {})
+  // 등록 직후에는 스토어에 기존 반려동물만 남아 있을 수 있다. URL로 대상 petId를
+  // 받았다면 목록 유무와 관계없이 다시 조회해야 새 반려동물을 정확히 찾을 수 있다.
+  if (route.query.petId || isEditMode.value || !petStore.pets.length) {
+    await petStore.fetchPets().catch(() => {})
+  }
+
+  if (requestedPetId.value && !targetPet.value) {
+    errorMessage.value = '대상 반려동물 정보를 찾지 못했어요. 반려동물 목록에서 다시 시도해 주세요.'
+    return
+  }
+
+  const existingCharacter = targetPet.value?.profileImg || targetPet.value?.characterImg
+  if (isEditMode.value && existingCharacter) {
+    resultUrl.value = existingCharacter
+    isShowingExistingCharacter.value = true
+    step.value = 4
+  }
 })
 
 onBeforeUnmount(() => {
@@ -197,6 +237,14 @@ onBeforeUnmount(() => {
           저장된 사진 중 얼굴과 몸통이 함께 나온 사진을 골라<br>{{ petName }}만의 홈 캐릭터를 만들어요.
         </p>
 
+        <p
+          v-if="errorMessage"
+          class="mt-(--space-4) text-center text-(length:--font-sm) font-semibold text-(color:--color-danger-strong)"
+          role="alert"
+        >
+          {{ errorMessage }}
+        </p>
+
         <button
           type="button"
           class="mt-(--space-7) flex h-[296px] w-full flex-col items-center justify-center rounded-[26px] bg-(--color-white) px-(--space-4)"
@@ -222,6 +270,7 @@ onBeforeUnmount(() => {
           variant="navy"
           size="lg"
           block
+          :disabled="!targetPet"
           @click="openGallery"
         >
           사진 한 장 업로드
@@ -296,10 +345,15 @@ onBeforeUnmount(() => {
         class="flex flex-1 flex-col pt-(--space-6) text-center"
       >
         <h2 class="text-[25px] leading-[1.35] font-bold text-(color:--color-navy)">
-          {{ petName }}를 닮은 모습이<br>완성됐어요!
+          <template v-if="isShowingExistingCharacter">
+            현재 적용된 {{ petName }}의<br>캐릭터예요
+          </template>
+          <template v-else>
+            {{ petName }}를 닮은 모습이<br>완성됐어요!
+          </template>
         </h2>
         <p class="mt-(--space-2) text-(length:--font-sm) text-(color:--color-slate-muted)">
-          완성된 캐릭터는 홈 화면에 적용할 수 있어요.
+          {{ isShowingExistingCharacter ? '새 사진으로 다시 만들 수도 있어요.' : '완성된 캐릭터는 홈 화면에 적용할 수 있어요.' }}
         </p>
 
         <div class="mt-(--space-7) flex h-[305px] items-center justify-center">
@@ -319,7 +373,7 @@ onBeforeUnmount(() => {
           class="mx-auto mt-(--space-5) text-(length:--font-sm) text-(color:--color-slate-muted)"
           @click="handleReset"
         >
-          다시 만들기
+          {{ isShowingExistingCharacter ? '다른 사진으로 만들기' : '다시 만들기' }}
         </button>
         <p
           v-if="remainingToday !== null"
@@ -334,7 +388,7 @@ onBeforeUnmount(() => {
           block
           @click="handleApply"
         >
-          {{ isEditMode ? '수정 이미지 적용' : '홈에 적용하기' }}
+          {{ isShowingExistingCharacter ? '확인' : isEditMode ? '수정 이미지 적용' : '홈에 적용하기' }}
         </AppButton>
       </section>
     </template>

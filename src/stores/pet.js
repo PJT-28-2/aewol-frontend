@@ -1,7 +1,5 @@
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { petApi } from '@/api/pet'
-import { mockPets } from '@/mocks/pet'
-import { USE_MOCK_DATA } from '@/mocks/config'
 
 const normalizePet = (pet) => ({
   ...pet,
@@ -10,26 +8,29 @@ const normalizePet = (pet) => ({
   neutered: pet.neutered === true || pet.neutered === 'Y',
 })
 
+const REPRESENTATIVE_PET_KEY = 'representativePetId'
+
+function persistRepresentativePet(id) {
+  if (id) localStorage.setItem(REPRESENTATIVE_PET_KEY, id)
+  else localStorage.removeItem(REPRESENTATIVE_PET_KEY)
+}
+
 export const usePetStore = defineStore('pet', {
   state: () => ({
-    pets: USE_MOCK_DATA ? mockPets.map(normalizePet) : [],
+    pets: [],
     currentPet: null,
     // TODO(backend): 대표 반려동물 설정 API 연동 후 서버 값으로 초기화
-    representativePetId: null,
+    representativePetId: localStorage.getItem(REPRESENTATIVE_PET_KEY),
   }),
 
   actions: {
     async fetchPets() {
-      if (USE_MOCK_DATA) {
-        if (this.pets.length === 0) {
-          this.pets = mockPets.map(normalizePet)
-        }
-        if (!this.representativePetId) this.representativePetId = this.pets[0]?.id ?? null
-        return this.pets
-      }
       const { data } = await petApi.getPets()
       this.pets = (data.result ?? []).map(normalizePet)
-      if (!this.representativePetId) this.representativePetId = this.pets[0]?.id ?? null
+      if (!this.pets.some((pet) => pet.id === this.representativePetId)) {
+        this.representativePetId = this.pets[0]?.id ?? null
+        persistRepresentativePet(this.representativePetId)
+      }
       return this.pets
     },
 
@@ -61,12 +62,14 @@ export const usePetStore = defineStore('pet', {
       if (this.currentPet?.id === String(id)) this.currentPet = null
       if (this.representativePetId === String(id)) {
         this.representativePetId = this.pets[0]?.id ?? null
+        persistRepresentativePet(this.representativePetId)
       }
     },
 
     setRepresentativePet(id) {
       if (this.pets.some((pet) => pet.id === String(id))) {
         this.representativePetId = String(id)
+        persistRepresentativePet(this.representativePetId)
       }
     },
   },

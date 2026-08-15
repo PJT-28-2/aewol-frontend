@@ -22,6 +22,13 @@ function isSameMonth(dateStr, year, month) {
   return txYear === year && txMonth === month
 }
 
+function normalizePaymentMethod(paymentMethod) {
+  if (!paymentMethod || ['애월 통합 지갑', '애월통합지갑'].includes(paymentMethod)) {
+    return '애월지갑'
+  }
+  return paymentMethod
+}
+
 function normalizeTransaction(transaction) {
   if (!transaction) return null
 
@@ -40,7 +47,7 @@ function normalizeTransaction(transaction) {
     : [categoryLabel, transaction.memo].filter(Boolean).join(' · ')
   const chargeMethod = transaction.txnType === 'DEPOSIT'
     ? (transaction.memo?.includes('TossPayments') ? 'TossPayments' : '직접 충전')
-    : transaction.paymentMethod ?? '애월 통합 지갑'
+    : normalizePaymentMethod(transaction.paymentMethod)
 
   return {
     ...transaction,
@@ -53,7 +60,7 @@ function normalizeTransaction(transaction) {
     type,
     category,
     petId: transaction.petId ? String(transaction.petId) : null,
-    paymentMethod: transaction.paymentMethod ?? '애월 통합 지갑',
+    paymentMethod: normalizePaymentMethod(transaction.paymentMethod),
     chargeMethod,
     autoTagged: transaction.autoTagged === true || transaction.autoTagged === 'Y',
   }

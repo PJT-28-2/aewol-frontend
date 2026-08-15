@@ -1,13 +1,15 @@
 <script setup>
 import { computed } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useAccountStore } from '@/stores/account';
 import AccountSummaryCard from '@/components/common/AccountSummaryCard.vue';
 import AppButton from '@/components/common/AppButton.vue';
 import CompletionPageLayout from '@/components/common/CompletionPageLayout.vue';
 
 const router = useRouter();
+const route = useRoute();
 const store = useAccountStore();
+const returnToCharge = computed(() => route.query.next === '/wallet/charge');
 
 // "배열의 마지막 항목" 같은 불안정한 추측 대신, 방금 연동 완료 시 store에 저장해둔
 // 정확한 accountId로 찾아요. 이 값이 없거나 계좌를 못 찾으면 잘못된 진입(직접 URL 접근 등)
@@ -21,6 +23,11 @@ const linkedAccount = computed(
 function goToAccountManagement() {
   store.resetLinkingState();
   router.replace({ name: 'AccountManagement' });
+}
+
+function goToNextDestination() {
+  store.resetLinkingState();
+  router.replace(returnToCharge.value ? '/wallet/charge' : { name: 'AccountManagement' });
 }
 </script>
 
@@ -60,9 +67,9 @@ function goToAccountManagement() {
       block
       radius="2xl"
       class="mt-(--space-4)"
-      @click="goToAccountManagement"
+      @click="goToNextDestination"
     >
-      계좌 관리로
+      {{ returnToCharge ? '충전 화면으로 돌아가기' : '계좌 관리로' }}
     </AppButton>
   </CompletionPageLayout>
 </template>

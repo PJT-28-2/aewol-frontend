@@ -6,7 +6,7 @@ import AppInput from '@/components/common/AppInput.vue';
 import FeatureIconTile from '@/components/common/FeatureIconTile.vue';
 import { petApi } from '@/api/pet';
 import { useMemberStore } from '@/stores/member';
-import { isValidCalendarDate } from '@/utils/date';
+import { formatBirthDateInput, isValidCalendarDate } from '@/utils/date';
 import IconDog from '@/components/common/icons/IconDog.vue';
 import IconCat from '@/components/common/icons/IconCat.vue';
 
@@ -38,6 +38,12 @@ const memberName = ref('');
 
 const BIRTH_DATE_PATTERN = /^\d{4}\.\d{2}\.\d{2}$/;
 const REG_NUMBER_PATTERN = /^(\d{12}|\d{15})$/;
+const birthDateInput = computed({
+  get: () => form.value.birthDate,
+  set: (value) => {
+    form.value.birthDate = formatBirthDateInput(value);
+  },
+});
 
 function validateForm() {
   if (!form.value.name.trim()) return '이름을 입력해주세요.';
@@ -138,7 +144,7 @@ async function handleSubmit() {
       path: '/settings/pet-photo',
       query: registrationVerificationFailed
         ? { mode: 'create', next: '/pets', registration: 'unverified', petId: createdPetId.value }
-        : { mode: 'create', next: '/home' },
+        : { mode: 'create', next: '/home', petId: createdPetId.value },
     });
   } catch (error) {
     const messages = {
@@ -290,7 +296,7 @@ async function handleSubmit() {
         />
 
         <AppInput
-          v-model="form.birthDate"
+          v-model="birthDateInput"
           variant="soft"
           type="text"
           label="생년월일"

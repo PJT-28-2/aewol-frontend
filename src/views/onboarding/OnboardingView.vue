@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, onBeforeUnmount, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import AppButton from '@/components/common/AppButton.vue';
 import AewolLogo from '@/components/common/AewolLogo.vue';
@@ -52,6 +52,18 @@ function handleNext() {
 const SWIPE_THRESHOLD = 50;
 const touchStartX = ref(0);
 const touchStartY = ref(0);
+let wheelDeltaX = 0;
+let wheelResetTimer;
+let wheelUnlockTimer;
+let isWheelLocked = false;
+
+function moveSlide(direction) {
+  if (direction > 0 && !isLastSlide.value) {
+    currentIndex.value += 1;
+  } else if (direction < 0 && currentIndex.value > 0) {
+    currentIndex.value -= 1;
+  }
+}
 
 function handleTouchStart(event) {
   touchStartX.value = event.changedTouches[0].clientX;
@@ -64,12 +76,33 @@ function handleTouchEnd(event) {
 
   if (Math.abs(deltaX) < SWIPE_THRESHOLD || Math.abs(deltaX) < Math.abs(deltaY)) return;
 
-  if (deltaX < 0 && !isLastSlide.value) {
-    currentIndex.value += 1;
-  } else if (deltaX > 0 && currentIndex.value > 0) {
-    currentIndex.value -= 1;
-  }
+  moveSlide(deltaX < 0 ? 1 : -1);
 }
+
+function handleWheel(event) {
+  // 트랙패드의 가로 제스처만 처리하고 일반적인 세로 스크롤은 그대로 둔다.
+  if (isWheelLocked || Math.abs(event.deltaX) <= Math.abs(event.deltaY)) return;
+
+  wheelDeltaX += event.deltaX;
+  window.clearTimeout(wheelResetTimer);
+  wheelResetTimer = window.setTimeout(() => {
+    wheelDeltaX = 0;
+  }, 160);
+
+  if (Math.abs(wheelDeltaX) < SWIPE_THRESHOLD) return;
+
+  moveSlide(wheelDeltaX > 0 ? 1 : -1);
+  wheelDeltaX = 0;
+  isWheelLocked = true;
+  wheelUnlockTimer = window.setTimeout(() => {
+    isWheelLocked = false;
+  }, 450);
+}
+
+onBeforeUnmount(() => {
+  window.clearTimeout(wheelResetTimer);
+  window.clearTimeout(wheelUnlockTimer);
+});
 </script>
 
 <template>
@@ -77,6 +110,7 @@ function handleTouchEnd(event) {
     class="relative flex min-h-svh w-full flex-col overflow-hidden bg-(--color-app-bg) px-(--space-5) pt-(--space-5) pb-(--space-5)"
     @touchstart.passive="handleTouchStart"
     @touchend.passive="handleTouchEnd"
+    @wheel="handleWheel"
   >
     <div class="relative z-1 flex h-8 items-center justify-between">
       <AewolLogo size="18" />

@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useAccountStore } from '@/stores/account';
 import { getBankMeta } from '@/utils/bankMeta';
 import { formatCountdown } from '@/utils/date';
@@ -9,10 +9,12 @@ import BankBadge from '@/components/common/BankBadge.vue';
 import IconLock from '@/components/common/icons/IconLock.vue';
 
 const router = useRouter();
+const route = useRoute();
 const store = useAccountStore();
+const nextQuery = computed(() => route.query.next === '/wallet/charge' ? { next: '/wallet/charge' } : {});
 
 if (!store.linking.bankCode) {
-  router.replace({ name: 'AccountLinkSelect' });
+  router.replace({ name: 'AccountLinkSelect', query: nextQuery.value });
 }
 
 const bankMeta = computed(() => getBankMeta(store.linking.bankCode));
@@ -220,9 +222,9 @@ async function submitVerification() {
     // 간편 비밀번호는 계정당 하나만 설정하면 돼요. 이미 설정된 적이 있으면
     // (두 번째 계좌부터) 비밀번호 설정 단계를 건너뛰고 바로 완료 화면으로 보내요.
     if (store.hasSimplePassword) {
-      router.replace({ name: 'AccountLinkComplete' });
+      router.replace({ name: 'AccountLinkComplete', query: nextQuery.value });
     } else {
-      router.replace({ name: 'AccountPasswordSetup' });
+      router.replace({ name: 'AccountPasswordSetup', query: nextQuery.value });
     }
   } catch {
     verifyError.value = '인증에 실패했어요. 다시 시도해주세요';

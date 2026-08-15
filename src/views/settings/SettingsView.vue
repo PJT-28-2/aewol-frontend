@@ -16,7 +16,8 @@ import IconNotificationBell from '@/components/common/icons/IconNotificationBell
 import IconRecurring from '@/components/common/icons/IconRecurring.vue'
 import IconSavings from '@/components/common/icons/IconSavings.vue'
 import IconWallet from '@/components/common/icons/IconWallet.vue'
-import profileMascot from '@/assets/images/pet-poodle-profile-mascot.png'
+import dogProfileMascot from '@/assets/images/pet-dog-default-profile-v3.png'
+import catProfileMascot from '@/assets/images/pet-cat-default-profile-v3.png'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -38,7 +39,10 @@ const representativePet = computed(() =>
 const petName = computed(() => representativePet.value?.name ?? '포리')
 // 이 자리는 회원 사진이 아니라 반려동물 아바타다(수정 버튼도 캐릭터 생성 화면으로 간다).
 // AI로 만든 얼굴 클로즈업을 쓰고, 없으면 기본 마스코트로 대체한다.
-const profileImage = computed(() => representativePet.value?.profileImg || profileMascot)
+const defaultProfileImage = computed(() =>
+  representativePet.value?.species === 'CAT' ? catProfileMascot : dogProfileMascot,
+)
+const profileImage = computed(() => representativePet.value?.profileImg || defaultProfileImage.value)
 
 onMounted(async () => {
   await Promise.allSettled([

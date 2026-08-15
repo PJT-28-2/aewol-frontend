@@ -54,6 +54,7 @@ describe('useTransactionStore', () => {
       date: '2026-08-11',
       time: '15:24',
       autoTagged: true,
+      paymentMethod: '애월지갑',
     })
     expect(store.nextCursor).toBe('next-page')
   })

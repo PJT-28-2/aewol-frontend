@@ -12,8 +12,8 @@ import { useDashboardStore } from '@/stores/dashboard'
 import { useMemberStore } from '@/stores/member'
 import { usePetStore } from '@/stores/pet'
 import { getHomeInsights } from '@/api/insight'
-import dogHero from '@/assets/images/pet-poodle-home-mascot-v2.png'
-import catHero from '@/assets/images/pet-siamese-home-mascot-v2.png'
+import dogHero from '@/assets/images/pet-dog-default-home-v3.png'
+import catHero from '@/assets/images/pet-cat-default-home-v3.png'
 
 const memberStore = useMemberStore()
 const petStore = usePetStore()
@@ -172,7 +172,7 @@ onMounted(fetchHome)
         <img
           :src="heroImage"
           :alt="`${petName} 캐릭터`"
-          class="relative z-1 h-[254px] w-full object-contain object-bottom"
+          class="relative z-1 h-[274px] w-full object-contain object-bottom"
         >
       </section>
 
