@@ -71,7 +71,17 @@ const handleKakaoCallback = async () => {
 
   try {
     // 백엔드가 카카오 인증 코드를 교환하고 애월 토큰을 발급하도록 요청한다.
-    await authStore.kakaoLogin(code)
+    const result = await authStore.kakaoLogin(code)
+
+    if (result.authStatus === 'ADDITIONAL_INFO_REQUIRED') {
+      await router.replace('/signup/kakao/additional-info')
+      return
+    }
+
+    if (result.authStatus !== 'LOGIN_COMPLETE') {
+      throw new Error('카카오 로그인 응답을 확인할 수 없습니다.')
+    }
+
     await router.replace(await resolvePostLoginPath())
   } catch (error) {
     errorMessage.value =
