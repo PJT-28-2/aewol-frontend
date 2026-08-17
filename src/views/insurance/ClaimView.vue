@@ -8,7 +8,7 @@ import AppButton from '@/components/common/AppButton.vue'
 import AppModal from '@/components/common/AppModal.vue'
 import OcrResultCard from '@/components/insurance/OcrResultCard.vue'
 import ClaimDraftCard from '@/components/insurance/ClaimDraftCard.vue'
-import ClaimChecklist from '@/components/insurance/ClaimChecklist.vue'
+import ClaimDocumentGuide from '@/components/insurance/ClaimDocumentGuide.vue'
 import PetSelectorChip from '@/components/common/PetSelectorChip.vue'
 import IconDocument from '@/components/common/icons/IconDocument.vue'
 
@@ -170,12 +170,12 @@ const goToPdfDraft = () => {
   router.push('/insurance/claim/pdf-draft')
 }
 
-// 청구 서류 체크리스트
-const docChecklist = [
-  { name: '진료 영수증', sub: '이미 확보됨',             checked: true },
-  { name: '진단서',      sub: '병원에서 발급받아야 해요', checked: false },
-  { name: '신분증 사본', sub: '본인 확인용',              checked: false },
-  { name: '통장 사본',   sub: '보험금 입금용',            checked: false },
+// 청구 시 안내할 서류 목록
+const docGuideItems = [
+  { name: '진료 영수증', sub: '업로드한 영수증으로 준비할 수 있어요' },
+  { name: '진단서',      sub: '병원에서 발급받아 두면 좋아요' },
+  { name: '신분증 사본', sub: '본인 확인용으로 요청될 수 있어요' },
+  { name: '통장 사본',   sub: '보험금 입금 계좌 확인에 쓰여요' },
 ]
 </script>
 
@@ -333,7 +333,7 @@ const docChecklist = [
       @pdf-click="goToPdfDraft"
     />
 
-    <ClaimChecklist :items="docChecklist" />
+    <ClaimDocumentGuide :items="docGuideItems" />
 
     <AppButton
       block
