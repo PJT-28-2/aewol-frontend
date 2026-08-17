@@ -23,8 +23,13 @@ const isSheetExpanded = ref(false);
 // 카카오 CustomOverlay의 content로 넘긴다. MarkerImage를 쓰면 색을 하드코딩한
 // 이미지가 필요해서 프로젝트의 색상/아이콘 규칙과 어긋난다.
 const markerHost = ref(null);
-const markerEls = ref([]);
 const userMarkerEl = ref(null);
+
+// 마커 DOM은 병원 key로 잡는다. 배열 index로 잡으면 v-for 항목이 언마운트될 때
+// Vue가 옛 index를 담은 ref 콜백을 null로 호출하면서, 그 사이 새로 마운트된 노드가
+// 들어간 슬롯을 덮어쓸 수 있다. 그러면 해당 병원 마커만 조용히 사라진다.
+// 화면에 그리는 값이 아니라 DOM 핸들이라 반응형으로 두지 않는다.
+const markerEls = new Map();
 
 let map = null;
 let overlays = [];
@@ -109,8 +114,9 @@ const markerIconColors = {
 
 const markerZIndexes = { selected: 30, nearest: 20, default: 10 };
 
-function setMarkerEl(el, index) {
-  markerEls.value[index] = el;
+function setMarkerEl(el, key) {
+  if (el) markerEls.set(key, el);
+  else markerEls.delete(key);
 }
 
 function handleCall(hospital) {
@@ -185,12 +191,11 @@ async function renderMarkers() {
   // onMounted의 직접 호출과 hospitals watcher가 겹칠 수 있어서, 마지막 호출만 반영한다
   const token = ++renderToken;
   clearOverlays();
-  markerEls.value.length = markerViews.value.length;
   await nextTick();
   if (token !== renderToken) return;
 
-  markerViews.value.forEach(({ hospital, key, state }, index) => {
-    const content = markerEls.value[index];
+  markerViews.value.forEach(({ hospital, key, state }) => {
+    const content = markerEls.get(key);
     if (!content) return;
 
     const overlay = new window.kakao.maps.CustomOverlay({
@@ -215,15 +220,52 @@ async function renderMarkers() {
   }
 }
 
+// 스크립트 로드도 kakao.maps.load 콜백도 "영영 안 오는" 경우가 있다. 응답이 없으면
+// 실패 통보가 없어서 Promise가 안 풀리고 뒤 단계가 통째로 멈추므로 타임아웃을 건다.
+const KAKAO_MAP_TIMEOUT_MS = 10000;
+
+function withTimeout(promise, message) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(message)), KAKAO_MAP_TIMEOUT_MS);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
 function loadKakaoSdk(key) {
   if (window.kakao?.maps) return Promise.resolve();
-  return new Promise((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${key}&autoload=false`;
-    script.onload = resolve;
-    script.onerror = () => reject(new Error('카카오맵 SDK 로드 실패'));
-    document.head.appendChild(script);
-  });
+  return withTimeout(
+    new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${key}&autoload=false`;
+      script.onload = resolve;
+      script.onerror = () => reject(new Error('카카오맵 SDK 로드 실패'));
+      document.head.appendChild(script);
+    }),
+    '카카오맵 SDK 로드 시간 초과',
+  );
+}
+
+function createMap() {
+  return withTimeout(
+    new Promise((resolve, reject) => {
+      window.kakao.maps.load(() => {
+        try {
+          map = new window.kakao.maps.Map(mapContainer.value, {
+            center: new window.kakao.maps.LatLng(userLat.value, userLng.value),
+            level: 5,
+          });
+          // 지도 빈 곳을 누르면 선택을 해제해 지도 전체를 다시 볼 수 있게 한다
+          mapClickListener = () => clearSelection();
+          window.kakao.maps.event.addListener(map, 'click', mapClickListener);
+          resolve();
+        } catch (error) {
+          reject(error);
+        }
+      });
+    }),
+    '카카오맵 초기화 시간 초과',
+  );
 }
 
 async function initKakaoMap() {
@@ -237,23 +279,12 @@ async function initKakaoMap() {
 
   try {
     await loadKakaoSdk(key);
-  } catch {
+    await createMap();
+  } catch (error) {
+    // 지도는 못 띄워도 병원 목록은 그대로 쓸 수 있어야 한다 — 시트가 목록을 계속 보여준다
+    console.warn('[EmergencyView] 지도 초기화 실패', error);
     mapError.value = '지도를 불러오지 못했습니다.';
-    return;
   }
-
-  await new Promise((resolve) => {
-    window.kakao.maps.load(() => {
-      map = new window.kakao.maps.Map(mapContainer.value, {
-        center: new window.kakao.maps.LatLng(userLat.value, userLng.value),
-        level: 5,
-      });
-      // 지도 빈 곳을 누르면 선택을 해제해 지도 전체를 다시 볼 수 있게 한다
-      mapClickListener = () => clearSelection();
-      window.kakao.maps.event.addListener(map, 'click', mapClickListener);
-      resolve();
-    });
-  });
 }
 
 // hospitals watcher는 배열 "참조"가 바뀔 때만 돈다. 목 모드처럼 같은 배열을 그대로
@@ -306,11 +337,23 @@ async function retryLocation() {
 }
 
 onMounted(async () => {
-  // 실패해도 기본 좌표로 계속 진행한다 — 실패 사유는 locationError로 화면에 표시된다.
-  await locate();
+  // 병원 목록은 지도 없이도 성립하는 정보다. 측위(최대 15초)와 지도 SDK 로딩 뒤로
+  // 밀면 첫 진입에서 그동안 아무 요청도 나가지 않아 빈 화면이 오래 남는다.
+  // 기본 좌표로 즉시 조회를 띄우고, 측위와 지도 초기화는 병렬로 돌린다.
+  const initialList = loadHospitals();
 
+  // 측위에 성공하면 실제 좌표로 다시 조회한다. store가 요청 순번 + AbortController로
+  // 앞선 요청을 무효화하므로 두 조회가 겹쳐도 최신 결과만 반영된다.
+  // 실패해도 기본 좌표 결과를 그대로 두고, 사유는 locationError로 화면에 표시된다.
+  const locating = locate().then((located) => (located ? refreshHospitals() : null));
+
+  // 지도가 준비되기 전에 목록이 먼저 와도 renderMarkers는 map이 없어 그냥 빠진다.
+  // 그래서 지도 준비 직후 한 번 명시적으로 그려준다.
   await initKakaoMap();
-  await refreshHospitals();
+  await initialList;
+  await renderMarkers();
+
+  await locating;
 });
 
 onBeforeUnmount(() => {
@@ -430,9 +473,9 @@ onBeforeUnmount(() => {
       class="hidden"
     >
       <button
-        v-for="(view, index) in markerViews"
+        v-for="view in markerViews"
         :key="view.key"
-        :ref="(el) => setMarkerEl(el, index)"
+        :ref="(el) => setMarkerEl(el, view.key)"
         type="button"
         class="flex cursor-pointer flex-col items-center"
         :aria-label="`${view.hospital.name} 선택`"
