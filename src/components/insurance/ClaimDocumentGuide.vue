@@ -1,5 +1,5 @@
 <script setup>
-import IconCheck from '@/components/common/icons/IconCheck.vue'
+import IconDocument from '@/components/common/icons/IconDocument.vue'
 
 const props = defineProps({
   items: {
@@ -11,9 +11,12 @@ const props = defineProps({
 
 <template>
   <section class="rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-(--space-5) shadow-(--shadow-card)">
-    <h2 class="text-(length:--font-base) font-semibold text-(color:--color-gray-900) mb-(--space-4)">
-      청구 서류 체크리스트
+    <h2 class="text-(length:--font-base) font-semibold text-(color:--color-gray-900) mb-(--space-1)">
+      이런 서류가 필요할 수 있어요
     </h2>
+    <p class="text-(length:--font-sm) text-(color:--color-slate-muted) mb-(--space-4)">
+      보험사와 상품에 따라 요청 서류가 달라질 수 있어요
+    </p>
     <ul class="flex flex-col gap-(--space-4)">
       <li
         v-for="item in props.items"
@@ -21,18 +24,12 @@ const props = defineProps({
         class="flex items-center gap-(--space-3)"
       >
         <span
-          class="w-(--space-6) h-(--space-6) rounded-(--radius-full) shrink-0 flex items-center justify-center border-2"
-          role="img"
-          :aria-label="item.checked ? `${item.name} 확보 완료` : `${item.name} 미확보`"
-          :class="item.checked
-            ? 'bg-(--color-leaf) border-(--color-leaf)'
-            : 'border-(--color-gray-300)'"
+          class="w-(--space-8) h-(--space-8) rounded-(--radius-full) shrink-0 flex items-center justify-center bg-(--color-leaf-soft)"
+          aria-hidden="true"
         >
-          <IconCheck
-            v-if="item.checked"
-            :size="14"
-            color="var(--color-white)"
-            aria-hidden="true"
+          <IconDocument
+            :size="16"
+            color="var(--color-leaf-dark)"
           />
         </span>
         <div class="flex flex-col gap-(--space-1)">
