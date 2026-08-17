@@ -196,6 +196,14 @@
 
   /* Component Sizes */
   --size-map-preview-height: 180px;
+  /* 응급병원 지도 화면 — 전체 지도 위에 얹히는 peek 바텀시트의 상태별 높이.
+     max-height가 아니라 height로 쓴다. max-height는 내용이 그보다 짧으면 실제 높이가
+     따라오지 않아 상태 전환이 애니메이션되지 않는다. %가 아닌 px이어야 보간된다.
+     iPhone 12 Pro(844px) 기준 헤더/하단 네비를 뺀 지도 영역이 약 700px이라,
+     목록 상태에서도 지도가 280px 남는다. */
+  --size-map-sheet-summary: 76px;
+  --size-map-sheet-detail: 252px;
+  --size-map-sheet-list: 420px;
   --size-thumb-lg: 110px;
   --size-progress-bar: 8px;
   --size-stepper-box: 46px;
