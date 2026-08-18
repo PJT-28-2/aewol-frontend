@@ -332,7 +332,7 @@ function handleReset() {
       >
         <div class="bg-(--color-navy) text-(color:--color-white) rounded-(--radius-xl) p-(--space-5) shadow-(--shadow-md)">
           <span
-            class="inline-block py-(--space-1) px-(--space-3) rounded-(--radius-full) text-(length:--font-xs) font-semibold bg-white/15"
+            class="inline-block py-(--space-1) px-(--space-3) rounded-(--radius-full) text-(length:--font-xs) font-semibold bg-[color-mix(in_srgb,var(--color-white)_15%,transparent)]"
             :class="verdictColorClasses[result.insuranceAdvice.verdict]"
           >
             {{ verdictLabels[result.insuranceAdvice.verdict] }}
@@ -341,7 +341,7 @@ function handleReset() {
             {{ result.insuranceAdvice.message }}
           </p>
 
-          <div class="flex flex-col gap-(--space-1) mt-(--space-5) pt-(--space-4) border-t border-white/15">
+          <div class="flex flex-col gap-(--space-1) mt-(--space-5) pt-(--space-4) border-t border-[color-mix(in_srgb,var(--color-white)_15%,transparent)]">
             <span class="text-(length:--font-xs) opacity-70">예상 연 의료비</span>
             <span class="text-(length:--font-lg) font-bold text-(color:--color-gold-light)">
               {{ result.assumptions.annualExpectedVetCostKrw.toLocaleString() }}원

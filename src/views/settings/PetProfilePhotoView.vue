@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import AppButton from '@/components/common/AppButton.vue'
 import AewolLogo from '@/components/common/AewolLogo.vue'
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
+import IconCheck from '@/components/common/icons/IconCheck.vue'
 import IconImage from '@/components/common/icons/IconImage.vue'
 import IconPaw from '@/components/common/icons/IconPaw.vue'
 import { usePetStore } from '@/stores/pet'
@@ -260,9 +261,9 @@ onBeforeUnmount(() => {
         </button>
 
         <div class="mt-(--space-5) flex flex-wrap gap-(--space-2)">
-          <span class="rounded-full bg-(--color-leaf-soft) px-(--space-3) py-(--space-2) text-(length:--font-xs) text-(color:--color-leaf-dark)">✓ 몸통까지</span>
-          <span class="rounded-full bg-(--color-leaf-soft) px-(--space-3) py-(--space-2) text-(length:--font-xs) text-(color:--color-leaf-dark)">✓ 밝은 사진</span>
-          <span class="rounded-full bg-(--color-leaf-soft) px-(--space-3) py-(--space-2) text-(length:--font-xs) text-(color:--color-leaf-dark)">✓ 한 마리</span>
+          <span class="inline-flex items-center gap-(--space-1) rounded-full bg-(--color-leaf-soft) px-(--space-3) py-(--space-2) text-(length:--font-xs) text-(color:--color-leaf-dark)"><IconCheck :size="12" /> 몸통까지</span>
+          <span class="inline-flex items-center gap-(--space-1) rounded-full bg-(--color-leaf-soft) px-(--space-3) py-(--space-2) text-(length:--font-xs) text-(color:--color-leaf-dark)"><IconCheck :size="12" /> 밝은 사진</span>
+          <span class="inline-flex items-center gap-(--space-1) rounded-full bg-(--color-leaf-soft) px-(--space-3) py-(--space-2) text-(length:--font-xs) text-(color:--color-leaf-dark)"><IconCheck :size="12" /> 한 마리</span>
         </div>
 
         <AppButton
