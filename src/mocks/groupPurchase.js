@@ -108,10 +108,9 @@ export const MOCK_GROUP_PURCHASE_DETAIL = {
 }
 
 // 나의 공동구매 목록(GroupPurchaseMyView) 목데이터
-// role: group_purchase_participant에 로그인 유저 member_id의 참여 row가 있으면 '참여',
-// 없이 group_purchase 작성자 member_id만 일치하면 '작성'으로 판정
-// role과 무관하게 항상 GroupPurchaseStatusView로 이동하고, 화면 안에서 역할에 따라 버튼만 달라짐
-// (참여: 참여 취소하기 / 작성: 공동구매 취소)
+// GET /api/group-purchase/my는 role=USER 전용이라 관리자는 이 화면에 올 수 없음 — role은 항상 '참여'
+// (참여 취소하기 버튼만 노출됨. 관리자의 "공동구매 취소" 버튼은 List 화면에서 진입한
+// GroupPurchaseStatusView에서만 나타남)
 // dDay는 화면에서 deadline으로부터 매번 계산하므로 mock에는 deadline만 둔다. 진행중 항목은
 // mock을 볼 때 D-day가 음수로 밀리지 않도록 항상 미래 날짜로 유지할 것
 // TODO: 백엔드 API 연동 후 제거하고 groupPurchaseApi.getMyList()로 교체
@@ -129,7 +128,7 @@ export const MOCK_MY_GROUP_PURCHASES = [
   {
     gpId: 2,
     productName: '강아지 사료 정기배송',
-    role: '작성',
+    role: '참여',
     status: 'OPEN',
     currentQuantity: 18,
     targetQuantity: 20,
@@ -149,7 +148,7 @@ export const MOCK_MY_GROUP_PURCHASES = [
   {
     gpId: 4,
     productName: '강아지 간식 세트',
-    role: '작성',
+    role: '참여',
     status: 'FAILED',
     currentQuantity: 8,
     targetQuantity: 10,

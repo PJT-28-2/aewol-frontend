@@ -31,10 +31,12 @@ defineProps({
         {{ description }}
       </p>
       <slot />
+      <div
+        v-if="$slots.action"
+        class="mt-(--space-6) w-full [&>*]:!rounded-[20px]"
+      >
+        <slot name="action" />
+      </div>
     </section>
-
-    <div class="w-full [&>*]:!rounded-[20px]">
-      <slot name="action" />
-    </div>
   </main>
 </template>

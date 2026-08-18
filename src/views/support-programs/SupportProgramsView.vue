@@ -27,6 +27,14 @@ const isApplied = computed(() =>
     : false,
 )
 
+// 한 번 눌렀다고 버튼을 잠그면, 팝업이 막혔거나 탭을 닫은 사람은 신청 페이지로
+// 돌아갈 길이 없어진다. 신청 기록이 남았어도 링크가 있으면 계속 열 수 있게 둔다.
+// 링크가 없는 정책은 '관심 저장'이 전부라 그때만 잠근다.
+const applyButtonLabel = computed(() => {
+  if (!isApplied.value) return '신청하기'
+  return selectedProgram.value?.applyUrl ? '신청 페이지 다시 열기' : '관심 정책으로 저장됨'
+})
+
 function loadPrograms() {
   supportProgramsStore.fetchPrograms()
 }
@@ -40,19 +48,38 @@ function goToList() {
 }
 
 async function applyForProgram() {
-  if (selectedProgram.value?.eligible) {
-    const applyUrl = selectedProgram.value.applyUrl
-    const applyWindow = applyUrl ? window.open('about:blank', '_blank') : null
-    if (applyWindow) applyWindow.opener = null
-    const saved = await supportProgramsStore.applyForProgram(selectedProgram.value.id)
-    if (saved && applyWindow) {
-      applyWindow.location.replace(applyUrl)
-    } else if (saved && applyUrl) {
-      window.location.assign(applyUrl)
-    } else if (applyWindow) {
-      applyWindow.close()
-    }
+  const program = selectedProgram.value
+  if (!program?.eligible) return
+
+  const { applyUrl } = program
+  // window.open은 클릭 핸들러 안에서 동기적으로 불러야 팝업 차단을 통과한다.
+  // await 뒤로 미루면 사용자 제스처와의 연결이 끊긴다.
+  const applyWindow = applyUrl ? window.open('about:blank', '_blank') : null
+  if (applyWindow) applyWindow.opener = null
+
+  // 이미 기록된 건이면 store가 요청 없이 false를 돌려준다. 그래도 신청 페이지는 연다.
+  // 팝업이 막히거나 실수로 탭을 닫았을 때 다시 들어갈 길이 있어야 한다.
+  await supportProgramsStore.applyForProgram(program.id)
+
+  if (!applyUrl) return
+  if (applyWindow) {
+    applyWindow.location.replace(applyUrl)
+  } else {
+    window.location.assign(applyUrl)
   }
+}
+
+/**
+ * 정부24 원본은 값이 여러 개일 때 `서비스(의료)||현금`처럼 이어 보낸다.
+ * 그대로 두면 구분자가 화면에 그대로 노출된다.
+ */
+function formatList(value) {
+  if (!value) return ''
+  return value
+    .split('||')
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .join(' · ')
 }
 
 onMounted(loadPrograms)
@@ -104,11 +131,26 @@ watch(
       v-else-if="!hasPrograms"
       class="grid min-h-[calc(100dvh-var(--header-height)-var(--bottom-nav-height))] place-items-center"
     >
+      <!--
+        목록이 빈 이유는 둘 중 하나다. 반려동물이 없어 매칭 기준 자체가 없거나,
+        지원사업 데이터가 아직 안 들어왔거나. 원인에 따라 다음 행동이 다르므로
+        안내도 갈라 준다. (예전에는 지금 보고 있는 페이지로 이동하는 버튼이라
+        눌러도 아무 일이 없었다.)
+      -->
       <EmptyState
+        v-if="!supportProgramsStore.petId"
+        :icon="IconPaw"
+        message="반려동물을 등록하면
+맞춤 지원사업을 찾아드려요."
+        action-text="반려동물 등록하기"
+        action-route="/pets/register"
+      />
+      <EmptyState
+        v-else
         :icon="IconPaw"
         message="현재 조건에 맞는 지원사업이 없어요."
-        action-text="목록 새로고침"
-        action-route="/support-programs"
+        action-text="다시 불러오기"
+        @action="loadPrograms"
       />
     </section>
 
@@ -179,7 +221,7 @@ watch(
         {{ selectedProgram.title }}
       </h1>
       <p class="mb-0 mt-[var(--space-1)] text-[length:var(--font-md)] text-(--color-slate-muted)">
-        {{ selectedProgram.agency }} · {{ selectedProgram.benefit }}
+        {{ selectedProgram.agency }} · {{ formatList(selectedProgram.benefit) }}
       </p>
 
       <section class="mt-[var(--space-7)] rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-[var(--space-4)] shadow-(--shadow-card)">
@@ -187,7 +229,7 @@ watch(
           신청 기간
         </h2>
         <p class="mb-0 mt-[var(--space-2)] text-(length:--font-md) font-bold">
-          {{ selectedProgram.period }}
+          {{ formatList(selectedProgram.period) }}
         </p>
       </section>
 
@@ -252,7 +294,7 @@ watch(
         role="status"
       >
         {{ selectedProgram.applyUrl
-          ? '신청 페이지를 열었어요. 안내에 따라 서류를 제출해 주세요.'
+          ? '신청 페이지를 열었어요. 창이 닫혔다면 아래에서 다시 열 수 있어요.'
           : '관심 정책으로 저장했어요. 주관 기관에 신청 방법을 문의해 주세요.' }}
       </p>
 
@@ -262,11 +304,11 @@ watch(
           block
           size="lg"
           variant="primary"
-          :disabled="isApplied || supportProgramsStore.isApplying"
+          :disabled="(isApplied && !selectedProgram.applyUrl) || supportProgramsStore.isApplying"
           :loading="supportProgramsStore.isApplying"
           @click="applyForProgram"
         >
-          {{ isApplied ? '신청 준비 완료' : '신청하기' }}
+          {{ applyButtonLabel }}
         </AppButton>
         <AppButton
           v-else

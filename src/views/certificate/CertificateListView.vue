@@ -38,24 +38,23 @@ function goToDocDetail(doc) {
   router.push(`/certificates/${doc.petId}/${doc.docId}`)
 }
 
-// 동물등록증 연동 — 동물등록번호 + 신청인(보호자) 이름/생년월일로 조회.
-// 흐름: 정보 입력(회원정보로 기본값) → 조회 → 조회된 동물 중 연동할 항목 선택 → 저장
+// 동물등록증 연동 — 상단 탭에서 이미 선택된 반려동물(selectedPetId)을 대상으로 동물등록번호 +
+// 신청인(보호자) 이름/생년월일을 검증. verify() 호출 자체가 검증+저장을 한 번에 처리하므로
+// 별도 "조회 결과에서 선택" 단계가 없다 — 흐름: 정보 입력(회원정보로 기본값) → 바로 연동
 const BIRTH_DATE_PATTERN = /^\d{4}\.\d{2}\.\d{2}$/
 const REG_NUMBER_PATTERN = /^(\d{12}|\d{15})$/
 
 const showAuthModal = ref(false)
-const showMatchModal = ref(false)
 
 const authForm = ref({ regNumber: '', userName: '', birthDate: '' })
 const authError = ref('')
 const isSubmittingAuth = ref(false)
 
-const candidates = ref([])
-const selectedCandidatePetIds = ref([])
-const isConfirming = ref(false)
-const matchError = ref('')
-
 async function openLinkFlow() {
+  // 등록된 반려동물이 없으면 selectedPetId가 null이라 verify(petId, ...)가 POST /pets/null/verify로
+  // 나가버린다 — 버튼을 숨겨도(v-if="certificateStore.pets.length > 0") 여기서 한 번 더 방어한다
+  if (!certificateStore.selectedPetId) return
+
   authForm.value = {
     regNumber: certificateStore.selectedPet?.regNumber ?? '',
     userName: '',
@@ -99,39 +98,12 @@ async function submitAuth() {
   authError.value = ''
   isSubmittingAuth.value = true
   try {
-    candidates.value = await certificateStore.requestApmsSimpleAuth(authForm.value)
-    selectedCandidatePetIds.value = candidates.value.map((c) => c.petId)
+    await certificateStore.verifyRegistration(certificateStore.selectedPetId, authForm.value)
     showAuthModal.value = false
-    showMatchModal.value = true
-  } catch {
-    authError.value = '조회에 실패했어요. 다시 시도해주세요.'
+  } catch (err) {
+    authError.value = err.response?.data?.message ?? '동물등록증 연동에 실패했어요. 다시 시도해주세요.'
   } finally {
     isSubmittingAuth.value = false
-  }
-}
-
-function toggleCandidate(petId) {
-  const idx = selectedCandidatePetIds.value.indexOf(petId)
-  if (idx === -1) {
-    selectedCandidatePetIds.value.push(petId)
-  } else {
-    selectedCandidatePetIds.value.splice(idx, 1)
-  }
-}
-
-async function confirmMatches() {
-  const selected = candidates.value.filter((c) => selectedCandidatePetIds.value.includes(c.petId))
-  if (selected.length === 0) return
-
-  matchError.value = ''
-  isConfirming.value = true
-  try {
-    await certificateStore.confirmApmsLink(selected)
-    showMatchModal.value = false
-  } catch {
-    matchError.value = '연동에 실패했어요. 다시 시도해주세요.'
-  } finally {
-    isConfirming.value = false
   }
 }
 
@@ -207,6 +179,7 @@ async function handleMedicalSelect(event) {
 
     <!-- 반려동물 탭 -->
     <div
+      v-if="certificateStore.pets.length > 0"
       class="mb-(--space-6) flex items-center gap-(--space-2) overflow-x-auto whitespace-nowrap pb-(--space-1) [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       role="tablist"
       aria-label="반려동물 선택"
@@ -226,6 +199,15 @@ async function handleMedicalSelect(event) {
     <LoadingSpinner
       v-if="certificateStore.isLoading"
       class="my-(--space-8)"
+    />
+
+    <!-- 등록된 반려동물이 없으면 동물등록증/접종증명서/진료확인서 섹션 전체를 비우고 등록부터 유도 -->
+    <EmptyState
+      v-else-if="certificateStore.pets.length === 0"
+      :icon="IconRegistrationPaper"
+      message="반려동물을 먼저 등록해주세요"
+      action-text="반려동물 등록하기"
+      action-route="/pets/register"
     />
 
     <template v-else>
@@ -424,16 +406,16 @@ async function handleMedicalSelect(event) {
       </section>
     </template>
 
-    <!-- 1단계: 조회를 위한 신원확인 입력 -->
+    <!-- 동물등록증 연동을 위한 신원확인 입력 — 제출하면 검증과 동시에 바로 연동(저장)됨 -->
     <AppModal
       v-model="showAuthModal"
-      title="동물등록증 조회"
+      title="동물등록증 연동"
     >
       <template #icon>
         <IconRegistrationPaper size="24" />
       </template>
       <p class="text-(length:--font-sm) text-(color:--color-gray-600) mb-(--space-4)">
-        국가동물보호정보시스템 조회를 위해 신청인 정보를 입력해주세요
+        국가동물보호정보시스템에서 확인 후 바로 연동할게요. 신청인 정보를 입력해주세요
       </p>
       <div class="flex flex-col gap-(--space-3)">
         <AppInput
@@ -478,85 +460,6 @@ async function handleMedicalSelect(event) {
             class="flex-1"
             :loading="isSubmittingAuth"
             @click="submitAuth"
-          >
-            조회하기
-          </AppButton>
-        </div>
-      </template>
-    </AppModal>
-
-    <!-- 2단계: 조회된 동물 중 연동할 항목 선택 -->
-    <AppModal
-      v-model="showMatchModal"
-      title="조회된 동물등록정보"
-      :show-close="false"
-    >
-      <template #icon>
-        <IconRegistrationPaper size="24" />
-      </template>
-      <template v-if="candidates.length > 0">
-        <p class="text-(length:--font-sm) text-(color:--color-gray-600) mb-(--space-3)">
-          신청인 명의로 조회된 동물이에요. 연동할 항목을 선택해주세요
-        </p>
-        <ul class="flex flex-col gap-(--space-2)">
-          <li
-            v-for="candidate in candidates"
-            :key="candidate.petId"
-          >
-            <label
-              class="flex cursor-pointer items-center gap-(--space-3) rounded-(--radius-xl) border p-(--space-4) transition-colors"
-              :class="selectedCandidatePetIds.includes(candidate.petId)
-                ? 'border-(--color-leaf) bg-(--color-leaf-soft)'
-                : 'border-(--color-card-border) bg-(--color-white)'"
-            >
-              <input
-                type="checkbox"
-                :checked="selectedCandidatePetIds.includes(candidate.petId)"
-                class="size-5 shrink-0 accent-(--color-leaf)"
-                @change="toggleCandidate(candidate.petId)"
-              >
-              <div class="flex-1 min-w-0">
-                <p class="text-(length:--font-md) font-semibold text-(color:--color-navy)">
-                  {{ candidate.name }} · {{ candidate.breed }}
-                </p>
-                <p class="text-(length:--font-xs) text-(color:--color-gray-500) mt-(--space-1)">
-                  등록번호: {{ candidate.regNumber }}
-                </p>
-              </div>
-            </label>
-          </li>
-        </ul>
-      </template>
-      <p
-        v-else
-        class="text-(length:--font-sm) text-(color:--color-gray-600)"
-      >
-        신청인 명의로 새로 조회된 동물이 없어요. 이미 모두 연동되어 있을 수 있어요.
-      </p>
-      <p
-        v-if="matchError"
-        class="text-(length:--font-xs) text-(color:--color-danger-strong) mt-(--space-2)"
-      >
-        {{ matchError }}
-      </p>
-      <template #footer>
-        <div class="flex w-full gap-(--space-3)">
-          <AppButton
-            variant="neutral"
-            size="lg"
-            class="flex-1"
-            @click="showMatchModal = false"
-          >
-            닫기
-          </AppButton>
-          <AppButton
-            v-if="candidates.length > 0"
-            variant="primary"
-            size="lg"
-            class="flex-1"
-            :loading="isConfirming"
-            :disabled="selectedCandidatePetIds.length === 0"
-            @click="confirmMatches"
           >
             연동하기
           </AppButton>

@@ -66,8 +66,9 @@ async function loadStatus() {
 onMounted(loadStatus);
 
 // 목록/마이페이지 중 어디서 이 화면으로 왔는지에 따라 "돌아가기" 목적지가 달라짐
-// (마이페이지는 상태 화면으로 이동할 때 ?from=my를 붙여서 표시함)
-const isFromMyPage = computed(() => route.query.from === 'my');
+// (마이페이지는 상태 화면으로 이동할 때 ?from=my를 붙여서 표시함). /group-purchase/my는
+// requiresNonAdmin이라 관리자는 목적지가 될 수 없음 — 관리자라면 from=my가 붙어있어도 리스트로 보낸다
+const isFromMyPage = computed(() => route.query.from === 'my' && !authStore.isAdmin);
 const backTarget = computed(() => (isFromMyPage.value ? '/group-purchase/my' : '/group-purchase'));
 const backLabel = computed(() => (isFromMyPage.value ? '마이페이지로 돌아가기' : '리스트로 돌아가기'));
 
@@ -83,7 +84,7 @@ const STATUS_TITLE = {
   OPEN: '구매가 보류 중이에요',
   COMPLETED: '구매가 확정됐어요',
   FAILED: '목표 인원 미달로 취소됐어요',
-  CANCELLED: '작성자가 취소한 공동구매예요',
+  CANCELLED: '관리자가 취소한 공동구매예요',
 };
 const statusTitle = computed(
   () => STATUS_TITLE[status.value.status] ?? '구매가 보류 중이에요',
@@ -103,7 +104,7 @@ const progressPercent = computed(() =>
   ),
 );
 
-// 참여자는 구매 수량만큼, 작성자는 단가 그대로(수량 개념 없음) 가격을 보여준다
+// 참여자는 구매 수량만큼, 관리자는 단가 그대로(수량 개념 없음) 가격을 보여준다
 const purchaseQuantity = computed(() => status.value.participantInfo?.purchaseQuantity ?? 1);
 const totalGroupPrice = computed(() => status.value.groupPrice * purchaseQuantity.value);
 const totalUnitPrice = computed(() => status.value.unitPrice * purchaseQuantity.value);
@@ -123,7 +124,7 @@ const arrivalDateLabel = computed(() => formatArrivalDateLabel(status.value?.del
 
 // 취소·미달 건에는 더 이상 배송이 진행되지 않으므로, 보류/확정 상태에서만 노출.
 // 'OPEN'/'COMPLETED'를 별도로 다시 나열하면 STATUS_TITLE과 어긋날 위험이 있어,
-// STATUS_TITLE에 정의된 상태 중 'CANCELLED'(작성자 취소)/'FAILED'(목표 미달)만 제외하는
+// STATUS_TITLE에 정의된 상태 중 'CANCELLED'(관리자 취소)/'FAILED'(목표 미달)만 제외하는
 // 방식으로 단일 출처를 유지한다.
 // deliveryDate가 없는 경우(API 미반영 등)에도 빈 라벨 대신 행 자체를 숨긴다
 const showDeliveryDate = computed(() =>
@@ -156,7 +157,7 @@ const cancelSuccessMessage = computed(() =>
 );
 
 // TODO: 저장된 결제 비밀번호와 비교하는 로직 연동 예정 (DB 연동 전이라 현재는 비교 없이 통과)
-// PinAuthSheet의 @complete에서 직접 호출됨. 작성자는 groupPurchaseApi.cancel(공동구매 취소),
+// PinAuthSheet의 @complete에서 직접 호출됨. 관리자는 groupPurchaseApi.cancel(공동구매 취소),
 // 참여자는 groupPurchaseApi.leave(참여 취소)를 호출
 async function handleCancelConfirm() {
   if (USE_MOCK_DATA) {
@@ -361,7 +362,7 @@ function confirmCancelSuccess() {
       </AppButton>
 
       <!-- 취소: 버튼은 항상 노출하고, 보류 중이 아니거나(이미 마감) 마감 기한이 지났으면 비활성화만 처리.
-           작성자는 공동구매 취소, 참여자는 참여 취소 -->
+           관리자는 공동구매 취소, 참여자는 참여 취소 -->
       <AppButton
         variant="danger"
         size="lg"

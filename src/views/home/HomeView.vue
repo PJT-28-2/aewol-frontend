@@ -12,8 +12,8 @@ import { useDashboardStore } from '@/stores/dashboard'
 import { useMemberStore } from '@/stores/member'
 import { usePetStore } from '@/stores/pet'
 import { getHomeInsights } from '@/api/insight'
-import dogHero from '@/assets/images/pet-poodle-home-mascot-v2.png'
-import catHero from '@/assets/images/pet-siamese-home-mascot-v2.png'
+import dogHero from '@/assets/images/pet-dog-default-home-v3.png'
+import catHero from '@/assets/images/pet-cat-default-home-v3.png'
 
 const memberStore = useMemberStore()
 const petStore = usePetStore()
@@ -21,6 +21,7 @@ const dashboardStore = useDashboardStore()
 const isLoading = ref(true)
 const loadError = ref(false)
 const insights = ref([])
+const isInsightsLoading = ref(true)
 const today = new Date()
 const currentPeriod = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`
 
@@ -89,6 +90,7 @@ let insightRequestId = 0
 
 async function fetchInsights() {
   const requestId = ++insightRequestId
+  isInsightsLoading.value = true
   try {
     const { data } = await getHomeInsights(primaryPet.value?.id)
     if (requestId !== insightRequestId) return
@@ -99,8 +101,15 @@ async function fetchInsights() {
     // 운영 중 장애를 알 방법이 없으므로 로그는 남긴다.
     console.error('[home] 인사이트 카드를 불러오지 못했습니다.', error)
     insights.value = []
+  } finally {
+    if (requestId === insightRequestId) isInsightsLoading.value = false
   }
 }
+
+// 카드마다 'AI 요약'을 반복해 붙이면 라벨이 내용을 밀어낸다. 묶음에 한 번만 단다.
+// fallback인 카드는 서버가 데이터로 조립한 문구라 AI가 쓴 것이 아니다. 한 장이라도
+// 모델이 쓴 것이 있을 때만 배지를 붙인다.
+const hasAiWrittenCard = computed(() => insights.value.some((card) => !card.fallback))
 
 // type은 서버에서 회원·카드종류별 유니크 키다. 그래도 중복이 오면 Vue key가 겹쳐
 // 렌더링이 어긋나므로 먼저 온 것만 남긴다.
@@ -168,11 +177,11 @@ onMounted(fetchHome)
             {{ petName }}
           </p>
         </div>
-        <div class="absolute bottom-[15px] h-[62px] w-[258px] rounded-[50%] bg-[color-mix(in_srgb,var(--color-leaf)_66%,white)]" />
+        <div class="absolute bottom-[15px] h-[62px] w-[258px] rounded-[50%] bg-[color-mix(in_srgb,var(--color-leaf)_66%,var(--color-white))]" />
         <img
           :src="heroImage"
           :alt="`${petName} 캐릭터`"
-          class="relative z-1 h-[254px] w-full object-contain object-bottom"
+          class="relative z-1 h-[274px] w-full object-contain object-bottom"
         >
       </section>
 
@@ -230,41 +239,91 @@ onMounted(fetchHome)
         </div>
       </router-link>
 
-      <component
-        :is="card.ctaPath ? 'router-link' : 'div'"
-        v-for="card in insights"
-        :key="card.type"
-        v-bind="card.ctaPath ? { to: card.ctaPath } : {}"
-        class="mt-(--space-3) block rounded-[22px] border border-(--color-leaf) bg-(--color-white) p-(--space-5) text-inherit no-underline"
+      <!--
+        인사이트는 위쪽 메뉴 카드와 성격이 다르다. 사용자가 누를 기능이 아니라
+        읽을 내용이라, 묶음 배경과 머리글로 한 덩어리임을 먼저 보이게 한다.
+        'AI 요약' 배지도 카드마다 반복하지 않고 여기 한 번만 단다.
+      -->
+      <section
+        v-if="isInsightsLoading || insights.length > 0"
+        class="mt-(--space-5) rounded-[24px] bg-(--color-leaf-soft) p-(--space-4)"
+        aria-labelledby="home-insight-title"
       >
-        <div class="flex items-start gap-(--space-3)">
-          <span class="mt-[2px] flex size-[26px] shrink-0 items-center justify-center rounded-(--radius-md) bg-(--color-leaf) text-(color:--color-navy)">
-            <component
-              :is="insightIcon(card.type)"
-              size="15"
-            />
-          </span>
-          <p class="min-w-0 flex-1 text-(length:--font-sm) font-bold text-(color:--color-navy)">
-            {{ card.headline }}
-          </p>
-        </div>
-        <p class="mt-(--space-3) text-(length:--font-sm) leading-[1.6] break-keep text-(color:--color-slate-dark)">
-          {{ card.body }}
-        </p>
-        <div class="mt-(--space-3) flex items-center justify-between border-t border-(--color-leaf-soft) pt-(--space-3)">
-          <!-- fallback이면 LLM 생성이 아니라 서버가 데이터로 조립한 문구다.
-               그때도 'AI 요약'이라고 달면 사실과 다르다. -->
+        <div class="flex items-center justify-between gap-(--space-2)">
+          <h2
+            id="home-insight-title"
+            class="m-0 text-(length:--font-md) font-bold text-(color:--color-navy)"
+          >
+            오늘의 읽을거리
+          </h2>
           <span
-            v-if="!card.fallback"
-            class="text-(length:--font-xs) font-bold text-(color:--color-leaf-dark)"
+            v-if="hasAiWrittenCard"
+            class="shrink-0 rounded-full bg-(--color-white) px-(--space-2) py-[2px] text-(length:--font-xs) font-bold text-(color:--color-leaf-dark)"
           >AI 요약</span>
-          <span v-else />
-          <span
-            v-if="card.ctaPath"
-            class="text-(length:--font-xs) font-bold text-(color:--color-leaf-dark)"
-          >{{ card.ctaLabel }} →</span>
         </div>
-      </component>
+
+        <!-- 카드 자리를 미리 잡아 두면 도착할 때 아래 내용이 밀리지 않는다. -->
+        <div
+          v-if="isInsightsLoading"
+          class="mt-(--space-3) space-y-(--space-3)"
+          aria-hidden="true"
+        >
+          <div
+            v-for="placeholder in 2"
+            :key="placeholder"
+            class="h-[104px] animate-pulse rounded-[18px] bg-(--color-white)"
+          />
+        </div>
+
+        <div
+          v-else
+          class="mt-(--space-3) space-y-(--space-3)"
+        >
+          <component
+            :is="card.ctaPath ? 'router-link' : 'div'"
+            v-for="card in insights"
+            :key="card.type"
+            v-bind="card.ctaPath ? { to: card.ctaPath } : {}"
+            class="block rounded-[18px] bg-(--color-white) p-(--space-4) text-inherit no-underline"
+          >
+            <div class="flex items-start gap-(--space-3)">
+              <span class="mt-[2px] flex size-[26px] shrink-0 items-center justify-center rounded-(--radius-md) bg-(--color-leaf) text-(color:--color-navy)">
+                <component
+                  :is="insightIcon(card.type)"
+                  size="15"
+                />
+              </span>
+              <p class="min-w-0 flex-1 text-(length:--font-sm) font-bold text-(color:--color-navy)">
+                {{ card.headline }}
+              </p>
+            </div>
+
+            <p class="mt-(--space-3) text-(length:--font-sm) leading-[1.6] break-keep text-(color:--color-slate-dark)">
+              {{ card.body }}
+            </p>
+
+            <!--
+              지나간 일을 요약한 문장과 앞날을 말하는 문장은 신뢰도가 다르다.
+              예측은 따로 떼어 '전망'이라고 못박아 둔다. 근거가 모자라면 서버가
+              이 값을 안 내려주므로 자리도 사라진다.
+            -->
+            <p
+              v-if="card.projection"
+              class="mt-(--space-3) mb-0 rounded-(--radius-lg) bg-(--color-leaf-soft) px-(--space-3) py-(--space-2) text-(length:--font-sm) leading-[1.5] break-keep text-(color:--color-leaf-dark)"
+            >
+              <span class="font-bold">전망</span>
+              · {{ card.projection }}
+            </p>
+
+            <p
+              v-if="card.ctaPath"
+              class="mt-(--space-3) mb-0 text-right text-(length:--font-xs) font-bold text-(color:--color-leaf-dark)"
+            >
+              {{ card.ctaLabel }} →
+            </p>
+          </component>
+        </div>
+      </section>
     </template>
   </div>
 </template>

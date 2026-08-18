@@ -33,6 +33,14 @@ const publicRoutes = [
     component: () => import('@/views/auth/SignupView.vue'),
   },
   {
+    path: '/signup/kakao/additional-info',
+    name: 'KakaoAdditionalInfo',
+    component: () => import('@/views/auth/KakaoAdditionalInfoView.vue'),
+    beforeEnter: () => {
+      if (!useAuthStore().registrationToken) return '/login';
+    },
+  },
+  {
     path: '/signup/complete',
     name: 'SignupComplete',
     component: () => import('@/views/auth/SignupCompleteView.vue'),
@@ -207,10 +215,16 @@ const authRoutes = [
     meta: { requiresAuth: true, layout: 'DefaultLayout', hideHeader: true },
   },
   {
-    path: '/wallet/charge/account-select',
-    name: 'ChargeAccountSelect',
-    component: () => import('@/views/wallet/ChargeAccountSelectView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
+    path: '/wallet/charge/success',
+    name: 'TossChargeSuccess',
+    component: () => import('@/views/wallet/TossChargeSuccessView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout', hideHeader: true, hideBottomNav: true },
+  },
+  {
+    path: '/wallet/charge/fail',
+    name: 'TossChargeFail',
+    component: () => import('@/views/wallet/TossChargeFailView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout', hideHeader: true, hideBottomNav: true },
   },
   {
     path: '/wallet/transfer',
@@ -373,7 +387,7 @@ const authRoutes = [
     path: '/group-purchase/my',
     name: 'GroupPurchaseMy',
     component: () => import('@/views/grouppurchase/GroupPurchaseMyView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
+    meta: { requiresAuth: true, requiresNonAdmin: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/group-purchase/create/step1',
@@ -420,7 +434,9 @@ const authRoutes = [
     name: 'GroupPurchasePayment',
     component: () =>
       import('@/views/grouppurchase/GroupPurchasePaymentPreview.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
+    // join()이 role=USER 전용이라 관리자는 애초에 참여자가 될 수 없음 — URL 직접 입력으로
+    // 이 결제 화면에 들어와 참여자로 등록되는 경로를 막는다(#237 리뷰 HIGH 항목)
+    meta: { requiresAuth: true, requiresNonAdmin: true, layout: 'DefaultLayout', showBack: true },
   },
   {
     path: '/group-purchase/:gpId/status',
@@ -630,6 +646,12 @@ router.beforeEach(async (to) => {
   // 공동구매 글쓰기 등 관리자 전용 화면을 URL 직접 입력으로 우회하는 것을 막음.
   // 버튼은 숨겨져 있어도 라우트 자체는 막혀있지 않으면 그대로 진입할 수 있기 때문
   if (to.meta.requiresAdmin && !authStore.isAdmin) {
+    return { path: '/group-purchase' };
+  }
+
+  // 나의 공동구매(GET /api/group-purchase/my)는 role=USER 전용이라 관리자가 URL로 직접
+  // 들어와도 막는다 — 관리자의 작성글 관리는 별도 기능으로 분리 예정이라 이 화면 범위 밖
+  if (to.meta.requiresNonAdmin && authStore.isAdmin) {
     return { path: '/group-purchase' };
   }
 

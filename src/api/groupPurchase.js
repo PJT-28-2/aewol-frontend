@@ -32,9 +32,10 @@ export const groupPurchaseApi = {
     return api.get('/group-purchase/my', { params })
   },
 
-  // 참여 신청과 결제가 한 번에 처리됨. 백엔드가 현재 quantity 쿼리 파라미터만 읽어서
+  // 참여 신청과 결제가 한 번에 처리됨. quantity는 쿼리 파라미터로 전달해
   // group_purchase_participant.purchase_quantity 컬럼에 저장함(DB에는 quantity 컬럼 없음, 쿼리 파라미터명만 quantity).
-  // 본문(shippingAddress 포함)은 아직 처리하지 않음 — 배송지 저장은 백엔드가 본문을 읽도록 구현되기 전까지는 반영되지 않는다
+  // 본문(recipientName/recipientPhone/zipCode/address/addressDetail)은 GroupPurchaseJoinRequest로
+  // 받아 같은 테이블에 저장함(2026-08-18 백엔드 확인)
   join(id, quantity, data) {
     return api.post(`/group-purchase/${id}/join`, data, { params: { quantity } })
   },
@@ -43,8 +44,8 @@ export const groupPurchaseApi = {
     return api.post(`/group-purchase/${id}/leave`)
   },
 
-  // 작성자가 공동구매 자체를 취소(판매취소)할 때 사용. 참여자 전원 환불은 백엔드가 처리.
-  // TODO: 백엔드에 해당 엔드포인트가 아직 없음 — 실제 경로/응답 형식은 API 명세 확정 후 맞출 것
+  // 관리자가 공동구매 자체를 취소(판매취소)할 때 사용 — 작성자 본인 여부와 무관하게 관리자면 누구나
+  // 호출 가능(2026-08-10 정책 확정). 참여자 전원 환불은 백엔드가 처리.
   cancel(id) {
     return api.post(`/group-purchase/${id}/cancel`)
   },

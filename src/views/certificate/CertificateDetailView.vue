@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
 import { useCertificateStore } from '@/stores/certificate'
+import { useMemberStore } from '@/stores/member'
 import { formatDateDot, formatDateTimeDot } from '@/utils/date'
 import AppButton from '@/components/common/AppButton.vue'
 import FeatureIconTile from '@/components/common/FeatureIconTile.vue'
@@ -17,6 +18,7 @@ import IconWarning from '@/components/common/icons/IconWarning.vue'
 const route = useRoute()
 const router = useRouter()
 const certificateStore = useCertificateStore()
+const memberStore = useMemberStore()
 
 // 동물등록증뿐 아니라 접종증명서/진료확인서도 같은 상세 페이지를 공유한다.
 // documents에서 docType을 먼저 확인해서, 등록증이면 registrationDetails를 조회하고
@@ -25,9 +27,11 @@ const currentDoc = ref(null)
 const isPhotoDoc = computed(() => currentDoc.value?.docType && currentDoc.value.docType !== 'REGISTRATION')
 
 onMounted(async () => {
-  // 목록 화면을 거치지 않고 이 화면으로 바로 진입(새로고침·직접 접속 등)해도
-  // fetchCertificates가 mock 시딩/실제 조회를 모두 처리하므로 바로 호출하면 된다.
-  await certificateStore.fetchCertificates(route.params.petId)
+  // 목록 화면을 거치지 않고 이 화면으로 바로 진입(새로고침·직접 접속 등)한 경우
+  // selectedPetId가 route의 petId와 다를 수 있어, fetchCertificates의 응답 역전 방지 가드
+  // (selectedPetId !== petId 이면 결과를 버림)에 걸려 documents가 비어버린다.
+  // selectPet()이 "selectedPetId 설정 + fetchCertificates 호출"을 함께 처리하므로 그대로 사용한다.
+  await certificateStore.selectPet(route.params.petId)
 
   currentDoc.value = certificateStore.documents.find((doc) => doc.docId === route.params.docId) ?? null
 
@@ -152,7 +156,9 @@ function handleShareFallbackConfirm() {
   handleDownloadPdf()
 }
 
-// 재동기화 — connectedId 재사용 전제라 신원확인 폼 없이 바로 재조회
+// 재동기화 — 별도 재동기화 API가 없어, 같은 petId로 verify()를 다시 호출한다(백엔드가 기존
+// 문서가 있으면 update 분기를 타서 재검증+갱신됨). regNumber는 이미 연동된 값을 그대로 쓰고,
+// 신청인 이름/생년월일은 회원 프로필로 채운다("대표 보호자만 이 작업을 할 수 있음" 전제와 일치)
 const isResyncing = ref(false)
 const resyncError = ref('')
 
@@ -161,9 +167,14 @@ async function handleResync() {
   resyncError.value = ''
   isResyncing.value = true
   try {
-    await certificateStore.resyncRegistration(route.params.petId, certificateStore.detail.docId)
-  } catch {
-    resyncError.value = '동기화에 실패했어요. 다시 시도해주세요.'
+    if (!memberStore.profile) await memberStore.fetchProfile()
+    await certificateStore.verifyRegistration(route.params.petId, {
+      regNumber: certificateStore.detail.regNumber,
+      userName: memberStore.profile?.name ?? '',
+      birthDate: memberStore.profile?.birthDate ?? '',
+    })
+  } catch (err) {
+    resyncError.value = err.response?.data?.message ?? '동기화에 실패했어요. 다시 시도해주세요.'
   } finally {
     isResyncing.value = false
   }
@@ -329,10 +340,12 @@ async function handlePhotoDelete() {
         </button>
         <div class="flex-1">
           <p class="text-(length:--font-sm) font-semibold text-(color:--color-navy)">
-            마지막 동기화: {{ formatDateDot(certificateStore.detail.lastSyncedAt) }}
+            {{ certificateStore.detail.lastSyncedAt
+              ? `마지막 동기화: ${formatDateTimeDot(certificateStore.detail.lastSyncedAt)}`
+              : 'APMS 정보 다시 확인하기' }}
           </p>
           <p class="text-(length:--font-xs) text-(color:--color-gray-600) mt-(--space-1)">
-            APMS 정보 변경 시 자동으로 갱신돼요
+            정보가 바뀌었다면 눌러서 최신 상태로 갱신해요
           </p>
           <p
             v-if="resyncError"

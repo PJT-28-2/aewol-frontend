@@ -32,6 +32,46 @@ export const authApi = {
     })
   },
 
+  sendKakaoSignupPhoneCode(registrationToken, phone) {
+    return api.post(
+      '/auth/oauth/kakao/signup/phone/send-code',
+      { registrationToken, phone },
+      { skipAuth: true, skipAuthRefresh: true },
+    )
+  },
+
+  verifyKakaoSignupPhoneCode(registrationToken, verificationCode) {
+    return api.post(
+      '/auth/oauth/kakao/signup/phone/verify-code',
+      { registrationToken, verificationCode },
+      { skipAuth: true, skipAuthRefresh: true },
+    )
+  },
+
+  completeKakaoSignup({
+    registrationToken,
+    zipCode,
+    address,
+    addressDetail,
+    terms,
+    privacy,
+    marketing,
+  }) {
+    return api.post(
+      '/auth/oauth/kakao/signup/complete',
+      {
+        registrationToken,
+        zipCode,
+        address,
+        addressDetail,
+        terms,
+        privacy,
+        marketing,
+      },
+      { skipAuth: true, skipAuthRefresh: true },
+    )
+  },
+
   refresh(refreshToken) {
     return api.post('/auth/refresh', null, {
       headers: { Authorization: `Bearer ${refreshToken}` },
@@ -76,6 +116,20 @@ export const authApi = {
         skipAuthRefresh: true,
       },
     )
+  },
+
+  requestFindAccountCode(name, phone) {
+    return api.post('/auth/account/find/send-code', { name, phone }, {
+      skipAuth: true,
+      skipAuthRefresh: true,
+    })
+  },
+
+  verifyFindAccountCode(requestId, verificationCode) {
+    return api.post('/auth/account/find/verify-code', { requestId, verificationCode }, {
+      skipAuth: true,
+      skipAuthRefresh: true,
+    })
   },
 
 }

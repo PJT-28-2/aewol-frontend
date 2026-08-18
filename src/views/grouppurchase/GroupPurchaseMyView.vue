@@ -11,7 +11,6 @@ import AppButton from '@/components/common/AppButton.vue';
 import { MOCK_MY_GROUP_PURCHASES } from '@/mocks/groupPurchase';
 import { USE_MOCK_DATA } from '@/mocks/config';
 import { groupPurchaseApi } from '@/api/groupPurchase';
-import { memberApi } from '@/api/member';
 import { formatDDayLabel } from '@/utils/date';
 import { useMidnightTick } from '@/composables/useMidnightTick';
 import {
@@ -54,7 +53,7 @@ const filteredGroupPurchases = computed(() =>
 // 필터 때문에 안 보이는 것(선택한 상태만 없음)과 애초에 이력이 없는 것을 구분해서 안내
 const emptyStateMessage = computed(() =>
   myGroupPurchases.value.length === 0
-    ? '작성하거나 참여한 공동구매가 없어요'
+    ? '참여한 공동구매가 없어요'
     : '선택한 상태의 게시물이 없어요',
 );
 const emptyStateActionText = computed(() =>
@@ -76,11 +75,6 @@ async function loadMyGroupPurchases() {
       return;
     }
 
-    // 서버는 group_purchase_participant 레코드를 반환하고 role은 내려주지 않으므로,
-    // 로그인한 회원의 memberId와 각 항목의 작성자 memberId를 비교해 '작성'/'참여'를 직접 구분한다
-    const { data: profileData } = await memberApi.getProfile();
-    const myMemberId = (profileData.result ?? profileData)?.memberId;
-
     // '전체'는 상태 필터 없이 조회, 그 외에는 백엔드 상태 코드로 변환해서 전달
     const params = selectedStatus.value === '전체' ? {} : { status: GROUP_PURCHASE_STATUS_CODE[selectedStatus.value] };
     const { data } = await groupPurchaseApi.getMyList(params);
@@ -91,7 +85,8 @@ async function loadMyGroupPurchases() {
     myGroupPurchases.value = items.map((item) => ({
       gpId: item.gpId,
       productName: item.productName,
-      role: item.memberId === myMemberId ? '작성' : '참여',
+      // GET /api/group-purchase/my는 role=USER 전용이라 관리자는 이 화면에 올 수 없음 — 항상 참여자
+      role: '참여',
       status: item.status,
       currentQuantity: item.currentQuantity,
       targetQuantity: item.targetQuantity,
@@ -131,7 +126,7 @@ watch(selectedStatus, loadMyGroupPurchases);
         </button>
       </div>
       <p class="text-(length:--font-md) text-(color:--color-slate-muted)">
-        내가 작성하거나 참여한 게시물을 확인해요
+        내가 참여한 게시물을 확인해요
       </p>
     </header>
 

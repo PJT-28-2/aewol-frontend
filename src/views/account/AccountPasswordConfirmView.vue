@@ -1,16 +1,18 @@
 <script setup>
 import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useAccountStore } from '@/stores/account';
 import PinKeypad from '@/components/common/PinKeypad.vue';
 import PinDots from '@/components/common/PinDots.vue';
 import IconLock from '@/components/common/icons/IconLock.vue';
 
 const router = useRouter();
+const route = useRoute();
 const store = useAccountStore();
+const nextQuery = route.query.next === '/wallet/charge' ? { next: '/wallet/charge' } : {};
 
 if (!store.linking.password) {
-  router.replace({ name: 'AccountLinkSelect' });
+  router.replace({ name: 'AccountLinkSelect', query: nextQuery });
 }
 
 // PasswordSetupComplete 라우터 가드가 확인하는 플래그 — 여기서 확인(confirm)까지
@@ -33,7 +35,7 @@ async function handleComplete(value) {
       return;
     }
     window.sessionStorage.setItem(PASSWORD_SETUP_COMPLETED_KEY, 'true');
-    router.replace({ name: 'PasswordSetupComplete' });
+    router.replace({ name: 'PasswordSetupComplete', query: nextQuery });
   } catch {
     errorMessage.value = '비밀번호 설정에 실패했어요. 다시 시도해주세요';
     pin.value = '';
@@ -52,8 +54,14 @@ function handleBiometricSwitch() {
 
 <template>
   <div class="min-h-[calc(100svh-var(--header-height))] flex flex-col bg-(--color-app-bg)">
-    <div class="mx-auto w-full max-w-(--content-max-width) px-(--space-5) pt-(--space-9) text-center">
+    <div class="mx-auto w-full max-w-(--content-max-width) px-(--space-5) pt-(--space-7) text-center">
       <header class="mb-(--space-4)">
+        <span class="mx-auto mb-(--space-4) flex size-[52px] items-center justify-center rounded-[18px] bg-(--color-leaf-soft)">
+          <IconLock
+            :size="22"
+            color="var(--color-leaf-dark)"
+          />
+        </span>
         <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) leading-snug">
           간편 비밀번호를 확인해주세요
         </h1>
@@ -77,7 +85,7 @@ function handleBiometricSwitch() {
       </div>
     </div>
 
-    <div class="mt-auto w-full bg-(--color-olive) pt-(--space-5) pb-(--space-8) px-(--space-7)">
+    <div class="mx-auto mt-auto w-full max-w-(--content-max-width) rounded-t-[32px] border-x border-t border-(--color-card-border) bg-(--color-leaf-soft) px-(--space-7) pt-(--space-5) pb-(--space-7) shadow-[0_-10px_30px_color-mix(in_srgb,var(--color-navy)_6%,transparent)]">
       <PinKeypad
         v-model="pin"
         @complete="handleComplete"
@@ -85,12 +93,12 @@ function handleBiometricSwitch() {
 
       <button
         type="button"
-        class="mx-auto mt-(--space-5) flex items-center gap-(--space-1) text-(length:--font-sm) text-(color:--color-navy)"
+        class="mx-auto mt-(--space-5) flex items-center gap-(--space-2) rounded-full bg-(--color-white) px-(--space-4) py-(--space-2) text-(length:--font-sm) font-medium text-(color:--color-slate-dark)"
         @click="handleBiometricSwitch"
       >
         <IconLock
           :size="14"
-          color="var(--color-navy)"
+          color="var(--color-leaf-dark)"
         />
         생체인증으로 전환
       </button>

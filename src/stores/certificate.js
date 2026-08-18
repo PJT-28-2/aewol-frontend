@@ -4,6 +4,18 @@ import { petApi } from '@/api/pet'
 import { USE_MOCK_DATA } from '@/mocks/config'
 import { MOCK_PET_DOCUMENTS, MOCK_REGISTRATION_DETAIL } from '@/mocks/certificate'
 
+// 백엔드가 birthDate를 digits(...)로 저장·응답해 "20230512"처럼 구분자 없는 8자리 숫자로 내려온다.
+// 화면에서 쓰는 formatDateDot은 '-'만 '.'로 치환할 뿐이라 구분자가 없으면 그대로 노출돼버리므로,
+// 응답을 받는 시점에 ISO(YYYY-MM-DD)로 정규화해서 저장해둔다
+function normalizeRegistrationDetail(detail) {
+  if (!detail?.birthDate || !/^\d{8}$/.test(detail.birthDate)) return detail
+  const { birthDate } = detail
+  return {
+    ...detail,
+    birthDate: `${birthDate.slice(0, 4)}-${birthDate.slice(4, 6)}-${birthDate.slice(6, 8)}`,
+  }
+}
+
 // mock 모드의 펫 탭 목록은 MOCK_REGISTRATION_DETAIL에서 뽑아 쓴다(등록증 연동 여부와 무관하게
 // 모든 펫이 하나씩 항목을 가지고 있음). 문서 상세 전용 필드(docId, rfidCd 등)는 제외한다
 function toPetSummary(detail) {
@@ -143,119 +155,67 @@ export const useCertificateStore = defineStore('certificate', {
       }
       return this._withRequestState(async () => {
         const { data } = await certificatesApi.getDetail(petId, docId)
-        this.detail = data.result ?? null
+        this.detail = normalizeRegistrationDetail(data.result ?? null)
         return this.detail
       })
     },
 
-    // 동물등록증 조회 — 동물등록번호 + 신청인(보호자) 이름/생년월일로 국가동물보호정보시스템(APMS)에서
-    // 조회. 외부 조회 API 연동(공공데이터포털 등)은 백엔드가 대신 처리하고, 프론트는 결과 후보
-    // 목록만 그대로 받는다. 이름/생년월일 중 하나만 있어도 조회 가능하다는 전제.
-    async requestApmsSimpleAuth({ regNumber, userName, birthDate }) {
+    // 동물등록증 인증 — 이미 있는 반려동물(petId) 하나를 대상으로 동물등록번호 + 신청인(보호자)
+    // 이름/생년월일을 검증하고, 성공하면 그 자리에서 바로 저장까지 된다(조회 전용 단계 없음).
+    // 이미 연동된 반려동물에 다시 호출하면 재동기화(갱신)로 동작 — 별도 재동기화 액션이 필요 없다.
+    // 이름/생년월일 중 하나만 있어도 검증 가능하다는 전제.
+    async verifyRegistration(petId, { regNumber, userName, birthDate }) {
       if (!regNumber?.trim() || (!userName?.trim() && !birthDate?.trim())) {
         throw new Error('동물등록번호와 이름 또는 생년월일을 입력해주세요.')
       }
 
       if (USE_MOCK_DATA) {
-        // 조회 API 응답 지연 흉내
+        // 인증 API 응답 지연 흉내
         await new Promise((resolve) => setTimeout(resolve, 800))
 
+        const pet = this.pets.find((p) => p.petId === petId)
         const nowIso = new Date().toISOString().slice(0, 19)
-        // 이미 연동된 동물등록증이 없는 펫들을 "신청인 명의로 조회된 동물"로 흉내냄
-        const linkedPetIds = new Set(
-          this.documents.filter((doc) => doc.docType === 'REGISTRATION').map((doc) => doc.petId),
-        )
-        const candidates = this.pets
-          .filter((pet) => !linkedPetIds.has(pet.petId))
-          .map((pet) => ({
-            petId: pet.petId,
-            regNumber: `41000001${String(Date.now()).slice(-8)}${pet.petId.slice(-1)}`,
-            name: pet.name,
-            breed: pet.breed,
-            gender: pet.gender,
-            neutered: pet.neutered,
-            birthDate: pet.birthDate,
-            rfidCd: `41000001${String(Date.now()).slice(-8)}${pet.petId.slice(-1)}`,
-            rfidGubun: 'Y',
-            orgNm: '제주특별자치도 제주시',
-            officeTel: '064-728-2114',
-            aprGbnNm: '승인완료',
-            regTm: nowIso,
-            aprTm: nowIso,
-          }))
-
-        return candidates
-      }
-
-      return this._withRequestState(async () => {
-        const { data } = await certificatesApi.syncRegistration({ regNumber, userName, birthDate })
-        return data.result ?? []
-      })
-    },
-
-    // 동물등록증 연동 2단계 — 사용자가 매칭 결과 화면에서 선택한 후보들을 저장
-    async confirmApmsLink(candidates) {
-      if (!USE_MOCK_DATA) {
-        return this._withRequestState(async () => {
-          await certificatesApi.saveRegistrationLinks(candidates)
-          if (this.selectedPetId) {
-            await this.fetchCertificates(this.selectedPetId)
-          }
-        })
-      }
-
-      const today = new Date().toISOString().slice(0, 10)
-
-      for (const candidate of candidates) {
-        const pet = this.pets.find((p) => p.petId === candidate.petId)
-        const docId = `doc-reg-${candidate.petId}`
-
+        const docId = `doc-reg-${petId}`
         const detail = {
           docId,
-          ...candidate,
-          lastSyncedAt: today,
+          petId,
+          regNumber,
+          name: pet?.name ?? '',
+          breed: pet?.breed ?? '',
+          gender: pet?.gender ?? 'MALE',
+          neutered: pet?.neutered ?? 'Y',
+          birthDate: pet?.birthDate ?? '',
+          rfidCd: regNumber,
+          rfidGubun: 'Y',
+          orgNm: '제주특별자치도 제주시',
+          officeTel: '064-728-2114',
+          aprGbnNm: '승인완료',
+          regTm: nowIso,
+          aprTm: nowIso,
+          verified: true,
         }
         this.registrationDetails = { ...this.registrationDetails, [docId]: detail }
-
-        if (pet) pet.regNumber = candidate.regNumber
+        if (pet) pet.regNumber = regNumber
 
         const newDoc = {
           docId,
-          petId: candidate.petId,
-          docName: `${candidate.name} · 동물등록증`,
+          petId,
+          docName: `${detail.name} · 동물등록증`,
           docType: 'REGISTRATION',
           fileUrl: '',
-          issuedDate: today,
+          issuedDate: nowIso.slice(0, 10),
           createdAt: new Date().toISOString(),
         }
         this.documents = [newDoc, ...this.documents.filter((doc) => doc.docId !== docId)]
-      }
-
-      if (this.selectedPetId) {
-        await this.fetchCertificates(this.selectedPetId)
-      }
-    },
-
-    // 동물등록증 재동기화 — connectedId를 이미 확보한 상태(최초 연동 완료)라는 전제로,
-    // 신원확인 폼 없이 바로 재조회한다는 흐름만 흉내냄. 값 자체는 크게 바뀌지 않고
-    // lastSyncedAt만 갱신 — "정보가 바뀌면 자동 갱신"을 사용자가 수동으로 트리거하는 액션.
-    async resyncRegistration(petId, docId) {
-      if (USE_MOCK_DATA) {
-        const existing = this.registrationDetails[docId]
-        if (!existing) return null
-
-        // 재인증 없이 바로 재조회한다는 전제라 대기 시간이 짧음
-        await new Promise((resolve) => setTimeout(resolve, 800))
-
-        const updated = { ...existing, lastSyncedAt: new Date().toISOString().slice(0, 10) }
-        this.registrationDetails = { ...this.registrationDetails, [docId]: updated }
-        if (this.detail?.docId === docId) this.detail = updated
-        return updated
+        this.detail = detail
+        if (this.selectedPetId === petId) await this.fetchCertificates(petId)
+        return detail
       }
 
       return this._withRequestState(async () => {
-        const { data } = await certificatesApi.resyncRegistration(petId, docId)
-        this.detail = data.result ?? null
+        const { data } = await certificatesApi.verifyRegistration(petId, { regNumber, userName, birthDate })
+        this.detail = normalizeRegistrationDetail(data.result ?? null)
+        await this.fetchCertificates(petId)
         return this.detail
       })
     },
@@ -284,6 +244,20 @@ export const useCertificateStore = defineStore('certificate', {
       })
     },
 
+    // 업로드 POST 응답을 목록에 낙관적으로 반영 — 재조회(fetchCertificates) 없이도
+    // 화면에 바로 보이게 한다. 업로드 도중 다른 펫 탭으로 전환된 경우(petId !== selectedPetId)는
+    // 지금 보이는 목록이 다른 펫 것이므로 반영하지 않는다 — 이후 그 펫 탭으로 다시 돌아오면
+    // selectPet()의 재조회가 서버에 이미 저장된 문서를 정상적으로 가져온다
+    _addUploadedDocument(doc) {
+      if (doc.petId !== this.selectedPetId) return
+      this.documents = [doc, ...this.documents]
+      if (doc.docType === 'VACCINATION') {
+        this.vaccinationDocs = [doc, ...this.vaccinationDocs]
+      } else if (doc.docType === 'MEDICAL_CONFIRMATION') {
+        this.medicalDocs = [doc, ...this.medicalDocs]
+      }
+    },
+
     // POST /api/pets/{petId}/documents — file 필수, issuedDate 선택
     async uploadVaccination(petId, file, issuedDate) {
       if (USE_MOCK_DATA) {
@@ -304,18 +278,20 @@ export const useCertificateStore = defineStore('certificate', {
       }
       return this._withRequestState(async () => {
         const { data } = await certificatesApi.uploadVaccination(petId, file, issuedDate)
-        const uploaded = {
+        // data.result는 POST 응답 그대로라 docName 등이 비어있을 수 있어 폴백을 먼저 깔고 덮어쓴다
+        const newDoc = {
+          petId,
+          docType: 'VACCINATION',
+          docName: file.name,
+          issuedDate: issuedDate || new Date().toISOString().slice(0, 10),
+          createdAt: new Date().toISOString(),
           ...data.result,
-          docName: data.result?.docName || file.name,
         }
-        const isUploadedDocument = (doc) =>
-          doc.docId === uploaded.docId || (doc.petId === petId && doc.docType === 'VACCINATION')
-        this.documents = [uploaded, ...this.documents.filter((doc) => !isUploadedDocument(doc))]
-        this.vaccinationDocs = [
-          uploaded,
-          ...this.vaccinationDocs.filter((doc) => !isUploadedDocument(doc)),
-        ]
-        return uploaded
+        this._addUploadedDocument(newDoc)
+        // 재조회는 최신 상태로 보정하기 위한 보조 작업일 뿐, POST는 이미 성공했으므로 이 실패를
+        // 업로드 실패로 취급하지 않는다 — 그렇지 않으면 사용자가 재시도해 서버에 중복 저장된다
+        this.fetchCertificates(petId).catch(() => {})
+        return newDoc
       })
     },
 
@@ -340,8 +316,18 @@ export const useCertificateStore = defineStore('certificate', {
         formData.append('file', file)
         formData.append('docType', 'MEDICAL_CONFIRMATION')
         const { data } = await certificatesApi.uploadDocument(petId, formData)
-        await this.fetchCertificates(petId)
-        return data.result
+        const newDoc = {
+          petId,
+          docType: 'MEDICAL_CONFIRMATION',
+          docName: file.name,
+          issuedDate: new Date().toISOString().slice(0, 10),
+          createdAt: new Date().toISOString(),
+          ...data.result,
+        }
+        this._addUploadedDocument(newDoc)
+        // 접종증명서와 동일한 이유로 재조회 실패를 업로드 실패로 전파하지 않는다
+        this.fetchCertificates(petId).catch(() => {})
+        return newDoc
       })
     },
 

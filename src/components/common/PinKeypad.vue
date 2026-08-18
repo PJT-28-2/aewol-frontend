@@ -47,7 +47,7 @@ function handleBackspace() {
 
 <template>
   <div>
-    <div class="grid grid-cols-3 gap-(--space-6)">
+    <div class="grid grid-cols-3 gap-x-(--space-5) gap-y-(--space-3)">
       <template
         v-for="key in keypadKeys"
         :key="key || 'blank'"
@@ -55,7 +55,7 @@ function handleBackspace() {
         <button
           v-if="key === '__shuffle__'"
           type="button"
-          class="h-14 flex items-center justify-center text-(length:--font-sm) font-medium text-(color:--color-navy)"
+          class="mx-auto flex size-14 items-center justify-center rounded-full text-(length:--font-xs) font-semibold text-(color:--color-leaf-dark) transition-transform active:scale-95"
           aria-label="숫자판 재배열"
           @click="shuffle"
         >
@@ -64,7 +64,7 @@ function handleBackspace() {
         <button
           v-else
           type="button"
-          class="h-14 flex items-center justify-center text-(length:--font-2xl) font-bold text-(color:--color-navy)"
+          class="mx-auto flex size-14 items-center justify-center text-(length:--font-xl) font-bold text-(color:--color-navy) transition-transform active:scale-95"
           :aria-label="key === '⌫' ? '지우기' : key"
           @click="key === '⌫' ? handleBackspace() : handleKeyPress(key)"
         >
