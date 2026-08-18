@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, nextTick, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import AddressSearchLayer from '@/components/common/AddressSearchLayer.vue';
 import IconWallet from '@/components/common/icons/IconWallet.vue';
@@ -236,9 +236,14 @@ const paymentError = ref('');
 const paymentErrorRef = ref(null);
 
 // paymentError는 화면 상단 쪽에 있어서, 결제 버튼(화면 하단 고정)까지 스크롤해 내려온
-// 상태에서 에러가 나면 안 보일 수 있다. 값이 채워질 때마다 그 문단으로 스크롤해 보여준다
-watch(paymentError, (value) => {
-  if (value) paymentErrorRef.value?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+// 상태에서 에러가 나면 안 보일 수 있다. 값이 채워질 때마다 그 문단으로 스크롤해 보여준다.
+// watch의 기본 flush('pre')는 DOM 갱신 전에 콜백이 실행돼, 빈 문자열 → 값 있음으로
+// 처음 바뀌는 순간엔 v-if로 막 마운트되는 <p>가 아직 없어 paymentErrorRef가 null일 수
+// 있다 — nextTick으로 DOM 갱신을 기다린 뒤에 스크롤해야 첫 에러부터 확실히 동작한다
+watch(paymentError, async (value) => {
+  if (!value) return;
+  await nextTick();
+  paymentErrorRef.value?.scrollIntoView({ behavior: 'smooth', block: 'center' });
 });
 
 // 버튼은 :disabled="!isShippingInfoComplete"로 이미 막혀있어 정상 클릭으로는 여기 걸릴 일이
