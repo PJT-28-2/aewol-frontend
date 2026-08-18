@@ -22,9 +22,14 @@ const props = defineProps({
   },
 })
 
+// 지금 보고 있는 화면을 다시 불러오는 것처럼, 이동할 곳이 없는 행동도 있다.
+// 그럴 때 actionRoute를 비우고 이 이벤트를 받아 처리한다.
+const emit = defineEmits(['action'])
+
 const router = useRouter()
 
 function handleAction() {
+  emit('action')
   if (props.actionRoute) {
     router.push(props.actionRoute)
   }
