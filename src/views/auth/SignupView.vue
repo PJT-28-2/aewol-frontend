@@ -17,6 +17,7 @@ const authStore = useAuthStore()
 const isKakaoSignup = ref(false)
 const isLoading = ref(false)
 const isSendingCode = ref(false)
+const isCodeSent = ref(false)
 const isVerifyingCode = ref(false)
 const isEmailVerified = ref(false)
 const isAddressSearchOpen = ref(false)
@@ -73,6 +74,7 @@ const handleKakaoSignup = () => {
 }
 
 const handleEmailInput = () => {
+  isCodeSent.value = false
   isEmailVerified.value = false
   form.verificationCode = ''
   errorMessage.value = ''
@@ -89,6 +91,9 @@ const sendVerificationCode = async () => {
   isSendingCode.value = true
   try {
     await authStore.sendSignupCode(requestedEmail)
+    if (requestedEmail === form.email.trim()) {
+      isCodeSent.value = true
+    }
   } catch (error) {
     if (requestedEmail === form.email.trim()) {
       errorMessage.value = error.response?.data?.message ?? '인증번호 발송에 실패했습니다.'
@@ -318,7 +323,7 @@ const handleSignup = async () => {
           :disabled="isSendingCode || !form.email.trim()"
           @click="sendVerificationCode"
         >
-          {{ isSendingCode ? '발송 중' : '인증하기' }}
+          {{ isSendingCode ? '발송 중' : isCodeSent ? '다시 받기' : '인증하기' }}
         </button>
       </div>
 
