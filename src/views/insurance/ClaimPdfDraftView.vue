@@ -46,10 +46,13 @@ const handleDownload = async () => {
   if (!canDownload.value) return
   isGenerating.value = true
   try {
+    const white = getComputedStyle(document.documentElement)
+      .getPropertyValue('--color-white')
+      .trim()
     const canvas = await html2canvas(previewRef.value, {
       scale: 2,
       useCORS: true,
-      backgroundColor: '#ffffff',
+      backgroundColor: white,
     })
     const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
     const margin = 10
@@ -71,7 +74,7 @@ const handleDownload = async () => {
       slice.width = canvas.width
       slice.height = canvasPageHeight
       const ctx = slice.getContext('2d')
-      ctx.fillStyle = '#ffffff'
+      ctx.fillStyle = white
       ctx.fillRect(0, 0, slice.width, slice.height)
       ctx.drawImage(canvas, 0, srcY, canvas.width, srcH, 0, 0, canvas.width, srcH)
       const sliceHeight = (slice.height / pxPerMm)

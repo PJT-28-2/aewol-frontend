@@ -168,7 +168,7 @@ onMounted(fetchHome)
             {{ petName }}
           </p>
         </div>
-        <div class="absolute bottom-[15px] h-[62px] w-[258px] rounded-[50%] bg-[color-mix(in_srgb,var(--color-leaf)_66%,white)]" />
+        <div class="absolute bottom-[15px] h-[62px] w-[258px] rounded-[50%] bg-[color-mix(in_srgb,var(--color-leaf)_66%,var(--color-white))]" />
         <img
           :src="heroImage"
           :alt="`${petName} 캐릭터`"

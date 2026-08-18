@@ -35,34 +35,15 @@ const spinnerStyle = computed(() => ({
 
 <template>
   <div
-    class="spinner-wrapper"
+    class="flex items-center justify-center"
     role="status"
     aria-live="polite"
   >
     <div
-      class="spinner"
+      class="animate-spin rounded-full border-solid"
       :style="spinnerStyle"
       aria-hidden="true"
     />
     <span class="sr-only">로딩 중</span>
   </div>
 </template>
-
-<style scoped>
-.spinner-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.spinner {
-  border-style: solid;
-  border-radius: var(--radius-full);
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-</style>
