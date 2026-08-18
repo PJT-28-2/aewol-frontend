@@ -156,10 +156,11 @@ const cancelSuccessMessage = computed(() =>
     : '결제 금액은 환불 처리돼요',
 );
 
-// TODO: 저장된 결제 비밀번호와 비교하는 로직 연동 예정 (DB 연동 전이라 현재는 비교 없이 통과)
-// PinAuthSheet의 @complete에서 직접 호출됨. 관리자는 groupPurchaseApi.cancel(공동구매 취소),
-// 참여자는 groupPurchaseApi.leave(참여 취소)를 호출
-async function handleCancelConfirm() {
+// PinAuthSheet의 @complete에서 입력된 6자리 PIN을 그대로 인자로 받아 password로 함께
+// 보낸다(백엔드가 cancel/leave 요청에도 password를 필수로 요구함, join과 동일한 이유로
+// 2026-08-18 확인) — 검증 자체는 백엔드가 처리하고 프론트는 전달만 한다.
+// 관리자는 groupPurchaseApi.cancel(공동구매 취소), 참여자는 groupPurchaseApi.leave(참여 취소)를 호출
+async function handleCancelConfirm(password) {
   if (USE_MOCK_DATA) {
     isPinSheetOpen.value = false;
     status.value = { ...status.value, status: 'CANCELLED' };
@@ -171,9 +172,9 @@ async function handleCancelConfirm() {
   isCancelling.value = true;
   try {
     if (isAdmin.value) {
-      await groupPurchaseApi.cancel(route.params.gpId);
+      await groupPurchaseApi.cancel(route.params.gpId, password);
     } else {
-      await groupPurchaseApi.leave(route.params.gpId);
+      await groupPurchaseApi.leave(route.params.gpId, password);
     }
     // 취소 버튼이 계속 보이지 않도록 이전 상태(OPEN)를 취소 완료로 갱신
     status.value = { ...status.value, status: 'CANCELLED' };
