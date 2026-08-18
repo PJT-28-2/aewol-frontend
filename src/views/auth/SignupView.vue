@@ -7,6 +7,7 @@ import AppButton from '@/components/common/AppButton.vue'
 import PasswordInput from '@/components/common/PasswordInput.vue'
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 import IconCheck from '@/components/common/icons/IconCheck.vue'
+import { startKakaoOAuth } from '@/utils/kakaoOAuth'
 import { formatPhoneNumber } from '@/utils/phone'
 import { isValidPassword } from '@/utils/password'
 
@@ -66,7 +67,9 @@ const isSignupDisabled = computed(
 )
 
 const handleKakaoSignup = () => {
-  router.push('/login')
+  if (!startKakaoOAuth({ prompt: 'login' })) {
+    errorMessage.value = '카카오 로그인 설정을 확인해 주세요.'
+  }
 }
 
 const handleEmailInput = () => {

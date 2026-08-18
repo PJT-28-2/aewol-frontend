@@ -6,6 +6,7 @@ import { usePetStore } from '@/stores/pet'
 import PasswordInput from '@/components/common/PasswordInput.vue'
 import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 import AewolLogo from '@/components/common/AewolLogo.vue'
+import { startKakaoOAuth } from '@/utils/kakaoOAuth'
 
 const router = useRouter()
 const route = useRoute()
@@ -37,22 +38,7 @@ const passwordChangeNotice = computed(() =>
     ? '비밀번호가 변경되었습니다. 다시 로그인해주세요.'
     : '',
 )
-const KAKAO_OAUTH_STATE_KEY = 'kakaoOAuthState'
 let loginAttemptId = 0
-
-/**
- * 카카오 인증 요청과 콜백을 연결할 일회성 CSRF 방지 값을 생성한다.
- * 예측 가능성을 낮추기 위해 브라우저의 암호학적 난수 생성기를 사용한다.
- *
- * @returns {string} 32바이트 난수를 16진수로 변환한 OAuth state
- */
-const createOAuthState = () => {
-  const randomBytes = new Uint8Array(32)
-  window.crypto.getRandomValues(randomBytes)
-  return Array.from(randomBytes, (byte) =>
-    byte.toString(16).padStart(2, '0'),
-  ).join('')
-}
 
 /**
  * 이메일 로그인 화면을 연다.
@@ -125,37 +111,9 @@ const handleEmailLogin = async () => {
  * @returns {void}
  */
 const handleKakaoLogin = () => {
-  // =========================
-  // OAuth 설정 검증
-  // =========================
-  const clientId = import.meta.env.VITE_KAKAO_REST_API_KEY
-  const redirectUri =
-    import.meta.env.VITE_KAKAO_REDIRECT_URI ||
-    `${window.location.origin}/callback/kakao`
-
-  if (!clientId) {
+  if (!startKakaoOAuth()) {
     errorMessage.value = '카카오 로그인 설정을 확인해 주세요.'
-    return
   }
-
-  // =========================
-  // CSRF 방지 상태 생성
-  // =========================
-  const state = createOAuthState()
-  // 다른 탭의 OAuth 요청과 섞이지 않도록 현재 탭에 한정된 sessionStorage를 사용한다.
-  window.sessionStorage.setItem(KAKAO_OAUTH_STATE_KEY, state)
-
-  // =========================
-  // 카카오 인증 화면 이동
-  // =========================
-  const params = new URLSearchParams({
-    client_id: clientId,
-    redirect_uri: redirectUri,
-    response_type: 'code',
-    state,
-  })
-
-  window.location.assign(`https://kauth.kakao.com/oauth/authorize?${params}`)
 }
 </script>
 
