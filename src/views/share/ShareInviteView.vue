@@ -58,7 +58,9 @@ async function sendInvite() {
     const invite = await shareStore.invite(props.petId, trimmedRecipient.value)
     inviteCode.value = invite.inviteCode
     copied.value = false
-    feedback.value = '초대를 만들었어요. 아래 참여 링크를 전달해 주세요.'
+    // 앱이 메일이나 문자를 대신 보내지 않는다. 그 사실을 여기서 분명히 해야
+    // 사용자가 발송을 기다리지 않는다.
+    feedback.value = `${trimmedRecipient.value}만 수락할 수 있는 링크를 만들었어요. 아래 링크를 직접 전달해 주세요.`
   } catch (error) {
     feedback.value = getErrorMessage(error, '초대를 만들지 못했어요. 다시 시도해 주세요.')
     isError.value = true
@@ -97,7 +99,7 @@ async function copyLink() {
     @submit.prevent="sendInvite"
   >
     <p
-      class="mb-[var(--space-7)] mt-0 text-[length:var(--font-sm)] text-(--color-slate-muted)"
+      class="mb-[var(--space-6)] mt-0 text-[length:var(--font-sm)] text-(--color-slate-muted)"
     >
       함께 돌볼 가족을 초대해 반려동물의 기록을 나눠요
     </p>
@@ -108,6 +110,15 @@ async function copyLink() {
     >
       이메일 또는 휴대전화 번호
     </label>
+    <!--
+      회의에서 "이메일·전화번호 인증을 왜 받나"라는 질문이 나왔다. 실제로는 인증이
+      아니라 받는 사람을 못박는 값이다. 이 값으로 만든 초대는 그 계정으로만 수락되고,
+      아래 링크 초대는 링크를 가진 누구나 수락된다. 두 방식의 보안 수준이 다른데
+      화면에서는 나란한 선택지로 보여 오해를 만들었다.
+    -->
+    <p class="mb-[var(--space-2)] mt-0 text-[length:var(--font-xs)] leading-[1.5] text-(--color-slate-muted)">
+      여기에 적은 계정만 초대를 수락할 수 있어요. 링크가 다른 사람에게 전달돼도 안전해요.
+    </p>
     <input
       id="recipient"
       v-model="recipient"
@@ -132,6 +143,13 @@ async function copyLink() {
         class="m-0 text-center text-[length:var(--font-sm)] font-bold text-(--color-slate-muted)"
       >
         또는 링크로 초대
+      </p>
+      <p
+        class="mb-0 mt-[var(--space-2)] text-center text-[length:var(--font-xs)] leading-[1.5] text-(--color-slate-muted)"
+      >
+        받는 사람을 지정하지 않아요.
+        <strong class="font-bold text-(--color-danger-strong)">링크를 가진 누구나 참여할 수 있으니</strong>
+        믿을 수 있는 사람에게만 보내주세요.
       </p>
       <div class="mt-[var(--space-4)] flex gap-[var(--space-4)]">
         <span
