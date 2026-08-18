@@ -23,6 +23,7 @@ const loadError = ref(false);
 const notFound = computed(() => !transaction.value);
 const isPayment = computed(() => transaction.value?.txnType === 'PAYMENT');
 const isWalletWithdrawal = computed(() => transaction.value?.txnType === 'WITHDRAW');
+const isRefund = computed(() => transaction.value?.txnType === 'REFUND');
 const returnPath = computed(() =>
   route.query.from === 'wallet' ? '/wallet' : '/wallet/history',
 );
@@ -106,14 +107,18 @@ const formattedDateTime = computed(() => {
 
 const walletMovementDetails = computed(() => {
   if (!transaction.value) return [];
-  const details = isWalletWithdrawal.value
-    ? [
-        { label: '출금 계좌', value: transaction.value.title },
-        { label: '출금 수단', value: transaction.value.paymentMethod },
-      ]
-    : [
-        { label: '충전 수단', value: transaction.value.chargeMethod },
-      ];
+  let details;
+  if (isWalletWithdrawal.value) {
+    details = [
+      { label: '출금 계좌', value: transaction.value.title },
+      { label: '출금 수단', value: transaction.value.paymentMethod },
+    ];
+  } else if (isRefund.value) {
+    // REFUND는 충전이 아니라서 '충전 수단' 라벨을 그대로 쓰면 오해를 준다
+    details = [{ label: '환불 수단', value: transaction.value.chargeMethod }];
+  } else {
+    details = [{ label: '충전 수단', value: transaction.value.chargeMethod }];
+  }
 
   if (transaction.value.memo) {
     details.push({ label: '메모', value: transaction.value.memo });
