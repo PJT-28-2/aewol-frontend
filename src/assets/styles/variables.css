@@ -221,6 +221,10 @@
   --share-contribution-dot-size: 14px;
   --diary-avatar-size: 32px;
   --diary-photo-max-height: 320px;
+  /* 일기장 본문 줄 간격. 배경의 줄선과 글줄이 어긋나지 않으려면
+     textarea의 line-height와 줄선 배경이 같은 값을 써야 한다. */
+  --diary-line-height: 32px;
+  --diary-paper-min-height: 288px;
   --icon-badge-size: 56px;
   --share-chart-size: 200px;
   --share-chart-hole-size: 132px;
