@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, nextTick, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import AddressSearchLayer from '@/components/common/AddressSearchLayer.vue';
 import IconWallet from '@/components/common/icons/IconWallet.vue';
@@ -105,6 +105,20 @@ const isBalanceInsufficient = computed(
 const shortfallAmount = computed(
   () => totalAmount.value - paymentMethod.value.balance,
 );
+
+// 배송지가 등록돼 있어도 회원 프로필 자동 채움 값 중 일부(전화번호·상세주소 등)가 비어있을 수
+// 있어, join() 요청이 필수로 보내는 필드를 여기서 한 번 더 확인한다
+const isShippingInfoComplete = computed(() => {
+  const info = shippingAddress.value;
+  return Boolean(
+    info &&
+      info.recipientName?.trim() &&
+      info.recipientPhone?.trim() &&
+      info.zipCode?.trim() &&
+      info.address?.trim() &&
+      info.addressDetail?.trim(),
+  );
+});
 
 // 배송지 변경 바텀시트 상태 및 입력 폼 (현재 배송지 값으로 초기화)
 const isAddressSheetOpen = ref(false);
@@ -219,6 +233,29 @@ function confirmAddress() {
 
 const isPaying = ref(false);
 const paymentError = ref('');
+const paymentErrorRef = ref(null);
+
+// paymentError는 화면 상단 쪽에 있어서, 결제 버튼(화면 하단 고정)까지 스크롤해 내려온
+// 상태에서 에러가 나면 안 보일 수 있다. 값이 채워질 때마다 그 문단으로 스크롤해 보여준다.
+// watch의 기본 flush('pre')는 DOM 갱신 전에 콜백이 실행돼, 빈 문자열 → 값 있음으로
+// 처음 바뀌는 순간엔 v-if로 막 마운트되는 <p>가 아직 없어 paymentErrorRef가 null일 수
+// 있다 — nextTick으로 DOM 갱신을 기다린 뒤에 스크롤해야 첫 에러부터 확실히 동작한다
+watch(paymentError, async (value) => {
+  if (!value) return;
+  await nextTick();
+  paymentErrorRef.value?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+});
+
+// 버튼은 :disabled="!isShippingInfoComplete"로 이미 막혀있어 정상 클릭으로는 여기 걸릴 일이
+// 없지만, PIN 시트 진입 직전 마지막 방어로 남겨둔다(handlePayment의 재검사와 같은 이유)
+function handleOpenPinSheet() {
+  if (!isShippingInfoComplete.value) {
+    paymentError.value = '배송지 정보를 모두 입력해주세요.';
+    return;
+  }
+  paymentError.value = '';
+  isPinSheetOpen.value = true;
+}
 
 // 참여 신청 · 결제가 한 번에 처리됨. PinAuthSheet의 @complete에서 직접 호출되므로
 // 버튼 disabled와 별개로 진입 시점에 잔액/배송지 상태를 다시 검사한다
@@ -229,8 +266,8 @@ async function handlePayment() {
     return;
   }
 
-  // PIN 시트가 열려 있는 동안 잔액이 바뀌거나 배송지가 없어졌을 수 있어 재검사
-  if (isBalanceInsufficient.value || !shippingAddress.value) {
+  // PIN 시트가 열려 있는 동안 잔액이 바뀌거나 배송지 정보가 불완전해졌을 수 있어 재검사
+  if (isBalanceInsufficient.value || !isShippingInfoComplete.value) {
     isPinSheetOpen.value = false;
     paymentError.value = '결제 정보가 변경됐어요. 다시 확인해주세요.';
     return;
@@ -239,9 +276,8 @@ async function handlePayment() {
   paymentError.value = '';
   isPaying.value = true;
   try {
-    // 수량은 quantity 쿼리 파라미터로 전달(백엔드가 현재 이것만 읽음).
-    // 배송지는 group_purchase_participant 컬럼 기준으로 본문에 실어 보내지만,
-    // 백엔드가 아직 본문을 처리하지 않아 실제로 저장되지는 않는다(백엔드 작업 필요)
+    // 수량은 quantity 쿼리 파라미터로, 배송지는 group_purchase_participant 컬럼 기준으로
+    // 본문에 실어 보낸다(백엔드가 body를 읽어 저장까지 함, 2026-08-18 확인)
     await groupPurchaseApi.join(route.params.gpId, product.value.purchaseQuantity, {
       recipientName: shippingAddress.value.recipientName,
       recipientPhone: shippingAddress.value.recipientPhone,
@@ -507,6 +543,8 @@ const isPinSheetOpen = ref(false);
       <!-- 결제 실패 안내 -->
       <p
         v-if="paymentError"
+        ref="paymentErrorRef"
+        role="alert"
         class="text-(length:--font-xs) text-(color:--color-danger-strong) text-center mb-(--space-3)"
       >
         {{ paymentError }}
@@ -524,21 +562,23 @@ const isPinSheetOpen = ref(false);
         충전하러 가기
       </AppButton>
 
-      <!-- 결제하기 버튼: 배송지 미등록 시 비활성화 -->
+      <!-- 결제하기 버튼: 배송지 미등록·정보 불완전 시 비활성화하고 무엇이 부족한지 라벨로 안내 -->
       <AppButton
         v-else
         variant="primary"
         size="lg"
         block
-        :disabled="!shippingAddress"
+        :disabled="!isShippingInfoComplete"
         :loading="isPaying"
         class="fixed bottom-[calc(var(--bottom-nav-height)+var(--space-7))] left-(--space-4) right-(--space-4) !w-auto !h-auto !min-h-(--control-height-lg) !py-(--space-3) text-center shadow-(--shadow-md)"
-        @click="isPinSheetOpen = true"
+        @click="handleOpenPinSheet"
       >
         {{
-          shippingAddress
-            ? `${totalAmount.toLocaleString()}원 결제하기`
-            : '배송지를 먼저 등록해주세요'
+          !shippingAddress
+            ? '배송지를 먼저 등록해주세요'
+            : !isShippingInfoComplete
+              ? '배송지 정보를 모두 입력해주세요'
+              : `${totalAmount.toLocaleString()}원 결제하기`
         }}
       </AppButton>
 
