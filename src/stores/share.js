@@ -1,18 +1,42 @@
 import { defineStore } from 'pinia'
 import { shareApi } from '@/api/share'
 
-const MEMBER_AVATAR_CLASSES = [
-  'bg-(--color-gold)',
-  'bg-(--color-slate-dark)',
-  'bg-(--color-olive)',
-  'bg-(--color-slate)',
-]
-const CONTRIBUTION_TONES = [
+// 가족 한 사람에게 색 하나. 아바타와 기여도 도넛이 같은 색을 써야 두 영역을
+// 눈으로 이어 볼 수 있다.
+//
+// 예전에는 아바타와 기여도가 서로 다른 팔레트를 배열 순번으로 나눠 썼다. 그래서
+// 같은 사람이 두 곳에서 다른 색으로 보였고, 지출이 없어 기여도 목록에서 빠진
+// 가족이 있으면 그 뒤 사람들의 색까지 통째로 밀렸다. 그래서 순번이 아니라
+// 회원 id로 색을 고정한다.
+//
+// 도넛 조각으로 구분되도록 만들어 둔 차트 팔레트를 아바타에도 그대로 쓴다.
+// (예전 아바타 팔레트의 --color-gold 와 --color-olive 는 값이 같은 색이라
+//  가족이 셋만 돼도 두 명이 같은 색으로 보였다.)
+const MEMBER_TONES = [
   ['bg-(--color-chart-leaf)', '--color-chart-leaf'],
-  ['bg-(--color-chart-sage)', '--color-chart-sage'],
   ['bg-(--color-chart-teal)', '--color-chart-teal'],
   ['bg-(--color-chart-lilac)', '--color-chart-lilac'],
+  ['bg-(--color-chart-amber)', '--color-chart-amber'],
+  ['bg-(--color-chart-sage)', '--color-chart-sage'],
+  ['bg-(--color-chart-blue)', '--color-chart-blue'],
 ]
+
+/**
+ * 회원 id로 색을 찾을 수 있는 표를 만든다.
+ *
+ * <p>기여도 응답에만 있고 멤버 목록에는 없는 사람이 나올 수 있어(탈퇴 등),
+ * 조회 시점에 표에 없으면 그 자리에서 다음 색을 내어준다.
+ */
+function createToneLookup() {
+  const assigned = new Map()
+  return (memberId) => {
+    const key = String(memberId ?? '')
+    if (!assigned.has(key)) {
+      assigned.set(key, MEMBER_TONES[assigned.size % MEMBER_TONES.length])
+    }
+    return assigned.get(key)
+  }
+}
 
 // 백엔드 공통 응답은 { status, message, result } 래퍼라 실제 페이로드는 data.result에 있다
 const unwrap = (response) => response.data?.result
@@ -60,12 +84,14 @@ export const useShareStore = defineStore('share', {
           shareApi.getLogs(petId),
         ])
         if (requestId !== this.sharedCareRequestId) return
-        this.members = (unwrap(membersResponse) ?? []).map((member, index) => ({
-          ...member,
-          avatarClass: MEMBER_AVATAR_CLASSES[index % MEMBER_AVATAR_CLASSES.length],
-        }))
-        this.contributions = (unwrap(contributionsResponse) ?? []).map((contribution, index) => {
-          const [toneClass, colorToken] = CONTRIBUTION_TONES[index % CONTRIBUTION_TONES.length]
+        // 멤버 목록을 먼저 훑어 색을 정한다. 기여도는 그 색을 id로 찾아 쓰기만 한다.
+        const toneOf = createToneLookup()
+        this.members = (unwrap(membersResponse) ?? []).map((member) => {
+          const [avatarClass, colorToken] = toneOf(member.id)
+          return { ...member, avatarClass, colorToken }
+        })
+        this.contributions = (unwrap(contributionsResponse) ?? []).map((contribution) => {
+          const [toneClass, colorToken] = toneOf(contribution.id)
           return { ...contribution, toneClass, colorToken }
         })
         this.activities = unwrap(logsResponse) ?? []
