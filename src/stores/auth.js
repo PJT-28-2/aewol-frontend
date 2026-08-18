@@ -5,11 +5,38 @@ import { useAccountStore } from '@/stores/account'
 import router from '@/router'
 import { decodeJwtPayload } from '@/utils/jwt'
 
-const unwrapResult = (data) => data.result ?? data
+const unwrapResult = (data) => data?.result ?? data
+const KAKAO_REGISTRATION_TOKEN_KEY = 'kakaoRegistrationToken'
+export const KAKAO_LOGIN_COMPLETE = 'LOGIN_COMPLETE'
+export const KAKAO_ADDITIONAL_INFO_REQUIRED = 'ADDITIONAL_INFO_REQUIRED'
+
+const isValidToken = (token) =>
+  typeof token === 'string' && token.trim().length > 0
+
+const getStoredKakaoRegistrationToken = () => {
+  const token = window.sessionStorage.getItem(KAKAO_REGISTRATION_TOKEN_KEY)
+  return isValidToken(token) ? token : null
+}
+
+const invalidKakaoLoginResponse = () =>
+  new Error('카카오 로그인 응답을 확인할 수 없습니다.')
+
+const assertKakaoLoginComplete = (result) => {
+  if (
+    !result ||
+    typeof result !== 'object' ||
+    result.authStatus !== KAKAO_LOGIN_COMPLETE ||
+    !isValidToken(result.accessToken) ||
+    !isValidToken(result.refreshToken)
+  ) {
+    throw invalidKakaoLoginResponse()
+  }
+}
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     accessToken: localStorage.getItem('accessToken') || null,
+    registrationToken: getStoredKakaoRegistrationToken(),
     user: null,
   }),
 
@@ -22,7 +49,25 @@ export const useAuthStore = defineStore('auth', {
   },
 
   actions: {
+    startKakaoRegistration(registrationToken) {
+      if (!isValidToken(registrationToken)) {
+        throw invalidKakaoLoginResponse()
+      }
+
+      this.registrationToken = registrationToken
+      window.sessionStorage.setItem(
+        KAKAO_REGISTRATION_TOKEN_KEY,
+        registrationToken,
+      )
+    },
+
+    clearKakaoRegistration() {
+      this.registrationToken = null
+      window.sessionStorage.removeItem(KAKAO_REGISTRATION_TOKEN_KEY)
+    },
+
     clearSession() {
+      this.clearKakaoRegistration()
       this.accessToken = null
       this.user = null
       localStorage.removeItem('accessToken')
@@ -55,24 +100,56 @@ export const useAuthStore = defineStore('auth', {
         this.clearSession()
         throw error
       }
+      this.clearKakaoRegistration()
       return result
     },
 
-    async kakaoLogin(code) {
-      const { data } = await authApi.kakaoLogin(code)
-      const result = unwrapResult(data)
+    async finishKakaoLogin(result) {
+      assertKakaoLoginComplete(result)
+
       this.accessToken = result.accessToken
       localStorage.setItem('accessToken', result.accessToken)
-      if (result.refreshToken) {
-        localStorage.setItem('refreshToken', result.refreshToken)
-      }
+      localStorage.setItem('refreshToken', result.refreshToken)
       try {
         this.user = await useMemberStore().fetchProfile()
       } catch (error) {
         this.clearSession()
         throw error
       }
+      this.clearKakaoRegistration()
       return result
+    },
+
+    async kakaoLogin(code) {
+      const { data } = await authApi.kakaoLogin(code)
+      const result = unwrapResult(data)
+
+      if (!result || typeof result !== 'object') {
+        throw invalidKakaoLoginResponse()
+      }
+
+      if (result.authStatus === KAKAO_ADDITIONAL_INFO_REQUIRED) {
+        this.startKakaoRegistration(result.registrationToken)
+        return result
+      }
+
+      return this.finishKakaoLogin(result)
+    },
+
+    async completeKakaoSignup(signupData) {
+      if (!isValidToken(this.registrationToken)) {
+        throw invalidKakaoLoginResponse()
+      }
+
+      const { data } = await authApi.completeKakaoSignup({
+        ...signupData,
+        registrationToken: this.registrationToken,
+      })
+      const result = unwrapResult(data)
+
+      assertKakaoLoginComplete(result)
+      this.clearKakaoRegistration()
+      return this.finishKakaoLogin(result)
     },
 
     async signup(signupData) {

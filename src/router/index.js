@@ -33,6 +33,14 @@ const publicRoutes = [
     component: () => import('@/views/auth/SignupView.vue'),
   },
   {
+    path: '/signup/kakao/additional-info',
+    name: 'KakaoAdditionalInfo',
+    component: () => import('@/views/auth/KakaoAdditionalInfoView.vue'),
+    beforeEnter: () => {
+      if (!useAuthStore().registrationToken) return '/login';
+    },
+  },
+  {
     path: '/signup/complete',
     name: 'SignupComplete',
     component: () => import('@/views/auth/SignupCompleteView.vue'),
