@@ -35,18 +35,21 @@ export const groupPurchaseApi = {
   // 참여 신청과 결제가 한 번에 처리됨. quantity는 쿼리 파라미터로 전달해
   // group_purchase_participant.purchase_quantity 컬럼에 저장함(DB에는 quantity 컬럼 없음, 쿼리 파라미터명만 quantity).
   // 본문(recipientName/recipientPhone/zipCode/address/addressDetail)은 GroupPurchaseJoinRequest로
-  // 받아 같은 테이블에 저장함(2026-08-18 백엔드 확인)
+  // 받아 같은 테이블에 저장함(2026-08-18 백엔드 확인). password도 이 본문에 필수로 포함해야
+  // 하며, 결제 비밀번호 검증은 백엔드가 처리한다(2026-08-18부터 필수, 없으면 400)
   join(id, quantity, data) {
     return api.post(`/group-purchase/${id}/join`, data, { params: { quantity } })
   },
 
-  leave(id) {
-    return api.post(`/group-purchase/${id}/leave`)
+  // password는 join과 동일하게 결제 비밀번호 검증용 — 백엔드가 body에 필수로 요구함(2026-08-18 확인)
+  leave(id, password) {
+    return api.post(`/group-purchase/${id}/leave`, { password })
   },
 
   // 관리자가 공동구매 자체를 취소(판매취소)할 때 사용 — 작성자 본인 여부와 무관하게 관리자면 누구나
   // 호출 가능(2026-08-10 정책 확정). 참여자 전원 환불은 백엔드가 처리.
-  cancel(id) {
-    return api.post(`/group-purchase/${id}/cancel`)
+  // password는 leave와 동일하게 결제 비밀번호 검증용 — 백엔드가 body에 필수로 요구함(2026-08-18 확인)
+  cancel(id, password) {
+    return api.post(`/group-purchase/${id}/cancel`, { password })
   },
 }

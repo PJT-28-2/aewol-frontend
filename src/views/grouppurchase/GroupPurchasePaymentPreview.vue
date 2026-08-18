@@ -257,9 +257,10 @@ function handleOpenPinSheet() {
   isPinSheetOpen.value = true;
 }
 
-// 참여 신청 · 결제가 한 번에 처리됨. PinAuthSheet의 @complete에서 직접 호출되므로
-// 버튼 disabled와 별개로 진입 시점에 잔액/배송지 상태를 다시 검사한다
-async function handlePayment() {
+// 참여 신청 · 결제가 한 번에 처리됨. PinAuthSheet의 @complete에서 입력된 6자리 PIN을
+// 그대로 인자로 받아 password로 함께 보낸다(백엔드가 join 요청 body에 password를 필수로
+// 요구함, 2026-08-18 확인) — 버튼 disabled와 별개로 진입 시점에 잔액/배송지 상태를 다시 검사한다
+async function handlePayment(password) {
   if (USE_MOCK_DATA) {
     isPinSheetOpen.value = false;
     router.push(`/group-purchase/${route.params.gpId}/status`);
@@ -276,14 +277,15 @@ async function handlePayment() {
   paymentError.value = '';
   isPaying.value = true;
   try {
-    // 수량은 quantity 쿼리 파라미터로, 배송지는 group_purchase_participant 컬럼 기준으로
-    // 본문에 실어 보낸다(백엔드가 body를 읽어 저장까지 함, 2026-08-18 확인)
+    // 수량은 quantity 쿼리 파라미터로, 배송지·결제 비밀번호는 본문에 실어 보낸다
+    // (백엔드가 body를 읽어 GroupPurchaseJoinRequest로 저장·검증함, 2026-08-18 확인)
     await groupPurchaseApi.join(route.params.gpId, product.value.purchaseQuantity, {
       recipientName: shippingAddress.value.recipientName,
       recipientPhone: shippingAddress.value.recipientPhone,
       zipCode: shippingAddress.value.zipCode,
       address: shippingAddress.value.address,
       addressDetail: shippingAddress.value.addressDetail,
+      password,
     });
     router.push(`/group-purchase/${route.params.gpId}/status`);
   } catch {
@@ -301,8 +303,8 @@ function handleCharge() {
 // 송금 비밀번호 인증 바텀시트
 const isPinSheetOpen = ref(false);
 
-// TODO: 사용자가 설정해둔 결제 비밀번호와 비교하는 로직 (DB 연동 전이라 현재는 비교 없이 통과)
-// 지금은 6자리 입력이 완료되면 바로 결제 진행
+// 결제 비밀번호 검증은 백엔드가 join() 요청의 password 필드로 처리한다(2026-08-18부터 필수).
+// 프론트는 PinAuthSheet가 입력받은 6자리를 그대로 전달만 하고 자체적으로 비교하지 않는다
 </script>
 
 <template>

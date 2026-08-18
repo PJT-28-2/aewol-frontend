@@ -17,6 +17,11 @@ const API_CATEGORY_BY_UI = Object.fromEntries(
   ]),
 )
 
+// WITHDRAW/PAYMENT처럼 여기 없는 txnType은 전부 'withdraw'(출금 취급)로 떨어진다.
+// REFUND는 'charge'로 합치지 않고 별도 값을 둬서, "충전"/"출금" 두 탭짜리 필터
+// (WalletView, TransactionHistoryView)의 어느 쪽에도 걸리지 않고 "전체"에서만 보이게 한다
+const TYPE_BY_TXN_TYPE = { DEPOSIT: 'charge', REFUND: 'refund' }
+
 function isSameMonth(dateStr, year, month) {
   const [txYear, txMonth] = dateStr.split('-').map(Number)
   return txYear === year && txMonth === month
@@ -34,18 +39,23 @@ function normalizeTransaction(transaction) {
 
   const transactionDate = transaction.transactionDate ?? transaction.txnDate ?? ''
   const [date = '', rawTime = '00:00'] = transactionDate.split(/[T ]/)
-  const type = transaction.txnType === 'DEPOSIT' ? 'charge' : 'withdraw'
   const category = UI_CATEGORY_BY_API[transaction.category] ?? transaction.category ?? 'ETC'
   const rawAmount = Number(transaction.amount ?? 0)
-  const amount = type === 'charge' ? Math.abs(rawAmount) : -Math.abs(rawAmount)
+  // DEPOSIT(충전)과 REFUND(공동구매 참여취소 환불 등) 둘 다 잔액이 늘어나는 입금이라 금액
+  // 부호는 +로 같이 취급한다. type은 TYPE_BY_TXN_TYPE 기준으로 정해지는데, "애월지갑 충전"
+  // 문구·충전수단 표시는 REFUND에는 안 맞으므로 그건 isDeposit로 따로 따진다
+  const isDeposit = transaction.txnType === 'DEPOSIT'
+  const isIncoming = isDeposit || transaction.txnType === 'REFUND'
+  const type = TYPE_BY_TXN_TYPE[transaction.txnType] ?? 'withdraw'
+  const amount = isIncoming ? Math.abs(rawAmount) : -Math.abs(rawAmount)
   const categoryLabel = CATEGORY_LABELS[category] ?? '기타'
   const title = transaction.merchantName
-    || (type === 'charge' ? '애월지갑 충전' : transaction.memo)
+    || (isDeposit ? '애월지갑 충전' : transaction.memo)
     || '거래 내역'
-  const subtitle = type === 'charge'
+  const subtitle = isDeposit
     ? transaction.memo || '애월지갑 충전'
     : [categoryLabel, transaction.memo].filter(Boolean).join(' · ')
-  const chargeMethod = transaction.txnType === 'DEPOSIT'
+  const chargeMethod = isDeposit
     ? (transaction.memo?.includes('TossPayments') ? 'TossPayments' : '직접 충전')
     : normalizePaymentMethod(transaction.paymentMethod)
 
