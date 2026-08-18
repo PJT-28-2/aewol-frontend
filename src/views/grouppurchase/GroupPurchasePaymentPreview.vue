@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import AddressSearchLayer from '@/components/common/AddressSearchLayer.vue';
 import IconWallet from '@/components/common/icons/IconWallet.vue';
@@ -233,13 +233,19 @@ function confirmAddress() {
 
 const isPaying = ref(false);
 const paymentError = ref('');
+const paymentErrorRef = ref(null);
 
-// "결제하기" 버튼 클릭 시 배송지 이름·전화번호·상세주소가 모두 채워져 있는지 먼저 확인한다.
-// 회원 프로필에서 자동으로 채운 값 중 일부가 비어있는 채로 결제까지 진행되면 백엔드가
-// 필수 필드 누락으로 거부하므로, PIN 입력 전에 걸러서 빈칸을 채우도록 안내한다
+// paymentError는 화면 상단 쪽에 있어서, 결제 버튼(화면 하단 고정)까지 스크롤해 내려온
+// 상태에서 에러가 나면 안 보일 수 있다. 값이 채워질 때마다 그 문단으로 스크롤해 보여준다
+watch(paymentError, (value) => {
+  if (value) paymentErrorRef.value?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+});
+
+// 버튼은 :disabled="!isShippingInfoComplete"로 이미 막혀있어 정상 클릭으로는 여기 걸릴 일이
+// 없지만, PIN 시트 진입 직전 마지막 방어로 남겨둔다(handlePayment의 재검사와 같은 이유)
 function handleOpenPinSheet() {
   if (!isShippingInfoComplete.value) {
-    paymentError.value = '배송지 이름·전화번호·상세주소를 모두 입력해주세요.';
+    paymentError.value = '배송지 정보를 모두 입력해주세요.';
     return;
   }
   paymentError.value = '';
@@ -532,6 +538,8 @@ const isPinSheetOpen = ref(false);
       <!-- 결제 실패 안내 -->
       <p
         v-if="paymentError"
+        ref="paymentErrorRef"
+        role="alert"
         class="text-(length:--font-xs) text-(color:--color-danger-strong) text-center mb-(--space-3)"
       >
         {{ paymentError }}
@@ -549,21 +557,23 @@ const isPinSheetOpen = ref(false);
         충전하러 가기
       </AppButton>
 
-      <!-- 결제하기 버튼: 배송지 미등록 시 비활성화 -->
+      <!-- 결제하기 버튼: 배송지 미등록·정보 불완전 시 비활성화하고 무엇이 부족한지 라벨로 안내 -->
       <AppButton
         v-else
         variant="primary"
         size="lg"
         block
-        :disabled="!shippingAddress"
+        :disabled="!isShippingInfoComplete"
         :loading="isPaying"
         class="fixed bottom-[calc(var(--bottom-nav-height)+var(--space-7))] left-(--space-4) right-(--space-4) !w-auto !h-auto !min-h-(--control-height-lg) !py-(--space-3) text-center shadow-(--shadow-md)"
         @click="handleOpenPinSheet"
       >
         {{
-          shippingAddress
-            ? `${totalAmount.toLocaleString()}원 결제하기`
-            : '배송지를 먼저 등록해주세요'
+          !shippingAddress
+            ? '배송지를 먼저 등록해주세요'
+            : !isShippingInfoComplete
+              ? '배송지 정보를 모두 입력해주세요'
+              : `${totalAmount.toLocaleString()}원 결제하기`
         }}
       </AppButton>
 
