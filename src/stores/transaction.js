@@ -37,7 +37,10 @@ function normalizeTransaction(transaction) {
   const type = transaction.txnType === 'DEPOSIT' ? 'charge' : 'withdraw'
   const category = UI_CATEGORY_BY_API[transaction.category] ?? transaction.category ?? 'ETC'
   const rawAmount = Number(transaction.amount ?? 0)
-  const amount = type === 'charge' ? Math.abs(rawAmount) : -Math.abs(rawAmount)
+  // REFUND(공동구매 참여취소 환불 등)는 '충전'은 아니지만 잔액이 늘어나는 입금이라,
+  // 표시 부호만 DEPOSIT과 동일하게 +로 취급한다 (type/제목/충전수단 표시는 그대로 유지)
+  const isIncoming = transaction.txnType === 'DEPOSIT' || transaction.txnType === 'REFUND'
+  const amount = isIncoming ? Math.abs(rawAmount) : -Math.abs(rawAmount)
   const categoryLabel = CATEGORY_LABELS[category] ?? '기타'
   const title = transaction.merchantName
     || (type === 'charge' ? '애월지갑 충전' : transaction.memo)

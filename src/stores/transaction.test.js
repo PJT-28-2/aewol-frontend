@@ -109,6 +109,30 @@ describe('useTransactionStore', () => {
     })
   })
 
+  it('환불(REFUND) 거래는 charge가 아니어도 양수 금액으로 변환한다 — 공동구매 참여취소 환불 등', async () => {
+    transactionApi.getRecentTransactions.mockResolvedValue({
+      data: {
+        result: [{
+          ...backendTransaction,
+          transactionId: '21',
+          txnType: 'REFUND',
+          amount: 28000,
+          category: null,
+          merchantName: null,
+          memo: '공동구매 참여취소 환불',
+        }],
+      },
+    })
+
+    const store = useTransactionStore()
+    await store.fetchRecentTransactions()
+
+    expect(store.recentTransactions[0]).toMatchObject({
+      id: '21',
+      amount: 28000,
+    })
+  })
+
   it('기존 직접 충전 거래은 충전 수단을 직접 충전으로 표시한다', async () => {
     transactionApi.getTransaction.mockResolvedValue({
       data: {
