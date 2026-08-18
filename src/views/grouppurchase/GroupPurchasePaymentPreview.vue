@@ -106,6 +106,20 @@ const shortfallAmount = computed(
   () => totalAmount.value - paymentMethod.value.balance,
 );
 
+// 배송지가 등록돼 있어도 회원 프로필 자동 채움 값 중 일부(전화번호·상세주소 등)가 비어있을 수
+// 있어, join() 요청이 필수로 보내는 필드를 여기서 한 번 더 확인한다
+const isShippingInfoComplete = computed(() => {
+  const info = shippingAddress.value;
+  return Boolean(
+    info &&
+      info.recipientName?.trim() &&
+      info.recipientPhone?.trim() &&
+      info.zipCode?.trim() &&
+      info.address?.trim() &&
+      info.addressDetail?.trim(),
+  );
+});
+
 // 배송지 변경 바텀시트 상태 및 입력 폼 (현재 배송지 값으로 초기화)
 const isAddressSheetOpen = ref(false);
 const addressForm = ref({
@@ -220,6 +234,18 @@ function confirmAddress() {
 const isPaying = ref(false);
 const paymentError = ref('');
 
+// "결제하기" 버튼 클릭 시 배송지 이름·전화번호·상세주소가 모두 채워져 있는지 먼저 확인한다.
+// 회원 프로필에서 자동으로 채운 값 중 일부가 비어있는 채로 결제까지 진행되면 백엔드가
+// 필수 필드 누락으로 거부하므로, PIN 입력 전에 걸러서 빈칸을 채우도록 안내한다
+function handleOpenPinSheet() {
+  if (!isShippingInfoComplete.value) {
+    paymentError.value = '배송지 이름·전화번호·상세주소를 모두 입력해주세요.';
+    return;
+  }
+  paymentError.value = '';
+  isPinSheetOpen.value = true;
+}
+
 // 참여 신청 · 결제가 한 번에 처리됨. PinAuthSheet의 @complete에서 직접 호출되므로
 // 버튼 disabled와 별개로 진입 시점에 잔액/배송지 상태를 다시 검사한다
 async function handlePayment() {
@@ -229,8 +255,8 @@ async function handlePayment() {
     return;
   }
 
-  // PIN 시트가 열려 있는 동안 잔액이 바뀌거나 배송지가 없어졌을 수 있어 재검사
-  if (isBalanceInsufficient.value || !shippingAddress.value) {
+  // PIN 시트가 열려 있는 동안 잔액이 바뀌거나 배송지 정보가 불완전해졌을 수 있어 재검사
+  if (isBalanceInsufficient.value || !isShippingInfoComplete.value) {
     isPinSheetOpen.value = false;
     paymentError.value = '결제 정보가 변경됐어요. 다시 확인해주세요.';
     return;
@@ -239,9 +265,8 @@ async function handlePayment() {
   paymentError.value = '';
   isPaying.value = true;
   try {
-    // 수량은 quantity 쿼리 파라미터로 전달(백엔드가 현재 이것만 읽음).
-    // 배송지는 group_purchase_participant 컬럼 기준으로 본문에 실어 보내지만,
-    // 백엔드가 아직 본문을 처리하지 않아 실제로 저장되지는 않는다(백엔드 작업 필요)
+    // 수량은 quantity 쿼리 파라미터로, 배송지는 group_purchase_participant 컬럼 기준으로
+    // 본문에 실어 보낸다(백엔드가 body를 읽어 저장까지 함, 2026-08-18 확인)
     await groupPurchaseApi.join(route.params.gpId, product.value.purchaseQuantity, {
       recipientName: shippingAddress.value.recipientName,
       recipientPhone: shippingAddress.value.recipientPhone,
@@ -533,7 +558,7 @@ const isPinSheetOpen = ref(false);
         :disabled="!shippingAddress"
         :loading="isPaying"
         class="fixed bottom-[calc(var(--bottom-nav-height)+var(--space-7))] left-(--space-4) right-(--space-4) !w-auto !h-auto !min-h-(--control-height-lg) !py-(--space-3) text-center shadow-(--shadow-md)"
-        @click="isPinSheetOpen = true"
+        @click="handleOpenPinSheet"
       >
         {{
           shippingAddress
