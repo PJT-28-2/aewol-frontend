@@ -32,9 +32,10 @@ export const groupPurchaseApi = {
     return api.get('/group-purchase/my', { params })
   },
 
-  // 참여 신청과 결제가 한 번에 처리됨. 백엔드가 현재 quantity 쿼리 파라미터만 읽어서
+  // 참여 신청과 결제가 한 번에 처리됨. quantity는 쿼리 파라미터로 전달해
   // group_purchase_participant.purchase_quantity 컬럼에 저장함(DB에는 quantity 컬럼 없음, 쿼리 파라미터명만 quantity).
-  // 본문(shippingAddress 포함)은 아직 처리하지 않음 — 배송지 저장은 백엔드가 본문을 읽도록 구현되기 전까지는 반영되지 않는다
+  // 본문(recipientName/recipientPhone/zipCode/address/addressDetail)은 GroupPurchaseJoinRequest로
+  // 받아 같은 테이블에 저장함(2026-08-18 백엔드 확인)
   join(id, quantity, data) {
     return api.post(`/group-purchase/${id}/join`, data, { params: { quantity } })
   },
