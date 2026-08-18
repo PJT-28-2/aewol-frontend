@@ -273,6 +273,44 @@ describe('KakaoAdditionalInfoView SMS 인증', () => {
     expect(host.textContent).toContain(message)
   })
 
+  it('발송 400 응답의 Backend message를 우선 표시한다', async () => {
+    await inputValue(getPhoneInput(), '01012345678')
+    mocks.sendCode.mockRejectedValueOnce({
+      response: {
+        status: 400,
+        data: { message: '유효하지 않거나 만료된 카카오 가입 세션입니다.' },
+      },
+    })
+
+    getButton('인증번호 받기').click()
+    await flushView()
+
+    expect(host.textContent).toContain(
+      '유효하지 않거나 만료된 카카오 가입 세션입니다.',
+    )
+  })
+
+  it.each([
+    [
+      { message: '전화번호 인증이 완료되지 않았거나 만료되었습니다.' },
+      '전화번호 인증이 완료되지 않았거나 만료되었습니다.',
+    ],
+    [undefined, '인증번호를 확인해주세요.'],
+  ])(
+    '인증 400 응답에서 Backend message를 우선하고 없으면 fallback을 표시한다',
+    async (data, message) => {
+      await inputValue(getPhoneInput(), '01012345678')
+      await requestCode()
+      await inputValue(getCodeInput(), '123456')
+      mocks.verifyCode.mockRejectedValueOnce({ response: { status: 400, data } })
+
+      getButton('확인').click()
+      await flushView()
+
+      expect(host.textContent).toContain(message)
+    },
+  )
+
   it('전화번호 인증 전에는 주소와 약관 폼을 노출하지 않는다', () => {
     expect(getCompleteForm()).toBeNull()
     expect(getButton('가입 완료')).toBeUndefined()
@@ -451,6 +489,27 @@ describe('KakaoAdditionalInfoView SMS 인증', () => {
     await submitCompleteForm()
 
     expect(host.textContent).toContain(message)
+    expect(mocks.authStore.clearKakaoRegistration).not.toHaveBeenCalled()
+  })
+
+  it('가입 완료 400 응답의 Backend message를 우선 표시하고 가입 세션을 유지한다', async () => {
+    mocks.completeSignup.mockRejectedValueOnce({
+      response: {
+        status: 400,
+        data: { message: '전화번호 인증이 완료되지 않았거나 만료되었습니다.' },
+      },
+    })
+    await verifyPhone()
+    await selectAddress()
+    const [, terms, privacy] = getAgreementInputs()
+    await setCheckbox(terms)
+    await setCheckbox(privacy)
+
+    await submitCompleteForm()
+
+    expect(host.textContent).toContain(
+      '전화번호 인증이 완료되지 않았거나 만료되었습니다.',
+    )
     expect(mocks.authStore.clearKakaoRegistration).not.toHaveBeenCalled()
   })
 

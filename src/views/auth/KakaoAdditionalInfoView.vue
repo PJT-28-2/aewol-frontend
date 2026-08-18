@@ -142,6 +142,9 @@ const getSmsErrorMessage = (error, action) => {
     return '네트워크 연결을 확인한 뒤 다시 시도해주세요.'
   }
 
+  const serverMessage = error.response.data?.message
+  if (serverMessage != null) return serverMessage
+
   const status = error.response.status
   if (status === 400) {
     return action === 'send'
@@ -321,6 +324,9 @@ const getSignupErrorMessage = (error) => {
       ? '네트워크 연결을 확인한 뒤 다시 시도해주세요.'
       : '회원가입을 완료하지 못했습니다.'
   }
+
+  const serverMessage = error.response.data?.message
+  if (serverMessage != null) return serverMessage
 
   const status = error.response.status
   if (status === 400) return '입력한 주소와 약관 정보를 확인해주세요.'

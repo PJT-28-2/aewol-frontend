@@ -1,7 +1,11 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
+import {
+  KAKAO_ADDITIONAL_INFO_REQUIRED,
+  KAKAO_LOGIN_COMPLETE,
+  useAuthStore,
+} from '@/stores/auth'
 import { usePetStore } from '@/stores/pet'
 import AewolLogo from '@/components/common/AewolLogo.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
@@ -73,12 +77,12 @@ const handleKakaoCallback = async () => {
     // 백엔드가 카카오 인증 코드를 교환하고 애월 토큰을 발급하도록 요청한다.
     const result = await authStore.kakaoLogin(code)
 
-    if (result.authStatus === 'ADDITIONAL_INFO_REQUIRED') {
+    if (result.authStatus === KAKAO_ADDITIONAL_INFO_REQUIRED) {
       await router.replace('/signup/kakao/additional-info')
       return
     }
 
-    if (result.authStatus !== 'LOGIN_COMPLETE') {
+    if (result.authStatus !== KAKAO_LOGIN_COMPLETE) {
       throw new Error('카카오 로그인 응답을 확인할 수 없습니다.')
     }
 

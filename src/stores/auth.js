@@ -5,10 +5,10 @@ import { useAccountStore } from '@/stores/account'
 import router from '@/router'
 import { decodeJwtPayload } from '@/utils/jwt'
 
-const unwrapResult = (data) => data.result ?? data
+const unwrapResult = (data) => data?.result ?? data
 const KAKAO_REGISTRATION_TOKEN_KEY = 'kakaoRegistrationToken'
-const KAKAO_LOGIN_COMPLETE = 'LOGIN_COMPLETE'
-const KAKAO_ADDITIONAL_INFO_REQUIRED = 'ADDITIONAL_INFO_REQUIRED'
+export const KAKAO_LOGIN_COMPLETE = 'LOGIN_COMPLETE'
+export const KAKAO_ADDITIONAL_INFO_REQUIRED = 'ADDITIONAL_INFO_REQUIRED'
 
 const isValidToken = (token) =>
   typeof token === 'string' && token.trim().length > 0
@@ -122,7 +122,7 @@ export const useAuthStore = defineStore('auth', {
 
     async kakaoLogin(code) {
       const { data } = await authApi.kakaoLogin(code)
-      const result = data?.result ?? data
+      const result = unwrapResult(data)
 
       if (!result || typeof result !== 'object') {
         throw invalidKakaoLoginResponse()
@@ -145,7 +145,7 @@ export const useAuthStore = defineStore('auth', {
         ...signupData,
         registrationToken: this.registrationToken,
       })
-      const result = data?.result ?? data
+      const result = unwrapResult(data)
 
       assertKakaoLoginComplete(result)
       this.clearKakaoRegistration()
