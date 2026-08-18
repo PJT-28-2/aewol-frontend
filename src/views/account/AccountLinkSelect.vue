@@ -104,7 +104,7 @@ function selectBank(bankCode) {
         </div>
         <div
           v-if="!isEnabled(bank.code)"
-          class="absolute inset-0 bg-white/70"
+          class="absolute inset-0 bg-(--color-white)/70"
         />
       </button>
     </div>
