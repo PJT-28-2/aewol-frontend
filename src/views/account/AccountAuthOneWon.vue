@@ -20,6 +20,12 @@ if (!store.linking.bankCode) {
 
 const bankMeta = computed(() => getBankMeta(store.linking.bankCode));
 
+// Vue 템플릿의 v-if 표현식은 sourceType: "script"로 파싱돼서 import.meta를 템플릿에
+// 직접 쓰면 빌드가 깨진다("import.meta may appear only with 'sourceType: module'",
+// PR #301 CI 실패, 2026-08-19). script setup 쪽(모듈 스코프)에서 한 번 읽어서 상수로
+// 빼두고 템플릿에서는 이 값만 참조한다.
+const isDev = import.meta.env.DEV;
+
 // step 1: 계좌번호 입력 (Figma 목업에 없는 보완 단계)
 // step 2: 1원 인증 - 입금자명(한글, CODEF inPrintType=1) 입력 (RF-CM 목업 그대로)
 const step = ref('accountNumber');
@@ -385,7 +391,7 @@ async function submitVerification() {
            잘못 내려보내도(defense-in-depth) 빌드된 배포본에서는 절대 노출되지 않게 한다
            (PR #301 리뷰 반영, 2026-08-19). -->
       <div
-        v-if="import.meta.env.DEV && store.linking.depositorNameForTest"
+        v-if="isDev && store.linking.depositorNameForTest"
         class="flex items-center gap-(--space-2) p-3 rounded-(--radius-lg) bg-(--color-icon-yellow-soft) border border-(--color-icon-yellow) mb-(--space-2)"
       >
         <IconInfo
