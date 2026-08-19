@@ -7,6 +7,7 @@ import BottomSheet from '@/components/common/BottomSheet.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import PinAuthSheet from '@/components/common/PinAuthSheet.vue';
 import StatusVisual from '@/components/common/StatusVisual.vue';
+import GroupPurchaseProgressBar from '@/components/grouppurchase/GroupPurchaseProgressBar.vue';
 import {
   MOCK_GROUP_PURCHASE_STATUS,
   MOCK_GROUP_PURCHASE_STATUS_ADMIN_BY_GP_ID,
@@ -286,14 +287,7 @@ function confirmCancelSuccess() {
         >
           참여 현황
         </h2>
-        <div
-          class="h-(--size-progress-bar) rounded-full bg-(--color-border) overflow-hidden mb-(--space-2)"
-        >
-          <div
-            class="h-full rounded-full bg-(--color-gold)"
-            :style="{ width: `${progressPercent}%` }"
-          />
-        </div>
+        <GroupPurchaseProgressBar :percent="progressPercent" />
         <div class="flex items-center justify-between">
           <p class="text-(length:--font-xs) text-(color:--color-slate-muted)">
             {{ status.currentQuantity }}/{{ status.targetQuantity }}개 구매 중
