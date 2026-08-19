@@ -593,11 +593,27 @@ const authRoutes = [
 ];
 
 /* ------------------------------------------------------------------ */
+/*  Not found (catch-all)                                             */
+/* ------------------------------------------------------------------ */
+const notFoundRoutes = [
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'NotFound',
+    component: () => import('@/views/NotFoundView.vue'),
+    meta: { layout: 'DefaultLayout', hideBottomNav: true },
+  },
+];
+
+/* ------------------------------------------------------------------ */
 /*  Router instance                                                   */
 /* ------------------------------------------------------------------ */
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
-  routes: [...publicRoutes, ...authRoutes],
+  // catch-all은 항상 마지막이어야 한다. 앞에 두면 뒤의 라우트가 전부 가려진다.
+  //
+  // S3 정적 호스팅 + CloudFront 구성에서는 존재하지 않는 경로도 CloudFront가
+  // index.html을 돌려주므로(SPA 폴백), 라우터에 대응 라우트가 없으면 흰 화면만 남는다.
+  routes: [...publicRoutes, ...authRoutes, ...notFoundRoutes],
   scrollBehavior(to, from, savedPosition) {
     // 뒤로/앞으로 가기는 이전 스크롤 위치를 복원하고, 새 이동은 맨 위에서 시작한다.
     if (savedPosition) {
