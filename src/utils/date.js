@@ -40,17 +40,20 @@ export function getDaysUntil(targetDate, now = new Date()) {
 }
 
 /**
- * 마감일까지 남은 일수를 "D-N" 라벨로, 마감 당일이거나 지났으면 "마감"으로 변환한다.
- * 표시(display) 전용이며 날짜 단위로만 비교하므로, 실제 마감 시각과의 정확한 선후 비교(버튼
- * 활성화 등)에는 getDeadlineTimestamp를 사용해야 한다.
+ * 마감일까지 남은 일수를 "D-N" 라벨로, 마감 당일이면 "D-DAY"로, 마감일이 지났으면
+ * "마감"으로 변환한다. 표시(display) 전용이며 날짜 단위로만 비교하므로, 실제 마감
+ * 시각과의 정확한 선후 비교(버튼 활성화 등)에는 getDeadlineTimestamp를 사용해야 한다
+ * (마감 당일은 이 라벨이 "D-DAY"를 보여주는 동안에도 23:59:59까지는 아직 유효하다).
  *
  * @param {string} deadline `YYYY-MM-DD`로 시작하는 날짜(시간) 문자열
  * @param {Date} [now] 기준 시각(테스트/반응형 갱신용, 기본값은 호출 시점의 현재 시각)
- * @returns {string} `D-N` 또는 `마감`
+ * @returns {string} `D-N`, `D-DAY`, 또는 `마감`
  */
 export function formatDDayLabel(deadline, now = new Date()) {
   const diffDays = getDaysUntil(deadline, now)
-  return diffDays <= 0 ? '마감' : `D-${diffDays}`
+  if (diffDays > 0) return `D-${diffDays}`
+  if (diffDays === 0) return 'D-DAY'
+  return '마감'
 }
 
 /**
