@@ -87,7 +87,7 @@ const handleWithdraw = async () => {
       </li>
       <li class="flex items-center gap-[9px]">
         <span class="size-[6px] shrink-0 rounded-full bg-(--color-danger-strong)" />
-        <span>가족 공유(공동양육) 연결 정보</span>
+        <span>가족 공유(공동육아) 연결 정보</span>
       </li>
       <li class="flex items-center gap-[9px]">
         <span class="size-[6px] shrink-0 rounded-full bg-(--color-danger-strong)" />

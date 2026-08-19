@@ -100,7 +100,7 @@ export const useShareStore = defineStore('share', {
         this.members = []
         this.contributions = []
         this.activities = []
-        this.error = errorMessage(error, '공동 육아 정보를 불러오지 못했어요. 다시 시도해 주세요.')
+        this.error = errorMessage(error, '공동육아 정보를 불러오지 못했어요. 다시 시도해 주세요.')
       } finally {
         if (requestId === this.sharedCareRequestId) this.isLoading = false
       }

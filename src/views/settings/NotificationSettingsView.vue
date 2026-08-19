@@ -21,7 +21,7 @@ const notificationSettings = ref([
     id: 'family-share',
     field: 'familyShareEnabled',
     title: '가족 공유 알림',
-    description: '공동양육 가족의 입출금·버킷 변경 알림',
+    description: '공동육아 가족의 입출금·버킷 변경 알림',
     isEnabled: false,
   },
   {
