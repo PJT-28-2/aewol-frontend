@@ -86,7 +86,10 @@ async function loadPaymentMethod() {
     if (profile?.address) {
       shippingAddress.value = {
         recipientName: profile.name,
-        recipientPhone: profile.phone,
+        // 프로필 API는 숫자만 내려주는데(예: "01012345678"), 화면 표시와 "배송지 변경" 폼
+        // 초기값 둘 다 이 값을 그대로 쓰므로 여기서 한 번만 하이픈을 붙여두면 어디서든
+        // 따로 포맷팅할 필요가 없다. 백엔드로 보낼 때는 handlePayment에서 다시 숫자만 추출한다
+        recipientPhone: profile.phone ? formatPhoneAsTyped(profile.phone) : '',
         zipCode: profile.zipCode,
         address: profile.address,
         addressDetail: profile.addressDetail,
@@ -297,10 +300,12 @@ async function handlePayment(password) {
   isPaying.value = true;
   try {
     // 수량은 quantity 쿼리 파라미터로, 배송지·결제 비밀번호는 본문에 실어 보낸다
-    // (백엔드가 body를 읽어 GroupPurchaseJoinRequest로 저장·검증함, 2026-08-18 확인)
+    // (백엔드가 body를 읽어 GroupPurchaseJoinRequest로 저장·검증함, 2026-08-18 확인).
+    // recipientPhone은 화면 표시용으로 하이픈이 붙어있으니(자동 채움/직접 입력 둘 다),
+    // 저장 형식은 항상 숫자만으로 통일되도록 여기서 하이픈을 다시 제거해서 보낸다
     await groupPurchaseApi.join(route.params.gpId, product.value.purchaseQuantity, {
       recipientName: shippingAddress.value.recipientName,
-      recipientPhone: shippingAddress.value.recipientPhone,
+      recipientPhone: normalizePhoneDigits(shippingAddress.value.recipientPhone),
       zipCode: shippingAddress.value.zipCode,
       address: shippingAddress.value.address,
       addressDetail: shippingAddress.value.addressDetail,
