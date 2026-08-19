@@ -4,12 +4,15 @@ import api from './index'
  * 홈 AI 인사이트 카드 조회
  * GET /api/home/insights?petId={petId}
  *
- * result: [{ type, headline, body, ctaLabel, ctaPath, fallback, generatedAt }]
+ * result: [{ type, headline, body, ctaLabel, ctaPath, projection, fallback, generatedAt }]
  *
- * - type      SUPPORT | SPENDING | CARE | DONATION. 회원당 종류별 1건이다.
- * - fallback  true면 LLM 생성이 아니라 서버가 데이터로 조립한 문구다. 화면에서
- *             'AI 요약' 표기를 떼는 데 쓴다(생성이 아닌데 그렇게 적으면 거짓말이다).
- * - ctaPath   이동 경로를 서버가 준다. 프론트가 type별로 하드코딩하지 않는다.
+ * - type       SUPPORT | SPENDING | CARE | DONATION. 회원당 종류별 1건이다.
+ * - fallback   true면 LLM 생성이 아니라 서버가 데이터로 조립한 문구다. 화면에서
+ *              'AI 요약' 표기를 떼는 데 쓴다(생성이 아닌데 그렇게 적으면 거짓말이다).
+ * - ctaPath    이동 경로를 서버가 준다. 프론트가 type별로 하드코딩하지 않는다.
+ * - projection 지금 추세가 이어지면 어떻게 되는지 한 줄. 서버가 자바에서 계산한다.
+ *              근거가 부족하면(관측 기간이 짧으면) null이라 화면에서 자리가 사라진다.
+ *              지나간 일을 요약한 body와 신뢰도가 달라 '전망'으로 따로 떼어 그린다.
  *
  * 서버가 회원·카드별로 캐시하고 배치가 새벽에 미리 채운다. 보여줄 데이터가 없는
  * 카드는 응답에서 빠지므로 프론트는 내려온 것만 그리면 된다.
