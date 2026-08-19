@@ -37,6 +37,14 @@ describe('getDeadlineTimestamp', () => {
     expect(getDeadlineTimestamp('2026-02-31')).toBeNaN()
   })
 
+  // Date는 25시나 60분처럼 범위를 벗어난 값을 자동으로 다음 날/다음 시간으로 보정해버리므로,
+  // 날짜와 마찬가지로 시간도 범위를 벗어나면 보정 없이 NaN을 반환해야 한다
+  it('시/분/초가 범위를 벗어나면 NaN을 반환한다', () => {
+    expect(getDeadlineTimestamp('2026-08-19 25:00:00')).toBeNaN()
+    expect(getDeadlineTimestamp('2026-08-19 00:60:00')).toBeNaN()
+    expect(getDeadlineTimestamp('2026-08-19 00:00:60')).toBeNaN()
+  })
+
   it('값이 없으면 NaN을 반환한다', () => {
     expect(getDeadlineTimestamp(null)).toBeNaN()
     expect(getDeadlineTimestamp(undefined)).toBeNaN()

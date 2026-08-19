@@ -67,9 +67,10 @@ export function formatDDayLabel(deadline, now = new Date()) {
  * 형식(비표준 포맷)의 해석이 브라우저마다 다를 수 있어(예: Safari에서 실패), 연/월/일/시/분/초를
  * 각각 뽑아 로컬 컴포넌트로 조립한다.
  *
- * new Date(...)에 연/월/일을 그대로 넘기면 "2026-02-31"처럼 존재하지 않는 날짜를 3월 3일로
- * 자동 보정해버려 API가 잘못된 값을 내려도 그럴듯한 타임스탬프가 나온다. isValidCalendarDate로
- * 먼저 걸러서, 존재하지 않는 날짜는 보정 없이 NaN을 반환하도록 한다.
+ * new Date(...)에 연/월/일/시/분/초를 그대로 넘기면 "2026-02-31"이나 "25:00:00"처럼 존재하지
+ * 않는 값을 다음 달/다음 날로 자동 보정해버려 API가 잘못된 값을 내려도 그럴듯한 타임스탬프가
+ * 나온다. 날짜는 isValidCalendarDate로, 시간은 각 필드의 범위(0-23시/0-59분초)로 먼저 걸러서,
+ * 존재하지 않는 값은 보정 없이 NaN을 반환하도록 한다.
  *
  * @param {string | null | undefined} deadline `YYYY-MM-DD`, `YYYY-MM-DDTHH:mm:ss`,
  *   또는 `YYYY-MM-DD HH:mm:ss` 형식의 마감 문자열
@@ -83,8 +84,12 @@ export function getDeadlineTimestamp(deadline) {
 
   const timeMatch = /^(\d{2}):(\d{2}):(\d{2})/.exec(deadline.slice(11))
   if (timeMatch) {
-    const [, hour, minute, second] = timeMatch
-    return new Date(year, month - 1, day, Number(hour), Number(minute), Number(second)).getTime()
+    const [, hourText, minuteText, secondText] = timeMatch
+    const hour = Number(hourText)
+    const minute = Number(minuteText)
+    const second = Number(secondText)
+    if (hour > 23 || minute > 59 || second > 59) return NaN
+    return new Date(year, month - 1, day, hour, minute, second).getTime()
   }
   return new Date(year, month - 1, day, 23, 59, 59, 999).getTime()
 }
