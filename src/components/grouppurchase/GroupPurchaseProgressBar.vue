@@ -34,7 +34,7 @@ watch(() => props.percent, (next) => {
     class="h-(--size-progress-bar) rounded-full bg-(--color-border) overflow-hidden mb-(--space-2)"
   >
     <div
-      class="h-full rounded-full bg-(--color-gold) transition-[width] duration-700 ease-out"
+      class="h-full rounded-full bg-(--color-gold) transition-[width] duration-1000 ease-out"
       :style="{ width: `${displayPercent}%` }"
     />
   </div>
