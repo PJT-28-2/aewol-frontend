@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatDDayLabel } from './date'
+import { formatDDayLabel, getDeadlineTimestamp } from './date'
 
 describe('formatDDayLabel', () => {
   it('마감일 이전에는 D-N을 반환한다', () => {
@@ -14,5 +14,32 @@ describe('formatDDayLabel', () => {
   it('마감일 다음 날부터는 마감을 반환한다', () => {
     expect(formatDDayLabel('2026-08-19', new Date('2026-08-20T00:00:00'))).toBe('마감')
     expect(formatDDayLabel('2026-08-19', new Date('2026-08-25T00:00:00'))).toBe('마감')
+  })
+})
+
+describe('getDeadlineTimestamp', () => {
+  it('날짜만 있으면 그날 23:59:59.999를 반환한다', () => {
+    expect(getDeadlineTimestamp('2026-08-19')).toBe(new Date(2026, 7, 19, 23, 59, 59, 999).getTime())
+  })
+
+  it('T로 구분된 시간이 있으면 그 시각을 그대로 반환한다', () => {
+    expect(getDeadlineTimestamp('2026-08-19T15:00:00')).toBe(new Date(2026, 7, 19, 15, 0, 0).getTime())
+  })
+
+  // 백엔드(Jackson jackson.date-format: yyyy-MM-dd HH:mm:ss)는 LocalDateTime을 T가 아니라
+  // 공백으로 구분해서 내려준다 — 이 형식을 그냥 날짜만 있는 값으로 오인해 시각을 버리고
+  // 23:59:59.999로 뭉개버리면 안 된다(2026-08-19 리뷰에서 지적된 케이스)
+  it('공백으로 구분된 시간(백엔드 응답 형식)도 그 시각을 그대로 반환한다', () => {
+    expect(getDeadlineTimestamp('2026-08-19 15:00:00')).toBe(new Date(2026, 7, 19, 15, 0, 0).getTime())
+  })
+
+  it('존재하지 않는 날짜는 NaN을 반환한다', () => {
+    expect(getDeadlineTimestamp('2026-02-31')).toBeNaN()
+  })
+
+  it('값이 없으면 NaN을 반환한다', () => {
+    expect(getDeadlineTimestamp(null)).toBeNaN()
+    expect(getDeadlineTimestamp(undefined)).toBeNaN()
+    expect(getDeadlineTimestamp('')).toBeNaN()
   })
 })
