@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import AppButton from '@/components/common/AppButton.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
+import GroupPurchaseProgressBar from '@/components/grouppurchase/GroupPurchaseProgressBar.vue';
 import IconPlus from '@/components/common/icons/IconPlus.vue';
 import IconMinus from '@/components/common/icons/IconMinus.vue';
 import { MOCK_GROUP_PURCHASE_DETAIL } from '@/mocks/groupPurchase';
@@ -269,14 +270,7 @@ function goToPaymentPreview() {
           </p>
         </div>
         <!-- 진행률 바도 선택 수량 반영 기준으로 실시간 갱신 -->
-        <div
-          class="h-(--size-progress-bar) rounded-full bg-(--color-border) overflow-hidden mb-(--space-2)"
-        >
-          <div
-            class="h-full rounded-full bg-(--color-gold)"
-            :style="{ width: `${progressPercent}%` }"
-          />
-        </div>
+        <GroupPurchaseProgressBar :percent="progressPercent" />
         <div class="flex items-center justify-between">
           <p
             class="text-(length:--font-xs) text-(color:--color-slate-muted)"
