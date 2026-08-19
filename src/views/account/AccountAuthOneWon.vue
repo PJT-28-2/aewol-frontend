@@ -6,6 +6,7 @@ import { getBankMeta } from '@/utils/bankMeta';
 import { formatCountdown } from '@/utils/date';
 import AppButton from '@/components/common/AppButton.vue';
 import BankBadge from '@/components/common/BankBadge.vue';
+import IconInfo from '@/components/common/icons/IconInfo.vue';
 import IconLock from '@/components/common/icons/IconLock.vue';
 
 const router = useRouter();
@@ -376,6 +377,23 @@ async function submitVerification() {
       <p class="text-(length:--font-sm) text-(color:--color-gray-500) leading-relaxed mb-(--space-2)">
         은행 앱 알림이나 입출금 문자에서<br>입금자명(예: 푸른애월)의 앞 {{ depositorNameLength }}글자를 확인할 수 있어요
       </p>
+
+      <!-- local/test/dev 환경에서만 백엔드가 내려주는 값이에요(운영에서는 항상 null이라
+           이 블록 자체가 안 보여요). CODEF 데모 서버라 실제 입금 알림이 없어서, 이 값이
+           없으면 서버 로그 접근 권한이 없는 이상 1원 인증을 끝낼 방법이 없었어요(2026-08-19). -->
+      <div
+        v-if="store.linking.depositorNameForTest"
+        class="flex items-center gap-(--space-2) p-3 rounded-(--radius-lg) bg-(--color-icon-yellow-soft) border border-(--color-icon-yellow) mb-(--space-2)"
+      >
+        <IconInfo
+          :size="14"
+          color="var(--color-icon-yellow)"
+        />
+        <span class="text-(length:--font-sm) text-(color:--color-navy)">
+          테스트 환경 정답: <strong class="font-bold">{{ store.linking.depositorNameForTest }}</strong>
+        </span>
+      </div>
+
       <p
         v-if="verifyError"
         class="text-(length:--font-sm) text-(color:--color-danger-strong) mb-(--space-2)"
