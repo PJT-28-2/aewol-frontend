@@ -14,6 +14,7 @@ import {
 import { USE_MOCK_DATA } from '@/mocks/config';
 import { groupPurchaseApi } from '@/api/groupPurchase';
 import { formatArrivalDateLabel, formatDDayLabel, getDeadlineTimestamp } from '@/utils/date';
+import { goBackOr } from '@/utils/navigation';
 import { useDeadlineTimer } from '@/composables/useDeadlineTimer';
 import { useMidnightTick } from '@/composables/useMidnightTick';
 import { useAuthStore } from '@/stores/auth';
@@ -72,20 +73,10 @@ const isFromMyPage = computed(() => route.query.from === 'my' && !authStore.isAd
 const backTarget = computed(() => (isFromMyPage.value ? '/group-purchase/my' : '/group-purchase'));
 const backLabel = computed(() => (isFromMyPage.value ? '마이페이지로 돌아가기' : '리스트로 돌아가기'));
 
-// 이 화면은 목록/마이페이지에서 push로 들어온 상태(히스토리: [...,목록/마이페이지, status])다.
-// 그냥 router.replace(backTarget)만 쓰면 이 status 항목이 목적지로 덮어써져서
-// [...,목록/마이페이지, 목록/마이페이지]처럼 바로 아래에 있던 것과 중복된 항목이 하나 더
-// 쌓인다 — 그 상태로 브라우저/제스처 뒤로가기를 누르면 중복된 항목으로 이동할 뿐이라
-// 화면이 안 바뀐 것처럼 보이고, 취소를 여러 번 반복할수록 계속 쌓인다.
-// history.state.back(Vue Router가 채워주는 네이티브 히스토리 포인터)이 있으면 실제로
-// "뒤로" 이동해서 이미 있는 항목을 재사용하고, 없는 경우(직접 URL 접속 등 되돌아갈 곳이
-// 없을 때)에만 목적지로 replace한다
+// 이 화면은 목록/마이페이지에서 push로 들어온 상태다 — goBackOr가 중복 히스토리 항목이
+// 쌓이지 않도록 처리해준다(자세한 이유는 utils/navigation.js 참고)
 function goBack() {
-  if (window.history.state?.back != null) {
-    router.back();
-  } else {
-    router.replace(backTarget.value);
-  }
+  goBackOr(router, backTarget.value);
 }
 
 // 백엔드 enum(OPEN/COMPLETED/FAILED/CANCELLED)을 그대로 키로 쓴다 — 별도 내부 어휘를 두지 않아서
