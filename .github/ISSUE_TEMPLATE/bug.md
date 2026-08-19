@@ -1,8 +1,8 @@
 ---
-name: 버그 리포트
+name: 버그 수정
 about: 버그를 보고합니다.
-title: "[Bug] "
-labels: bug
+title: "[Fix] "
+labels: fix
 assignees: ''
 ---
 
@@ -27,9 +27,3 @@ assignees: ''
 ## 스크린샷 / 로그
 
 (선택 사항)
-
-## 환경
-
-- OS:
-- Browser:
-- Version:

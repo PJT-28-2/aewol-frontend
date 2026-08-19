@@ -1,0 +1,144 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: "ko-KR"
+tone_instructions: "한국어로 간결하고 실무적으로 리뷰한다. 사소한 취향보다 버그, 인증 흐름, API 연동, 상태 관리, 모바일 UI 깨짐, 테스트 누락을 우선한다."
+
+reviews:
+  profile: "chill"
+  request_changes_workflow: false
+  high_level_summary: true
+  high_level_summary_in_walkthrough: true
+  poem: false
+  review_status: true
+  review_details: true
+  commit_status: true
+  fail_commit_status: false
+  collapse_walkthrough: false
+  changed_files_summary: true
+  sequence_diagrams: false
+  estimate_code_review_effort: true
+  assess_linked_issues: true
+  related_issues: true
+  related_prs: true
+  suggested_labels: true
+  auto_apply_labels: false
+  suggested_reviewers: false
+  enable_prompt_for_ai_agents: true
+  path_filters:
+    - "!**/.DS_Store"
+    - "!**/node_modules/**"
+    - "!**/dist/**"
+    - "!**/coverage/**"
+    - "!**/*.log"
+    - "!**/*.png"
+    - "!**/*.jpg"
+    - "!**/*.jpeg"
+    - "!**/*.gif"
+    - "!**/*.webp"
+    - "!**/*.pdf"
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - "develop"
+      - "main"
+    auto_incremental_review: true
+    auto_pause_after_reviewed_commits: 5
+    ignore_title_keywords:
+      - "WIP"
+      - "DO NOT MERGE"
+      - "[skip review]"
+    ignore_usernames:
+      - "dependabot[bot]"
+      - "renovate[bot]"
+      - "github-actions[bot]"
+  labeling_instructions:
+    - label: "page"
+      instructions: "Vue view, route, layout 변경에 적용한다."
+    - label: "component"
+      instructions: "재사용 컴포넌트, props, emits, slot, UI 상태 변경에 적용한다."
+    - label: "store"
+      instructions: "Pinia store, state, action, getter 변경에 적용한다."
+    - label: "api"
+      instructions: "Axios API module, endpoint, interceptor, error handling 변경에 적용한다."
+    - label: "ui"
+      instructions: "CSS, 디자인 토큰, 반응형, 접근성 변경에 적용한다."
+    - label: "auth"
+      instructions: "로그인, 회원가입, OAuth callback, token refresh, route guard 변경에 적용한다."
+    - label: "docs"
+      instructions: "README, GitHub 템플릿, 문서 변경에 적용한다."
+  path_instructions:
+    - path: "src/router/**"
+      instructions: |
+        - Vue Router 설정이다. 인증 가드, route meta, redirect, token 만료 흐름을 확인한다.
+        - 보호 라우트는 미인증 접근 시 /login으로 일관되게 이동해야 한다.
+    - path: "src/stores/**"
+      instructions: |
+        - Pinia 상태 관리다. action의 비동기 처리, 로딩/에러 상태, 토큰 저장 방식, 상태 초기화를 확인한다.
+        - API 실패 시 사용자에게 보여줄 상태가 누락되지 않았는지 확인한다.
+    - path: "src/api/**"
+      instructions: |
+        - Axios API 모듈이다. endpoint, baseURL, JWT interceptor, refresh token 재시도 루프 가능성을 확인한다.
+        - 백엔드 API 명세와 request/response 형식이 맞는지 확인한다.
+    - path: "src/views/**"
+      instructions: |
+        - 페이지 컴포넌트다. 모바일 우선 레이아웃, 로딩/빈 상태/에러 상태, 인증 필요 상태를 확인한다.
+        - 지갑/거래/보험/공동양육 화면은 금액 표기와 상태 전이가 사용자에게 명확해야 한다.
+    - path: "src/components/**"
+      instructions: |
+        - 재사용 컴포넌트다. props, emits, slot, disabled/loading/error 상태, keyboard 접근성을 확인한다.
+        - 공통 컴포넌트는 기존 디자인 토큰과 스타일 규칙을 따라야 한다.
+    - path: "src/assets/styles/**"
+      instructions: |
+        - 디자인 토큰과 전역 스타일이다. 색상, spacing, radius, typography 변경이 전체 UI에 미치는 영향을 확인한다.
+    - path: ".github/**"
+      instructions: |
+        - CI와 템플릿 문법을 확인한다.
+        - Node 20, npm ci, npm run build/lint 흐름과 맞는지 확인한다.
+  pre_merge_checks:
+    title:
+      mode: "warning"
+      requirements: "PR 제목은 'feat: 한글 설명', 'fix: 한글 설명'처럼 소문자 type과 한글 설명 형식을 따른다."
+    description:
+      mode: "warning"
+    issue_assessment:
+      mode: "warning"
+  tools:
+    eslint:
+      enabled: true
+    yamllint:
+      enabled: true
+    actionlint:
+      enabled: true
+    markdownlint:
+      enabled: true
+    biome:
+      enabled: true
+    oxc:
+      enabled: true
+    gitleaks:
+      enabled: true
+    trufflehog:
+      enabled: true
+    checkov:
+      enabled: true
+    trivy:
+      enabled: true
+
+chat:
+  auto_reply: true
+
+knowledge_base:
+  code_guidelines:
+    enabled: true
+    filePatterns:
+      - "README.md"
+  pull_requests:
+    scope: "local"
+  issues:
+    scope: "local"
+  automatic_repository_linking: false
+  linked_repositories:
+    - repository: "PJT-28-2/aewol-backend"
+      instructions: "애월 백엔드 저장소다. 프론트 API module, request/response, 인증 만료 처리, endpoint 경로가 백엔드 API와 호환되는지 확인한다."
+    - repository: "PJT-28-2/aewol"
+      instructions: "애월 통합 저장소다. 프로젝트 공통 문서, GitHub 템플릿, docker-compose, 전체 구조 기준을 포함한다."

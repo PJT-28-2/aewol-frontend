@@ -1,0 +1,135 @@
+# main에 머지되면 SPA를 빌드해 S3에 올리고 CloudFront 캐시를 무효화한다.
+#
+# 설계 메모
+#   - AWS 인증은 OIDC로 한다. 장기 액세스 키를 GitHub Secrets에 두지 않는다.
+#   - VITE_* 값은 빌드 시점에 번들에 문자열로 박힌다. 즉 브라우저에서 전부 보이므로
+#     Secrets가 아니라 Variables에 둔다. 숨겨서 지키는 게 아니라 각 콘솔의
+#     허용 도메인 설정으로 지킨다(README·docs 참고).
+#   - 정적 자산과 index.html의 캐시 정책을 다르게 준다. 아래 배포 스텝 주석 참고.
+name: Frontend CD
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# 배포가 겹치면 두 개의 s3 sync가 같은 버킷에서 부딪힌다. 취소하지 않고 줄을 세운다.
+concurrency:
+  group: deploy-frontend-prod
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: ap-northeast-2
+  S3_BUCKET: aewol-prod-596617418243-ap-northeast-2-an
+  CLOUDFRONT_ID: E2AXIIBUB4L66H
+  ROLE_ARN: arn:aws:iam::596617418243:role/aewol-frontend-github-actions
+
+permissions:
+  contents: read
+  id-token: write   # OIDC 토큰 발급에 필요하다
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 의존성 설치
+        run: npm ci
+
+      # PR 단계의 CI에서 이미 돌지만, main에 직접 들어온 커밋도 있을 수 있어
+      # 운영에 나가기 전 마지막으로 한 번 더 확인한다.
+      - name: 테스트
+        run: npm run test:run
+
+      - name: 빌드
+        env:
+          VITE_KAKAO_REST_API_KEY: ${{ vars.VITE_KAKAO_REST_API_KEY }}
+          VITE_KAKAO_MAP_KEY: ${{ vars.VITE_KAKAO_MAP_KEY }}
+          VITE_TOSS_CLIENT_KEY: ${{ vars.VITE_TOSS_CLIENT_KEY }}
+        run: |
+          set -euo pipefail
+          # 값이 비면 카카오 로그인·지도·결제가 조용히 죽는다. 화면은 뜨는데 버튼만
+          # 동작하지 않아 원인을 찾기 어려우므로 빌드 단계에서 먼저 막는다.
+          MISSING=""
+          [ -n "${VITE_KAKAO_REST_API_KEY}" ] || MISSING="$MISSING VITE_KAKAO_REST_API_KEY"
+          [ -n "${VITE_KAKAO_MAP_KEY}" ]      || MISSING="$MISSING VITE_KAKAO_MAP_KEY"
+          [ -n "${VITE_TOSS_CLIENT_KEY}" ]    || MISSING="$MISSING VITE_TOSS_CLIENT_KEY"
+          if [ -n "$MISSING" ]; then
+            echo "다음 저장소 Variables가 비어 있습니다:$MISSING" >&2
+            echo "Settings > Secrets and variables > Actions > Variables 에서 채우세요." >&2
+            exit 1
+          fi
+          npm run build
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: 정적 자산 업로드
+        run: |
+          set -euo pipefail
+          # index.html보다 자산을 먼저 올린다. 순서가 바뀌면 새 index.html이 아직
+          # 없는 파일을 가리키는 순간이 생긴다.
+          #
+          # 파일명에 해시가 들어가므로 내용이 바뀌면 이름도 바뀐다. 따라서 1년 캐시에
+          # immutable을 붙여도 안전하고, 재방문 시 자산을 다시 받지 않는다.
+          #
+          # --delete를 쓰지 않는 이유: 이 앱은 라우트를 전부 동적 import로 나눠서,
+          # 배포 순간 열려 있던 세션이 나중에 옛 청크를 요청한다. 지우면 그 사용자는
+          # 화면 이동에서 404를 맞는다. 남는 파일의 보관 비용보다 그 편이 비싸다.
+          aws s3 sync dist/ "s3://${S3_BUCKET}/" \
+            --exclude index.html \
+            --cache-control 'public, max-age=31536000, immutable' \
+            --only-show-errors
+
+      - name: index.html 업로드
+        run: |
+          set -euo pipefail
+          # index.html은 이름이 고정이라 캐시되면 새 배포가 사용자에게 도달하지 않는다.
+          # 항상 재검증하도록 no-cache를 준다(no-store가 아니라 no-cache라서,
+          # 변경이 없으면 304로 끝나 트래픽은 거의 늘지 않는다).
+          aws s3 cp dist/index.html "s3://${S3_BUCKET}/index.html" \
+            --cache-control 'no-cache' \
+            --content-type 'text/html; charset=utf-8' \
+            --only-show-errors
+
+      - name: CloudFront 캐시 무효화
+        run: |
+          set -euo pipefail
+          # 엣지에 남은 index.html만 지우면 된다. 자산은 해시 이름이라 무효화가 필요 없고,
+          # /* 로 전부 지우면 무효화 무료 한도(월 1000경로)를 빠르게 소진한다.
+          ID=$(aws cloudfront create-invalidation \
+            --distribution-id "$CLOUDFRONT_ID" \
+            --paths '/index.html' '/' \
+            --query 'Invalidation.Id' --output text)
+          echo "무효화 요청: $ID"
+          aws cloudfront wait invalidation-completed \
+            --distribution-id "$CLOUDFRONT_ID" --id "$ID"
+          echo "무효화 완료"
+
+      - name: 배포 확인
+        run: |
+          set -euo pipefail
+          URL=https://d2wzfpczojllq5.cloudfront.net
+          for i in $(seq 1 10); do
+            if curl -fsS --max-time 10 "$URL" | grep -q '<div id="app">'; then
+              echo "SPA 응답 확인"
+              # SPA 폴백이 살아있는지도 본다. 이게 깨지면 새로고침할 때만 흰 화면이 난다.
+              CODE=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "$URL/settings")
+              echo "존재하지 않는 직접 접근 경로 응답 코드: $CODE"
+              [ "$CODE" = "200" ] || { echo "SPA 폴백이 동작하지 않습니다." >&2; exit 1; }
+              echo "배포 완료" >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            sleep 6
+          done
+          echo "CloudFront를 통해 정상 응답을 받지 못했습니다." >&2
+          exit 1
