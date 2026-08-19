@@ -170,6 +170,16 @@ async function handleApply() {
   router.replace(nextPath.value)
 }
 
+/**
+ * 사진 없이 넘어가면 생성 API를 부르지 않고 아무것도 저장하지 않는다. 홈·목록·
+ * 마이페이지는 characterImg와 profileImg가 모두 비어 있을 때 종별 기본 캐릭터로
+ * 폴백하므로(PetListView의 catHero/dogHero) 빈 상태 그대로 두는 것이 곧 기본
+ * 캐릭터를 쓰는 것이다.
+ */
+function handleSkip() {
+  router.replace(nextPath.value)
+}
+
 onMounted(async () => {
   // 등록 직후에는 스토어에 기존 반려동물만 남아 있을 수 있다. URL로 대상 petId를
   // 받았다면 목록 유무와 관계없이 다시 조회해야 새 반려동물을 정확히 찾을 수 있다.
@@ -275,6 +285,16 @@ onBeforeUnmount(() => {
           @click="openGallery"
         >
           사진 한 장 업로드
+        </AppButton>
+
+        <AppButton
+          class="mt-(--space-2)"
+          variant="ghost"
+          size="lg"
+          block
+          @click="handleSkip"
+        >
+          사진 없이 기본 캐릭터 쓰기
         </AppButton>
       </section>
 
