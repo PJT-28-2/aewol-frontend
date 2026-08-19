@@ -18,6 +18,7 @@ import { USE_MOCK_DATA } from '@/mocks/config';
 import { groupPurchaseApi } from '@/api/groupPurchase';
 import { memberApi } from '@/api/member';
 import { useWalletStore } from '@/stores/wallet';
+import { getDeadlineTimestamp } from '@/utils/date';
 
 const route = useRoute();
 const router = useRouter();
@@ -35,6 +36,9 @@ const product = ref(null);
 const paymentMethod = ref(null);
 const isLoading = ref(true);
 const isError = ref(false);
+// 마감 여부 재검사(handlePayment)용 — GroupPurchaseDetailView.vue를 거치지 않고 URL 직접
+// 입력이나 뒤로가기로 이 화면에 곧장 들어올 수 있어, 이 화면 자체도 deadline을 알아야 한다
+const deadline = ref(null);
 
 async function loadPaymentMethod() {
   isLoading.value = true;
@@ -52,6 +56,16 @@ async function loadPaymentMethod() {
 
     const { data: detailData } = await groupPurchaseApi.getDetail(route.params.gpId);
     const detail = detailData.result;
+
+    // GroupPurchaseDetailView.vue와 같은 이유(URL 직접 입력, 뒤로가기, 공유 링크 등)로
+    // 이미 마감되었거나(status !== 'OPEN') 마감 시각이 지난 공동구매에 결제가 들어갈 수
+    // 있어, 이 화면에 진입하는 시점에 한 번 더 확인해서 상태 화면으로 돌려보낸다
+    if (detail.status !== 'OPEN' || Date.now() >= getDeadlineTimestamp(detail.deadline)) {
+      router.replace(`/group-purchase/${route.params.gpId}/status`);
+      return;
+    }
+    deadline.value = detail.deadline;
+
     product.value = {
       productName: detail.productName,
       optionText: '옵션 없음', // group_purchase에 옵션 개념이 없어 고정 문구 유지
@@ -267,8 +281,13 @@ async function handlePayment(password) {
     return;
   }
 
-  // PIN 시트가 열려 있는 동안 잔액이 바뀌거나 배송지 정보가 불완전해졌을 수 있어 재검사
-  if (isBalanceInsufficient.value || !isShippingInfoComplete.value) {
+  // PIN 시트가 열려 있는 동안 잔액이 바뀌거나 배송지 정보가 불완전해지거나 마감 시각이
+  // 지났을 수 있어 재검사
+  if (
+    isBalanceInsufficient.value ||
+    !isShippingInfoComplete.value ||
+    Date.now() >= getDeadlineTimestamp(deadline.value)
+  ) {
     isPinSheetOpen.value = false;
     paymentError.value = '결제 정보가 변경됐어요. 다시 확인해주세요.';
     return;
