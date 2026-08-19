@@ -378,11 +378,14 @@ async function submitVerification() {
         은행 앱 알림이나 입출금 문자에서<br>입금자명(예: 푸른애월)의 앞 {{ depositorNameLength }}글자를 확인할 수 있어요
       </p>
 
-      <!-- local/test/dev 환경에서만 백엔드가 내려주는 값이에요(운영에서는 항상 null이라
+      <!-- local/test 환경에서만 백엔드가 내려주는 값이에요(운영에서는 항상 null이라
            이 블록 자체가 안 보여요). CODEF 데모 서버라 실제 입금 알림이 없어서, 이 값이
-           없으면 서버 로그 접근 권한이 없는 이상 1원 인증을 끝낼 방법이 없었어요(2026-08-19). -->
+           없으면 서버 로그 접근 권한이 없는 이상 1원 인증을 끝낼 방법이 없었어요(2026-08-19).
+           import.meta.env.DEV를 추가 게이트로 걸어서, 배포 설정 실수로 백엔드가 이 필드를
+           잘못 내려보내도(defense-in-depth) 빌드된 배포본에서는 절대 노출되지 않게 한다
+           (PR #301 리뷰 반영, 2026-08-19). -->
       <div
-        v-if="store.linking.depositorNameForTest"
+        v-if="import.meta.env.DEV && store.linking.depositorNameForTest"
         class="flex items-center gap-(--space-2) p-3 rounded-(--radius-lg) bg-(--color-icon-yellow-soft) border border-(--color-icon-yellow) mb-(--space-2)"
       >
         <IconInfo
