@@ -21,6 +21,7 @@ const isCodeSent = ref(false)
 const isVerifyingCode = ref(false)
 const isEmailVerified = ref(false)
 const isAddressSearchOpen = ref(false)
+const isPhoneInputOverflow = ref(false)
 const errorMessage = ref('')
 const verificationErrorMessage = ref('')
 const form = reactive({
@@ -50,6 +51,12 @@ const isPasswordConfirmed = computed(
   () => form.passwordConfirm === form.password,
 )
 
+const phoneDigits = computed(() => form.phone.replace(/\D/g, ''))
+
+const isPhoneValid = computed(
+  () => !isPhoneInputOverflow.value && /^010\d{8}$/.test(phoneDigits.value),
+)
+
 const isAddressComplete = computed(
   () =>
     Boolean(form.zipCode.trim()) &&
@@ -60,6 +67,7 @@ const isSignupDisabled = computed(
   () =>
     isLoading.value ||
     !isEmailVerified.value ||
+    !isPhoneValid.value ||
     !agreements.terms ||
     !agreements.privacy ||
     !isAddressComplete.value ||
@@ -133,7 +141,11 @@ const verifyCode = async () => {
 }
 
 const handlePhoneInput = (event) => {
+  const rawPhoneDigits = event.target.value.replace(/\D/g, '')
+  isPhoneInputOverflow.value = rawPhoneDigits.length > 11
   form.phone = formatPhoneNumber(event.target.value)
+  event.target.value = form.phone
+  errorMessage.value = ''
 }
 
 const toggleAllAgreements = () => {
@@ -150,6 +162,11 @@ const handleAddressSelect = ({ zipCode, address }) => {
 
 const handleSignup = async () => {
   errorMessage.value = ''
+
+  if (!isPhoneValid.value) {
+    errorMessage.value = '010으로 시작하는 11자리 휴대폰 번호를 입력해 주세요.'
+    return
+  }
 
   if (!isKakaoSignup.value && !isPasswordValid.value) {
     errorMessage.value =
@@ -184,7 +201,7 @@ const handleSignup = async () => {
       verificationCode: form.verificationCode,
       password: form.password,
       name: form.name.trim(),
-      phone: form.phone.replace(/\D/g, ''),
+      phone: phoneDigits.value,
       zipCode: form.zipCode.trim(),
       address: form.address.trim(),
       addressDetail: form.addressDetail.trim(),
@@ -297,6 +314,13 @@ const handleSignup = async () => {
         required
         @input="handlePhoneInput"
       >
+      <p
+        v-if="form.phone && !isPhoneValid"
+        class="mt-1 text-[11px] text-(color:--color-danger-strong)"
+        role="alert"
+      >
+        010으로 시작하는 11자리 휴대폰 번호를 입력해 주세요.
+      </p>
 
       <label
         class="mt-[11px] mb-1 text-[12.5px] font-(--font-bold) text-(color:--color-slate-dark)"
