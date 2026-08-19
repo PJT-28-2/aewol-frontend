@@ -212,7 +212,7 @@ watch(selectedStatus, loadMyGroupPurchases);
               {{ gp.productName }}
             </h3>
             <p class="text-(length:--font-xs) text-(color:--color-gray-500) mb-(--space-2)">
-              {{ gp.role }} · {{ gp.currentQuantity }}/{{ gp.targetQuantity }}개 · {{ gp.status === 'OPEN' ? dDayLabel(gp.deadline) : '마감됨' }}
+              {{ gp.role }} · {{ gp.currentQuantity }}/{{ gp.targetQuantity }}개 · {{ gp.status === 'OPEN' ? dDayLabel(gp.deadline) : getGroupPurchaseStatusLabel(gp.status) }}
             </p>
             <span
               class="inline-block px-(--space-2) py-(--space-1) rounded-full text-(length:--font-xs) font-semibold"

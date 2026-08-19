@@ -14,6 +14,7 @@ import {
 import { USE_MOCK_DATA } from '@/mocks/config';
 import { groupPurchaseApi } from '@/api/groupPurchase';
 import { formatArrivalDateLabel, formatDDayLabel, getDeadlineTimestamp } from '@/utils/date';
+import { goBackOr } from '@/utils/navigation';
 import { useDeadlineTimer } from '@/composables/useDeadlineTimer';
 import { useMidnightTick } from '@/composables/useMidnightTick';
 import { useAuthStore } from '@/stores/auth';
@@ -72,10 +73,10 @@ const isFromMyPage = computed(() => route.query.from === 'my' && !authStore.isAd
 const backTarget = computed(() => (isFromMyPage.value ? '/group-purchase/my' : '/group-purchase'));
 const backLabel = computed(() => (isFromMyPage.value ? '마이페이지로 돌아가기' : '리스트로 돌아가기'));
 
-// replace를 써서 히스토리에 status를 남기지 않는다 — push로 쌓으면 목록/마이페이지에서
-// 브라우저 뒤로가기를 눌렀을 때 이 status 화면으로 되돌아와버린다
+// 이 화면은 목록/마이페이지에서 push로 들어온 상태다 — goBackOr가 중복 히스토리 항목이
+// 쌓이지 않도록 처리해준다(자세한 이유는 utils/navigation.js 참고)
 function goBack() {
-  router.replace(backTarget.value);
+  goBackOr(router, backTarget.value);
 }
 
 // 백엔드 enum(OPEN/COMPLETED/FAILED/CANCELLED)을 그대로 키로 쓴다 — 별도 내부 어휘를 두지 않아서
@@ -143,6 +144,9 @@ const isPinSheetOpen = ref(false);
 const isCancelSuccessSheetOpen = ref(false);
 const isCancelling = ref(false);
 const cancelError = ref('');
+// 참여자가 자기 참여만 취소했을 때 쓰는 로컬 플래그. status.status는 공동구매 자체의
+// 상태라 참여자 개별 취소로는 안 바뀌므로, 취소 버튼을 다시 숨기는 건 이 값이 담당한다
+const hasLeft = ref(false);
 
 const pinSheetDescription = computed(() =>
   isAdmin.value
@@ -163,7 +167,8 @@ const cancelSuccessMessage = computed(() =>
 async function handleCancelConfirm(password) {
   if (USE_MOCK_DATA) {
     isPinSheetOpen.value = false;
-    status.value = { ...status.value, status: 'CANCELLED' };
+    if (isAdmin.value) status.value = { ...status.value, status: 'CANCELLED' };
+    else hasLeft.value = true;
     isCancelSuccessSheetOpen.value = true;
     return;
   }
@@ -173,11 +178,14 @@ async function handleCancelConfirm(password) {
   try {
     if (isAdmin.value) {
       await groupPurchaseApi.cancel(route.params.gpId, password);
+      // 공동구매 자체가 취소된 경우에만 CANCELLED로 갱신 — 참여자 개별 취소(leave)는
+      // 공동구매 자체를 취소하는 게 아니라서 이 값을 건드리면 "관리자가 취소한 공동구매"로
+      // 잘못 표시된다(취소 버튼을 계속 숨기는 용도는 아래 hasLeft가 대신 담당)
+      status.value = { ...status.value, status: 'CANCELLED' };
     } else {
       await groupPurchaseApi.leave(route.params.gpId, password);
+      hasLeft.value = true;
     }
-    // 취소 버튼이 계속 보이지 않도록 이전 상태(OPEN)를 취소 완료로 갱신
-    status.value = { ...status.value, status: 'CANCELLED' };
     isCancelSuccessSheetOpen.value = true;
   } catch {
     cancelError.value = isAdmin.value
@@ -191,7 +199,7 @@ async function handleCancelConfirm(password) {
 
 function confirmCancelSuccess() {
   isCancelSuccessSheetOpen.value = false;
-  router.replace(backTarget.value);
+  goBack();
 }
 </script>
 
@@ -368,7 +376,7 @@ function confirmCancelSuccess() {
         variant="danger"
         size="lg"
         block
-        :disabled="status.status !== 'OPEN' || isDeadlinePassed"
+        :disabled="status.status !== 'OPEN' || isDeadlinePassed || hasLeft"
         :loading="isCancelling"
         @click="isPinSheetOpen = true"
       >

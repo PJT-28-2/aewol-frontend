@@ -40,38 +40,57 @@ export function getDaysUntil(targetDate, now = new Date()) {
 }
 
 /**
- * 마감일까지 남은 일수를 "D-N" 라벨로, 마감 당일이거나 지났으면 "마감"으로 변환한다.
- * 표시(display) 전용이며 날짜 단위로만 비교하므로, 실제 마감 시각과의 정확한 선후 비교(버튼
- * 활성화 등)에는 getDeadlineTimestamp를 사용해야 한다.
+ * 마감일까지 남은 일수를 "D-N" 라벨로, 마감 당일이면 "D-DAY"로, 마감일이 지났으면
+ * "마감"으로 변환한다. 표시(display) 전용이며 날짜 단위로만 비교하므로, 실제 마감
+ * 시각과의 정확한 선후 비교(버튼 활성화 등)에는 getDeadlineTimestamp를 사용해야 한다
+ * (마감 당일은 이 라벨이 "D-DAY"를 보여주는 동안에도 23:59:59까지는 아직 유효하다).
  *
  * @param {string} deadline `YYYY-MM-DD`로 시작하는 날짜(시간) 문자열
  * @param {Date} [now] 기준 시각(테스트/반응형 갱신용, 기본값은 호출 시점의 현재 시각)
- * @returns {string} `D-N` 또는 `마감`
+ * @returns {string} `D-N`, `D-DAY`, 또는 `마감`
  */
 export function formatDDayLabel(deadline, now = new Date()) {
   const diffDays = getDaysUntil(deadline, now)
-  return diffDays <= 0 ? '마감' : `D-${diffDays}`
+  if (diffDays > 0) return `D-${diffDays}`
+  if (diffDays === 0) return 'D-DAY'
+  return '마감'
 }
 
 /**
- * 마감 문자열을 실제 만료 시각(epoch ms)으로 변환한다. 시간 정보가 있으면(`T` 포함) 그대로
- * 로컬 시각으로 해석하고, 날짜만 있으면(캘린더에서 날짜만 선택하는 마감일 등) 그날
+ * 마감 문자열을 실제 만료 시각(epoch ms)으로 변환한다. 시간 정보가 있으면 그대로 로컬
+ * 시각으로 해석하고, 날짜만 있으면(캘린더에서 날짜만 선택하는 마감일 등) 그날
  * 23:59:59.999까지 유효한 것으로 해석한다.
  *
- * new Date(...)에 연/월/일을 그대로 넘기면 "2026-02-31"처럼 존재하지 않는 날짜를 3월 3일로
- * 자동 보정해버려 API가 잘못된 값을 내려도 그럴듯한 타임스탬프가 나온다. isValidCalendarDate로
- * 먼저 걸러서, 존재하지 않는 날짜는 보정 없이 NaN을 반환하도록 한다.
+ * 시간 구분자는 `T`(프론트에서 생성 시 붙이는 형식)와 공백(백엔드 Jackson
+ * `yyyy-MM-dd HH:mm:ss` 직렬화 형식) 둘 다 온다 — 11번째 글자부터를 시간으로 간주해서
+ * 구분자 문자 자체는 신경 쓰지 않는다. new Date(전체 문자열)로 직접 파싱하면 공백 구분
+ * 형식(비표준 포맷)의 해석이 브라우저마다 다를 수 있어(예: Safari에서 실패), 연/월/일/시/분/초를
+ * 각각 뽑아 로컬 컴포넌트로 조립한다.
  *
- * @param {string | null | undefined} deadline `YYYY-MM-DD` 또는 `YYYY-MM-DDTHH:mm:ss` 형식의 마감 문자열
+ * new Date(...)에 연/월/일/시/분/초를 그대로 넘기면 "2026-02-31"이나 "25:00:00"처럼 존재하지
+ * 않는 값을 다음 달/다음 날로 자동 보정해버려 API가 잘못된 값을 내려도 그럴듯한 타임스탬프가
+ * 나온다. 날짜는 isValidCalendarDate로, 시간은 각 필드의 범위(0-23시/0-59분초)로 먼저 걸러서,
+ * 존재하지 않는 값은 보정 없이 NaN을 반환하도록 한다.
+ *
+ * @param {string | null | undefined} deadline `YYYY-MM-DD`, `YYYY-MM-DDTHH:mm:ss`,
+ *   또는 `YYYY-MM-DD HH:mm:ss` 형식의 마감 문자열
  * @returns {number} 마감 시각의 epoch 밀리초 (값이 없거나 유효하지 않으면 NaN)
  */
 export function getDeadlineTimestamp(deadline) {
   if (!deadline) return NaN
-  if (!isValidCalendarDate(deadline.slice(0, 10))) return NaN
-  if (deadline.includes('T')) {
-    return new Date(deadline).getTime()
+  const datePart = deadline.slice(0, 10)
+  if (!isValidCalendarDate(datePart)) return NaN
+  const [year, month, day] = datePart.split('-').map(Number)
+
+  const timeMatch = /^(\d{2}):(\d{2}):(\d{2})/.exec(deadline.slice(11))
+  if (timeMatch) {
+    const [, hourText, minuteText, secondText] = timeMatch
+    const hour = Number(hourText)
+    const minute = Number(minuteText)
+    const second = Number(secondText)
+    if (hour > 23 || minute > 59 || second > 59) return NaN
+    return new Date(year, month - 1, day, hour, minute, second).getTime()
   }
-  const [year, month, day] = deadline.slice(0, 10).split('-').map(Number)
   return new Date(year, month - 1, day, 23, 59, 59, 999).getTime()
 }
 
