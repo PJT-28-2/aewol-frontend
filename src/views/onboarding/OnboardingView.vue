@@ -106,7 +106,7 @@ onBeforeUnmount(() => {
 
 <template>
   <main
-    class="relative flex min-h-svh w-full flex-col overflow-hidden bg-(--color-app-bg) px-(--space-5) pt-(--space-5) pb-(--space-5)"
+    class="relative flex min-h-svh w-full flex-col overflow-hidden bg-(--color-app-bg) px-(--space-5) pt-(--space-5) pb-(--space-5) [@media(max-height:720px)]:pt-(--space-3) [@media(max-height:720px)]:pb-(--space-3)"
     @touchstart.passive="handleTouchStart"
     @touchend.passive="handleTouchEnd"
     @wheel="handleWheel"
@@ -123,27 +123,27 @@ onBeforeUnmount(() => {
       </button>
     </div>
 
-    <div class="relative z-1 -mx-[4px] mt-(--space-5) h-[54svh] min-h-[450px] max-h-[480px] w-[calc(100%+8px)]">
+    <div class="relative z-1 -mx-[4px] mt-(--space-5) h-[54svh] min-h-[450px] max-h-[480px] w-[calc(100%+8px)] [@media(max-height:720px)]:mt-(--space-3) [@media(max-height:720px)]:h-[44svh] [@media(max-height:720px)]:min-h-0">
       <OnboardingVisual
         :key="currentSlide.visual"
         :type="currentSlide.visual"
       />
     </div>
 
-    <section class="relative z-1 mt-(--space-7) text-center">
+    <section class="relative z-1 mt-(--space-7) text-center [@media(max-height:720px)]:mt-(--space-4)">
       <h1
-        class="text-[26px] leading-[1.28] font-bold tracking-[-0.03em] text-(color:--color-navy) whitespace-pre-line"
+        class="text-[26px] leading-[1.28] font-bold tracking-[-0.03em] text-(color:--color-navy) whitespace-pre-line [@media(max-height:720px)]:text-[22px]"
       >
         {{ currentSlide.title }}
       </h1>
       <p
-        class="mt-(--space-3) text-(length:--font-sm) leading-[1.55] text-(color:--color-slate-muted) whitespace-pre-line"
+        class="mt-(--space-3) text-(length:--font-sm) leading-[1.55] text-(color:--color-slate-muted) whitespace-pre-line [@media(max-height:720px)]:mt-(--space-2) [@media(max-height:720px)]:text-[13px]"
       >
         {{ currentSlide.description }}
       </p>
     </section>
 
-    <div class="relative z-1 mt-auto flex justify-center gap-(--space-2) pt-(--space-4)">
+    <div class="relative z-1 mt-auto flex justify-center gap-(--space-2) pt-(--space-4) [@media(max-height:720px)]:pt-(--space-2)">
       <button
         v-for="(_, index) in slides"
         :key="index"
@@ -162,7 +162,7 @@ onBeforeUnmount(() => {
     <AppButton
       block
       size="lg"
-      class="relative z-1 mt-(--space-4)"
+      class="relative z-1 mt-(--space-4) [@media(max-height:720px)]:mt-(--space-2)"
       @click="handleNext"
     >
       {{ isLastSlide ? '시작하기' : '다음' }}

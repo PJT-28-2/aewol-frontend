@@ -21,7 +21,7 @@ defineProps({
 <template>
   <div class="relative h-full w-full overflow-hidden rounded-[28px] bg-(--color-leaf-soft)">
     <!-- HomeView의 MY PET 카드와 애월지갑 카드를 축약해 사용 -->
-    <div v-if="type === 'wallet'" class="absolute inset-x-[20px] top-1/2 -translate-y-1/2">
+    <div v-if="type === 'wallet'" class="absolute inset-x-[20px] top-1/2 -translate-y-1/2 [@media(max-height:720px)]:scale-[0.72]">
       <section class="relative flex h-[265px] items-end justify-center overflow-hidden rounded-[28px] bg-(--color-leaf-soft)">
         <div class="absolute top-0 left-(--space-4) z-2">
           <p class="text-[10px] font-semibold tracking-[0.08em] whitespace-nowrap text-(--color-leaf-dark)">AEWOL PET</p>
@@ -42,7 +42,7 @@ defineProps({
     </div>
 
     <!-- PetMemoryListView의 실제 추억 카드 구조를 축약해 사용 -->
-    <div v-else-if="type === 'memories'" class="absolute inset-x-[28px] top-1/2 -translate-y-1/2">
+    <div v-else-if="type === 'memories'" class="absolute inset-x-[28px] top-1/2 -translate-y-1/2 [@media(max-height:720px)]:scale-[0.72]">
       <div class="flex items-center justify-between px-(--space-2)">
         <span class="grid size-[26px] place-items-center rounded-full bg-(--color-white) text-(--color-slate-dark)">
           <IconChevronRight class="rotate-180" :size="15" />
@@ -83,7 +83,7 @@ defineProps({
     </div>
 
     <!-- ShareView의 반려동물 선택과 참여 중인 가족 UI를 축약해 사용 -->
-    <div v-else-if="type === 'family'" class="absolute inset-x-[28px] top-1/2 -translate-y-1/2">
+    <div v-else-if="type === 'family'" class="absolute inset-x-[28px] top-1/2 -translate-y-1/2 [@media(max-height:720px)]:scale-[0.72]">
       <header class="mb-(--space-3)">
         <strong class="block text-[15px] text-(--color-navy)">함께 돌보기</strong>
         <span class="mt-[3px] block text-[9px] text-(--color-slate-muted)">가족과 돌봄 기록을 나누고 함께 관리해요</span>
@@ -129,7 +129,7 @@ defineProps({
     </div>
 
     <!-- CertificateListView의 목록과 CertificateDetailView의 펼친 문서를 함께 축약해 사용 -->
-    <div v-else class="absolute inset-x-[16px] top-[20px]">
+    <div v-else class="absolute inset-x-[16px] top-[20px] [@media(max-height:720px)]:top-[10px] [@media(max-height:720px)]:scale-[0.65] [@media(max-height:720px)]:origin-top">
       <header class="mb-(--space-2)">
         <strong class="block text-[15px] text-(--color-navy)">증명서 관리</strong>
         <span class="mt-[2px] block text-[9px] text-(--color-slate-muted)">동물등록증 · 접종증명서를 한곳에서 확인해요</span>
