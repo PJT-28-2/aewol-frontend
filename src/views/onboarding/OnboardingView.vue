@@ -10,24 +10,23 @@ const router = useRouter();
 const slides = [
   {
     visual: 'wallet',
-    label: '반려동물 전용 전자지갑',
-    title: '결제와 거래 내역을\n한 곳에서 관리해요',
-    description:
-      '충전, 송금, QR 결제를 이용하고\n정기결제와 전체 거래 내역을 확인해요',
+    title: '우리 아이에게도\n지갑이 필요하니까',
+    description: '사진 한 장으로 우리 아이 캐릭터를 만들고\n전용 지갑과 일상을 시작해요',
   },
   {
-    visual: 'report',
-    label: '반려동물 지출 리포트',
-    title: '어디에 얼마나 썼는지\n한눈에 확인해요',
-    description:
-      '의료비, 식비, 미용 등 카테고리와\n반려동물별 월 지출을 비교할 수 있어요',
+    visual: 'family',
+    title: '가족과 함께\n우리 아이를 돌봐요',
+    description: '가족을 초대해 돌봄을 나누고\n우리 아이를 함께 챙겨요',
   },
   {
-    visual: 'insurance',
-    label: '보험 판단과 간편 청구',
-    title: '보험이 유리한지 계산하고\n청구 준비도 간편하게',
-    description:
-      '예상 비용으로 가입 여부를 비교하고\n영수증으로 청구서 초안을 만들어요',
+    visual: 'memories',
+    title: '함께한 모든 순간을\n소중하게 담아두어요',
+    description: '첫 만남부터 좋아하는 것까지\n함께한 시간을 오래 간직하고 싶으니까요',
+  },
+  {
+    visual: 'identity',
+    title: '필요한 정보도\n한곳에서 간편하게',
+    description: '동물등록증과 접종·진료 기록을\n필요할 때 바로 확인해요',
   },
 ];
 
@@ -124,24 +123,14 @@ onBeforeUnmount(() => {
       </button>
     </div>
 
-    <div class="relative z-1 mt-(--space-5) h-[42svh] min-h-[326px] max-h-[370px]">
+    <div class="relative z-1 -mx-[4px] mt-(--space-5) h-[54svh] min-h-[450px] max-h-[480px] w-[calc(100%+8px)]">
       <OnboardingVisual
         :key="currentSlide.visual"
         :type="currentSlide.visual"
       />
-      <span
-        class="absolute top-(--space-4) right-(--space-4) rounded-full bg-(--color-white) px-(--space-3) py-[6px] text-[11px] font-bold text-(--color-leaf-dark) shadow-(--shadow-sm)"
-      >
-        {{ currentIndex + 1 }} / {{ slides.length }}
-      </span>
     </div>
 
-    <section class="relative z-1 mt-(--space-5) text-center">
-      <p
-        class="mb-(--space-2) text-(length:--font-sm) font-semibold text-(--color-leaf-dark)"
-      >
-        {{ currentSlide.label }}
-      </p>
+    <section class="relative z-1 mt-(--space-7) text-center">
       <h1
         class="text-[26px] leading-[1.28] font-bold tracking-[-0.03em] text-(color:--color-navy) whitespace-pre-line"
       >
