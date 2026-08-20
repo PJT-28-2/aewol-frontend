@@ -70,13 +70,12 @@ async function fetchPage(pageToLoad) {
     ...buildFilterParams(),
   });
   const result = data.result ?? { items: [], hasNext: false };
-  // 관리자면 진행중일 때 '참여하기' 대신 '확인하기'로 상태 화면 바로 이동
-  // isParticipating(로그인 유저의 참여 여부)은 응답에 없을 수 있어 기본값 false로 방어
-  // TODO: 백엔드 API 계약 변경(로그인 유저 기준 참여 여부 포함) 후 item.isParticipating으로 교체
+  // 관리자면 진행중일 때 '참여하기' 대신 '확인하기'로 상태 화면으로 바로 이동한다.
+  // isParticipating은 목록 API가 로그인 회원 기준으로 내려준다.
   const items = (result.items ?? []).map((item) => ({
     ...item,
     isAdmin: authStore.isAdmin,
-    isParticipating: item.isParticipating ?? false,
+    isParticipating: Boolean(item.isParticipating),
   }));
   return { items, hasNext: result.hasNext ?? false };
 }

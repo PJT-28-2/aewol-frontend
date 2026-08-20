@@ -5,10 +5,7 @@ import productImage from '@/assets/images/mock-product-dogfood.png'
 // isParticipating: 로그인 유저가 이미 참여(결제 완료)한 글인지 여부.
 // 진행중 글에서 '확인하기'(관리자) / '참여중'(이미 참여) / '참여하기'(미참여) 3분기 버튼에 사용
 // 실 API에서는 authStore.isAdmin(JWT role 클레임)으로 판정 (GroupPurchaseStatusView/DetailView와 동일 방식).
-// isParticipating은 GET /group-purchase 응답에 로그인 유저 기준으로 계산된 필드가 필요함
-// (요청한 회원의 memberId로 group_purchase_participant를 조회해서 참여 row가 있으면 true) —
-// 목록 API가 현재 group_purchase만 조회하고 로그인 유저를 참조하지 않아 백엔드 계약/조회 로직 변경이 선행돼야 함
-// TODO: 백엔드 API 연동 후 제거하고 groupPurchaseApi.getList()로 교체
+// isParticipating은 GET /group-purchase 응답의 로그인 회원 기준 필드다.
 export const MOCK_GROUP_PURCHASE_LIST = [
   {
     id: 1,
