@@ -4,23 +4,39 @@ import AewolLogo from '@/components/common/AewolLogo.vue'
 import AppButton from '@/components/common/AppButton.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import IconNotificationBell from '@/components/common/icons/IconNotificationBell.vue'
-import IconPublicSupport from '@/components/common/icons/IconPublicSupport.vue'
-import IconWallet from '@/components/common/icons/IconWallet.vue'
-import IconPaw from '@/components/common/icons/IconPaw.vue'
-import IconSavings from '@/components/common/icons/IconSavings.vue'
+import ExpenseDonutChart from '@/components/dashboard/ExpenseDonutChart.vue'
+import { groupPurchaseApi } from '@/api/groupPurchase'
+import { supportProgramsApi } from '@/api/supportPrograms'
 import { useDashboardStore } from '@/stores/dashboard'
 import { useMemberStore } from '@/stores/member'
 import { usePetStore } from '@/stores/pet'
-import { getHomeInsights } from '@/api/insight'
+import { useNotificationStore } from '@/stores/notification'
+import {
+  changeRateText,
+  discountPercent,
+  followUpCopy,
+  formatWon,
+  projectMonthEnd,
+  remainingDays,
+  spendingFollowUps,
+  toInsightCategories,
+  withChartColors,
+  withPercentages,
+} from '@/utils/homeMonthlyInsight'
 import dogHero from '@/assets/images/pet-dog-default-home-v3.png'
 import catHero from '@/assets/images/pet-cat-default-home-v3.png'
 
 const memberStore = useMemberStore()
 const petStore = usePetStore()
 const dashboardStore = useDashboardStore()
+const notificationStore = useNotificationStore()
 const isLoading = ref(true)
 const loadError = ref(false)
-const insights = ref([])
+const chartItems = ref([])
+const followUps = ref([])
+const recommendedPurchases = ref([])
+const eligiblePrograms = ref([])
+const gpSlideIndex = ref(0)
 const isInsightsLoading = ref(true)
 const today = new Date()
 const currentPeriod = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`
@@ -42,10 +58,34 @@ const formattedBalance = computed(() =>
 )
 const monthlyExpense = computed(() => Number(dashboardStore.summary?.monthlySpend?.totalAmount ?? 0))
 const changeRate = computed(() => Number(dashboardStore.summary?.monthlySpend?.changeRate ?? 0))
-const changeLabel = computed(() => {
-  if (changeRate.value === 0) return '전월과 동일'
-  return `전월보다 ${Math.abs(changeRate.value)}% ${changeRate.value > 0 ? '↑' : '↓'}`
+const rateLabel = computed(() => changeRateText(changeRate.value))
+const topCategory = computed(() => chartItems.value[0] ?? null)
+const hasInsight = computed(() => monthlyExpense.value > 0 && chartItems.value.length > 0)
+const projectionAmount = computed(() => projectMonthEnd(monthlyExpense.value, today))
+const daysLeft = remainingDays(today)
+const insightCta = { to: '/wallet/history', label: '내역 보기' }
+const currentPurchase = computed(() => recommendedPurchases.value[gpSlideIndex.value] ?? null)
+const currentDiscount = computed(() => {
+  const gp = currentPurchase.value
+  if (!gp) return null
+  if (gp.badgeText) return gp.badgeText
+  const percent = discountPercent(gp.unitPrice, gp.groupPrice)
+  return percent != null ? `${percent}% 할인` : null
 })
+const supportCopy = computed(() => {
+  const followUp = followUps.value.find((item) => item.type === 'SUPPORT')
+  if (!followUp || !eligiblePrograms.value.length) return null
+  return followUpCopy(followUp, {
+    petName: petName.value,
+    programCount: eligiblePrograms.value.length,
+    programTitle: eligiblePrograms.value[0]?.title,
+  })
+})
+
+function copyFor(followUp) {
+  if (followUp.type === 'SUPPORT') return supportCopy.value
+  return followUpCopy(followUp)
+}
 
 async function fetchHome() {
   isLoading.value = true
@@ -62,67 +102,78 @@ async function fetchHome() {
     isLoading.value = false
   }
 
-  // 카드는 홈의 부가 정보다. 위쪽(잔액·지출)을 먼저 그린 뒤 따로 불러와서
-  // 실패하거나 느려도 홈 전체가 기다리지 않게 한다.
-  fetchInsights()
+  fetchMonthlyInsight()
 }
 
-// 카드 종류는 서버가 정한다. 모르는 종류가 와도 아이콘 없이 뜨지 않도록 기본값을 둔다.
-const INSIGHT_ICONS = {
-  SUPPORT: IconPublicSupport,
-  SPENDING: IconWallet,
-  CARE: IconPaw,
-  DONATION: IconSavings,
-}
-
-function insightIcon(type) {
-  const icon = INSIGHT_ICONS[type]
-  if (!icon && import.meta.env.DEV) {
-    // 조용히 기본 아이콘으로 대체되면 서버가 새 카드를 추가한 걸 놓치기 쉽다.
-    console.warn(`[home] 아이콘이 정의되지 않은 인사이트 카드 종류: ${type}`)
-  }
-  return icon ?? IconPaw
-}
-
-// 다시 시도 버튼 등으로 fetchHome이 겹쳐 호출되면 늦게 보낸 요청이 먼저 끝날 수 있다.
-// 마지막 요청의 결과만 반영한다.
 let insightRequestId = 0
 
-async function fetchInsights() {
+async function fetchMonthlyInsight() {
   const requestId = ++insightRequestId
   isInsightsLoading.value = true
+  followUps.value = []
+  recommendedPurchases.value = []
+  eligiblePrograms.value = []
+  gpSlideIndex.value = 0
+
   try {
-    const { data } = await getHomeInsights(primaryPet.value?.id)
+    if (monthlyExpense.value <= 0) {
+      chartItems.value = []
+      return
+    }
+
+    await dashboardStore.fetchCategory({
+      groupBy: 'CATEGORY',
+      yearMonth: currentPeriod,
+    })
     if (requestId !== insightRequestId) return
-    insights.value = dedupeByType(data.result ?? [])
+
+    const items = withChartColors(
+      withPercentages(toInsightCategories(dashboardStore.category?.items ?? [])),
+    )
+    chartItems.value = items.slice(0, 4)
+    followUps.value = spendingFollowUps(items)
+
+    const gpFollowUp = followUps.value.find((item) => item.type === 'GROUP_PURCHASE')
+    if (gpFollowUp) {
+      try {
+        const { data } = await groupPurchaseApi.getList({
+          page: 0,
+          size: 5,
+          category: gpFollowUp.gpCategory,
+          status: 'OPEN',
+        })
+        if (requestId !== insightRequestId) return
+        recommendedPurchases.value = data.result?.items ?? []
+      } catch (error) {
+        console.error('[home] 공동구매 추천을 불러오지 못했습니다.', error)
+      }
+    }
+
+    if (followUps.value.some((item) => item.type === 'SUPPORT')) {
+      try {
+        const { data } = await supportProgramsApi.getMatchedPrograms(primaryPet.value?.id)
+        if (requestId !== insightRequestId) return
+        eligiblePrograms.value = (data.result?.programs ?? []).filter(
+          (program) => program.eligible && !program.applied,
+        )
+      } catch (error) {
+        console.error('[home] 정책 지원을 불러오지 못했습니다.', error)
+      }
+    }
   } catch (error) {
     if (requestId !== insightRequestId) return
-    // 카드는 부가 정보라 사용자에게 오류를 띄우지 않는다. 다만 조용히 사라지면
-    // 운영 중 장애를 알 방법이 없으므로 로그는 남긴다.
-    console.error('[home] 인사이트 카드를 불러오지 못했습니다.', error)
-    insights.value = []
+    console.error('[home] 이번 달 인사이트를 불러오지 못했습니다.', error)
+    chartItems.value = []
+    followUps.value = []
   } finally {
     if (requestId === insightRequestId) isInsightsLoading.value = false
   }
 }
 
-// 카드마다 'AI 요약'을 반복해 붙이면 라벨이 내용을 밀어낸다. 묶음에 한 번만 단다.
-// fallback인 카드는 서버가 데이터로 조립한 문구라 AI가 쓴 것이 아니다. 한 장이라도
-// 모델이 쓴 것이 있을 때만 배지를 붙인다.
-const hasAiWrittenCard = computed(() => insights.value.some((card) => !card.fallback))
-
-// type은 서버에서 회원·카드종류별 유니크 키다. 그래도 중복이 오면 Vue key가 겹쳐
-// 렌더링이 어긋나므로 먼저 온 것만 남긴다.
-function dedupeByType(cards) {
-  const seen = new Set()
-  return cards.filter((card) => {
-    if (!card?.type || seen.has(card.type)) return false
-    seen.add(card.type)
-    return true
-  })
-}
-
-onMounted(fetchHome)
+onMounted(() => {
+  fetchHome()
+  notificationStore.fetchUnreadCount()
+})
 </script>
 
 <template>
@@ -154,10 +205,15 @@ onMounted(fetchHome)
           <AewolLogo size="18" />
           <router-link
             to="/notifications"
-            class="flex size-[42px] items-center justify-center text-(color:--color-navy)"
+            class="relative flex size-[42px] items-center justify-center text-(color:--color-navy)"
             aria-label="알림함"
           >
             <IconNotificationBell size="22" />
+            <span
+              v-if="notificationStore.unreadCount"
+              class="absolute top-0 right-0 flex min-w-[18px] h-[18px] items-center justify-center rounded-full bg-(--color-danger-strong) px-[4px] text-[10px] font-bold leading-none text-(color:--color-white)"
+              aria-label="읽지 않은 알림 수"
+            >{{ notificationStore.unreadCount > 99 ? '99+' : notificationStore.unreadCount }}</span>
           </router-link>
         </div>
         <h1 class="mt-(--space-3) text-(length:--font-lg) font-bold text-(color:--color-navy)">
@@ -222,107 +278,177 @@ onMounted(fetchHome)
         </div>
       </section>
 
-      <router-link
-        to="/dashboard"
-        class="mt-(--space-5) flex items-center justify-between rounded-[22px] bg-(--color-white) p-(--space-5) text-inherit no-underline"
-      >
-        <div class="min-w-0 flex-1">
-          <div class="flex items-center justify-between gap-(--space-2)">
-            <p class="text-(length:--font-xs) font-medium text-(color:--color-slate-muted)">
-              이번 달 총지출
-            </p>
-            <span class="shrink-0 rounded-full bg-(--color-leaf-soft) px-(--space-3) py-(--space-2) text-(length:--font-xs) font-bold text-(color:--color-leaf-dark)">{{ changeLabel }}</span>
-          </div>
-          <p class="mt-(--space-2) text-(length:--font-xl) font-bold text-(color:--color-navy)">
-            {{ monthlyExpense.toLocaleString('ko-KR') }}원을 사용했어요
-          </p>
-        </div>
-      </router-link>
-
-      <!--
-        인사이트는 위쪽 메뉴 카드와 성격이 다르다. 사용자가 누를 기능이 아니라
-        읽을 내용이라, 묶음 배경과 머리글로 한 덩어리임을 먼저 보이게 한다.
-        'AI 요약' 배지도 카드마다 반복하지 않고 여기 한 번만 단다.
-      -->
       <section
-        v-if="isInsightsLoading || insights.length > 0"
-        class="mt-(--space-5) rounded-[24px] bg-(--color-leaf-soft) p-(--space-4)"
+        v-if="isInsightsLoading || hasInsight"
+        class="mt-(--space-5)"
         aria-labelledby="home-insight-title"
       >
-        <div class="flex items-center justify-between gap-(--space-2)">
-          <h2
-            id="home-insight-title"
-            class="m-0 text-(length:--font-md) font-bold text-(color:--color-navy)"
-          >
-            오늘의 읽을거리
-          </h2>
-          <span
-            v-if="hasAiWrittenCard"
-            class="shrink-0 rounded-full bg-(--color-white) px-(--space-2) py-[2px] text-(length:--font-xs) font-bold text-(color:--color-leaf-dark)"
-          >AI 요약</span>
-        </div>
+        <h2
+          id="home-insight-title"
+          class="m-0 text-(length:--font-xs) font-medium text-(color:--color-slate-muted)"
+        >
+          이번 달 인사이트
+        </h2>
 
-        <!-- 카드 자리를 미리 잡아 두면 도착할 때 아래 내용이 밀리지 않는다. -->
         <div
           v-if="isInsightsLoading"
-          class="mt-(--space-3) space-y-(--space-3)"
+          class="mt-(--space-3) h-[360px] animate-pulse rounded-[24px] bg-(--color-white)"
           aria-hidden="true"
-        >
-          <div
-            v-for="placeholder in 2"
-            :key="placeholder"
-            class="h-[104px] animate-pulse rounded-[18px] bg-(--color-white)"
-          />
-        </div>
+        />
 
-        <div
+        <article
           v-else
-          class="mt-(--space-3) space-y-(--space-3)"
+          class="mt-(--space-3) rounded-[24px] bg-(--color-white) p-(--space-5) shadow-(--shadow-card)"
         >
-          <component
-            :is="card.ctaPath ? 'router-link' : 'div'"
-            v-for="card in insights"
-            :key="card.type"
-            v-bind="card.ctaPath ? { to: card.ctaPath } : {}"
-            class="block rounded-[18px] bg-(--color-white) p-(--space-4) text-inherit no-underline"
-          >
-            <div class="flex items-start gap-(--space-3)">
-              <span class="mt-[2px] flex size-[26px] shrink-0 items-center justify-center rounded-(--radius-md) bg-(--color-leaf) text-(color:--color-navy)">
-                <component
-                  :is="insightIcon(card.type)"
-                  size="15"
-                />
-              </span>
-              <p class="min-w-0 flex-1 text-(length:--font-sm) font-bold text-(color:--color-navy)">
-                {{ card.headline }}
-              </p>
+          <p class="m-0 text-(length:--font-sm) font-bold text-(color:--color-navy)">
+            이번 달 총지출
+          </p>
+          <p class="mt-(--space-1) text-(length:--font-xl) font-bold tracking-[-0.03em] text-(color:--color-navy)">
+            {{ formatWon(monthlyExpense) }}원을 사용했어요
+          </p>
+
+          <div class="mt-(--space-5) flex items-center gap-(--space-5)">
+            <div class="relative grid size-[132px] shrink-0 place-items-center">
+              <ExpenseDonutChart
+                :items="chartItems"
+                size="132px"
+              />
+              <div
+                v-if="topCategory"
+                class="pointer-events-none absolute flex flex-col items-center text-center"
+              >
+                <p class="m-0 text-[22px] font-bold leading-none text-(color:--color-navy)">
+                  {{ topCategory.percentage }}%
+                </p>
+                <p class="mt-[4px] m-0 text-(length:--font-xs) text-(color:--color-slate-muted)">
+                  {{ topCategory.label }}
+                </p>
+              </div>
             </div>
 
-            <p class="mt-(--space-3) text-(length:--font-sm) leading-[1.6] break-keep text-(color:--color-slate-dark)">
-              {{ card.body }}
-            </p>
+            <ul class="m-0 min-w-0 flex-1 list-none space-y-(--space-3) p-0">
+              <li
+                v-for="item in chartItems"
+                :key="item.key"
+                class="flex items-center justify-between gap-(--space-2)"
+              >
+                <span class="flex min-w-0 items-center gap-(--space-2)">
+                  <span
+                    class="size-[8px] shrink-0 rounded-full"
+                    :style="{ backgroundColor: `var(${item.colorToken})` }"
+                  />
+                  <span class="truncate text-(length:--font-sm) text-(color:--color-navy)">{{ item.label }}</span>
+                </span>
+                <span class="shrink-0 text-(length:--font-sm) font-bold text-(color:--color-navy)">{{ item.percentage }}%</span>
+              </li>
+            </ul>
+          </div>
 
-            <!--
-              지나간 일을 요약한 문장과 앞날을 말하는 문장은 신뢰도가 다르다.
-              예측은 따로 떼어 '전망'이라고 못박아 둔다. 근거가 모자라면 서버가
-              이 값을 안 내려주므로 자리도 사라진다.
-            -->
-            <p
-              v-if="card.projection"
-              class="mt-(--space-3) mb-0 rounded-(--radius-lg) bg-(--color-leaf-soft) px-(--space-3) py-(--space-2) text-(length:--font-sm) leading-[1.5] break-keep text-(color:--color-leaf-dark)"
-            >
-              <span class="font-bold">전망</span>
-              · {{ card.projection }}
-            </p>
+          <p
+            v-if="topCategory"
+            class="mt-(--space-5) mb-0 text-(length:--font-sm) leading-[1.65] break-keep text-(color:--color-slate-dark)"
+          >
+            {{ topCategory.label }}가
+            <span class="font-bold text-(color:--color-leaf-dark)">{{ topCategory.percentage }}%</span>({{ formatWon(topCategory.amount) }}원)로 가장 크고,
+            <template v-if="rateLabel">
+              전월 대비
+              <span class="font-bold text-(color:--color-leaf-dark)">{{ rateLabel }}</span>예요.
+            </template>
+            <template v-else>전월과 같아요.</template>
+            내역에서 항목별로 확인해 보세요.
+          </p>
 
-            <p
-              v-if="card.ctaPath"
-              class="mt-(--space-3) mb-0 text-right text-(length:--font-xs) font-bold text-(color:--color-leaf-dark)"
+          <p
+            v-if="projectionAmount != null"
+            class="mt-(--space-4) mb-0 rounded-[14px] bg-(--color-leaf-soft) px-(--space-4) py-(--space-3) text-(length:--font-sm) leading-[1.5] break-keep text-(color:--color-navy)"
+          >
+            <span class="font-bold">전망</span>
+            · 이 속도면 이달 말 약 {{ formatWon(projectionAmount) }}원 (남은 {{ daysLeft }}일)
+          </p>
+
+          <router-link
+            :to="insightCta.to"
+            class="mt-(--space-4) block text-right text-(length:--font-sm) font-bold text-(color:--color-leaf-dark) no-underline"
+          >
+            {{ insightCta.label }} &gt;
+          </router-link>
+        </article>
+
+        <template
+          v-for="followUp in followUps"
+          :key="followUp.type"
+        >
+          <section
+            v-if="followUp.type === 'GROUP_PURCHASE' && currentPurchase"
+            class="mt-(--space-6)"
+            :aria-label="copyFor(followUp)?.title"
+          >
+            <h3 class="m-0 text-(length:--font-xs) font-medium text-(color:--color-slate-muted)">
+              {{ copyFor(followUp).title }}
+            </h3>
+            <router-link
+              :to="`/group-purchase/${currentPurchase.id}`"
+              class="mt-(--space-3) block rounded-[22px] border border-(--color-card-border) bg-(--color-white) p-(--space-4) text-inherit no-underline"
             >
-              {{ card.ctaLabel }} →
+              <div class="flex items-start justify-between gap-(--space-3)">
+                <div class="min-w-0">
+                  <p class="m-0 text-(length:--font-md) font-bold text-(color:--color-navy)">
+                    {{ currentPurchase.productName }}
+                  </p>
+                  <p class="mt-(--space-1) mb-0 text-(length:--font-xs) text-(color:--color-slate-muted)">
+                    {{ currentPurchase.currentQuantity }}/{{ currentPurchase.targetQuantity }}개 참여 · {{ currentPurchase.dDay }}
+                  </p>
+                  <p class="mt-(--space-2) mb-0 flex items-baseline gap-(--space-2)">
+                    <span class="text-(length:--font-lg) font-bold text-(color:--color-navy)">{{ formatWon(currentPurchase.groupPrice) }}원</span>
+                    <span
+                      v-if="currentPurchase.unitPrice"
+                      class="text-(length:--font-sm) text-(color:--color-slate-muted) line-through"
+                    >{{ formatWon(currentPurchase.unitPrice) }}원</span>
+                  </p>
+                </div>
+                <span
+                  v-if="currentDiscount"
+                  class="shrink-0 rounded-full bg-(--color-pastel-cream) px-(--space-3) py-(--space-1) text-(length:--font-xs) font-bold text-(color:--color-gold-dark)"
+                >
+                  {{ currentDiscount }}
+                </span>
+              </div>
+            </router-link>
+            <div
+              v-if="recommendedPurchases.length > 1"
+              class="mt-(--space-3) flex justify-center gap-(--space-2)"
+            >
+              <button
+                v-for="(_, index) in recommendedPurchases"
+                :key="index"
+                type="button"
+                class="h-[8px] rounded-full border-0 p-0"
+                :class="index === gpSlideIndex ? 'w-[18px] bg-(--color-leaf)' : 'w-[8px] bg-(--color-slate-light)'"
+                :aria-label="`${index + 1}번째 추천`"
+                :aria-pressed="index === gpSlideIndex"
+                @click="gpSlideIndex = index"
+              />
+            </div>
+          </section>
+
+          <article
+            v-else-if="followUp.type !== 'GROUP_PURCHASE' && copyFor(followUp)"
+            class="mt-(--space-6) rounded-[22px] border border-(--color-card-border) bg-(--color-white) p-(--space-4)"
+          >
+            <h3 class="m-0 text-(length:--font-xs) font-medium text-(color:--color-slate-muted)">
+              {{ copyFor(followUp).title }}
+            </h3>
+            <p class="mt-(--space-3) mb-0 text-(length:--font-sm) leading-[1.65] break-keep text-(color:--color-slate-dark)">
+              {{ copyFor(followUp).body }}
             </p>
-          </component>
-        </div>
+            <router-link
+              :to="copyFor(followUp).ctaPath"
+              class="mt-(--space-3) block text-right text-(length:--font-sm) font-bold text-(color:--color-leaf-dark) no-underline"
+            >
+              {{ copyFor(followUp).ctaLabel }} &gt;
+            </router-link>
+          </article>
+        </template>
       </section>
     </template>
   </div>
