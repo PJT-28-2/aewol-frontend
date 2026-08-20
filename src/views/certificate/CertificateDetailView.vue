@@ -97,6 +97,13 @@ async function captureCard() {
     useCORS: true,
     // CSS 변수는 html2canvas가 직접 해석하지 못해 실제 계산된 색상값을 런타임에 읽어서 전달
     backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--color-white').trim(),
+    // --shadow-card가 color-mix()로 정의돼 있는데(variables.css), html2canvas는 color-mix()
+    // 같은 최신 CSS 색상 함수를 파싱하지 못해 캡처 자체가 예외를 던진다. 화면에 실제로 붙는
+    // 요소가 아니라 캡처용으로 복제된 사본(onclone의 두 번째 인자)에서만 그림자를 제거해서,
+    // 실제 화면(shadow-(--shadow-card))에는 영향 없이 캡처만 되게 한다
+    onclone: (clonedDocument, clonedElement) => {
+      clonedElement.style.boxShadow = 'none'
+    },
   })
 }
 
@@ -113,7 +120,11 @@ async function handleDownloadPdf() {
     const fileName = isPhotoDoc.value ? certName.value : `동물등록증_${certName.value}`
     pdf.save(`${fileName}.pdf`)
     showSavedModal.value = true
-  } catch {
+  } catch (err) {
+    // 원인 무관하게 같은 alert만 뜨는 문제가 있었다(html2canvas의 color-mix() 파싱 실패 등) —
+    // 사용자에게 보여줄 문구는 그대로 두되, 콘솔에는 실제 에러를 남겨 다음에 같은 증상이
+    // 생겨도 원인을 바로 확인할 수 있게 한다
+    console.error('[CertificateDetail] PDF 저장 실패', err)
     alert('문서를 저장할 수 없어요. 다시 시도해주세요.')
   } finally {
     isGeneratingPdf.value = false
