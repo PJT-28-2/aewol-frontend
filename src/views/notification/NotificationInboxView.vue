@@ -52,6 +52,10 @@ function fetchNotifications() {
   return store.fetchNotifications().catch(() => {})
 }
 
+function loadMoreNotifications() {
+  return store.loadMore().catch(() => {})
+}
+
 onMounted(fetchNotifications)
 </script>
 
@@ -137,7 +141,7 @@ onMounted(fetchNotifications)
           variant="secondary"
           size="sm"
           :loading="isLoadingMore"
-          @click="store.loadMore()"
+          @click="loadMoreNotifications"
         >
           알림 더 보기
         </AppButton>

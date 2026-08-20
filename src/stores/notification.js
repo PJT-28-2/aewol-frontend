@@ -22,7 +22,8 @@ export const useNotificationStore = defineStore('notification', {
     async fetchNotifications({ page = 0, size = 20, append = false } = {}) {
       if (append) this.isLoadingMore = true
       else this.isLoading = true
-      this.error = ''
+      if (append) this.actionError = ''
+      else this.error = ''
 
       try {
         const result = unwrapResult(await notificationApi.getNotifications({ page, size }))
@@ -33,7 +34,9 @@ export const useNotificationStore = defineStore('notification', {
         this.hasNext = Boolean(result?.hasNext)
         this.initialized = true
       } catch (error) {
-        this.error = errorMessage(error, '알림을 불러오지 못했어요. 다시 시도해 주세요.')
+        const message = errorMessage(error, '알림을 불러오지 못했어요. 다시 시도해 주세요.')
+        if (append) this.actionError = message
+        else this.error = message
         throw error
       } finally {
         this.isLoading = false

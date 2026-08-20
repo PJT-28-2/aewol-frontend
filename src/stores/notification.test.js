@@ -42,6 +42,21 @@ describe('useNotificationStore', () => {
     expect(store.initialized).toBe(true)
   })
 
+  it('추가 목록 조회가 실패해도 기존 목록을 유지한다', async () => {
+    notificationApi.getNotifications.mockRejectedValue(new Error('network'))
+    const store = useNotificationStore()
+    store.notifications = [{ ...unread }]
+    store.page = 0
+    store.hasNext = true
+
+    await expect(store.loadMore()).rejects.toThrow('network')
+
+    expect(store.notifications).toEqual([unread])
+    expect(store.error).toBe('')
+    expect(store.actionError).toBe('알림을 불러오지 못했어요. 다시 시도해 주세요.')
+    expect(store.isLoadingMore).toBe(false)
+  })
+
   it('읽음 API가 성공한 뒤에만 로컬 상태를 바꾼다', async () => {
     notificationApi.markAsRead.mockResolvedValue({ data: { result: null } })
     const store = useNotificationStore()
