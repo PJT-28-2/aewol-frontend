@@ -294,7 +294,7 @@ onBeforeUnmount(() => {
           block
           @click="handleSkip"
         >
-          사진 없이 기본 캐릭터 쓰기
+          다음에 등록하기
         </AppButton>
       </section>
 

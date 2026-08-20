@@ -64,20 +64,20 @@ describe('PetProfilePhotoView 기본 캐릭터로 건너뛰기', () => {
 
   // 회의 피드백: "사진 안 넣고 싶을 때는? → 우리 기본 캐릭터 넣어주기"
   it('업로드 단계에서 사진 없이 넘어가는 선택지를 준다', () => {
-    expect(findButtonByText('사진 없이 기본 캐릭터 쓰기')).toBeTruthy()
+    expect(findButtonByText('다음에 등록하기')).toBeTruthy()
   })
 
   // 표시단이 빈 값을 종별 기본 캐릭터로 폴백하므로 생성도 저장도 필요 없다.
   // 여기서 생성 API를 부르면 요금과 일일 한도를 쓸데없이 소모한다.
   it('건너뛰면 캐릭터 생성 API를 부르지 않는다', async () => {
-    findButtonByText('사진 없이 기본 캐릭터 쓰기').click()
+    findButtonByText('다음에 등록하기').click()
     await flush()
 
     expect(mocks.generateCharacter).not.toHaveBeenCalled()
   })
 
   it('건너뛰면 다음 화면으로 이동한다', async () => {
-    findButtonByText('사진 없이 기본 캐릭터 쓰기').click()
+    findButtonByText('다음에 등록하기').click()
     await flush()
 
     expect(mocks.replace).toHaveBeenCalledWith('/home')
