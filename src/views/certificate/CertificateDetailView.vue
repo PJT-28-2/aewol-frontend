@@ -160,15 +160,20 @@ function handleShareFallbackConfirm() {
 // 재동기화 시점의 로그인 유저 프로필과는 무관하다(2026-08-20 백엔드 확인)
 const isResyncing = ref(false)
 const resyncError = ref('')
+// 재동기화 성공 안내 — "마지막 동기화" 시각도 갱신되긴 하지만 값이 조용히 바뀌는 것뿐이라
+// 눈에 잘 안 띄어서, 성공했다는 걸 명확히 알려주는 문구를 따로 둔다
+const resyncSuccess = ref(false)
 
 async function handleResync() {
   if (!certificateStore.detail) return
   resyncError.value = ''
+  resyncSuccess.value = false
   isResyncing.value = true
   try {
     await certificateStore.verifyRegistration(route.params.petId, {
       regNumber: certificateStore.detail.regNumber,
     })
+    resyncSuccess.value = true
   } catch (err) {
     resyncError.value = err.response?.data?.message ?? '동기화에 실패했어요. 다시 시도해주세요.'
   } finally {
@@ -344,8 +349,16 @@ async function handlePhotoDelete() {
             정보가 바뀌었다면 눌러서 최신 상태로 갱신해요
           </p>
           <p
+            v-if="resyncSuccess"
+            class="text-(length:--font-xs) text-(color:--color-success) mt-(--space-1)"
+            role="status"
+          >
+            최신 정보로 업데이트했어요
+          </p>
+          <p
             v-if="resyncError"
             class="text-(length:--font-xs) text-(color:--color-danger-strong) mt-(--space-1)"
+            role="alert"
           >
             {{ resyncError }}
           </p>
