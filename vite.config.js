@@ -13,6 +13,7 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:8080',
         changeOrigin: true,
+        cookieDomainRewrite: 'localhost',
       },
       // 서버가 저장한 업로드 파일(일기 사진, 반려동물 프로필 등)은 백엔드가 /uploads로
       // 서빙한다. <img src="/uploads/...">는 개발 서버(5173)로 요청되므로 함께 프록시한다.

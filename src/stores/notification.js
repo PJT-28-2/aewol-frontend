@@ -17,12 +17,12 @@ export const useNotificationStore = defineStore('notification', {
   actions: {
     connect() {
       // WebSocket placeholder — replace URL with actual endpoint
-      const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8080/ws/notifications'
-      const token = localStorage.getItem('accessToken')
+      const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8080/ws'
+      if (!localStorage.getItem('accessToken')) return
 
       if (this._ws) this.disconnect()
 
-      this._ws = new WebSocket(`${wsUrl}?token=${token}`)
+      this._ws = new WebSocket(wsUrl)
 
       this._ws.onmessage = (event) => {
         try {
