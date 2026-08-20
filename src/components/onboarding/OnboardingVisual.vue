@@ -41,7 +41,7 @@ defineProps({
       </section>
     </div>
 
-    <!-- PetMemoryListView의 실제 추억 카드 구조를 축약해 사용 -->
+    <!-- 육아일기 목록(ShareDiaryView)의 카드 구조를 축약해 사용 -->
     <div v-else-if="type === 'memories'" class="absolute inset-x-[28px] top-1/2 -translate-y-1/2 [@media(max-height:720px)]:scale-[0.72]">
       <div class="flex items-center justify-between px-(--space-2)">
         <span class="grid size-[26px] place-items-center rounded-full bg-(--color-white) text-(--color-slate-dark)">
