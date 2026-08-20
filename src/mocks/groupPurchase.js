@@ -6,7 +6,9 @@ import productImage from '@/assets/images/mock-product-dogfood.png'
 // 진행중 글에서 '확인하기'(관리자) / '참여중'(이미 참여) / '참여하기'(미참여) 3분기 버튼에 사용
 // 실 API에서는 authStore.isAdmin(JWT role 클레임)으로 판정 (GroupPurchaseStatusView/DetailView와 동일 방식).
 // isParticipating은 GET /group-purchase 응답의 로그인 회원 기준 필드다.
-// image는 상세 화면(MOCK_GROUP_PURCHASE_DETAIL)과 동일한 group_purchase.image 컬럼을 목록 API도 함께 내려준다고 가정한 값
+// image는 상세 화면(MOCK_GROUP_PURCHASE_DETAIL)과 동일한 group_purchase.image 컬럼을 목록 API도 함께 내려준다고 가정한 값.
+// 에셋이 mock-product-dogfood.png 하나뿐이라 전 항목이 같은 이미지를 재사용한다.
+// id: 2는 의도적으로 image를 비워 목록 화면의 "이미지 없음" 플레이스홀더 분기를 mock으로도 확인할 수 있게 둔다
 export const MOCK_GROUP_PURCHASE_LIST = [
   {
     id: 1,
@@ -43,6 +45,7 @@ export const MOCK_GROUP_PURCHASE_LIST = [
     id: 3,
     productName: '고양이 스크래처 장난감 세트',
     category: '장난감',
+    image: productImage,
     status: 'COMPLETED',
     currentQuantity: 20,
     targetQuantity: 20,
@@ -58,6 +61,7 @@ export const MOCK_GROUP_PURCHASE_LIST = [
     id: 4,
     productName: '강아지 방한 조끼',
     category: '기타',
+    image: productImage,
     status: 'FAILED',
     currentQuantity: 12,
     targetQuantity: 30,
@@ -73,6 +77,7 @@ export const MOCK_GROUP_PURCHASE_LIST = [
     id: 5,
     productName: '강아지 유산균 6개월분',
     category: '영양제',
+    image: productImage,
     status: 'OPEN',
     currentQuantity: 14,
     targetQuantity: 20,
