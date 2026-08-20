@@ -173,7 +173,7 @@ onBeforeUnmount(releasePreview)
         줄 쳐진 본문이 차례로 놓이는 구조다. 저장 규칙과 API는 그대로다.
       -->
       <article
-        class="overflow-hidden rounded-[var(--radius-2xl)] border border-(--color-card-border) bg-(--color-white) shadow-(--shadow-card)"
+        class="overflow-hidden rounded-[24px] bg-(--color-white) shadow-(--shadow-sm)"
       >
         <header
           class="flex items-baseline justify-between gap-[var(--space-3)] border-b border-dashed border-(--color-border) px-[var(--space-5)] pb-[var(--space-3)] pt-[var(--space-5)]"
