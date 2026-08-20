@@ -6,11 +6,13 @@ import productImage from '@/assets/images/mock-product-dogfood.png'
 // 진행중 글에서 '확인하기'(관리자) / '참여중'(이미 참여) / '참여하기'(미참여) 3분기 버튼에 사용
 // 실 API에서는 authStore.isAdmin(JWT role 클레임)으로 판정 (GroupPurchaseStatusView/DetailView와 동일 방식).
 // isParticipating은 GET /group-purchase 응답의 로그인 회원 기준 필드다.
+// image는 상세 화면(MOCK_GROUP_PURCHASE_DETAIL)과 동일한 group_purchase.image 컬럼을 목록 API도 함께 내려준다고 가정한 값
 export const MOCK_GROUP_PURCHASE_LIST = [
   {
     id: 1,
     productName: '프리미엄 사료 15kg',
     category: '사료',
+    image: productImage,
     status: 'OPEN',
     currentQuantity: 32,
     targetQuantity: 50,

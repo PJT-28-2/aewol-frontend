@@ -327,42 +327,56 @@ onBeforeUnmount(() => {
         <li
           v-for="gp in groupPurchases"
           :key="gp.id"
-          class="flex items-center justify-between gap-(--space-3) rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-(--space-4) shadow-(--shadow-card)"
+          class="flex items-center gap-(--space-3) rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-(--space-4) shadow-(--shadow-card)"
         >
-          <div>
-            <h3 class="text-(length:--font-md) font-semibold text-(color:--color-gray-900) mb-(--space-1)">
-              {{ gp.productName }}
-            </h3>
-            <p class="text-(length:--font-xs) text-(color:--color-gray-500) mb-(--space-1)">
-              {{ gp.currentQuantity }}/{{ gp.targetQuantity }}개 참여 · {{ gp.status === 'OPEN' ? gp.dDay : getGroupPurchaseStatusLabel(gp.status) }}
-            </p>
-            <div class="flex items-center gap-(--space-2) mb-(--space-1)">
-              <p class="text-(length:--font-xs) font-bold text-(color:--color-navy)">
-                {{ gp.groupPrice?.toLocaleString() }}원
+          <!-- 상품 썸네일: 상세 화면(GroupPurchaseDetailView)과 동일하게 image 필드를 그대로 사용 -->
+          <div
+            class="shrink-0 w-(--size-thumb-md) h-(--size-thumb-md) rounded-(--radius-lg) bg-(--color-surface) overflow-hidden"
+          >
+            <img
+              v-if="gp.image"
+              :src="gp.image"
+              :alt="gp.productName"
+              class="w-full h-full object-cover"
+            >
+          </div>
+
+          <div class="flex flex-1 min-w-0 items-center justify-between gap-(--space-3)">
+            <div class="min-w-0">
+              <h3 class="text-(length:--font-md) font-semibold text-(color:--color-gray-900) mb-(--space-1)">
+                {{ gp.productName }}
+              </h3>
+              <p class="text-(length:--font-xs) text-(color:--color-gray-500) mb-(--space-1)">
+                {{ gp.currentQuantity }}/{{ gp.targetQuantity }}개 참여 · {{ gp.status === 'OPEN' ? gp.dDay : getGroupPurchaseStatusLabel(gp.status) }}
               </p>
-              <p class="text-(length:--font-xs) text-(color:--color-slate-muted) line-through">
-                {{ gp.unitPrice?.toLocaleString() }}원
-              </p>
+              <div class="flex items-center gap-(--space-2) mb-(--space-1)">
+                <p class="text-(length:--font-xs) font-bold text-(color:--color-navy)">
+                  {{ gp.groupPrice?.toLocaleString() }}원
+                </p>
+                <p class="text-(length:--font-xs) text-(color:--color-slate-muted) line-through">
+                  {{ gp.unitPrice?.toLocaleString() }}원
+                </p>
+              </div>
+              <span class="text-(length:--font-xs) font-semibold text-(color:--color-gold)">
+                {{ gp.badgeText }}
+              </span>
             </div>
-            <span class="text-(length:--font-xs) font-semibold text-(color:--color-gold)">
-              {{ gp.badgeText }}
+            <!-- 진행중: 관리자('확인하기')/이미 참여('참여중')는 상세 없이 상태 화면으로, 미참여('참여하기')는 참여 플로우로 이동 -->
+            <router-link
+              v-if="gp.status === 'OPEN'"
+              :to="gp.isAdmin || gp.isParticipating ? `/group-purchase/${gp.id}/status` : `/group-purchase/${gp.id}`"
+              class="shrink-0 whitespace-nowrap rounded-full bg-(--color-leaf) px-(--space-4) py-(--space-2) text-(length:--font-sm) font-semibold text-(color:--color-navy) no-underline"
+            >
+              {{ gp.isAdmin ? '확인하기' : gp.isParticipating ? '참여중' : '참여하기' }}
+            </router-link>
+            <!-- 마감된 게시글은 새로 참여할 수 없어 비활성화 표시만 함 -->
+            <span
+              v-else
+              class="shrink-0 px-(--space-4) py-(--space-2) bg-(--color-gray-200) text-(color:--color-gray-500) rounded-full text-(length:--font-sm) font-semibold whitespace-nowrap"
+            >
+              마감
             </span>
           </div>
-          <!-- 진행중: 관리자('확인하기')/이미 참여('참여중')는 상세 없이 상태 화면으로, 미참여('참여하기')는 참여 플로우로 이동 -->
-          <router-link
-            v-if="gp.status === 'OPEN'"
-            :to="gp.isAdmin || gp.isParticipating ? `/group-purchase/${gp.id}/status` : `/group-purchase/${gp.id}`"
-            class="shrink-0 whitespace-nowrap rounded-full bg-(--color-leaf) px-(--space-4) py-(--space-2) text-(length:--font-sm) font-semibold text-(color:--color-navy) no-underline"
-          >
-            {{ gp.isAdmin ? '확인하기' : gp.isParticipating ? '참여중' : '참여하기' }}
-          </router-link>
-          <!-- 마감된 게시글은 새로 참여할 수 없어 비활성화 표시만 함 -->
-          <span
-            v-else
-            class="shrink-0 px-(--space-4) py-(--space-2) bg-(--color-gray-200) text-(color:--color-gray-500) rounded-full text-(length:--font-sm) font-semibold whitespace-nowrap"
-          >
-            마감
-          </span>
         </li>
       </ul>
 
