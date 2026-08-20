@@ -1,62 +1,100 @@
 import { defineStore } from 'pinia'
-import { USE_MOCK_DATA } from '@/mocks/config'
+import { notificationApi } from '@/api/notification'
 
-const MOCK_NOTIFICATIONS = [
-  { id: 1, type: 'PAYMENT', title: '포리의 병원비가 기록됐어요', message: '24시 우리동물병원 · 42,000원', createdAt: '2026-08-18T15:24:00', read: false },
-  { id: 2, type: 'BUDGET', title: '이번 달 병원비 예산을 확인해주세요', message: '설정한 예산의 80%를 사용했어요.', createdAt: '2026-08-17T09:10:00', read: false },
-  { id: 3, type: 'CARE', title: '새로운 돌봄 기록이 도착했어요', message: '엄마님이 포리의 산책 기록을 남겼어요.', createdAt: '2026-08-16T19:30:00', read: true },
-]
+const errorMessage = (error, fallback) => error.response?.data?.message || fallback
+const unwrapResult = (response) => response?.data?.result ?? response?.data ?? response
 
 export const useNotificationStore = defineStore('notification', {
   state: () => ({
-    notifications: USE_MOCK_DATA ? MOCK_NOTIFICATIONS.map((item) => ({ ...item })) : [],
-    unreadCount: USE_MOCK_DATA ? MOCK_NOTIFICATIONS.filter((item) => !item.read).length : 0,
-    _ws: null,
+    notifications: [],
+    unreadCount: 0,
+    page: 0,
+    hasNext: false,
+    isLoading: false,
+    isLoadingMore: false,
+    isMarkingAll: false,
+    error: '',
+    actionError: '',
+    initialized: false,
   }),
 
   actions: {
-    connect() {
-      // WebSocket placeholder — replace URL with actual endpoint
-      const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8080/ws'
-      if (!localStorage.getItem('accessToken')) return
+    async fetchNotifications({ page = 0, size = 20, append = false } = {}) {
+      if (append) this.isLoadingMore = true
+      else this.isLoading = true
+      this.error = ''
 
-      if (this._ws) this.disconnect()
-
-      this._ws = new WebSocket(wsUrl)
-
-      this._ws.onmessage = (event) => {
-        try {
-          const notification = JSON.parse(event.data)
-          this.notifications.unshift(notification)
-          this.unreadCount += 1
-        } catch {
-          // ignore malformed messages
-        }
-      }
-
-      this._ws.onclose = () => {
-        this._ws = null
+      try {
+        const result = unwrapResult(await notificationApi.getNotifications({ page, size }))
+        const items = Array.isArray(result?.notifications) ? result.notifications : []
+        this.notifications = append ? [...this.notifications, ...items] : items
+        this.unreadCount = Number(result?.unreadCount ?? 0)
+        this.page = Number(result?.page ?? page)
+        this.hasNext = Boolean(result?.hasNext)
+        this.initialized = true
+      } catch (error) {
+        this.error = errorMessage(error, '알림을 불러오지 못했어요. 다시 시도해 주세요.')
+        throw error
+      } finally {
+        this.isLoading = false
+        this.isLoadingMore = false
       }
     },
 
-    disconnect() {
-      if (this._ws) {
-        this._ws.close()
-        this._ws = null
+    async fetchUnreadCount() {
+      try {
+        const result = unwrapResult(await notificationApi.getUnreadCount())
+        this.unreadCount = Number(result?.unreadCount ?? 0)
+      } catch (error) {
+        // 배지는 홈의 부가 정보라 홈 화면 전체를 실패시키지 않는다.
+        console.error('[notification] 읽지 않은 알림 수를 불러오지 못했습니다.', error)
       }
     },
 
-    markAsRead(id) {
-      const item = this.notifications.find((notification) => notification.id === id)
-      if (item && !item.read) {
+    async loadMore() {
+      if (!this.hasNext || this.isLoading || this.isLoadingMore) return
+      return this.fetchNotifications({ page: this.page + 1, size: 20, append: true })
+    },
+
+    async markAsRead(notificationId) {
+      const item = this.notifications.find((notification) => notification.notificationId === notificationId)
+      if (!item || item.read) return
+
+      this.actionError = ''
+      try {
+        await notificationApi.markAsRead(notificationId)
         item.read = true
+        item.readAt ||= new Date().toISOString()
         this.unreadCount = Math.max(0, this.unreadCount - 1)
+      } catch (error) {
+        this.actionError = errorMessage(error, '알림을 읽음 처리하지 못했어요.')
+        throw error
       }
     },
 
-    markAllAsRead() {
-      this.notifications.forEach((notification) => { notification.read = true })
-      this.unreadCount = 0
+    async markAllAsRead() {
+      if (!this.unreadCount || this.isMarkingAll) return
+
+      this.isMarkingAll = true
+      this.actionError = ''
+      try {
+        await notificationApi.markAllAsRead()
+        const readAt = new Date().toISOString()
+        this.notifications.forEach((notification) => {
+          notification.read = true
+          notification.readAt ||= readAt
+        })
+        this.unreadCount = 0
+      } catch (error) {
+        this.actionError = errorMessage(error, '알림을 모두 읽음 처리하지 못했어요.')
+        throw error
+      } finally {
+        this.isMarkingAll = false
+      }
+    },
+
+    reset() {
+      this.$reset()
     },
   },
 })
