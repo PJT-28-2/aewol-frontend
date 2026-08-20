@@ -4,7 +4,6 @@ import { useRoute, useRouter } from 'vue-router'
 import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
 import { useCertificateStore } from '@/stores/certificate'
-import { useMemberStore } from '@/stores/member'
 import { formatDateDot, formatDateTimeDot } from '@/utils/date'
 import AppButton from '@/components/common/AppButton.vue'
 import FeatureIconTile from '@/components/common/FeatureIconTile.vue'
@@ -18,7 +17,6 @@ import IconWarning from '@/components/common/icons/IconWarning.vue'
 const route = useRoute()
 const router = useRouter()
 const certificateStore = useCertificateStore()
-const memberStore = useMemberStore()
 
 // 동물등록증뿐 아니라 접종증명서/진료확인서도 같은 상세 페이지를 공유한다.
 // documents에서 docType을 먼저 확인해서, 등록증이면 registrationDetails를 조회하고
@@ -99,6 +97,13 @@ async function captureCard() {
     useCORS: true,
     // CSS 변수는 html2canvas가 직접 해석하지 못해 실제 계산된 색상값을 런타임에 읽어서 전달
     backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--color-white').trim(),
+    // --shadow-card가 color-mix()로 정의돼 있는데(variables.css), html2canvas는 color-mix()
+    // 같은 최신 CSS 색상 함수를 파싱하지 못해 캡처 자체가 예외를 던진다. 화면에 실제로 붙는
+    // 요소가 아니라 캡처용으로 복제된 사본(onclone의 두 번째 인자)에서만 그림자를 제거해서,
+    // 실제 화면(shadow-(--shadow-card))에는 영향 없이 캡처만 되게 한다
+    onclone: (clonedDocument, clonedElement) => {
+      clonedElement.style.boxShadow = 'none'
+    },
   })
 }
 
@@ -115,7 +120,11 @@ async function handleDownloadPdf() {
     const fileName = isPhotoDoc.value ? certName.value : `동물등록증_${certName.value}`
     pdf.save(`${fileName}.pdf`)
     showSavedModal.value = true
-  } catch {
+  } catch (err) {
+    // 원인 무관하게 같은 alert만 뜨는 문제가 있었다(html2canvas의 color-mix() 파싱 실패 등) —
+    // 사용자에게 보여줄 문구는 그대로 두되, 콘솔에는 실제 에러를 남겨 다음에 같은 증상이
+    // 생겨도 원인을 바로 확인할 수 있게 한다
+    console.error('[CertificateDetail] PDF 저장 실패', err)
     alert('문서를 저장할 수 없어요. 다시 시도해주세요.')
   } finally {
     isGeneratingPdf.value = false
@@ -157,22 +166,25 @@ function handleShareFallbackConfirm() {
 }
 
 // 재동기화 — 별도 재동기화 API가 없어, 같은 petId로 verify()를 다시 호출한다(백엔드가 기존
-// 문서가 있으면 update 분기를 타서 재검증+갱신됨). regNumber는 이미 연동된 값을 그대로 쓰고,
-// 신청인 이름/생년월일은 회원 프로필로 채운다("대표 보호자만 이 작업을 할 수 있음" 전제와 일치)
+// 문서가 있으면 update 분기를 타서 재검증+갱신됨). regNumber만 넘기면, 최초 연동 시 DB에
+// 저장해둔 소유자 이름/생년월일을 백엔드가 그대로 재사용해 APMS를 다시 조회한다 — 그래서
+// 재동기화 시점의 로그인 유저 프로필과는 무관하다(2026-08-20 백엔드 확인)
 const isResyncing = ref(false)
 const resyncError = ref('')
+// 재동기화 성공 안내 — "마지막 동기화" 시각도 갱신되긴 하지만 값이 조용히 바뀌는 것뿐이라
+// 눈에 잘 안 띄어서, 성공했다는 걸 명확히 알려주는 문구를 따로 둔다
+const resyncSuccess = ref(false)
 
 async function handleResync() {
   if (!certificateStore.detail) return
   resyncError.value = ''
+  resyncSuccess.value = false
   isResyncing.value = true
   try {
-    if (!memberStore.profile) await memberStore.fetchProfile()
     await certificateStore.verifyRegistration(route.params.petId, {
       regNumber: certificateStore.detail.regNumber,
-      userName: memberStore.profile?.name ?? '',
-      birthDate: memberStore.profile?.birthDate ?? '',
     })
+    resyncSuccess.value = true
   } catch (err) {
     resyncError.value = err.response?.data?.message ?? '동기화에 실패했어요. 다시 시도해주세요.'
   } finally {
@@ -348,8 +360,16 @@ async function handlePhotoDelete() {
             정보가 바뀌었다면 눌러서 최신 상태로 갱신해요
           </p>
           <p
+            v-if="resyncSuccess"
+            class="text-(length:--font-xs) text-(color:--color-success) mt-(--space-1)"
+            role="status"
+          >
+            최신 정보로 업데이트했어요
+          </p>
+          <p
             v-if="resyncError"
             class="text-(length:--font-xs) text-(color:--color-danger-strong) mt-(--space-1)"
+            role="alert"
           >
             {{ resyncError }}
           </p>

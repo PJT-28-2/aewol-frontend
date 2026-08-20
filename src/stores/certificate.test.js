@@ -203,6 +203,32 @@ describe('useCertificateStore - 문서 목록 및 상세 조회', () => {
     expect(store.detail?.birthDate).toBe('2023-05-12')
   })
 
+  it('verifyRegistration()은 regNumber만 있어도 통과한다 — 재동기화는 최초 연동 시 저장된 소유자 정보를 백엔드가 재사용하므로 userName/birthDate가 필요 없다', async () => {
+    certificatesApi.verifyRegistration.mockResolvedValue({
+      data: { result: { docId: 'doc-reg-1', petId: 'pet-1', regNumber: '410000012345678' } },
+    })
+    // verifyRegistration 성공 후 내부적으로 fetchCertificates(petId)를 호출하므로 같이 mock한다
+    certificatesApi.getList.mockResolvedValue({ data: { result: [] } })
+
+    const store = useCertificateStore()
+    await store.verifyRegistration('pet-1', { regNumber: '410000012345678' })
+
+    expect(certificatesApi.verifyRegistration).toHaveBeenCalledWith('pet-1', {
+      regNumber: '410000012345678',
+      userName: undefined,
+      birthDate: undefined,
+    })
+  })
+
+  it('verifyRegistration()은 regNumber가 없으면 API를 호출하지 않고 에러를 던진다', async () => {
+    const store = useCertificateStore()
+
+    await expect(store.verifyRegistration('pet-1', {})).rejects.toThrow(
+      '동물등록번호를 입력해주세요.',
+    )
+    expect(certificatesApi.verifyRegistration).not.toHaveBeenCalled()
+  })
+
   it('selectPet()은 선택된 펫 ID를 바꾸고 해당 펫의 증명서 목록을 요청한다', async () => {
     certificatesApi.getList.mockResolvedValue({
       data: { result: [] },
