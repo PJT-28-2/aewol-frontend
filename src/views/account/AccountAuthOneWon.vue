@@ -6,6 +6,7 @@ import { getBankMeta } from '@/utils/bankMeta';
 import { formatCountdown } from '@/utils/date';
 import AppButton from '@/components/common/AppButton.vue';
 import BankBadge from '@/components/common/BankBadge.vue';
+import IconInfo from '@/components/common/icons/IconInfo.vue';
 import IconLock from '@/components/common/icons/IconLock.vue';
 
 const router = useRouter();
@@ -18,6 +19,12 @@ if (!store.linking.bankCode) {
 }
 
 const bankMeta = computed(() => getBankMeta(store.linking.bankCode));
+
+// Vue 템플릿의 v-if 표현식은 sourceType: "script"로 파싱돼서 import.meta를 템플릿에
+// 직접 쓰면 빌드가 깨진다("import.meta may appear only with 'sourceType: module'",
+// PR #301 CI 실패, 2026-08-19). script setup 쪽(모듈 스코프)에서 한 번 읽어서 상수로
+// 빼두고 템플릿에서는 이 값만 참조한다.
+const isDev = import.meta.env.DEV;
 
 // step 1: 계좌번호 입력 (Figma 목업에 없는 보완 단계)
 // step 2: 1원 인증 - 입금자명(한글, CODEF inPrintType=1) 입력 (RF-CM 목업 그대로)
@@ -376,6 +383,26 @@ async function submitVerification() {
       <p class="text-(length:--font-sm) text-(color:--color-gray-500) leading-relaxed mb-(--space-2)">
         은행 앱 알림이나 입출금 문자에서<br>입금자명(예: 푸른애월)의 앞 {{ depositorNameLength }}글자를 확인할 수 있어요
       </p>
+
+      <!-- local/test 환경에서만 백엔드가 내려주는 값이에요(운영에서는 항상 null이라
+           이 블록 자체가 안 보여요). CODEF 데모 서버라 실제 입금 알림이 없어서, 이 값이
+           없으면 서버 로그 접근 권한이 없는 이상 1원 인증을 끝낼 방법이 없었어요(2026-08-19).
+           import.meta.env.DEV를 추가 게이트로 걸어서, 배포 설정 실수로 백엔드가 이 필드를
+           잘못 내려보내도(defense-in-depth) 빌드된 배포본에서는 절대 노출되지 않게 한다
+           (PR #301 리뷰 반영, 2026-08-19). -->
+      <div
+        v-if="isDev && store.linking.depositorNameForTest"
+        class="flex items-center gap-(--space-2) p-3 rounded-(--radius-lg) bg-(--color-icon-yellow-soft) border border-(--color-icon-yellow) mb-(--space-2)"
+      >
+        <IconInfo
+          :size="14"
+          color="var(--color-icon-yellow)"
+        />
+        <span class="text-(length:--font-sm) text-(color:--color-navy)">
+          테스트 환경 정답: <strong class="font-bold">{{ store.linking.depositorNameForTest }}</strong>
+        </span>
+      </div>
+
       <p
         v-if="verifyError"
         class="text-(length:--font-sm) text-(color:--color-danger-strong) mb-(--space-2)"
