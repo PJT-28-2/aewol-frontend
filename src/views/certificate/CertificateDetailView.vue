@@ -4,7 +4,6 @@ import { useRoute, useRouter } from 'vue-router'
 import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
 import { useCertificateStore } from '@/stores/certificate'
-import { useMemberStore } from '@/stores/member'
 import { formatDateDot, formatDateTimeDot } from '@/utils/date'
 import AppButton from '@/components/common/AppButton.vue'
 import FeatureIconTile from '@/components/common/FeatureIconTile.vue'
@@ -18,7 +17,6 @@ import IconWarning from '@/components/common/icons/IconWarning.vue'
 const route = useRoute()
 const router = useRouter()
 const certificateStore = useCertificateStore()
-const memberStore = useMemberStore()
 
 // 동물등록증뿐 아니라 접종증명서/진료확인서도 같은 상세 페이지를 공유한다.
 // documents에서 docType을 먼저 확인해서, 등록증이면 registrationDetails를 조회하고
@@ -157,8 +155,9 @@ function handleShareFallbackConfirm() {
 }
 
 // 재동기화 — 별도 재동기화 API가 없어, 같은 petId로 verify()를 다시 호출한다(백엔드가 기존
-// 문서가 있으면 update 분기를 타서 재검증+갱신됨). regNumber는 이미 연동된 값을 그대로 쓰고,
-// 신청인 이름/생년월일은 회원 프로필로 채운다("대표 보호자만 이 작업을 할 수 있음" 전제와 일치)
+// 문서가 있으면 update 분기를 타서 재검증+갱신됨). regNumber만 넘기면, 최초 연동 시 DB에
+// 저장해둔 소유자 이름/생년월일을 백엔드가 그대로 재사용해 APMS를 다시 조회한다 — 그래서
+// 재동기화 시점의 로그인 유저 프로필과는 무관하다(2026-08-20 백엔드 확인)
 const isResyncing = ref(false)
 const resyncError = ref('')
 
@@ -167,11 +166,8 @@ async function handleResync() {
   resyncError.value = ''
   isResyncing.value = true
   try {
-    if (!memberStore.profile) await memberStore.fetchProfile()
     await certificateStore.verifyRegistration(route.params.petId, {
       regNumber: certificateStore.detail.regNumber,
-      userName: memberStore.profile?.name ?? '',
-      birthDate: memberStore.profile?.birthDate ?? '',
     })
   } catch (err) {
     resyncError.value = err.response?.data?.message ?? '동기화에 실패했어요. 다시 시도해주세요.'

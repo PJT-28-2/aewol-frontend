@@ -163,10 +163,13 @@ export const useCertificateStore = defineStore('certificate', {
     // 동물등록증 인증 — 이미 있는 반려동물(petId) 하나를 대상으로 동물등록번호 + 신청인(보호자)
     // 이름/생년월일을 검증하고, 성공하면 그 자리에서 바로 저장까지 된다(조회 전용 단계 없음).
     // 이미 연동된 반려동물에 다시 호출하면 재동기화(갱신)로 동작 — 별도 재동기화 액션이 필요 없다.
-    // 이름/생년월일 중 하나만 있어도 검증 가능하다는 전제.
+    // userName/birthDate는 최초 연동에서만 필수다(신청인 확인용) — 재동기화는 최초 연동 시
+    // DB에 저장해둔 소유자 이름/생년월일을 백엔드가 그대로 재사용해 APMS를 다시 조회하므로,
+    // regNumber만 넘기면 된다(handleResync가 이 방식으로 호출함). 최초 연동 화면(CertificateListView)
+    // 쪽 "이름 또는 생년월일 중 하나 이상" 검증은 화면 자체에서 이미 하고 있어 여기서는 regNumber만 확인한다.
     async verifyRegistration(petId, { regNumber, userName, birthDate }) {
-      if (!regNumber?.trim() || (!userName?.trim() && !birthDate?.trim())) {
-        throw new Error('동물등록번호와 이름 또는 생년월일을 입력해주세요.')
+      if (!regNumber?.trim()) {
+        throw new Error('동물등록번호를 입력해주세요.')
       }
 
       if (USE_MOCK_DATA) {
