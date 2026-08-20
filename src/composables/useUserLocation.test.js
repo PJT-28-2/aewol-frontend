@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useUserLocation } from './useUserLocation'
 
 const SEOUL = { defaultLatitude: 37.5665, defaultLongitude: 126.978 }
+const ERROR_GRACE_MS = 1000
 
 function positionOf(latitude, longitude) {
   return { coords: { latitude, longitude } }
@@ -12,6 +13,12 @@ function stubGeolocation(impl) {
   const getCurrentPosition = vi.fn(impl)
   navigator.geolocation = { getCurrentPosition }
   return getCurrentPosition
+}
+
+/** 실패 확정까지의 유예 타이머를 흘려보내고 locate() 결과를 받아요. */
+function settleLocate(locate) {
+  const pending = locate()
+  return vi.advanceTimersByTimeAsync(ERROR_GRACE_MS).then(() => pending)
 }
 
 /** Permissions API의 geolocation 상태를 원하는 값으로 고정해요. */
@@ -32,9 +39,12 @@ describe('useUserLocation', () => {
 
   beforeEach(() => {
     warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    // 실패 경로는 ERROR_GRACE_MS만큼 성공을 기다리므로 타이머를 직접 돌려요.
+    vi.useFakeTimers()
   })
 
   afterEach(() => {
+    vi.useRealTimers()
     warnSpy.mockRestore()
     delete navigator.geolocation
     delete navigator.permissions
@@ -68,7 +78,7 @@ describe('useUserLocation', () => {
     stubGeolocation((_success, failure) => failure({ code: 1, message: 'User denied Geolocation' }))
     const { latitude, isFallbackLocation, locationError, locate } = useUserLocation(SEOUL)
 
-    await expect(locate()).resolves.toBe(false)
+    await expect(settleLocate(locate)).resolves.toBe(false)
 
     expect(locationError.value).toBe(
       '위치 권한이 꺼져 있어요. 주소창의 자물쇠 아이콘에서 위치를 허용해주세요',
@@ -85,7 +95,7 @@ describe('useUserLocation', () => {
     stubGeolocation((_success, failure) => failure({ code: 1, message: 'User denied Geolocation' }))
     const { locationError, locate } = useUserLocation(SEOUL)
 
-    await locate()
+    await settleLocate(locate)
 
     expect(locationError.value).toBe(
       '기기의 위치 서비스가 꺼져 있어요. 설정에서 위치를 켠 뒤 다시 시도해주세요',
@@ -97,7 +107,7 @@ describe('useUserLocation', () => {
     stubGeolocation((_success, failure) => failure({ code: 1, message: 'User denied Geolocation' }))
     const { locationError, locate } = useUserLocation(SEOUL)
 
-    await locate()
+    await settleLocate(locate)
 
     expect(locationError.value).toBe(
       '기기의 위치 서비스가 꺼져 있어요. 설정에서 위치를 켠 뒤 다시 시도해주세요',
@@ -112,7 +122,7 @@ describe('useUserLocation', () => {
     stubGeolocation((_success, failure) => failure({ code: 1, message: 'User denied Geolocation' }))
     const { locationError, locate } = useUserLocation(SEOUL)
 
-    await locate()
+    await settleLocate(locate)
 
     expect(locationError.value).toBe(
       '앱 안에서 열린 화면에서는 위치를 쓸 수 없어요. 크롬이나 사파리로 열어주세요',
@@ -123,7 +133,7 @@ describe('useUserLocation', () => {
     stubGeolocation((_success, failure) => failure({ code: 1, message: 'User denied Geolocation' }))
     const { locationError, locate } = useUserLocation(SEOUL)
 
-    await locate()
+    await settleLocate(locate)
 
     expect(locationError.value).toBe(
       '위치 권한이 꺼져 있어요. 주소창의 자물쇠 아이콘에서 위치를 허용해주세요',
@@ -135,7 +145,7 @@ describe('useUserLocation', () => {
     stubGeolocation((_success, failure) => failure({ code: 1, message: 'User denied Geolocation' }))
     const { locationError, locate } = useUserLocation(SEOUL)
 
-    await locate()
+    await settleLocate(locate)
 
     expect(locationError.value).toBe(
       '위치 권한이 꺼져 있어요. 주소창의 자물쇠 아이콘에서 위치를 허용해주세요',
@@ -146,7 +156,7 @@ describe('useUserLocation', () => {
     stubGeolocation((_success, failure) => failure({ code: 2, message: 'unavailable' }))
     const { locationError, locate } = useUserLocation(SEOUL)
 
-    await locate()
+    await settleLocate(locate)
 
     expect(locationError.value).toBe('현재 위치를 확인할 수 없어요. 네트워크 연결을 확인해주세요')
   })
@@ -155,7 +165,7 @@ describe('useUserLocation', () => {
     stubGeolocation((_success, failure) => failure({ code: 3, message: 'timeout' }))
     const { locationError, locate } = useUserLocation(SEOUL)
 
-    await locate()
+    await settleLocate(locate)
 
     expect(locationError.value).toBe('위치 확인이 오래 걸려요. 다시 시도해주세요')
   })
@@ -164,7 +174,7 @@ describe('useUserLocation', () => {
     stubGeolocation((_success, failure) => failure({ message: 'unknown' }))
     const { locationError, locate } = useUserLocation(SEOUL)
 
-    await locate()
+    await settleLocate(locate)
 
     expect(locationError.value).toBe('현재 위치를 확인할 수 없어요')
   })
@@ -181,7 +191,7 @@ describe('useUserLocation', () => {
     stubGeolocation((_success, failure) => failure({ code: 3, message: 'timeout' }))
     const { locate } = useUserLocation(SEOUL)
 
-    await locate()
+    await settleLocate(locate)
 
     expect(warnSpy).toHaveBeenCalledWith(
       '[useUserLocation] 위치 조회 실패',
@@ -223,6 +233,40 @@ describe('useUserLocation', () => {
     expect(isLocating.value).toBe(false)
   })
 
+  // 회귀 방지: 이슈 #344의 진짜 원인. Chrome(Windows)이 명세를 어기고 오류 콜백을
+  // 먼저(실측 7ms) 부른 뒤 성공 콜백에 진짜 좌표를 실어 보낸다(실측 142ms).
+  // 첫 오류로 실패를 확정하면 뒤늦게 온 실제 위치를 버리고 기본 좌표에 머문다.
+  it('오류 콜백 뒤에 성공 콜백이 오면 실제 좌표를 채택한다', async () => {
+    stubPermissionState('granted')
+    stubGeolocation((success, failure) => {
+      failure({ code: 1, message: 'User denied Geolocation' })
+      setTimeout(() => success(positionOf(37.5602, 126.9962)), 135)
+    })
+    const { latitude, longitude, isFallbackLocation, locationError, locate } =
+      useUserLocation(SEOUL)
+
+    await expect(settleLocate(locate)).resolves.toBe(true)
+
+    expect(latitude.value).toBe(37.5602)
+    expect(longitude.value).toBe(126.9962)
+    expect(isFallbackLocation.value).toBe(false)
+    expect(locationError.value).toBe('')
+  })
+
+  // 유예는 성공을 기다리는 시간일 뿐, 성공이 끝내 오지 않으면 원래 오류로 실패해야 한다.
+  it('오류 뒤에 성공이 오지 않으면 유예 후 실패로 확정한다', async () => {
+    stubPermissionState('denied')
+    stubGeolocation((_success, failure) => failure({ code: 1, message: 'User denied Geolocation' }))
+    const { isFallbackLocation, locationError, locate } = useUserLocation(SEOUL)
+
+    await expect(settleLocate(locate)).resolves.toBe(false)
+
+    expect(isFallbackLocation.value).toBe(true)
+    expect(locationError.value).toBe(
+      '위치 권한이 꺼져 있어요. 주소창의 자물쇠 아이콘에서 위치를 허용해주세요',
+    )
+  })
+
   // 회귀 방지: 한 번 성공한 뒤 재시도가 실패했다고 해서 실제 위치를 기본 좌표로
   // 되돌리거나 fallback 상태로 되돌려선 안 된다.
   it('성공 후 재시도가 실패해도 직전 좌표와 상태를 유지한다', async () => {
@@ -231,7 +275,7 @@ describe('useUserLocation', () => {
     await locate()
 
     stubGeolocation((_success, failure) => failure({ code: 3, message: 'timeout' }))
-    await expect(locate()).resolves.toBe(false)
+    await expect(settleLocate(locate)).resolves.toBe(false)
 
     expect(latitude.value).toBe(35.1796)
     expect(longitude.value).toBe(129.0756)

@@ -19,6 +19,13 @@ const GEOLOCATION_OPTIONS = {
 
 const PERMISSION_DENIED = 1
 
+// Chrome(Windows)에서 getCurrentPosition이 명세를 어기고 두 콜백을 다 부르는 경우가 있어요.
+// 실측: 오류 콜백이 7ms에 code 1로 먼저 오고, 135ms 뒤 성공 콜백에 진짜 좌표가 들어와요.
+// 첫 오류를 최종 실패로 확정하면 뒤늦게 도착하는 실제 위치를 버리고 기본 좌표로 내려가요.
+// 그래서 오류가 와도 이 시간만큼은 성공을 기다려요. 관측값의 7배 여유이면서,
+// 진짜 거부일 때 사용자가 안내를 보기까지 1초만 늦어지는 선이에요.
+const ERROR_GRACE_MS = 1000
+
 // PositionError.code 별 안내. 원인마다 사용자가 할 수 있는 조치가 달라서 문구를 나눠요.
 // code 1(PERMISSION_DENIED)만은 코드 하나에 서로 다른 상황이 섞여 있어서
 // resolveDeniedMessage()가 따로 판별해요.
@@ -91,7 +98,28 @@ export function useUserLocation({ defaultLatitude, defaultLongitude }) {
 
 function requestPosition() {
   return new Promise((resolve, reject) => {
-    navigator.geolocation.getCurrentPosition(resolve, reject, GEOLOCATION_OPTIONS)
+    let settled = false
+    let graceTimer = null
+
+    function succeed(position) {
+      if (settled) return
+      settled = true
+      clearTimeout(graceTimer)
+      resolve(position)
+    }
+
+    // 오류를 즉시 확정하지 않고 유예를 둬요 — 그 사이에 성공이 오면 그쪽이 이겨요.
+    function fail(error) {
+      if (settled) return
+      clearTimeout(graceTimer)
+      graceTimer = setTimeout(() => {
+        if (settled) return
+        settled = true
+        reject(error)
+      }, ERROR_GRACE_MS)
+    }
+
+    navigator.geolocation.getCurrentPosition(succeed, fail, GEOLOCATION_OPTIONS)
   })
 }
 
