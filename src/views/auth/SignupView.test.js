@@ -43,7 +43,9 @@ const getButton = (label) =>
   )
 
 const getEmailInput = () => host.querySelector('#signup-email')
+const getPhoneInput = () => host.querySelector('#signup-phone')
 const getVerificationCodeInput = () => host.querySelector('#signup-code')
+const getSignupForm = () => host.querySelector('form')
 
 const inputValue = async (input, value) => {
   input.value = value
@@ -66,6 +68,35 @@ const createDeferred = () => {
   })
 
   return { promise, resolve, reject }
+}
+
+const setCheckbox = async (input, checked = true) => {
+  input.checked = checked
+  input.dispatchEvent(new Event('change', { bubbles: true }))
+  await nextTick()
+}
+
+const completeSignupPrerequisites = async () => {
+  mocks.authStore.sendSignupCode.mockResolvedValueOnce()
+  mocks.authStore.verifySignupCode.mockResolvedValueOnce()
+
+  await inputValue(host.querySelector('#signup-name'), '홍길동')
+  await inputValue(getEmailInput(), 'user@example.com')
+  getButton('인증하기').click()
+  await flushView()
+  await inputValue(getVerificationCodeInput(), '123456')
+  getButton('확인').click()
+  await flushView()
+  await inputValue(host.querySelector('#signup-password'), 'Abcd123!')
+  await inputValue(host.querySelector('#signup-password-confirm'), 'Abcd123!')
+  await inputValue(host.querySelector('#signup-zip-code'), '12345')
+  await inputValue(host.querySelector('#signup-address'), '제주특별자치도 제주시 애월읍')
+
+  const [, terms, privacy] = host.querySelectorAll(
+    'fieldset input[type="checkbox"]',
+  )
+  await setCheckbox(terms)
+  await setCheckbox(privacy)
 }
 
 describe('SignupView Kakao OAuth 진입', () => {
@@ -254,5 +285,46 @@ describe('SignupView LOCAL 이메일 인증번호 발송', () => {
     expect(getEmailInput().value).toBe('second@example.com')
     expect(getButton('인증하기')).toBeTruthy()
     expect(getButton('다시 받기')).toBeUndefined()
+  })
+
+  it.each([
+    '',
+    '123',
+    '999999',
+    '01112345678',
+    '0101234567',
+    '010123456789',
+  ])('유효하지 않은 전화번호 %j는 버튼과 submit guard에서 차단한다', async (phone) => {
+    await completeSignupPrerequisites()
+    await inputValue(getPhoneInput(), phone)
+
+    expect(getButton('가입하기').disabled).toBe(true)
+
+    getSignupForm().dispatchEvent(
+      new Event('submit', { bubbles: true, cancelable: true }),
+    )
+    await flushView()
+
+    expect(mocks.authStore.signup).not.toHaveBeenCalled()
+    expect(host.textContent).toContain(
+      '010으로 시작하는 11자리 휴대폰 번호를 입력해 주세요.',
+    )
+  })
+
+  it('유효한 전화번호는 화면에 포맷하고 API에는 숫자만 전달한다', async () => {
+    mocks.authStore.signup.mockResolvedValueOnce()
+    await completeSignupPrerequisites()
+    await inputValue(getPhoneInput(), '010-1234-5678')
+
+    expect(getPhoneInput().value).toBe('010-1234-5678')
+    expect(getButton('가입하기').disabled).toBe(false)
+
+    getButton('가입하기').click()
+    await flushView()
+
+    expect(mocks.authStore.signup).toHaveBeenCalledWith(
+      expect.objectContaining({ phone: '01012345678' }),
+    )
+    expect(mocks.routerPush).toHaveBeenCalledWith('/signup/complete')
   })
 })
