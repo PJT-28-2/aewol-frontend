@@ -72,6 +72,17 @@ async function saveSettings() {
   if (await donationStore.saveSettings()) go('/donation')
 }
 
+/**
+ * 결제액을 저금 단위로 올렸을 때 생기는 차액.
+ *
+ * 서버(DonationServiceImpl.roundUpAmount)와 같은 계산이다. 딱 떨어지면 올릴 것이
+ * 없으므로 0이고, 그 결제는 적립을 건너뛴다.
+ */
+function roundUpGap(amount) {
+  const remainder = amount % savingUnit.value
+  return remainder === 0 ? 0 : savingUnit.value - remainder
+}
+
 onMounted(loadDonationData)
 </script>
 
@@ -649,8 +660,9 @@ onMounted(loadDonationData)
         <strong
           class="mt-[var(--space-2)] block text-[length:var(--font-sm)] leading-snug"
         >
-          31,275원 결제 시, {{ formatWon(savingUnit) }} 미만 잔돈인
-          {{ formatWon(31275 % savingUnit) }}이 자동으로 저금통에 쌓여요
+          31,275원 결제 시, {{ formatWon(savingUnit) }} 단위로 올린
+          {{ formatWon(31275 + roundUpGap(31275)) }}과의 차액
+          {{ formatWon(roundUpGap(31275)) }}이 자동으로 저금통에 쌓여요
         </strong>
         <span
           class="mt-[var(--space-1)] block text-[length:var(--font-sm)] text-(--color-olive)"
