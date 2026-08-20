@@ -167,6 +167,11 @@ export const useCertificateStore = defineStore('certificate', {
     // DB에 저장해둔 소유자 이름/생년월일을 백엔드가 그대로 재사용해 APMS를 다시 조회하므로,
     // regNumber만 넘기면 된다(handleResync가 이 방식으로 호출함). 최초 연동 화면(CertificateListView)
     // 쪽 "이름 또는 생년월일 중 하나 이상" 검증은 화면 자체에서 이미 하고 있어 여기서는 regNumber만 확인한다.
+    //
+    // ⚠️ 재동기화 흐름을 지원하려면 이 액션 자체는 "이름/생년월일 필수"를 강제할 수 없다(둘 다
+    // 안 보내는 게 정상 케이스이므로). 그래서 이 검증은 전적으로 호출하는 화면 책임이다 —
+    // 나중에 최초 연동 진입점이 하나 더 생기면, 그 화면에서도 CertificateListView와 동일하게
+    // "이름 또는 생년월일 중 하나 이상" 검증을 반드시 자체적으로 넣어야 한다(여기서 안 막아줌).
     async verifyRegistration(petId, { regNumber, userName, birthDate }) {
       if (!regNumber?.trim()) {
         throw new Error('동물등록번호를 입력해주세요.')
