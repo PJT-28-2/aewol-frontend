@@ -14,7 +14,20 @@ function stubGeolocation(impl) {
   return getCurrentPosition
 }
 
+/** Permissions API의 geolocation 상태를 원하는 값으로 고정해요. */
+function stubPermissionState(state) {
+  const query = vi.fn().mockResolvedValue({ state })
+  navigator.permissions = { query }
+  return query
+}
+
+/** 인앱 웹뷰 판별은 UA 문자열을 보므로 테스트에서 갈아끼워요. */
+function stubUserAgent(value) {
+  Object.defineProperty(navigator, 'userAgent', { value, configurable: true })
+}
+
 describe('useUserLocation', () => {
+  const originalUserAgent = navigator.userAgent
   let warnSpy
 
   beforeEach(() => {
@@ -24,6 +37,8 @@ describe('useUserLocation', () => {
   afterEach(() => {
     warnSpy.mockRestore()
     delete navigator.geolocation
+    delete navigator.permissions
+    stubUserAgent(originalUserAgent)
   })
 
   it('기본 좌표로 시작하고 fallback 상태로 표시한다', () => {
@@ -48,7 +63,8 @@ describe('useUserLocation', () => {
     expect(locationError.value).toBe('')
   })
 
-  it('권한이 거부되면(code 1) 권한 안내 문구를 채우고 기본 좌표를 유지한다', async () => {
+  it('사이트 권한이 거부된 code 1이면 자물쇠 안내 문구를 채우고 기본 좌표를 유지한다', async () => {
+    stubPermissionState('denied')
     stubGeolocation((_success, failure) => failure({ code: 1, message: 'User denied Geolocation' }))
     const { latitude, isFallbackLocation, locationError, locate } = useUserLocation(SEOUL)
 
@@ -59,6 +75,71 @@ describe('useUserLocation', () => {
     )
     expect(latitude.value).toBe(37.5665)
     expect(isFallbackLocation.value).toBe(true)
+  })
+
+  // 회귀 방지: 이슈 #344. 사이트 권한이 granted인데도 OS 위치 서비스가 꺼져 있으면
+  // 브라우저는 똑같이 code 1을 준다. 여기서 자물쇠 안내를 하면 이미 허용된 권한을
+  // 가리키는 셈이라 사용자가 할 수 있는 조치가 없어진다.
+  it('사이트 권한이 granted인 code 1이면 OS 위치 설정을 안내한다', async () => {
+    stubPermissionState('granted')
+    stubGeolocation((_success, failure) => failure({ code: 1, message: 'User denied Geolocation' }))
+    const { locationError, locate } = useUserLocation(SEOUL)
+
+    await locate()
+
+    expect(locationError.value).toBe(
+      '기기의 위치 서비스가 꺼져 있어요. 설정에서 위치를 켠 뒤 다시 시도해주세요',
+    )
+  })
+
+  it('사이트 권한이 prompt인 code 1이면 OS 위치 설정을 안내한다', async () => {
+    stubPermissionState('prompt')
+    stubGeolocation((_success, failure) => failure({ code: 1, message: 'User denied Geolocation' }))
+    const { locationError, locate } = useUserLocation(SEOUL)
+
+    await locate()
+
+    expect(locationError.value).toBe(
+      '기기의 위치 서비스가 꺼져 있어요. 설정에서 위치를 켠 뒤 다시 시도해주세요',
+    )
+  })
+
+  it('인앱 브라우저의 code 1이면 외부 브라우저로 열도록 안내한다', async () => {
+    stubUserAgent(
+      'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/120 Mobile Safari/537.36 KAKAOTALK 10.4.5',
+    )
+    stubPermissionState('granted')
+    stubGeolocation((_success, failure) => failure({ code: 1, message: 'User denied Geolocation' }))
+    const { locationError, locate } = useUserLocation(SEOUL)
+
+    await locate()
+
+    expect(locationError.value).toBe(
+      '앱 안에서 열린 화면에서는 위치를 쓸 수 없어요. 크롬이나 사파리로 열어주세요',
+    )
+  })
+
+  it('Permissions API가 없으면 code 1을 사이트 권한 거부로 안내한다', async () => {
+    stubGeolocation((_success, failure) => failure({ code: 1, message: 'User denied Geolocation' }))
+    const { locationError, locate } = useUserLocation(SEOUL)
+
+    await locate()
+
+    expect(locationError.value).toBe(
+      '위치 권한이 꺼져 있어요. 주소창의 자물쇠 아이콘에서 위치를 허용해주세요',
+    )
+  })
+
+  it('Permissions API 조회가 실패해도 code 1 안내 문구를 채운다', async () => {
+    navigator.permissions = { query: vi.fn().mockRejectedValue(new TypeError('unsupported')) }
+    stubGeolocation((_success, failure) => failure({ code: 1, message: 'User denied Geolocation' }))
+    const { locationError, locate } = useUserLocation(SEOUL)
+
+    await locate()
+
+    expect(locationError.value).toBe(
+      '위치 권한이 꺼져 있어요. 주소창의 자물쇠 아이콘에서 위치를 허용해주세요',
+    )
   })
 
   it('측위가 불가하면(code 2) 네트워크 안내 문구를 채운다', async () => {
