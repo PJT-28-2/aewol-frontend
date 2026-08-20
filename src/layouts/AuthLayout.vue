@@ -4,7 +4,7 @@ import AewolLogo from '@/components/common/AewolLogo.vue'
 
 <template>
   <div class="flex min-h-svh flex-col bg-(--color-app-bg)">
-    <header class="flex flex-col items-center bg-(--color-leaf-soft) px-(--space-5) pt-(--space-10) pb-(--space-7)">
+    <header class="flex flex-col items-center bg-(--color-leaf-soft) px-(--space-5) pt-[calc(var(--space-10)+env(safe-area-inset-top,0px))] pb-(--space-7)">
       <AewolLogo size="30" />
       <p class="mt-(--space-2) text-(length:--font-sm) font-medium text-(color:--color-slate-dark)">
         반려동물과 금융을 잇는 지갑

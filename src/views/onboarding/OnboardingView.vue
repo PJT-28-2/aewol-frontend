@@ -106,7 +106,7 @@ onBeforeUnmount(() => {
 
 <template>
   <main
-    class="relative flex min-h-svh w-full flex-col overflow-hidden bg-(--color-app-bg) px-(--space-5) pt-(--space-5) pb-(--space-5) [@media(max-height:720px)]:pt-(--space-3) [@media(max-height:720px)]:pb-(--space-3)"
+    class="relative flex min-h-svh w-full flex-col overflow-hidden bg-(--color-app-bg) px-(--space-5) pt-[calc(var(--space-5)+env(safe-area-inset-top,0px))] pb-[calc(var(--space-5)+env(safe-area-inset-bottom,0px))] [@media(max-height:720px)]:pt-[calc(var(--space-3)+env(safe-area-inset-top,0px))] [@media(max-height:720px)]:pb-[calc(var(--space-3)+env(safe-area-inset-bottom,0px))]"
     @touchstart.passive="handleTouchStart"
     @touchend.passive="handleTouchEnd"
     @wheel="handleWheel"

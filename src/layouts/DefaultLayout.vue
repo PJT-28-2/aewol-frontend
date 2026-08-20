@@ -21,7 +21,7 @@ const route = useRoute()
       class="flex-1"
       :class="[
         route.meta.hideBottomNav ? 'pb-0' : 'pb-[calc(var(--bottom-nav-height)+var(--space-6)+env(safe-area-inset-bottom,0px))]',
-        route.meta.hideHeader ? '' : 'pt-(--header-height)',
+        route.meta.hideHeader ? '' : 'pt-[calc(var(--header-height)+env(safe-area-inset-top,0px))]',
         route.path.startsWith('/payment/qr') ? 'bg-(--color-navy)' : 'bg-(--color-app-bg)',
       ]"
     >
