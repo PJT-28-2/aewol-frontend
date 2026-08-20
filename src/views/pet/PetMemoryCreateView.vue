@@ -16,7 +16,7 @@ const selectedPetId = ref(petStore.representativePetId ?? petStore.pets[0]?.id ?
 const previewUrl = ref('')
 const description = ref('')
 const canSave = computed(() => Boolean(previewUrl.value && description.value.trim()))
-const currentAuthorName = computed(() => memberStore.profile?.name ?? '김애월')
+const currentAuthorName = computed(() => memberStore.profile?.name ?? '나')
 function selectPhoto(event) {
   const file = event.target.files?.[0]
   if (!file) return

@@ -2,6 +2,7 @@ import axios from 'axios'
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
+  withCredentials: true,
 })
 
 // Request interceptor — attach Bearer token
@@ -68,7 +69,7 @@ api.interceptors.response.use(
         const { data } = await axios.post(
           `${import.meta.env.VITE_API_BASE_URL}/auth/refresh`,
           null,
-          { headers: { Authorization: `Bearer ${refreshToken}` } },
+          { headers: { Authorization: `Bearer ${refreshToken}` }, withCredentials: true },
         )
 
         const result = data.result ?? data
