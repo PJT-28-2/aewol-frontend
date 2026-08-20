@@ -221,3 +221,35 @@ describe('ShareDiaryWriteView 수정 모드', () => {
     })
   })
 })
+
+describe('ShareDiaryWriteView 앱 톤 정합', () => {
+  beforeEach(async () => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+    mocks.query = { petId: '9001' }
+    mocks.getPets.mockResolvedValue({ data: { result: [{ id: '9001', name: '보리' }] } })
+    await mountView()
+  })
+
+  afterEach(() => {
+    app?.unmount()
+    host?.remove()
+  })
+
+  // 다른 화면은 모두 회색 배경(--color-app-bg) 위에 흰 카드를 얹는다. 일기 화면만
+  // 페이지가 흰색이면 같은 앱으로 안 보인다.
+  it('페이지 배경에 앱 공통 배경 토큰을 쓴다', () => {
+    const page = host.firstElementChild
+
+    expect(page.className).toContain('bg-(--color-app-bg)')
+    expect(page.className).not.toContain('bg-(--color-white)')
+  })
+
+  it('일기 종이를 앱 공통 카드 반경·그림자로 그린다', () => {
+    const paper = host.querySelector('article')
+
+    expect(paper.className).toContain('bg-(--color-white)')
+    expect(paper.className).toContain('rounded-[24px]')
+    expect(paper.className).toContain('shadow-(--shadow-sm)')
+  })
+})
