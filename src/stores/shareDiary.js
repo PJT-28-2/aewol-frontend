@@ -116,6 +116,27 @@ export const useShareDiaryStore = defineStore('shareDiary', {
       }
     },
 
+    /**
+     * 사진은 바꾸지 않는다. 서버 PUT이 날짜와 내용만 받기 때문이다.
+     *
+     * version을 함께 보내 그 사이 다른 곳에서 저장됐는지 서버가 판정하게 한다. 409면
+     * 화면이 다시 불러오도록 안내해야 하므로 여기서 삼키지 않고 그대로 올려보낸다.
+     */
+    async updateDiary(diaryId, { diaryDate, content, version }) {
+      this.isSubmitting = true
+      try {
+        const updated = unwrap(await shareApi.updateDiary(diaryId, { diaryDate, content, version }))
+        // 날짜를 바꿨으면 그 달로 옮겨 수정한 글이 보이게 한다.
+        const [year, month] = diaryDate.split('-').map(Number)
+        this.year = year
+        this.month = month
+        await this.fetchDiaries()
+        return updated
+      } finally {
+        this.isSubmitting = false
+      }
+    },
+
     async deleteDiary(diaryId) {
       this.isSubmitting = true
       try {

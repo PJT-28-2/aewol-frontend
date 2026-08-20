@@ -7,6 +7,9 @@ const mocks = vi.hoisted(() => ({
   replace: vi.fn(),
   getPets: vi.fn(),
   createDiary: vi.fn(),
+  getDiary: vi.fn(),
+  updateDiary: vi.fn(),
+  getDiaries: vi.fn(),
 }))
 
 vi.mock('vue-router', () => ({
@@ -21,9 +24,9 @@ vi.mock('@/api/share', () => ({
     getContributions: vi.fn(),
     getLogs: vi.fn(),
     createDiary: mocks.createDiary,
-    getDiaries: vi.fn(),
-    getDiary: vi.fn(),
-    updateDiary: vi.fn(),
+    getDiaries: mocks.getDiaries,
+    getDiary: mocks.getDiary,
+    updateDiary: mocks.updateDiary,
     deleteDiary: vi.fn(),
   },
 }))
@@ -116,5 +119,105 @@ describe('ShareDiaryWriteView 일기 형식 화면', () => {
       .find((button) => button.textContent.trim() === '일기 남기기')
 
     expect(submit.disabled).toBe(true)
+  })
+})
+
+
+describe('ShareDiaryWriteView 수정 모드', () => {
+  const diary = {
+    id: 'd-1',
+    petId: '9001',
+    diaryDate: '2026-08-10',
+    content: '산책 다녀왔다',
+    images: [],
+    version: 3,
+  }
+
+  beforeEach(async () => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+    mocks.query = { petId: '9001', diaryId: 'd-1' }
+    mocks.getPets.mockResolvedValue({ data: { result: [{ id: '9001', name: '보리' }] } })
+    mocks.getDiary.mockResolvedValue({ data: { result: diary } })
+    mocks.getDiaries.mockResolvedValue({ data: { result: [] } })
+    mocks.updateDiary.mockResolvedValue({ data: { result: { ...diary, version: 4 } } })
+    await mountView()
+  })
+
+  afterEach(() => {
+    app?.unmount()
+    host?.remove()
+  })
+
+  // 저장은 스토어의 try/finally와 재throw를 거쳐 화면에 반영되므로 한 번의 flush로는
+  // 렌더가 끝나지 않는다.
+  const submitForm = async () => {
+    host.querySelector('form').dispatchEvent(
+      new Event('submit', { bubbles: true, cancelable: true }),
+    )
+    await flush()
+    await flush()
+  }
+
+  it('기존 내용을 채워 넣는다', () => {
+    expect(host.querySelector('textarea').value).toBe('산책 다녀왔다')
+    expect(host.querySelector('input[type="date"]').value).toBe('2026-08-10')
+  })
+
+  it('작성이 아니라 수정임을 버튼과 머리글에 드러낸다', () => {
+    expect(host.textContent).toContain('일기 수정하기')
+    expect(host.textContent).toContain('남긴 일기를 고쳐요')
+  })
+
+  // 이 값이 빠지면 서버가 충돌을 판정할 수 없어 낙관락이 무력해진다.
+  it('불러올 때 받은 version을 저장 요청에 실어 보낸다', async () => {
+    await submitForm()
+
+    expect(mocks.updateDiary).toHaveBeenCalledWith('d-1', {
+      diaryDate: '2026-08-10',
+      content: '산책 다녀왔다',
+      version: 3,
+    })
+  })
+
+  // 서버 PUT이 사진을 받지 않는다. 바꿀 수 있는 것처럼 보이면 안 된다.
+  it('사진 첨부 칸을 보여주지 않는다', () => {
+    expect(host.querySelector('input[type="file"]')).toBeNull()
+  })
+
+  it('409를 받으면 저장 대신 다시 불러오기를 내민다', async () => {
+    mocks.updateDiary.mockRejectedValueOnce({
+      response: { status: 409, data: { message: '다른 곳에서 이 일기를 먼저 수정했어요.' } },
+    })
+
+    await submitForm()
+
+    expect(host.textContent).toContain('다른 곳에서 이 일기를 먼저 수정했어요.')
+    expect(host.textContent).toContain('최신 내용 다시 불러오기')
+    expect(host.textContent).not.toContain('일기 수정하기')
+  })
+
+  // 그냥 다시 누르게 두면 남이 먼저 저장한 내용을 덮어쓴다.
+  it('409 이후 다시 불러오면 최신 내용과 새 version을 받는다', async () => {
+    mocks.updateDiary.mockRejectedValueOnce({ response: { status: 409, data: {} } })
+    await submitForm()
+
+    mocks.getDiary.mockResolvedValueOnce({
+      data: { result: { ...diary, content: '남이 고친 내용', version: 9 } },
+    })
+    host.querySelectorAll('button').forEach((button) => {
+      if (button.textContent.includes('최신 내용 다시 불러오기')) button.click()
+    })
+    await flush()
+    await flush()
+
+    expect(host.querySelector('textarea').value).toBe('남이 고친 내용')
+
+    await submitForm()
+    expect(mocks.updateDiary).toHaveBeenLastCalledWith('d-1', {
+      diaryDate: '2026-08-10',
+      content: '남이 고친 내용',
+      version: 9,
+    })
   })
 })

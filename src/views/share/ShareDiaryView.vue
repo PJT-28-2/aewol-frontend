@@ -8,6 +8,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import PetSelectorChip from '@/components/common/PetSelectorChip.vue'
 import IconChevronRight from '@/components/common/icons/IconChevronRight.vue'
 import IconDelete from '@/components/common/icons/IconDelete.vue'
+import IconEdit from '@/components/common/icons/IconEdit.vue'
 import IconDocument from '@/components/common/icons/IconDocument.vue'
 import IconPaw from '@/components/common/icons/IconPaw.vue'
 import IconPlus from '@/components/common/icons/IconPlus.vue'
@@ -54,6 +55,11 @@ function markImageBroken(diaryId) {
 
 function goWrite() {
   router.push({ path: '/share/diary/write', query: { petId: selectedPetId.value } })
+}
+
+// 수정은 작성 화면을 그대로 쓴다. diaryId가 있으면 수정 모드로 뜬다.
+function goEdit(diaryId) {
+  router.push({ path: '/share/diary/write', query: { petId: selectedPetId.value, diaryId } })
 }
 
 async function confirmDelete() {
@@ -238,8 +244,20 @@ onMounted(initializeDiary)
                   </strong>
 
                   <AppButton
-                    v-if="diary.deletable"
+                    v-if="diary.editable"
                     class="ml-auto"
+                    variant="ghost"
+                    size="xs"
+                    icon-only
+                    aria-label="일기 수정"
+                    @click="goEdit(diary.id)"
+                  >
+                    <IconEdit :size="18" />
+                  </AppButton>
+
+                  <AppButton
+                    v-if="diary.deletable"
+                    :class="diary.editable ? '' : 'ml-auto'"
                     variant="ghost"
                     size="xs"
                     icon-only
