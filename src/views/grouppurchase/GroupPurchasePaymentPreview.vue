@@ -333,7 +333,7 @@ const isPinSheetOpen = ref(false);
 
 <template>
   <div
-    class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-[calc(var(--bottom-nav-height)+88px)]"
+    class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-8))]"
   >
     <!-- 로딩 상태 -->
     <div
@@ -582,7 +582,7 @@ const isPinSheetOpen = ref(false);
         variant="primary"
         size="lg"
         block
-        class="fixed bottom-[calc(var(--bottom-nav-height)+var(--space-7))] left-(--space-4) right-(--space-4) !w-auto shadow-(--shadow-md)"
+        class="mt-(--space-4)"
         @click="handleCharge"
       >
         충전하러 가기
@@ -596,7 +596,7 @@ const isPinSheetOpen = ref(false);
         block
         :disabled="!isShippingInfoComplete"
         :loading="isPaying"
-        class="fixed bottom-[calc(var(--bottom-nav-height)+var(--space-7))] left-(--space-4) right-(--space-4) !w-auto !h-auto !min-h-(--control-height-lg) !py-(--space-3) text-center shadow-(--shadow-md)"
+        class="mt-(--space-4) !h-auto !min-h-(--control-height-lg) !py-(--space-3) text-center"
         @click="handleOpenPinSheet"
       >
         {{

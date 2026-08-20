@@ -177,7 +177,7 @@ function goToPaymentPreview() {
 
 <template>
   <div
-    class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--size-cta-bar-height))]"
+    class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-8))]"
   >
     <!-- 로딩 상태 -->
     <div
@@ -378,25 +378,22 @@ function goToPaymentPreview() {
       </section>
 
       <!-- 결제 버튼: 금액은 groupPrice * 선택 수량으로 실시간 계산 -->
-      <div
-        class="fixed inset-x-0 bottom-[calc(var(--bottom-nav-height)+var(--space-7))] bg-(--color-app-bg) p-(--space-4)"
+      <AppButton
+        variant="primary"
+        size="lg"
+        block
+        class="mt-(--space-4)"
+        :disabled="isExpired || isQuantityOverTarget"
+        @click="goToPaymentPreview"
       >
-        <AppButton
-          variant="primary"
-          size="lg"
-          block
-          :disabled="isExpired || isQuantityOverTarget"
-          @click="goToPaymentPreview"
-        >
-          {{
-            isExpired
-              ? '마감된 공동구매예요'
-              : isQuantityOverTarget
-                ? '목표 수량을 초과했어요'
-                : `${totalPrice.toLocaleString()}원 결제하기`
-          }}
-        </AppButton>
-      </div>
+        {{
+          isExpired
+            ? '마감된 공동구매예요'
+            : isQuantityOverTarget
+              ? '목표 수량을 초과했어요'
+              : `${totalPrice.toLocaleString()}원 결제하기`
+        }}
+      </AppButton>
     </template>
   </div>
 </template>
