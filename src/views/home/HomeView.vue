@@ -13,6 +13,7 @@ import { usePetStore } from '@/stores/pet'
 import { useNotificationStore } from '@/stores/notification'
 import {
   changeRateText,
+  collapseChartCategories,
   discountPercent,
   followUpCopy,
   formatWon,
@@ -127,10 +128,9 @@ async function fetchMonthlyInsight() {
     })
     if (requestId !== insightRequestId) return
 
-    const items = withChartColors(
-      withPercentages(toInsightCategories(dashboardStore.category?.items ?? [])),
-    )
-    chartItems.value = items.slice(0, 4)
+    const categories = toInsightCategories(dashboardStore.category?.items ?? [])
+    const items = withChartColors(withPercentages(categories))
+    chartItems.value = withChartColors(withPercentages(collapseChartCategories(categories)))
     followUps.value = spendingFollowUps(items)
 
     const gpFollowUp = followUps.value.find((item) => item.type === 'GROUP_PURCHASE')

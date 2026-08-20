@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  collapseChartCategories,
   discountPercent,
   followUpCopy,
   groupPurchaseCategory,
@@ -13,6 +14,26 @@ import {
 } from './homeMonthlyInsight'
 
 describe('homeMonthlyInsight', () => {
+  it('도넛 항목이 많으면 나머지를 기타로 합쳐 전체 비율을 보존한다', () => {
+    const categories = toInsightCategories([
+      { category: 'FOOD', amount: 40 },
+      { category: 'SNACK', amount: 30 },
+      { category: 'HOSPITAL', amount: 20 },
+      { category: 'GROOMING', amount: 5 },
+      { category: 'DONATION', amount: 5 },
+    ])
+
+    const chartItems = withPercentages(collapseChartCategories(categories))
+
+    expect(chartItems.map(({ label, amount }) => [label, amount])).toEqual([
+      ['사료', 40],
+      ['간식', 30],
+      ['의료', 20],
+      ['기타', 10],
+    ])
+    expect(chartItems.reduce((sum, item) => sum + item.percentage, 0)).toBe(100)
+  })
+
   it('백엔드 카테고리 코드를 홈 인사이트 라벨로 바꾼다', () => {
     expect(insightCategoryLabel('FOOD')).toBe('사료')
     expect(insightCategoryLabel('INSURANCE')).toBe('보험')

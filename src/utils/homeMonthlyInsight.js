@@ -40,6 +40,19 @@ export function toInsightCategories(rawItems = []) {
     .sort((a, b) => b.amount - a.amount)
 }
 
+export function collapseChartCategories(list, limit = 4) {
+  if (list.length <= limit) return list
+  const visibleCount = Math.max(1, limit - 1)
+  const visible = list.slice(0, visibleCount)
+  const otherAmount = list
+    .slice(visibleCount)
+    .reduce((sum, item) => sum + item.amount, 0)
+  return [
+    ...visible,
+    { key: 'OTHER', label: INSIGHT_CATEGORY_LABELS.ETC, amount: otherAmount },
+  ]
+}
+
 export function withPercentages(list) {
   const total = list.reduce((sum, item) => sum + item.amount, 0)
   const items = list.map((item) => ({
