@@ -10,14 +10,14 @@ defineProps({
 
 <template>
   <span
-    class="inline-flex items-center font-bold tracking-[-0.055em]"
-    :style="{ color, fontSize: `${size}px`, lineHeight: 1 }"
+    class="inline-flex items-center tracking-[-0.02em]"
+    :style="{ color, fontSize: `${size}px`, lineHeight: 1, fontFamily: 'var(--font-logo)', fontWeight: 800 }"
     aria-label="AEWOL"
   >
     <span>AEW</span>
     <IconPaw
-      class="mx-[0.06em]"
-      :size="Number(size) * 0.78"
+      class="-mx-[0.05em]"
+      :size="Number(size)"
       :color="pawColor"
       filled
     />

@@ -1,10 +1,9 @@
 <script setup>
-import { computed, ref, watchEffect } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { usePetStore } from '@/stores/pet'
 import PasswordInput from '@/components/common/PasswordInput.vue'
-import IconArrowLeft from '@/components/common/icons/IconArrowLeft.vue'
 import AewolLogo from '@/components/common/AewolLogo.vue'
 import { startKakaoOAuth } from '@/utils/kakaoOAuth'
 
@@ -28,7 +27,6 @@ const resolvePostLoginPath = async () => {
   }
 }
 
-const showEmailForm = ref(false)
 const email = ref('')
 const password = ref('')
 const isLoading = ref(false)
@@ -40,36 +38,9 @@ const passwordChangeNotice = computed(() =>
 )
 let loginAttemptId = 0
 
-watchEffect(() => {
-  const themeColor = showEmailForm.value ? '#f5f7f2' : '#f0f8de'
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', themeColor)
+onMounted(() => {
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '#f5f7f2')
 })
-
-/**
- * 이메일 로그인 화면을 연다.
- * 이전 로그인 방식에서 남은 오류가 폼에 노출되지 않도록 함께 초기화한다.
- *
- * @returns {void}
- */
-const openEmailLogin = () => {
-  errorMessage.value = ''
-  showEmailForm.value = true
-}
-
-/**
- * 이메일 로그인 화면을 닫고 민감한 입력 상태를 제거한다.
- * 진행 중인 요청의 지연 응답이 시작 화면을 오염시키지 않도록 요청 식별값도 갱신한다.
- *
- * @returns {void}
- */
-const closeEmailLogin = () => {
-  loginAttemptId += 1
-  showEmailForm.value = false
-  email.value = ''
-  password.value = ''
-  errorMessage.value = ''
-  isLoading.value = false
-}
 
 /**
  * 이메일과 비밀번호로 로그인을 요청한다.
@@ -124,120 +95,38 @@ const handleKakaoLogin = () => {
 
 <template>
   <main
-    class="min-h-svh w-full bg-(--color-app-bg)"
+    class="flex min-h-svh w-full flex-col justify-center bg-(--color-app-bg) px-(--space-5) pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)]"
   >
-    <template v-if="!showEmailForm">
-      <section
-        class="relative h-[calc(480px+env(safe-area-inset-top,0px))] bg-(--color-leaf-soft) max-h-[700px]:h-[calc(420px+env(safe-area-inset-top,0px))]"
-        aria-labelledby="login-title"
+    <h1
+      id="login-title"
+      class="sr-only"
+    >
+      애월 로그인
+    </h1>
+
+    <div class="flex flex-col items-center gap-(--space-2)">
+      <AewolLogo size="34" />
+      <p
+        class="text-center text-(length:--auth-font-sm) leading-[1.3] text-(color:--color-slate-dark)"
       >
-        <h1
-          id="login-title"
-          class="sr-only"
-        >
-          애월 로그인
-        </h1>
-
-        <AewolLogo
-          class="absolute top-[calc(190px+env(safe-area-inset-top,0px))] left-1/2 -translate-x-1/2 max-h-[700px]:top-[calc(155px+env(safe-area-inset-top,0px))]"
-          size="38"
-        />
-        <p
-          class="absolute top-[calc(250px+env(safe-area-inset-top,0px))] w-full text-center text-(length:--auth-font-sm) leading-[1.3] text-(color:--color-slate-dark) max-h-[700px]:top-[calc(214px+env(safe-area-inset-top,0px))]"
-        >
-          반려동물을 위한, 전자 지갑
-        </p>
-      </section>
-
-      <section
-        class="relative flex flex-col gap-[14px] px-[26px] pt-[60px] pb-[calc(var(--space-8)+env(safe-area-inset-bottom,0px))] max-h-[700px]:pt-9"
-        aria-label="로그인 메뉴"
-      >
-        <p
-          v-if="passwordChangeNotice"
-          class="text-center text-(length:--font-sm) text-(color:--color-olive)"
-          role="status"
-        >
-          {{ passwordChangeNotice }}
-        </p>
-        <button
-          class="flex h-[52px] w-full items-center justify-center rounded-(--radius-xl) bg-(--color-kakao) text-[14.5px] leading-[1.3] font-(--font-bold) text-(color:--color-kakao-label)"
-          type="button"
-          @click="handleKakaoLogin"
-        >
-          카카오로 3초만에 시작하기
-        </button>
-        <button
-          class="flex h-[52px] w-full items-center justify-center rounded-(--radius-xl) bg-(--color-leaf) text-[14.5px] leading-[1.3] font-(--font-bold) text-(color:--color-navy)"
-          type="button"
-          @click="openEmailLogin"
-        >
-          이메일로 로그인
-        </button>
-
-        <nav
-          class="mt-[9px] flex justify-center gap-[7px] text-[12.5px] leading-[1.3] font-(--font-bold) text-(color:--color-slate-dark)"
-          aria-label="회원 메뉴"
-        >
-          <router-link to="/signup">
-            회원가입
-          </router-link>
-          <span aria-hidden="true">|</span>
-          <router-link to="/id/find">
-            계정 찾기
-          </router-link>
-          <span aria-hidden="true">|</span>
-          <router-link to="/password/reset">
-            비밀번호 찾기
-          </router-link>
-        </nav>
-        <p
-          v-if="errorMessage"
-          class="text-center text-(length:--font-sm) text-(color:--color-danger-strong)"
-          role="alert"
-        >
-          {{ errorMessage }}
-        </p>
-      </section>
-    </template>
+        반려동물을 위한, 전자 지갑
+      </p>
+    </div>
 
     <section
-      v-else
-      class="relative min-h-[700px] px-[22px] pt-[calc(var(--header-height)+var(--space-4)+env(safe-area-inset-top,0px))] pb-[calc(var(--space-8)+env(safe-area-inset-bottom,0px))]"
-      aria-labelledby="email-login-title"
+      class="relative mt-(--space-9)"
+      aria-label="로그인"
     >
-      <div
-        class="fixed inset-x-0 top-0 z-100 h-[calc(var(--header-height)+env(safe-area-inset-top,0px))] bg-(--color-app-bg)"
-        aria-hidden="true"
-      />
-      <button
-        class="fixed top-[calc(var(--space-2)+env(safe-area-inset-top,0px))] left-(--space-4) z-101 flex size-10 items-center justify-center text-(color:--color-navy)"
-        type="button"
-        aria-label="이전 화면으로 돌아가기"
-        @click="closeEmailLogin"
-      >
-        <IconArrowLeft size="24" />
-      </button>
-
-      <h2
-        id="email-login-title"
-        class="text-(length:--font-2xl) leading-[1.3] font-(--font-bold) text-(color:--color-navy)"
-      >
-        이메일로 로그인
-      </h2>
-      <p class="mt-[3px] text-(length:--font-md) leading-[1.3] text-(color:--color-slate-muted)">
-        계정 정보를 입력해주세요
-      </p>
       <p
         v-if="passwordChangeNotice"
-        class="mt-3 text-(length:--font-sm) text-(color:--color-olive)"
+        class="mb-3 text-center text-(length:--font-sm) text-(color:--color-olive)"
         role="status"
       >
         {{ passwordChangeNotice }}
       </p>
 
       <form
-        class="mt-9 flex flex-col"
+        class="flex flex-col"
         @submit.prevent="handleEmailLogin"
       >
         <label
@@ -256,7 +145,7 @@ const handleKakaoLogin = () => {
           required
         >
         <label
-          class="mt-[11px] mb-1 text-[12.5px] leading-[1.3] font-(--font-bold) text-(color:--color-slate-dark)"
+          class="mt-(--space-3) mb-1 text-[12.5px] leading-[1.3] font-(--font-bold) text-(color:--color-slate-dark)"
           for="password"
         >
           비밀번호
@@ -279,8 +168,16 @@ const handleKakaoLogin = () => {
         </button>
       </form>
 
+      <button
+        class="mt-(--space-3) flex h-[52px] w-full items-center justify-center rounded-(--radius-xl) bg-(--color-kakao) text-[14.5px] leading-[1.3] font-(--font-bold) text-(color:--color-kakao-label)"
+        type="button"
+        @click="handleKakaoLogin"
+      >
+        카카오로 3초만에 시작하기
+      </button>
+
       <nav
-        class="mt-[15px] flex justify-center gap-[7px] text-[12.5px] leading-[1.3] font-(--font-bold) text-(color:--color-slate-dark)"
+        class="mt-(--space-4) flex justify-center gap-[7px] text-[12.5px] leading-[1.3] font-(--font-bold) text-(color:--color-slate-dark)"
         aria-label="회원 메뉴"
       >
         <router-link to="/signup">
@@ -298,7 +195,7 @@ const handleKakaoLogin = () => {
 
       <p
         v-if="errorMessage"
-        class="text-center text-(length:--font-sm) text-(color:--color-danger-strong)"
+        class="mt-3 text-center text-(length:--font-sm) text-(color:--color-danger-strong)"
         role="alert"
       >
         {{ errorMessage }}
