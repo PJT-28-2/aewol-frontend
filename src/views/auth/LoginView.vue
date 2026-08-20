@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { usePetStore } from '@/stores/pet'
@@ -39,6 +39,11 @@ const passwordChangeNotice = computed(() =>
     : '',
 )
 let loginAttemptId = 0
+
+watchEffect(() => {
+  const themeColor = showEmailForm.value ? '#f5f7f2' : '#f0f8de'
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', themeColor)
+})
 
 /**
  * 이메일 로그인 화면을 연다.
@@ -123,7 +128,7 @@ const handleKakaoLogin = () => {
   >
     <template v-if="!showEmailForm">
       <section
-        class="relative h-[480px] bg-(--color-leaf-soft) max-h-[700px]:h-[420px]"
+        class="relative h-[calc(480px+env(safe-area-inset-top,0px))] bg-(--color-leaf-soft) max-h-[700px]:h-[calc(420px+env(safe-area-inset-top,0px))]"
         aria-labelledby="login-title"
       >
         <h1
@@ -134,18 +139,18 @@ const handleKakaoLogin = () => {
         </h1>
 
         <AewolLogo
-          class="absolute top-[190px] left-1/2 -translate-x-1/2 max-h-[700px]:top-[155px]"
+          class="absolute top-[calc(190px+env(safe-area-inset-top,0px))] left-1/2 -translate-x-1/2 max-h-[700px]:top-[calc(155px+env(safe-area-inset-top,0px))]"
           size="38"
         />
         <p
-          class="absolute top-[250px] w-full text-center text-(length:--auth-font-sm) leading-[1.3] text-(color:--color-slate-dark) max-h-[700px]:top-[214px]"
+          class="absolute top-[calc(250px+env(safe-area-inset-top,0px))] w-full text-center text-(length:--auth-font-sm) leading-[1.3] text-(color:--color-slate-dark) max-h-[700px]:top-[calc(214px+env(safe-area-inset-top,0px))]"
         >
           반려동물을 위한, 전자 지갑
         </p>
       </section>
 
       <section
-        class="relative flex flex-col gap-[14px] px-[26px] pt-[60px] pb-8 max-h-[700px]:pt-9"
+        class="relative flex flex-col gap-[14px] px-[26px] pt-[60px] pb-[calc(var(--space-8)+env(safe-area-inset-bottom,0px))] max-h-[700px]:pt-9"
         aria-label="로그인 메뉴"
       >
         <p
@@ -198,15 +203,15 @@ const handleKakaoLogin = () => {
 
     <section
       v-else
-      class="relative min-h-[700px] px-[22px] pt-[calc(var(--header-height)+var(--space-4))] pb-8"
+      class="relative min-h-[700px] px-[22px] pt-[calc(var(--header-height)+var(--space-4)+env(safe-area-inset-top,0px))] pb-[calc(var(--space-8)+env(safe-area-inset-bottom,0px))]"
       aria-labelledby="email-login-title"
     >
       <div
-        class="fixed inset-x-0 top-0 z-100 h-(--header-height) bg-(--color-app-bg)"
+        class="fixed inset-x-0 top-0 z-100 h-[calc(var(--header-height)+env(safe-area-inset-top,0px))] bg-(--color-app-bg)"
         aria-hidden="true"
       />
       <button
-        class="fixed top-(--space-2) left-(--space-4) z-101 flex size-10 items-center justify-center text-(color:--color-navy)"
+        class="fixed top-[calc(var(--space-2)+env(safe-area-inset-top,0px))] left-(--space-4) z-101 flex size-10 items-center justify-center text-(color:--color-navy)"
         type="button"
         aria-label="이전 화면으로 돌아가기"
         @click="closeEmailLogin"

@@ -7,13 +7,16 @@
 }
 
 html {
+  min-height: 100%;
+  background-color: var(--color-app-bg);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-size-adjust: 100%;
 }
 
 body {
-  min-height: 100vh;
+  min-height: 100%;
+  background-color: var(--color-app-bg);
   line-height: 1.5;
 }
 
