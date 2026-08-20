@@ -3,22 +3,45 @@ import { createApp, nextTick } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
 
 const mocks = vi.hoisted(() => ({
-  getHomeInsights: vi.fn(),
   fetchProfile: vi.fn(),
   fetchPets: vi.fn(),
   fetchSummary: vi.fn(),
+  fetchCategory: vi.fn(),
+  fetchUnreadCount: vi.fn(),
+  getList: vi.fn(),
+  getMatchedPrograms: vi.fn(),
+  unreadCount: 0,
+  summary: { walletBalance: 46700, monthlySpend: { totalAmount: 92700, changeRate: 100 } },
+  category: {
+    totalAmount: 92700,
+    items: [
+      { category: 'FOOD', amount: 74000, petBreakdown: [] },
+      { category: 'SNACK', amount: 15700, petBreakdown: [] },
+      { category: 'HOSPITAL', amount: 3000, petBreakdown: [] },
+    ],
+  },
 }))
 
 vi.mock('vue-router', () => ({
   useRoute: () => ({ query: {}, params: {} }),
   useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
-  RouterLink: { props: ['to'], template: '<a><slot /></a>' },
+  RouterLink: { props: ['to'], template: '<a :href="to"><slot /></a>' },
 }))
 
-vi.mock('@/api/insight', () => ({ getHomeInsights: mocks.getHomeInsights }))
+vi.mock('@/components/dashboard/ExpenseDonutChart.vue', () => ({
+  default: { props: ['items', 'size'], template: '<div data-testid="donut" />' },
+}))
+
+vi.mock('@/api/groupPurchase', () => ({
+  groupPurchaseApi: { getList: mocks.getList },
+}))
+
+vi.mock('@/api/supportPrograms', () => ({
+  supportProgramsApi: { getMatchedPrograms: mocks.getMatchedPrograms },
+}))
 
 vi.mock('@/stores/member', () => ({
-  useMemberStore: () => ({ profile: { name: '김애월' }, fetchProfile: mocks.fetchProfile }),
+  useMemberStore: () => ({ profile: { name: '장지연' }, fetchProfile: mocks.fetchProfile }),
 }))
 
 vi.mock('@/stores/pet', () => ({
@@ -31,28 +54,41 @@ vi.mock('@/stores/pet', () => ({
 
 vi.mock('@/stores/dashboard', () => ({
   useDashboardStore: () => ({
-    summary: { walletBalance: 0, monthlySpend: { totalAmount: 0, changeRate: 0 } },
+    get summary() {
+      return mocks.summary
+    },
+    get category() {
+      return mocks.category
+    },
     fetchSummary: mocks.fetchSummary,
+    fetchCategory: mocks.fetchCategory,
   }),
 }))
 
-import HomeView from './HomeView.vue'
+vi.mock('@/stores/notification', () => ({
+  useNotificationStore: () => ({
+    unreadCount: mocks.unreadCount,
+    fetchUnreadCount: mocks.fetchUnreadCount,
+  }),
+}))
 
-const card = (overrides = {}) => ({
-  type: 'SPENDING',
-  headline: '이번 달 지출 72,600원',
-  body: '이번 달 총 지출은 72,600원입니다.',
-  projection: '이 속도면 이달 말 약 125,033원 (남은 13일)',
-  ctaLabel: '내역 보기',
-  ctaPath: '/wallet',
-  fallback: false,
-  ...overrides,
+vi.mock('@/utils/homeMonthlyInsight', async (importOriginal) => {
+  const actual = await importOriginal()
+  return {
+    ...actual,
+    projectMonthEnd: () => 143685,
+    remainingDays: () => 11,
+  }
 })
+
+import HomeView from './HomeView.vue'
 
 let app
 let host
 
 const flush = async () => {
+  for (let i = 0; i < 12; i += 1) await Promise.resolve()
+  await nextTick()
   for (let i = 0; i < 6; i += 1) await Promise.resolve()
   await nextTick()
 }
@@ -62,19 +98,52 @@ const mountView = async () => {
   document.body.appendChild(host)
   app = createApp(HomeView)
   app.use(createPinia())
+  app.component('RouterLink', {
+    props: ['to'],
+    template: '<a :href="to"><slot /></a>',
+  })
   app.mount(host)
   await flush()
 }
 
 const section = () => host.querySelector('[aria-labelledby="home-insight-title"]')
 
-describe('HomeView AI 인사이트 카드', () => {
+describe('HomeView 이번 달 인사이트', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
     mocks.fetchProfile.mockResolvedValue({})
     mocks.fetchPets.mockResolvedValue([])
     mocks.fetchSummary.mockResolvedValue({})
+    mocks.fetchCategory.mockResolvedValue({})
+    mocks.fetchUnreadCount.mockResolvedValue()
+    mocks.getMatchedPrograms.mockResolvedValue({ data: { result: { programs: [] } } })
+    mocks.getList.mockResolvedValue({
+      data: {
+        result: {
+          items: [{
+            id: 11,
+            productName: '오리지널 사료 5kg',
+            currentQuantity: 8,
+            targetQuantity: 20,
+            dDay: 'D-7',
+            groupPrice: 32000,
+            unitPrice: 45000,
+            badgeText: '29% 할인',
+          }],
+        },
+      },
+    })
+    mocks.unreadCount = 0
+    mocks.summary = { walletBalance: 46700, monthlySpend: { totalAmount: 92700, changeRate: 100 } }
+    mocks.category = {
+      totalAmount: 92700,
+      items: [
+        { category: 'FOOD', amount: 74000, petBreakdown: [] },
+        { category: 'SNACK', amount: 15700, petBreakdown: [] },
+        { category: 'HOSPITAL', amount: 3000, petBreakdown: [] },
+      ],
+    }
   })
 
   afterEach(() => {
@@ -82,54 +151,105 @@ describe('HomeView AI 인사이트 카드', () => {
     host?.remove()
   })
 
-  it('인사이트를 별도 묶음으로 보여준다', async () => {
-    mocks.getHomeInsights.mockResolvedValue({ data: { result: [card()] } })
+  it('읽지 않은 알림 수를 홈 알림 배지에 보여준다', async () => {
+    mocks.unreadCount = 12
     await mountView()
 
-    expect(section()).toBeTruthy()
-    expect(section().textContent).toContain('오늘의 읽을거리')
+    expect(host.querySelector('[aria-label="읽지 않은 알림 수"]')?.textContent).toBe('12')
   })
 
-  // 요약과 예측은 신뢰도가 달라 한 문단에 섞으면 안 된다.
-  it('예측을 전망 줄로 따로 보여준다', async () => {
-    mocks.getHomeInsights.mockResolvedValue({ data: { result: [card()] } })
+  it('총지출과 도넛 범례를 이번 달 인사이트로 보여준다', async () => {
     await mountView()
 
-    expect(section().textContent).toContain('전망')
-    expect(section().textContent).toContain('이 속도면 이달 말 약 125,033원 (남은 13일)')
+    expect(section()?.textContent).toContain('이번 달 인사이트')
+    expect(section()?.textContent).toContain('92,700원을 사용했어요')
+    expect(section()?.textContent).toContain('사료')
+    expect(section()?.textContent).toContain('80%')
+    expect(section()?.textContent).toContain('내역 보기')
   })
 
-  // 근거가 부족한 카드는 서버가 projection을 안 준다. 그때 빈 줄이 남으면 안 된다.
-  it('예측이 없는 카드에는 전망 줄을 만들지 않는다', async () => {
-    mocks.getHomeInsights.mockResolvedValue({
-      data: { result: [card({ type: 'SUPPORT', projection: null })] },
+  it('전월 대비와 월말 전망을 따로 보여준다', async () => {
+    await mountView()
+
+    expect(section()?.textContent).toContain('+100%')
+    expect(section()?.textContent).toContain('전망')
+    expect(section()?.textContent).toContain('143,685원')
+    expect(section()?.textContent).toContain('남은 11일')
+  })
+
+  it('보험 비중이 커도 소비 분석은 내역으로 보내고, 보험은 다음 카드로 잇는다', async () => {
+    mocks.summary = { walletBalance: 46700, monthlySpend: { totalAmount: 177700, changeRate: 100 } }
+    mocks.category = {
+      totalAmount: 177700,
+      items: [
+        { category: 'INSURANCE', amount: 85000, petBreakdown: [] },
+        { category: 'FOOD', amount: 74000, petBreakdown: [] },
+      ],
+    }
+    await mountView()
+
+    expect(section()?.textContent).toContain('내역 보기')
+    expect(section()?.querySelector('a[href="/wallet/history"]')).toBeTruthy()
+    expect(host.textContent).toContain('보험료 시뮬레이션 하러 가기')
+    expect(host.querySelector('a[href="/insurance/simulator"]')).toBeTruthy()
+    expect(mocks.getList).toHaveBeenCalledWith({
+      page: 0,
+      size: 5,
+      category: '사료',
+      status: 'OPEN',
+    })
+  })
+
+  it('사료 비중이 있으면 해당 카테고리 공동구매를 추천한다', async () => {
+    await mountView()
+
+    expect(mocks.getList).toHaveBeenCalledWith({
+      page: 0,
+      size: 5,
+      category: '사료',
+      status: 'OPEN',
+    })
+    expect(host.textContent).toContain('사료 공동구매 추천')
+    expect(host.textContent).toContain('오리지널 사료 5kg')
+    expect(host.textContent).toContain('29% 할인')
+  })
+
+  it('의료 지출이 있으면 신청 가능한 정책 지원을 잇는다', async () => {
+    mocks.category = {
+      totalAmount: 92700,
+      items: [
+        { category: 'FOOD', amount: 74000, petBreakdown: [] },
+        { category: 'HOSPITAL', amount: 18700, petBreakdown: [] },
+      ],
+    }
+    mocks.getMatchedPrograms.mockResolvedValue({
+      data: {
+        result: {
+          programs: [
+            { id: 'p1', title: '반려동물 진료비 지원', eligible: true, applied: false },
+          ],
+        },
+      },
     })
     await mountView()
 
-    expect(section().textContent).not.toContain('전망')
+    expect(mocks.getMatchedPrograms).toHaveBeenCalled()
+    expect(host.textContent).toContain('받을 수 있는 정책 지원')
+    expect(host.textContent).toContain('진료비 지원')
+    expect(host.querySelector('a[href="/support-programs"]')).toBeTruthy()
+    expect(host.textContent).toContain('보험 확인하기')
   })
 
-  // fallback은 서버가 데이터로 조립한 문구다. AI가 썼다고 표시하면 사실과 다르다.
-  it('모든 카드가 fallback이면 AI 배지를 달지 않는다', async () => {
-    mocks.getHomeInsights.mockResolvedValue({
-      data: { result: [card({ fallback: true })] },
-    })
+  it('지출이 없으면 인사이트 묶음을 감춘다', async () => {
+    mocks.summary = { walletBalance: 0, monthlySpend: { totalAmount: 0, changeRate: 0 } }
+    mocks.category = { totalAmount: 0, items: [] }
     await mountView()
 
-    expect(section().textContent).not.toContain('AI 요약')
+    expect(section()).toBeNull()
   })
 
-  it('한 장이라도 모델이 쓴 카드가 있으면 AI 배지를 단다', async () => {
-    mocks.getHomeInsights.mockResolvedValue({
-      data: { result: [card({ fallback: true }), card({ type: 'CARE', fallback: false })] },
-    })
-    await mountView()
-
-    expect(section().textContent).toContain('AI 요약')
-  })
-
-  it('카드를 못 불러오면 묶음 자체를 감춘다', async () => {
-    mocks.getHomeInsights.mockRejectedValue(new Error('boom'))
+  it('카테고리를 못 불러오면 묶음 자체를 감춘다', async () => {
+    mocks.fetchCategory.mockRejectedValue(new Error('boom'))
     vi.spyOn(console, 'error').mockImplementation(() => {})
     await mountView()
 
