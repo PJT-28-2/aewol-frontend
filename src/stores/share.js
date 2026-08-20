@@ -106,19 +106,16 @@ export const useShareStore = defineStore('share', {
       }
     },
 
-    async invite(petId, recipient) {
+    // 받는 사람을 지정하지 않는 대신 유효시간으로 위험을 줄인다. 시간이 유일한
+    // 방어선이라 호출부가 반드시 값을 정해서 넘기게 둔다.
+    async createLinkInvite(petId, expiresInMinutes) {
       this.isInviting = true
       try {
-        return unwrap(await shareApi.invite({ petId, recipient, role: 'VIEWER' }))
-      } finally {
-        this.isInviting = false
-      }
-    },
-
-    async createLinkInvite(petId) {
-      this.isInviting = true
-      try {
-        return unwrap(await shareApi.createLinkInvite({ petId, role: 'VIEWER' }))
+        return unwrap(await shareApi.createLinkInvite({
+          petId,
+          role: 'VIEWER',
+          expiresInMinutes,
+        }))
       } finally {
         this.isInviting = false
       }

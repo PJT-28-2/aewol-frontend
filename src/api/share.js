@@ -5,10 +5,6 @@ export const shareApi = {
     return api.get('/share/pets')
   },
 
-  invite(data) {
-    return api.post('/share/invite', data)
-  },
-
   createLinkInvite(data) {
     return api.post('/share/invite/link', data)
   },
