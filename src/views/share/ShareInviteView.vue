@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, ref } from 'vue'
 import AppButton from '@/components/common/AppButton.vue'
 import { useShareStore } from '@/stores/share'
 
@@ -10,44 +10,82 @@ const props = defineProps({
   },
 })
 
+// 받는 사람을 지정하지 않으므로, 링크가 살아 있는 동안은 그것을 본 누구나 들어올 수
+// 있다. 그래서 기본을 짧게 두고 길게 여는 쪽을 예외로 만든다.
+const TTL_OPTIONS = [
+  { minutes: 5, label: '5분' },
+  { minutes: 10, label: '10분' },
+  { minutes: 30, label: '30분' },
+]
+const DEFAULT_TTL_MINUTES = 10
+
 const shareStore = useShareStore()
-const recipient = ref('')
+const selectedMinutes = ref(DEFAULT_TTL_MINUTES)
+const inviteCode = ref('')
+const expiresAt = ref(null)
+const now = ref(Date.now())
 const copied = ref(false)
 const feedback = ref('')
 const isError = ref(false)
-const inviteCode = ref('')
+
+let ticker = null
+
 const inviteLink = computed(() =>
   inviteCode.value
     ? `${window.location.origin}/share/join?invite=${inviteCode.value}`
     : '',
 )
 
-const trimmedRecipient = computed(() => recipient.value.trim())
-const isEmail = computed(() =>
-  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedRecipient.value),
+const remainingMs = computed(() =>
+  expiresAt.value ? Math.max(0, expiresAt.value - now.value) : 0,
 )
-const normalizedPhone = computed(() => recipient.value.replace(/\D/g, ''))
-const isPhone = computed(() => /^01[016789]\d{7,8}$/.test(normalizedPhone.value))
-const isValidRecipient = computed(() => isEmail.value || isPhone.value)
+
+const isExpired = computed(() => Boolean(inviteCode.value) && remainingMs.value === 0)
+
+/** 남은 시간을 m:ss로. 초까지 보여야 링크를 오래 굴리지 않는다. */
+const remainingLabel = computed(() => {
+  const totalSeconds = Math.ceil(remainingMs.value / 1000)
+  return `${Math.floor(totalSeconds / 60)}:${String(totalSeconds % 60).padStart(2, '0')}`
+})
+
+function stopTicker() {
+  if (ticker) {
+    clearInterval(ticker)
+    ticker = null
+  }
+}
+
+function startTicker() {
+  stopTicker()
+  now.value = Date.now()
+  ticker = setInterval(() => {
+    now.value = Date.now()
+    if (remainingMs.value === 0) stopTicker()
+  }, 1000)
+}
 
 function resetFeedback() {
   feedback.value = ''
   isError.value = false
 }
 
-function getErrorMessage(error, fallback) {
-  return error.response?.data?.message || fallback
+function fail(error, fallback) {
+  feedback.value = error?.response?.data?.message || fallback
+  isError.value = true
 }
 
-async function sendInvite() {
+function selectMinutes(minutes) {
+  selectedMinutes.value = minutes
+  // 유효시간을 바꿨는데 이전 링크가 남아 있으면 어느 쪽이 유효한지 헷갈린다.
+  inviteCode.value = ''
+  expiresAt.value = null
+  copied.value = false
+  stopTicker()
   resetFeedback()
+}
 
-  if (!isValidRecipient.value) {
-    feedback.value = '이메일 또는 휴대전화 번호를 확인해 주세요.'
-    isError.value = true
-    return
-  }
-
+async function createLink() {
+  resetFeedback()
   if (!props.petId) {
     feedback.value = '초대할 반려동물을 먼저 선택해 주세요.'
     isError.value = true
@@ -55,21 +93,21 @@ async function sendInvite() {
   }
 
   try {
-    const invite = await shareStore.invite(props.petId, trimmedRecipient.value)
+    const invite = await shareStore.createLinkInvite(props.petId, selectedMinutes.value)
     inviteCode.value = invite.inviteCode
+    // 서버가 준 만료 시각을 그대로 쓴다. 여기서 다시 계산하면 요청이 오가는 동안의
+    // 지연만큼 실제보다 길게 보인다.
+    expiresAt.value = invite.expiresAt ? new Date(invite.expiresAt).getTime() : null
     copied.value = false
-    // 앱이 메일이나 문자를 대신 보내지 않는다. 그 사실을 여기서 분명히 해야
-    // 사용자가 발송을 기다리지 않는다.
-    feedback.value = `${trimmedRecipient.value}만 수락할 수 있는 링크를 만들었어요. 아래 링크를 직접 전달해 주세요.`
+    startTicker()
+    feedback.value = '링크를 만들었어요. 만료되기 전에 전달해 주세요.'
   } catch (error) {
-    feedback.value = getErrorMessage(error, '초대를 만들지 못했어요. 다시 시도해 주세요.')
-    isError.value = true
+    fail(error, '초대 링크를 만들지 못했어요. 다시 시도해 주세요.')
   }
 }
 
 async function copyLink() {
   resetFeedback()
-
   if (!navigator.clipboard?.writeText) {
     feedback.value = '이 브라우저에서는 링크 복사를 지원하지 않아요.'
     isError.value = true
@@ -77,99 +115,114 @@ async function copyLink() {
   }
 
   try {
-    if (!inviteLink.value) {
-      if (!props.petId) throw new Error('PET_REQUIRED')
-      const invite = await shareStore.createLinkInvite(props.petId)
-      inviteCode.value = invite.inviteCode
-    }
     await navigator.clipboard.writeText(inviteLink.value)
     copied.value = true
     feedback.value = '참여 링크를 복사했어요.'
   } catch (error) {
     copied.value = false
-    feedback.value = getErrorMessage(error, '링크를 만들거나 복사하지 못했어요. 다시 시도해 주세요.')
-    isError.value = true
+    fail(error, '링크를 복사하지 못했어요. 다시 시도해 주세요.')
   }
 }
+
+onBeforeUnmount(stopTicker)
 </script>
 
 <template>
   <form
     class="text-(--color-navy)"
-    @submit.prevent="sendInvite"
+    @submit.prevent="createLink"
   >
-    <p
-      class="mb-[var(--space-6)] mt-0 text-[length:var(--font-sm)] text-(--color-slate-muted)"
-    >
+    <p class="mb-[var(--space-6)] mt-0 text-[length:var(--font-sm)] text-(--color-slate-muted)">
       함께 돌볼 가족을 초대해 반려동물의 기록을 나눠요
     </p>
 
-    <label
-      class="mb-[var(--space-2)] block text-[length:var(--font-sm)] font-bold text-(--color-slate-dark)"
-      for="recipient"
+    <span class="mb-[var(--space-2)] block text-[length:var(--font-sm)] font-bold text-(--color-slate-dark)">
+      링크가 살아 있는 시간
+    </span>
+    <div
+      class="flex gap-[var(--space-2)]"
+      role="group"
+      aria-label="링크가 살아 있는 시간"
     >
-      이메일 또는 휴대전화 번호
-    </label>
+      <AppButton
+        v-for="option in TTL_OPTIONS"
+        :key="option.minutes"
+        class="flex-1"
+        type="button"
+        size="md"
+        :variant="selectedMinutes === option.minutes ? 'navy' : 'secondary'"
+        :aria-pressed="selectedMinutes === option.minutes"
+        @click="selectMinutes(option.minutes)"
+      >
+        {{ option.label }}
+      </AppButton>
+    </div>
+
     <!--
-      회의에서 "이메일·전화번호 인증을 왜 받나"라는 질문이 나왔다. 실제로는 인증이
-      아니라 받는 사람을 못박는 값이다. 이 값으로 만든 초대는 그 계정으로만 수락되고,
-      아래 링크 초대는 링크를 가진 누구나 수락된다. 두 방식의 보안 수준이 다른데
-      화면에서는 나란한 선택지로 보여 오해를 만들었다.
+      링크를 본 사람은 누구나 수락할 수 있다. 이 사실을 시간을 고르는 자리에서 바로
+      알려야 짧게 잡는다. 뒤에서 알려주면 이미 링크를 뿌린 뒤다.
     -->
-    <p class="mb-[var(--space-2)] mt-0 text-[length:var(--font-xs)] leading-[1.5] text-(--color-slate-muted)">
-      여기에 적은 계정만 초대를 수락할 수 있어요. 링크가 다른 사람에게 전달돼도 안전해요.
+    <p class="mb-0 mt-[var(--space-2)] text-[length:var(--font-xs)] leading-[1.5] text-(--color-slate-muted)">
+      이 시간 안에 링크를 받은 사람은 누구나 참여할 수 있어요.
+      한 명이 참여하면 링크는 바로 만료돼요.
     </p>
-    <input
-      id="recipient"
-      v-model="recipient"
-      class="h-[var(--control-height)] w-full box-border rounded-[var(--radius-lg)] border border-(--color-border) bg-(--color-surface) px-[var(--space-4)] [font-family:var(--font-family)] text-[length:var(--font-md)] text-(--color-navy) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-gold)"
-      placeholder="example@aewol.com"
-      @input="resetFeedback"
-    >
+
     <AppButton
-      class="mt-[var(--space-4)]"
+      class="mt-[var(--space-5)]"
       block
       size="lg"
       variant="navy"
       type="submit"
-      :disabled="!trimmedRecipient || !petId || shareStore.isInviting"
+      :disabled="!petId || shareStore.isInviting"
       :loading="shareStore.isInviting"
     >
-      초대 링크 만들기
+      {{ inviteCode ? '새 링크 만들기' : '초대 링크 만들기' }}
     </AppButton>
 
-    <div class="mt-[var(--space-7)] border-t border-(--color-border) pt-[var(--space-4)]">
-      <p
-        class="m-0 text-center text-[length:var(--font-sm)] font-bold text-(--color-slate-muted)"
-      >
-        또는 링크로 초대
-      </p>
-      <p
-        class="mb-0 mt-[var(--space-2)] text-center text-[length:var(--font-xs)] leading-[1.5] text-(--color-slate-muted)"
-      >
-        받는 사람을 지정하지 않아요.
-        <strong class="font-bold text-(--color-danger-strong)">링크를 가진 누구나 참여할 수 있으니</strong>
-        믿을 수 있는 사람에게만 보내주세요.
-      </p>
-      <div class="mt-[var(--space-4)] flex gap-[var(--space-4)]">
+    <section
+      v-if="inviteCode"
+      class="mt-[var(--space-5)] rounded-[var(--radius-lg)] border border-(--color-border) bg-(--color-surface) p-[var(--space-4)]"
+      aria-label="만들어진 초대 링크"
+    >
+      <div class="flex items-center justify-between gap-[var(--space-2)]">
+        <strong class="text-[length:var(--font-sm)] text-(--color-slate-dark)">참여 링크</strong>
         <span
-          class="min-w-0 flex-1 [overflow-wrap:anywhere] rounded-[var(--radius-lg)] border border-(--color-border) bg-(--color-surface) px-[var(--space-3)] py-[var(--space-3)] text-[length:var(--font-sm)] text-(--color-slate-dark)"
+          class="shrink-0 text-[length:var(--font-sm)] font-bold [font-variant-numeric:tabular-nums]"
+          :class="isExpired ? 'text-(--color-danger-strong)' : 'text-(--color-leaf-dark)'"
+          role="status"
+          aria-live="polite"
         >
-          {{ inviteLink || '복사 버튼을 누르면 새 참여 링크가 만들어져요.' }}
+          {{ isExpired ? '만료됨' : `${remainingLabel} 남음` }}
         </span>
-        <AppButton
-          class="shrink-0"
-          size="md"
-          variant="primary"
-          type="button"
-          :disabled="!petId || shareStore.isInviting"
-          :loading="shareStore.isInviting"
-          @click="copyLink"
-        >
-          {{ copied ? '복사됨' : '복사' }}
-        </AppButton>
       </div>
-    </div>
+
+      <p
+        class="mb-0 mt-[var(--space-3)] [overflow-wrap:anywhere] text-[length:var(--font-sm)]"
+        :class="isExpired ? 'text-(--color-slate-muted) line-through' : 'text-(--color-slate-dark)'"
+      >
+        {{ inviteLink }}
+      </p>
+
+      <AppButton
+        class="mt-[var(--space-3)]"
+        block
+        size="md"
+        variant="primary"
+        type="button"
+        :disabled="isExpired"
+        @click="copyLink"
+      >
+        {{ copied ? '복사됨' : '링크 복사' }}
+      </AppButton>
+
+      <p
+        v-if="isExpired"
+        class="mb-0 mt-[var(--space-3)] text-[length:var(--font-xs)] text-(--color-slate-muted)"
+      >
+        시간이 지나 링크가 만료됐어요. 위에서 새 링크를 만들어 주세요.
+      </p>
+    </section>
+
     <p
       v-if="feedback"
       class="mb-0 mt-[var(--space-3)] text-[length:var(--font-sm)] text-(--color-slate-dark)"
