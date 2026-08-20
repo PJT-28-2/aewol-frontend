@@ -30,7 +30,7 @@ const primaryPet = computed(() =>
     ?? petStore.pets[0]
     ?? null,
 )
-const petName = computed(() => primaryPet.value?.name || '포리')
+const petName = computed(() => primaryPet.value?.name || '반려동물')
 const memberName = computed(() => memberStore.profile?.name || '회원')
 // AI로 만든 전신 캐릭터가 있으면 그것을 쓴다. 이 이미지는 홈 화면 히어로 용도로
 // 생성된 것이다(prompts/pet-character-fullbody.txt). 아직 만들지 않았거나 생성에

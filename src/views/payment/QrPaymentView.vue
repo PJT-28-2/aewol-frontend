@@ -11,11 +11,13 @@ import FeatureIconTile from '@/components/common/FeatureIconTile.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { transactionApi } from '@/api/transaction'
 import { useWalletStore } from '@/stores/wallet'
+import { usePetStore } from '@/stores/pet'
 import { FILE_DECODE_ERROR_MESSAGE, useQrScanner } from '@/composables/useQrScanner'
 import { parseQrPayment } from '@/utils/qr'
 
 const router = useRouter()
 const walletStore = useWalletStore()
+const petStore = usePetStore()
 
 // scan(스캔 대기) → confirm(인식 결과 확인) → done(결제 완료)
 const step = ref('scan')
@@ -32,6 +34,12 @@ const balance = computed(() => walletStore.wallet?.totalBalance ?? null)
 const formattedBalance = computed(() =>
   balance.value === null ? '-' : balance.value.toLocaleString('ko-KR'),
 )
+const walletLabel = computed(() => {
+  const pet = petStore.pets.find((item) => item.id === petStore.representativePetId)
+    ?? petStore.pets[0]
+    ?? null
+  return pet?.name ? `${pet.name}의 애월 지갑` : '애월 지갑'
+})
 const balanceAfterPayment = computed(() => {
   if (balance.value === null || !detectedPayment.value) return null
   return balance.value - detectedPayment.value.amount
@@ -46,6 +54,7 @@ const { videoRef, isCameraOn, isCameraStarting, cameraError, startCamera, stopCa
 
 onMounted(() => {
   loadBalance()
+  petStore.pets.length ? Promise.resolve() : petStore.fetchPets().catch(() => {})
   startCamera()
 })
 
@@ -399,7 +408,7 @@ function toPaymentErrorMessage(error) {
             결제 지갑
           </p>
           <p class="mt-[2px] text-(length:--font-md) font-bold">
-            포리의 애월 지갑
+            {{ walletLabel }}
           </p>
         </div>
         <LoadingSpinner

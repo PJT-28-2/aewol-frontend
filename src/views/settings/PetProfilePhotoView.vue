@@ -22,7 +22,7 @@ const targetPet = computed(() => {
   }
   return petStore.pets.find(({ id }) => id === petStore.representativePetId) ?? petStore.pets[0]
 })
-const petName = computed(() => targetPet.value?.name ?? '포리')
+const petName = computed(() => targetPet.value?.name ?? '반려동물')
 
 const step = ref(1)
 const photoFile = ref(null)
