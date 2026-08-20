@@ -25,6 +25,7 @@ const form = reactive({
 })
 const isCurrentPasswordVerified = ref(false)
 const isAddressSearchOpen = ref(false)
+const isPhoneInputOverflow = ref(false)
 const passwordError = ref('')
 const isVerifyingPassword = ref(false)
 const isSaving = ref(false)
@@ -35,9 +36,17 @@ const isLocalProvider = computed(() => memberStore.profile?.provider === 'LOCAL'
 let saveSuccessTimer = null
 
 const isNewPasswordValid = computed(() => isValidPassword(form.newPassword))
+const phoneDigits = computed(() => form.phone.replace(/\D/g, ''))
+const isPhoneValid = computed(
+  () => !isPhoneInputOverflow.value && /^010\d{8}$/.test(phoneDigits.value),
+)
 
 const handlePhoneInput = (event) => {
+  const rawPhoneDigits = event.target.value.replace(/\D/g, '')
+  isPhoneInputOverflow.value = rawPhoneDigits.length > 11
   form.phone = formatPhoneNumber(event.target.value)
+  event.target.value = form.phone
+  saveError.value = ''
 }
 
 const handleCurrentPasswordInput = () => {
@@ -77,15 +86,18 @@ const handleProfileSave = async () => {
   saveError.value = ''
   isSaveSuccessVisible.value = false
   window.clearTimeout(saveSuccessTimer)
-  const phone = form.phone.replace(/\D/g, '')
-  if (!phone || !form.zipCode.trim() || !form.address.trim()) {
+  if (!isPhoneValid.value) {
+    saveError.value = '010으로 시작하는 11자리 휴대폰 번호를 입력해 주세요.'
+    return
+  }
+  if (!form.zipCode.trim() || !form.address.trim()) {
     saveError.value = '전화번호와 주소를 확인해주세요.'
     return
   }
   isSaving.value = true
   try {
     await memberStore.updateProfile({
-      phone,
+      phone: phoneDigits.value,
       profileImg: form.profileImg,
       zipCode: form.zipCode.trim(),
       address: form.address.trim(),
@@ -195,9 +207,17 @@ onBeforeUnmount(() => window.clearTimeout(saveSuccessTimer))
         class="h-(--control-height-md) rounded-(--radius-lg) border border-(--color-border) bg-(--color-white) px-[13px] text-[13px] text-(color:--color-navy) outline-none focus:border-(--color-leaf)"
         type="tel"
         autocomplete="tel"
+        inputmode="tel"
         required
         @input="handlePhoneInput"
       >
+      <p
+        v-if="form.phone && !isPhoneValid"
+        class="mt-1 text-[11px] text-(color:--color-danger-strong)"
+        role="alert"
+      >
+        010으로 시작하는 11자리 휴대폰 번호를 입력해 주세요.
+      </p>
 
       <label
         class="mt-[11px] mb-1 text-[12.5px] font-(--font-bold) text-(color:--color-slate-dark)"
@@ -272,7 +292,7 @@ onBeforeUnmount(() => window.clearTimeout(saveSuccessTimer))
         size="lg"
         block
         :loading="isSaving"
-        :disabled="isSaving"
+        :disabled="isSaving || !isPhoneValid"
       >
         저장하기
       </AppButton>
