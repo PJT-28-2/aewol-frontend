@@ -1,7 +1,5 @@
 import { defineStore } from 'pinia'
 import { emergencyApi } from '@/api/emergency'
-import { USE_MOCK_DATA } from '@/mocks/config'
-import { mockHospitals } from '@/mocks/emergency'
 
 // 스토어 밖의 모듈 스코프 변수로 둔다 — Pinia state(reactive)에 AbortController를 넣으면
 // Vue의 reactive Proxy가 감싸면서 signal 관련 네이티브 메서드 호출 시 문제가 생길 수 있다.
@@ -29,13 +27,6 @@ export const useEmergencyStore = defineStore('emergency', {
       const requestId = ++latestRequestId
       activeController?.abort()
       activeController = new AbortController()
-
-      if (USE_MOCK_DATA) {
-        this.hospitals = mockHospitals
-        this.error = null
-        if (requestId === latestRequestId) this.isLoading = false
-        return this.hospitals
-      }
 
       this.isLoading = true
       this.error = null

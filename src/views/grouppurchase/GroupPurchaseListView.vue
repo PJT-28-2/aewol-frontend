@@ -6,8 +6,6 @@ import IconGroupPurchase from '@/components/common/icons/IconGroupPurchase.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
 import AppButton from '@/components/common/AppButton.vue';
-import { MOCK_GROUP_PURCHASE_LIST } from '@/mocks/groupPurchase';
-import { USE_MOCK_DATA } from '@/mocks/config';
 import { groupPurchaseApi } from '@/api/groupPurchase';
 import { useAuthStore } from '@/stores/auth';
 import { GROUP_PURCHASE_STATUS_CODE, getGroupPurchaseStatusLabel } from '@/utils/groupPurchaseStatus';
@@ -44,25 +42,6 @@ function buildFilterParams() {
 }
 
 async function fetchPage(pageToLoad) {
-  if (USE_MOCK_DATA) {
-    // mock 모드에서는 페이지네이션/필터를 흉내내기 위해 MOCK 목록을 직접 자르고 거른다
-    let list = MOCK_GROUP_PURCHASE_LIST;
-    if (selectedCategory.value !== '전체') {
-      list = list.filter((gp) => gp.category === selectedCategory.value);
-    }
-    if (selectedStatus.value && selectedStatus.value !== '전체') {
-      list = list.filter((gp) => gp.status === GROUP_PURCHASE_STATUS_CODE[selectedStatus.value]);
-    }
-    const keyword = searchKeyword.value.trim().toLowerCase();
-    if (keyword) {
-      list = list.filter((gp) => gp.productName?.toLowerCase().includes(keyword));
-    }
-    const start = pageToLoad * PAGE_SIZE;
-    return {
-      items: list.slice(start, start + PAGE_SIZE),
-      hasNext: start + PAGE_SIZE < list.length,
-    };
-  }
 
   const { data } = await groupPurchaseApi.getList({
     page: pageToLoad,

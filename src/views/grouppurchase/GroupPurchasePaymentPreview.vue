@@ -9,12 +9,6 @@ import AppButton from '@/components/common/AppButton.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import PinAuthSheet from '@/components/common/PinAuthSheet.vue';
 import { formatPhoneNumber as formatPhoneAsTyped } from '@/utils/phone';
-import {
-  MOCK_GROUP_PURCHASE_PAYMENT_PRODUCT,
-  MOCK_GROUP_PURCHASE_PAYMENT_METHOD,
-  MOCK_MEMBER_SHIPPING_ADDRESS,
-} from '@/mocks/groupPurchase';
-import { USE_MOCK_DATA } from '@/mocks/config';
 import { groupPurchaseApi } from '@/api/groupPurchase';
 import { memberApi } from '@/api/member';
 import { useWalletStore } from '@/stores/wallet';
@@ -44,15 +38,6 @@ async function loadPaymentMethod() {
   isLoading.value = true;
   isError.value = false;
   try {
-    if (USE_MOCK_DATA) {
-      product.value = {
-        ...MOCK_GROUP_PURCHASE_PAYMENT_PRODUCT,
-        purchaseQuantity: Number(route.query.quantity) || 1,
-      };
-      paymentMethod.value = { ...MOCK_GROUP_PURCHASE_PAYMENT_METHOD };
-      shippingAddress.value = { ...MOCK_MEMBER_SHIPPING_ADDRESS };
-      return;
-    }
 
     const { data: detailData } = await groupPurchaseApi.getDetail(route.params.gpId);
     const detail = detailData.result;
@@ -278,11 +263,6 @@ function handleOpenPinSheet() {
 // 그대로 인자로 받아 password로 함께 보낸다(백엔드가 join 요청 body에 password를 필수로
 // 요구함, 2026-08-18 확인) — 버튼 disabled와 별개로 진입 시점에 잔액/배송지 상태를 다시 검사한다
 async function handlePayment(password) {
-  if (USE_MOCK_DATA) {
-    isPinSheetOpen.value = false;
-    router.push(`/group-purchase/${route.params.gpId}/status`);
-    return;
-  }
 
   // PIN 시트가 열려 있는 동안 잔액이 바뀌거나 배송지 정보가 불완전해지거나 마감 시각이
   // 지났을 수 있어 재검사

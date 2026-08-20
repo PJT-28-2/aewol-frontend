@@ -8,7 +8,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import IconCat from '@/components/common/icons/IconCat.vue';
 import IconDog from '@/components/common/icons/IconDog.vue';
 import IconStats from '@/components/common/icons/IconStats.vue';
-import { CATEGORY_LABELS } from '@/mocks/transaction';
+import { CATEGORY_LABELS } from '@/constants/transactionCategory';
 import { useDashboardStore } from '@/stores/dashboard';
 import { usePetStore } from '@/stores/pet';
 
