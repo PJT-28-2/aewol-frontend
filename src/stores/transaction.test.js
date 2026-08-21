@@ -106,7 +106,22 @@ describe('useTransactionStore', () => {
       type: 'charge',
       amount: 100000,
       chargeMethod: 'TossPayments',
+      subtitle: '지갑 충전 (TossPayments)',
     })
+  })
+
+  it('일반 거래(결제 등)의 부제목은 memo 없이 카테고리 라벨만 표시한다 (#354)', async () => {
+    transactionApi.getRecentTransactions.mockResolvedValue({
+      data: { result: [backendTransaction] },
+    })
+
+    const store = useTransactionStore()
+    await store.fetchRecentTransactions()
+
+    // backendTransaction은 category: 'HOSPITAL'(-> '병원비'), memo: '진료비'를 갖는다.
+    // memo가 리스트에 노출되면 공동구매 참여 같은 상세 정보가 그대로 보여, 부제목은
+    // 카테고리 라벨만 남긴다 — memo는 거래 상세 화면(TransactionDetailView)에서 별도로 보여준다
+    expect(store.recentTransactions[0].subtitle).toBe('병원비')
   })
 
   it('환불(REFUND) 거래는 양수 금액으로 변환하고, "충전"/"출금" 어느 필터 타입에도 속하지 않는 별도 type을 갖는다', async () => {
@@ -130,11 +145,14 @@ describe('useTransactionStore', () => {
     // amount만 양수로 바뀌고 type이 'charge'/'withdraw' 둘 중 하나로 남으면, WalletView/
     // TransactionHistoryView의 "충전"/"출금" 필터 탭 어느 한쪽에 잘못 걸리게 된다 —
     // "전체" 탭에서만 보이도록 별도 type('refund')이어야 한다
+    // 환불은 실제 소비 카테고리가 없는데도 category가 항상 'ETC'로 떨어져, 그대로 두면
+    // 부제목에 "기타"만 떠서 뭔가로 분류된 것처럼 오해를 준다 — 부제목은 비운다 (#354)
     expect(store.recentTransactions[0]).toMatchObject({
       id: '21',
       amount: 28000,
       type: 'refund',
       title: '공동구매 참여취소 환불',
+      subtitle: '',
     })
   })
 
