@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import AppButton from '@/components/common/AppButton.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
+import GroupPurchaseProgressBar from '@/components/grouppurchase/GroupPurchaseProgressBar.vue';
 import IconPlus from '@/components/common/icons/IconPlus.vue';
 import IconMinus from '@/components/common/icons/IconMinus.vue';
 import { MOCK_GROUP_PURCHASE_DETAIL } from '@/mocks/groupPurchase';
@@ -24,7 +25,13 @@ const isError = ref(false);
 // 목록/마이페이지는 관리자를 상세 화면 대신 상태 화면으로 바로 보내지만, 그 라우팅을 거치지 않고
 // (URL 직접 입력, 뒤로가기, 공유 링크 등) 이 화면에 온 경우까지 대비해 여기서도 참여 UI를 그리지
 // 않고 상태 화면으로 리다이렉트한다. 관리자는 작성자 여부와 무관하게 모든 게시글에 관리 권한을
-// 가지므로(2026-08-10 정책 확정), memberId 비교가 아니라 로그인 유저의 role만으로 판정한다
+// 가지므로(2026-08-10 정책 확정), memberId 비교가 아니라 로그인 유저의 role만으로 판정한다.
+//
+// 목록 화면은 status가 OPEN일 때만 이 화면으로 연결하지만(그 외엔 "마감" 배지만 노출),
+// 마감일 전에 관리자가 취소(CANCELLED)했거나 이미 목표 달성으로 확정(COMPLETED)된 게시물도
+// 같은 이유(직접 URL 입력 등)로 이 화면에 남아있는 링크/북마크를 통해 들어올 수 있다.
+// 이 화면의 CTA는 isExpired(마감 시각)만 검사하고 status는 보지 않으므로, status를 따로
+// 확인하지 않으면 이미 닫힌 공동구매에 결제가 들어갈 수 있어 status도 함께 확인한다
 async function loadDetail() {
   isLoading.value = true;
   isError.value = false;
@@ -43,7 +50,7 @@ async function loadDetail() {
       isError.value = true;
       return;
     }
-    if (authStore.isAdmin) {
+    if (authStore.isAdmin || detail.status !== 'OPEN') {
       router.replace(`/group-purchase/${route.params.gpId}/status`);
       return;
     }
@@ -263,14 +270,7 @@ function goToPaymentPreview() {
           </p>
         </div>
         <!-- 진행률 바도 선택 수량 반영 기준으로 실시간 갱신 -->
-        <div
-          class="h-(--size-progress-bar) rounded-full bg-(--color-border) overflow-hidden mb-(--space-2)"
-        >
-          <div
-            class="h-full rounded-full bg-(--color-gold)"
-            :style="{ width: `${progressPercent}%` }"
-          />
-        </div>
+        <GroupPurchaseProgressBar :percent="progressPercent" />
         <div class="flex items-center justify-between">
           <p
             class="text-(length:--font-xs) text-(color:--color-slate-muted)"

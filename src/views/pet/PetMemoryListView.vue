@@ -65,7 +65,7 @@ function petName(memory) {
 }
 
 function authorName(memory) {
-  return memory.authorName ?? '김애월'
+  return memory.authorName ?? '나'
 }
 
 function authorAvatarClass(authorId) {

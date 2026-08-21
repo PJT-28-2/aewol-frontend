@@ -5,10 +5,6 @@ export const shareApi = {
     return api.get('/share/pets')
   },
 
-  invite(data) {
-    return api.post('/share/invite', data)
-  },
-
   createLinkInvite(data) {
     return api.post('/share/invite/link', data)
   },
@@ -65,8 +61,10 @@ export const shareApi = {
     return api.post(`/share/${petId}/diaries`, formData)
   },
 
-  updateDiary(diaryId, { diaryDate, content }) {
-    return api.put(`/share/diaries/${diaryId}`, { diaryDate, content })
+  // version은 조회할 때 받은 값을 그대로 되돌려 보낸다. 그 사이 다른 곳에서 저장됐으면
+  // 서버가 409로 거절해 앞선 수정이 덮어써지지 않는다.
+  updateDiary(diaryId, { diaryDate, content, version }) {
+    return api.put(`/share/diaries/${diaryId}`, { diaryDate, content, version })
   },
 
   deleteDiary(diaryId) {

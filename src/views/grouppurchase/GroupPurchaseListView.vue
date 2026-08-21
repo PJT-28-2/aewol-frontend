@@ -70,13 +70,12 @@ async function fetchPage(pageToLoad) {
     ...buildFilterParams(),
   });
   const result = data.result ?? { items: [], hasNext: false };
-  // 관리자면 진행중일 때 '참여하기' 대신 '확인하기'로 상태 화면 바로 이동
-  // isParticipating(로그인 유저의 참여 여부)은 응답에 없을 수 있어 기본값 false로 방어
-  // TODO: 백엔드 API 계약 변경(로그인 유저 기준 참여 여부 포함) 후 item.isParticipating으로 교체
+  // 관리자면 진행중일 때 '참여하기' 대신 '확인하기'로 상태 화면으로 바로 이동한다.
+  // isParticipating은 목록 API가 로그인 회원 기준으로 내려준다.
   const items = (result.items ?? []).map((item) => ({
     ...item,
     isAdmin: authStore.isAdmin,
-    isParticipating: item.isParticipating ?? false,
+    isParticipating: Boolean(item.isParticipating),
   }));
   return { items, hasNext: result.hasNext ?? false };
 }
@@ -128,6 +127,13 @@ async function loadMore() {
 }
 
 onMounted(resetAndLoad);
+
+// 썸네일 로드 실패(깨진 URL 등) 시 브라우저 기본 깨짐 아이콘 대신 플레이스홀더로 대체하기 위해
+// 실패한 gp.id를 기록해둔다. gp.image가 있어도 이 Set에 들어있으면 플레이스홀더를 보여준다
+const brokenImageIds = ref(new Set());
+function markImageBroken(id) {
+  brokenImageIds.value = new Set(brokenImageIds.value).add(id);
+}
 
 // 카테고리 필터 — 상품등록 화면(GroupPurchaseCreateStep1.vue)이 쓰는 백엔드 허용값과 동일하게 맞춤.
 // 다른 값으로 필터링하면 실제로 그 카테고리로 등록된 상품이 없어 항상 빈 목록만 나온다
@@ -328,42 +334,64 @@ onBeforeUnmount(() => {
         <li
           v-for="gp in groupPurchases"
           :key="gp.id"
-          class="flex items-center justify-between gap-(--space-3) rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-(--space-4) shadow-(--shadow-card)"
+          class="flex items-center gap-(--space-3) rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-(--space-4) shadow-(--shadow-card)"
         >
-          <div>
-            <h3 class="text-(length:--font-md) font-semibold text-(color:--color-gray-900) mb-(--space-1)">
-              {{ gp.productName }}
-            </h3>
-            <p class="text-(length:--font-xs) text-(color:--color-gray-500) mb-(--space-1)">
-              {{ gp.currentQuantity }}/{{ gp.targetQuantity }}개 참여 · {{ gp.status === 'OPEN' ? gp.dDay : getGroupPurchaseStatusLabel(gp.status) }}
-            </p>
-            <div class="flex items-center gap-(--space-2) mb-(--space-1)">
-              <p class="text-(length:--font-xs) font-bold text-(color:--color-navy)">
-                {{ gp.groupPrice?.toLocaleString() }}원
+          <!-- 상품 썸네일: 상세 화면(GroupPurchaseDetailView)과 동일하게 image 필드를 그대로 사용.
+               image가 없거나 로드에 실패하면(brokenImageIds) 깨진 이미지 아이콘 대신 아이콘 플레이스홀더를 보여준다 -->
+          <div
+            class="flex shrink-0 items-center justify-center w-(--size-thumb-md) h-(--size-thumb-md) rounded-(--radius-lg) bg-(--color-surface) overflow-hidden"
+          >
+            <img
+              v-if="gp.image && !brokenImageIds.has(gp.id)"
+              :src="gp.image"
+              :alt="gp.productName"
+              loading="lazy"
+              class="w-full h-full object-cover"
+              @error="markImageBroken(gp.id)"
+            >
+            <IconGroupPurchase
+              v-else
+              :size="28"
+              color="var(--color-slate-light)"
+            />
+          </div>
+
+          <div class="flex flex-1 min-w-0 items-center justify-between gap-(--space-3)">
+            <div class="min-w-0">
+              <h3 class="truncate text-(length:--font-md) font-semibold text-(color:--color-gray-900) mb-(--space-1)">
+                {{ gp.productName }}
+              </h3>
+              <p class="text-(length:--font-xs) text-(color:--color-gray-500) mb-(--space-1)">
+                {{ gp.currentQuantity }}/{{ gp.targetQuantity }}개 참여 · {{ gp.status === 'OPEN' ? gp.dDay : getGroupPurchaseStatusLabel(gp.status) }}
               </p>
-              <p class="text-(length:--font-xs) text-(color:--color-slate-muted) line-through">
-                {{ gp.unitPrice?.toLocaleString() }}원
-              </p>
+              <div class="flex items-center gap-(--space-2) mb-(--space-1)">
+                <p class="text-(length:--font-xs) font-bold text-(color:--color-navy)">
+                  {{ gp.groupPrice?.toLocaleString() }}원
+                </p>
+                <p class="text-(length:--font-xs) text-(color:--color-slate-muted) line-through">
+                  {{ gp.unitPrice?.toLocaleString() }}원
+                </p>
+              </div>
+              <span class="text-(length:--font-xs) font-semibold text-(color:--color-gold)">
+                {{ gp.badgeText }}
+              </span>
             </div>
-            <span class="text-(length:--font-xs) font-semibold text-(color:--color-gold)">
-              {{ gp.badgeText }}
+            <!-- 진행중: 관리자('확인하기')/이미 참여('참여중')는 상세 없이 상태 화면으로, 미참여('참여하기')는 참여 플로우로 이동 -->
+            <router-link
+              v-if="gp.status === 'OPEN'"
+              :to="gp.isAdmin || gp.isParticipating ? `/group-purchase/${gp.id}/status` : `/group-purchase/${gp.id}`"
+              class="shrink-0 whitespace-nowrap rounded-full bg-(--color-leaf) px-(--space-4) py-(--space-2) text-(length:--font-sm) font-semibold text-(color:--color-navy) no-underline"
+            >
+              {{ gp.isAdmin ? '확인하기' : gp.isParticipating ? '참여중' : '참여하기' }}
+            </router-link>
+            <!-- 마감된 게시글은 새로 참여할 수 없어 비활성화 표시만 함 -->
+            <span
+              v-else
+              class="shrink-0 px-(--space-4) py-(--space-2) bg-(--color-gray-200) text-(color:--color-gray-500) rounded-full text-(length:--font-sm) font-semibold whitespace-nowrap"
+            >
+              마감
             </span>
           </div>
-          <!-- 진행중: 관리자('확인하기')/이미 참여('참여중')는 상세 없이 상태 화면으로, 미참여('참여하기')는 참여 플로우로 이동 -->
-          <router-link
-            v-if="gp.status === 'OPEN'"
-            :to="gp.isAdmin || gp.isParticipating ? `/group-purchase/${gp.id}/status` : `/group-purchase/${gp.id}`"
-            class="shrink-0 whitespace-nowrap rounded-full bg-(--color-leaf) px-(--space-4) py-(--space-2) text-(length:--font-sm) font-semibold text-(color:--color-navy) no-underline"
-          >
-            {{ gp.isAdmin ? '확인하기' : gp.isParticipating ? '참여중' : '참여하기' }}
-          </router-link>
-          <!-- 마감된 게시글은 새로 참여할 수 없어 비활성화 표시만 함 -->
-          <span
-            v-else
-            class="shrink-0 px-(--space-4) py-(--space-2) bg-(--color-gray-200) text-(color:--color-gray-500) rounded-full text-(length:--font-sm) font-semibold whitespace-nowrap"
-          >
-            마감
-          </span>
         </li>
       </ul>
 

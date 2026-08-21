@@ -18,6 +18,7 @@ import { USE_MOCK_DATA } from '@/mocks/config';
 import { groupPurchaseApi } from '@/api/groupPurchase';
 import { memberApi } from '@/api/member';
 import { useWalletStore } from '@/stores/wallet';
+import { getDeadlineTimestamp } from '@/utils/date';
 
 const route = useRoute();
 const router = useRouter();
@@ -35,6 +36,9 @@ const product = ref(null);
 const paymentMethod = ref(null);
 const isLoading = ref(true);
 const isError = ref(false);
+// 마감 여부 재검사(handlePayment)용 — GroupPurchaseDetailView.vue를 거치지 않고 URL 직접
+// 입력이나 뒤로가기로 이 화면에 곧장 들어올 수 있어, 이 화면 자체도 deadline을 알아야 한다
+const deadline = ref(null);
 
 async function loadPaymentMethod() {
   isLoading.value = true;
@@ -52,6 +56,16 @@ async function loadPaymentMethod() {
 
     const { data: detailData } = await groupPurchaseApi.getDetail(route.params.gpId);
     const detail = detailData.result;
+
+    // GroupPurchaseDetailView.vue와 같은 이유(URL 직접 입력, 뒤로가기, 공유 링크 등)로
+    // 이미 마감되었거나(status !== 'OPEN') 마감 시각이 지난 공동구매에 결제가 들어갈 수
+    // 있어, 이 화면에 진입하는 시점에 한 번 더 확인해서 상태 화면으로 돌려보낸다
+    if (detail.status !== 'OPEN' || Date.now() >= getDeadlineTimestamp(detail.deadline)) {
+      router.replace(`/group-purchase/${route.params.gpId}/status`);
+      return;
+    }
+    deadline.value = detail.deadline;
+
     product.value = {
       productName: detail.productName,
       optionText: '옵션 없음', // group_purchase에 옵션 개념이 없어 고정 문구 유지
@@ -72,7 +86,10 @@ async function loadPaymentMethod() {
     if (profile?.address) {
       shippingAddress.value = {
         recipientName: profile.name,
-        recipientPhone: profile.phone,
+        // 프로필 API는 숫자만 내려주는데(예: "01012345678"), 화면 표시와 "배송지 변경" 폼
+        // 초기값 둘 다 이 값을 그대로 쓰므로 여기서 한 번만 하이픈을 붙여두면 어디서든
+        // 따로 포맷팅할 필요가 없다. 백엔드로 보낼 때는 handlePayment에서 다시 숫자만 추출한다
+        recipientPhone: profile.phone ? formatPhoneAsTyped(profile.phone) : '',
         zipCode: profile.zipCode,
         address: profile.address,
         addressDetail: profile.addressDetail,
@@ -267,8 +284,13 @@ async function handlePayment(password) {
     return;
   }
 
-  // PIN 시트가 열려 있는 동안 잔액이 바뀌거나 배송지 정보가 불완전해졌을 수 있어 재검사
-  if (isBalanceInsufficient.value || !isShippingInfoComplete.value) {
+  // PIN 시트가 열려 있는 동안 잔액이 바뀌거나 배송지 정보가 불완전해지거나 마감 시각이
+  // 지났을 수 있어 재검사
+  if (
+    isBalanceInsufficient.value ||
+    !isShippingInfoComplete.value ||
+    Date.now() >= getDeadlineTimestamp(deadline.value)
+  ) {
     isPinSheetOpen.value = false;
     paymentError.value = '결제 정보가 변경됐어요. 다시 확인해주세요.';
     return;
@@ -278,10 +300,12 @@ async function handlePayment(password) {
   isPaying.value = true;
   try {
     // 수량은 quantity 쿼리 파라미터로, 배송지·결제 비밀번호는 본문에 실어 보낸다
-    // (백엔드가 body를 읽어 GroupPurchaseJoinRequest로 저장·검증함, 2026-08-18 확인)
+    // (백엔드가 body를 읽어 GroupPurchaseJoinRequest로 저장·검증함, 2026-08-18 확인).
+    // recipientPhone은 화면 표시용으로 하이픈이 붙어있으니(자동 채움/직접 입력 둘 다),
+    // 저장 형식은 항상 숫자만으로 통일되도록 여기서 하이픈을 다시 제거해서 보낸다
     await groupPurchaseApi.join(route.params.gpId, product.value.purchaseQuantity, {
       recipientName: shippingAddress.value.recipientName,
-      recipientPhone: shippingAddress.value.recipientPhone,
+      recipientPhone: normalizePhoneDigits(shippingAddress.value.recipientPhone),
       zipCode: shippingAddress.value.zipCode,
       address: shippingAddress.value.address,
       addressDetail: shippingAddress.value.addressDetail,

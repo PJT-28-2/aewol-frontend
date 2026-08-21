@@ -107,6 +107,8 @@
   
     /* Typography - Font Family */
   --font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  /* 워드마크(AewolLogo) 전용. 본문은 계속 Pretendard를 쓴다. */
+  --font-logo: 'Nunito', var(--font-family);
 
   /* Typography - Font Sizes */
   --font-xs: 10px;
@@ -205,6 +207,7 @@
   --size-map-sheet-detail: 252px;
   --size-map-sheet-list: 420px;
   --size-thumb-lg: 110px;
+  --size-thumb-md: 72px;
   --size-progress-bar: 8px;
   --size-stepper-box: 46px;
   --size-stepper-btn: 34px;

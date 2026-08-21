@@ -8,6 +8,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import PetSelectorChip from '@/components/common/PetSelectorChip.vue'
 import IconChevronRight from '@/components/common/icons/IconChevronRight.vue'
 import IconDelete from '@/components/common/icons/IconDelete.vue'
+import IconEdit from '@/components/common/icons/IconEdit.vue'
 import IconDocument from '@/components/common/icons/IconDocument.vue'
 import IconPaw from '@/components/common/icons/IconPaw.vue'
 import IconPlus from '@/components/common/icons/IconPlus.vue'
@@ -56,6 +57,11 @@ function goWrite() {
   router.push({ path: '/share/diary/write', query: { petId: selectedPetId.value } })
 }
 
+// 수정은 작성 화면을 그대로 쓴다. diaryId가 있으면 수정 모드로 뜬다.
+function goEdit(diaryId) {
+  router.push({ path: '/share/diary/write', query: { petId: selectedPetId.value, diaryId } })
+}
+
 async function confirmDelete() {
   const diaryId = deleteTargetId.value
   if (!diaryId || diaryStore.isSubmitting) return
@@ -77,7 +83,7 @@ onMounted(initializeDiary)
 
 <template>
   <div
-    class="mx-auto min-h-[calc(100dvh-var(--header-height)-var(--bottom-nav-height))] w-full max-w-(--content-max-width) box-border bg-(--color-white) px-[var(--space-5)] pt-[var(--space-4)] pb-[calc(var(--space-6)+env(safe-area-inset-bottom))] text-(--color-navy)"
+    class="mx-auto min-h-[calc(100dvh-var(--header-height)-var(--bottom-nav-height))] w-full max-w-(--content-max-width) box-border bg-(--color-app-bg) px-[var(--space-5)] pt-[var(--space-4)] pb-[calc(var(--space-6)+env(safe-area-inset-bottom))] text-(--color-navy)"
   >
     <header>
       <h1 class="m-0 text-(length:--font-2xl) font-bold leading-[1.3] text-(--color-navy)">
@@ -125,7 +131,7 @@ onMounted(initializeDiary)
       </section>
 
       <section
-        class="mt-[var(--space-6)] flex items-center justify-between"
+        class="mt-[var(--space-5)] flex items-center justify-between rounded-[24px] bg-(--color-white) px-[var(--space-3)] py-[var(--space-2)] shadow-(--shadow-sm)"
         aria-label="조회할 월 선택"
       >
         <AppButton
@@ -214,7 +220,7 @@ onMounted(initializeDiary)
             <li
               v-for="diary in group.items"
               :key="diary.id"
-              class="overflow-hidden rounded-[var(--radius-lg)] border border-(--color-card-border) bg-(--color-surface)"
+              class="overflow-hidden rounded-[24px] bg-(--color-white) shadow-(--shadow-sm)"
             >
               <img
                 v-if="diary.images.length > 0 && !brokenImageIds.has(diary.id)"
@@ -238,8 +244,20 @@ onMounted(initializeDiary)
                   </strong>
 
                   <AppButton
-                    v-if="diary.deletable"
+                    v-if="diary.editable"
                     class="ml-auto"
+                    variant="ghost"
+                    size="xs"
+                    icon-only
+                    aria-label="일기 수정"
+                    @click="goEdit(diary.id)"
+                  >
+                    <IconEdit :size="18" />
+                  </AppButton>
+
+                  <AppButton
+                    v-if="diary.deletable"
+                    :class="diary.editable ? '' : 'ml-auto'"
                     variant="ghost"
                     size="xs"
                     icon-only

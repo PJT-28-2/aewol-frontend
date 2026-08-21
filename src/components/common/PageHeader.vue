@@ -23,7 +23,7 @@ function goBack() {
 
 <template>
   <header
-    class="fixed top-0 left-0 right-0 z-100 flex h-(--header-height) items-center bg-(--color-app-bg) px-(--space-4)"
+    class="fixed top-0 left-0 right-0 z-100 flex h-[calc(var(--header-height)+env(safe-area-inset-top,0px))] items-center bg-(--color-app-bg) px-(--space-4) pt-[env(safe-area-inset-top,0px)]"
   >
     <div class="flex-none flex items-center justify-start">
       <button

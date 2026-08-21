@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import AppButton from '@/components/common/AppButton.vue'
 import IconClose from '@/components/common/icons/IconClose.vue'
 import IconImage from '@/components/common/icons/IconImage.vue'
+import { shareApi } from '@/api/share'
 import { useShareStore } from '@/stores/share'
 import { useShareDiaryStore } from '@/stores/shareDiary'
 
@@ -21,6 +22,17 @@ const content = ref('')
 const imageFile = ref(null)
 const imagePreview = ref('')
 const errorMessage = ref('')
+
+// 수정 모드는 ?diaryId=로 들어온다. 화면 구조가 작성과 같아 별도 뷰를 만들지 않는다.
+const diaryId = computed(() => route.query.diaryId ?? '')
+const isEditMode = computed(() => Boolean(diaryId.value))
+// 불러올 때 받은 버전. 저장 요청에 그대로 실어 보내 그 사이 다른 곳에서 저장됐는지
+// 서버가 판정하게 한다.
+const loadedVersion = ref(null)
+// 수정 모드에서 기존 사진은 그대로 두고 바꿀 수 없다. 서버 PUT이 사진을 받지 않는다.
+const existingImage = ref('')
+const isLoadingDiary = ref(false)
+const isStale = ref(false)
 
 const today = new Date()
 const todayText = [
@@ -52,7 +64,7 @@ const petName = computed(
 const canSubmit = computed(
   () => Boolean(petId.value)
     && Boolean(diaryDate.value)
-    && (content.value.trim().length > 0 || Boolean(imageFile.value)),
+    && (content.value.trim().length > 0 || Boolean(imageFile.value) || Boolean(existingImage.value)),
 )
 
 function releasePreview() {
@@ -83,26 +95,69 @@ function removeImage() {
   imageFile.value = null
 }
 
+/** 수정 화면에 기존 내용을 채워 넣는다. 실패하면 빈 화면 대신 이유를 보여준다. */
+async function loadDiary() {
+  isLoadingDiary.value = true
+  try {
+    const diary = (await shareApi.getDiary(diaryId.value)).data?.result
+    if (!diary) throw new Error('empty')
+    diaryDate.value = diary.diaryDate
+    content.value = diary.content ?? ''
+    loadedVersion.value = diary.version ?? null
+    existingImage.value = diary.images?.[0] ?? ''
+    if (diary.petId) petId.value = diary.petId
+  } catch (error) {
+    errorMessage.value = error.response?.data?.message
+      || '일기를 불러오지 못했어요. 목록에서 다시 시도해 주세요.'
+  } finally {
+    isLoadingDiary.value = false
+  }
+}
+
 async function submit() {
   if (!canSubmit.value || diaryStore.isSubmitting) return
   errorMessage.value = ''
   try {
-    await diaryStore.createDiary({
-      petId: petId.value,
-      diaryDate: diaryDate.value,
-      content: content.value.trim(),
-      image: imageFile.value,
-    })
+    if (isEditMode.value) {
+      await diaryStore.updateDiary(diaryId.value, {
+        diaryDate: diaryDate.value,
+        content: content.value.trim(),
+        version: loadedVersion.value,
+      })
+    } else {
+      await diaryStore.createDiary({
+        petId: petId.value,
+        diaryDate: diaryDate.value,
+        content: content.value.trim(),
+        image: imageFile.value,
+      })
+    }
     router.replace({ path: '/share/diary', query: { petId: petId.value } })
   } catch (error) {
+    // 409는 그 사이 다른 곳에서 저장됐다는 뜻이다. 그냥 다시 누르면 남의 수정을 덮어쓰게
+    // 되므로, 저장 버튼 대신 다시 불러오기를 내밀어 최신 내용을 보고 판단하게 한다.
+    if (error.response?.status === 409) {
+      isStale.value = true
+      errorMessage.value = error.response?.data?.message
+        || '다른 곳에서 이 일기를 먼저 수정했어요. 최신 내용을 불러온 뒤 다시 저장해 주세요.'
+      return
+    }
     errorMessage.value = error.response?.data?.message || '일기를 저장하지 못했어요. 다시 시도해 주세요.'
   }
+}
+
+/** 409 이후 최신 내용을 다시 받아온다. 사용자가 쓰던 글은 덮어쓰므로 확인 후 부른다. */
+async function reloadLatest() {
+  isStale.value = false
+  errorMessage.value = ''
+  await loadDiary()
 }
 
 onMounted(async () => {
   diaryDate.value = todayText
   const pets = shareStore.pets.length > 0 ? shareStore.pets : await shareStore.fetchPets()
   petId.value = route.query.petId ?? pets[0]?.id ?? ''
+  if (isEditMode.value) await loadDiary()
 })
 
 onBeforeUnmount(releasePreview)
@@ -118,7 +173,7 @@ onBeforeUnmount(releasePreview)
         줄 쳐진 본문이 차례로 놓이는 구조다. 저장 규칙과 API는 그대로다.
       -->
       <article
-        class="overflow-hidden rounded-[var(--radius-2xl)] border border-(--color-card-border) bg-(--color-white) shadow-(--shadow-card)"
+        class="overflow-hidden rounded-[24px] bg-(--color-white) shadow-(--shadow-sm)"
       >
         <header
           class="flex items-baseline justify-between gap-[var(--space-3)] border-b border-dashed border-(--color-border) px-[var(--space-5)] pb-[var(--space-3)] pt-[var(--space-5)]"
@@ -128,7 +183,7 @@ onBeforeUnmount(releasePreview)
               {{ diaryDateLabel }}
             </h1>
             <p class="mb-0 mt-[var(--space-1)] truncate text-(length:--font-sm) text-(--color-slate-muted)">
-              {{ petName ? `${petName}와 보낸 하루` : '오늘 하루를 남겨요' }}
+              {{ isEditMode ? '남긴 일기를 고쳐요' : (petName ? `${petName}와 보낸 하루` : '오늘 하루를 남겨요') }}
             </p>
           </div>
           <!--
@@ -176,8 +231,28 @@ onBeforeUnmount(releasePreview)
             </AppButton>
           </div>
 
+          <!--
+            수정 모드에서는 사진을 바꿀 수 없다. 서버 PUT이 날짜와 내용만 받기 때문이다.
+            기존 사진은 그대로 보여주되 제거 버튼 없이 두고, 바꿀 수 없다는 것을 적는다.
+          -->
+          <div
+            v-else-if="isEditMode && existingImage"
+            class="mb-[var(--space-4)]"
+          >
+            <div class="rotate-[-1.2deg] rounded-[var(--radius-sm)] border border-(--color-card-border) bg-(--color-white) p-[var(--space-2)] shadow-(--shadow-card)">
+              <img
+                :src="existingImage"
+                alt="이 일기에 붙인 사진"
+                class="block max-h-[var(--diary-photo-max-height)] w-full rounded-[var(--radius-sm)] object-cover"
+              >
+            </div>
+            <p class="mb-0 mt-[var(--space-2)] text-center text-(length:--font-xs) text-(--color-slate-muted)">
+              사진은 바꿀 수 없어요. 날짜와 내용만 고칠 수 있어요.
+            </p>
+          </div>
+
           <label
-            v-else
+            v-else-if="!isEditMode"
             class="mb-[var(--space-4)] flex h-[var(--control-height-lg)] cursor-pointer items-center justify-center gap-[var(--space-2)] rounded-[var(--radius-lg)] border border-dashed border-(--color-border) bg-(--color-surface) text-(length:--font-sm) text-(--color-slate-muted) focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-(--color-leaf-dark)"
           >
             <input
@@ -220,16 +295,34 @@ onBeforeUnmount(releasePreview)
         {{ errorMessage }}
       </p>
 
+      <!--
+        409를 받은 뒤에는 저장을 그대로 다시 누르게 두지 않는다. 다시 누르면 남이 먼저
+        저장한 내용을 덮어쓰기 때문이다. 최신 내용을 받아보고 판단하도록 유도한다.
+      -->
       <AppButton
+        v-if="isStale"
+        class="mt-[var(--space-5)]"
+        type="button"
+        variant="secondary"
+        block
+        size="lg"
+        :loading="isLoadingDiary"
+        @click="reloadLatest"
+      >
+        최신 내용 다시 불러오기
+      </AppButton>
+
+      <AppButton
+        v-else
         class="mt-[var(--space-5)]"
         type="submit"
         variant="primary"
         block
         size="lg"
-        :disabled="!canSubmit"
+        :disabled="!canSubmit || isLoadingDiary"
         :loading="diaryStore.isSubmitting"
       >
-        일기 남기기
+        {{ isEditMode ? '일기 수정하기' : '일기 남기기' }}
       </AppButton>
     </form>
   </div>
