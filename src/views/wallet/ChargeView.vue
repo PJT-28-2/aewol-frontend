@@ -76,8 +76,15 @@ async function handleCharge() {
     const tossPayments = await loadTossPayments(clientKey)
     const payment = tossPayments.payment({ customerKey: getTossCustomerKey() })
 
+    // 충전은 계좌이체(퀵계좌이체)만 허용한다. method를 지정하지 않거나 'CARD'를 주면
+    // 결제창에서 카드·간편결제 탭이 함께 열려서 사용자가 카드로 충전할 수 있게 된다.
+    // 'TRANSFER'는 계좌이체 결제창만 여는 값이다.
+    // 가상계좌('VIRTUAL_ACCOUNT')는 쓰지 않는다 — 입금 전까지 confirm 응답이
+    // WAITING_FOR_DEPOSIT이라 TossPaymentsClient가 INDETERMINATE로 떨어뜨리고
+    // (TossPaymentsClient.java:158-163) 잔액이 즉시 반영되지 않는다. 웹훅 수신이
+    // 없는 현재 구조에서는 계좌이체만이 즉시 승인되는 계좌 기반 수단이다.
     await payment.requestPayment({
-      method: 'CARD',
+      method: 'TRANSFER',
       amount: { currency: 'KRW', value: order.amount },
       orderId: order.orderId,
       orderName: '애월지갑 충전',
@@ -100,7 +107,7 @@ async function handleCharge() {
         충전하기
       </h1>
       <p class="mt-(--space-1) text-(length:--font-md) text-(color:--color-slate-muted)">
-        카드·간편결제로 애월지갑을 충전해요
+        연결한 계좌에서 애월지갑을 충전해요
       </p>
     </header>
 
@@ -136,10 +143,10 @@ async function handleCharge() {
 
     <section class="rounded-(--radius-2xl) bg-(--color-white) p-(--space-5)">
       <h2 class="text-(length:--font-md) font-semibold text-(color:--color-navy)">
-        TossPayments로 안전하게 결제해요
+        TossPayments 계좌이체로 안전하게 충전해요
       </h2>
       <p class="mt-(--space-2) text-(length:--font-sm) leading-relaxed text-(color:--color-slate-muted)">
-        결제창에서 카드 또는 간편결제를 선택할 수 있어요. 결제가 승인된 뒤 애월지갑 잔액에 반영돼요.
+        계좌이체로만 충전할 수 있어요. 결제창에서 출금할 계좌를 선택하고 이체가 승인되면 애월지갑 잔액에 반영돼요.
       </p>
     </section>
 
