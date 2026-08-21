@@ -2,13 +2,16 @@
 import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
+  KAKAO_ACCOUNT_RESTORED,
   KAKAO_ADDITIONAL_INFO_REQUIRED,
   KAKAO_LOGIN_COMPLETE,
   useAuthStore,
 } from '@/stores/auth'
 import { usePetStore } from '@/stores/pet'
 import AewolLogo from '@/components/common/AewolLogo.vue'
+import AppModal from '@/components/common/AppModal.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
+import IconCheck from '@/components/common/icons/IconCheck.vue'
 import IconWarning from '@/components/common/icons/IconWarning.vue'
 
 const KAKAO_OAUTH_STATE_KEY = 'kakaoOAuthState'
@@ -18,6 +21,9 @@ const router = useRouter()
 const authStore = useAuthStore()
 const petStore = usePetStore()
 const errorMessage = ref('')
+const isRestoredNoticeVisible = ref(false)
+const restoredLoginPath = ref('')
+let isRestoredNavigationStarted = false
 
 const resolvePostLoginPath = async () => {
   try {
@@ -26,6 +32,19 @@ const resolvePostLoginPath = async () => {
   } catch {
     return '/home'
   }
+}
+
+const completeRestoredLogin = async () => {
+  if (isRestoredNavigationStarted || !restoredLoginPath.value) return
+  isRestoredNavigationStarted = true
+  isRestoredNoticeVisible.value = false
+  const path = restoredLoginPath.value
+  restoredLoginPath.value = ''
+  await router.replace(path)
+}
+
+const handleRestoredNoticeVisibility = (isVisible) => {
+  if (!isVisible) completeRestoredLogin()
 }
 
 /**
@@ -82,11 +101,21 @@ const handleKakaoCallback = async () => {
       return
     }
 
-    if (result.authStatus !== KAKAO_LOGIN_COMPLETE) {
+    if (
+      result.authStatus !== KAKAO_LOGIN_COMPLETE &&
+      result.authStatus !== KAKAO_ACCOUNT_RESTORED
+    ) {
       throw new Error('카카오 로그인 응답을 확인할 수 없습니다.')
     }
 
-    await router.replace(await resolvePostLoginPath())
+    const postLoginPath = await resolvePostLoginPath()
+    if (result.authStatus === KAKAO_ACCOUNT_RESTORED) {
+      restoredLoginPath.value = postLoginPath
+      isRestoredNoticeVisible.value = true
+      return
+    }
+
+    await router.replace(postLoginPath)
   } catch (error) {
     errorMessage.value =
       error.response?.data?.message ?? '카카오 로그인 처리에 실패했습니다.'
@@ -138,4 +167,28 @@ onMounted(handleKakaoCallback)
       </router-link>
     </section>
   </main>
+  <AppModal
+    :model-value="isRestoredNoticeVisible"
+    title="계정 복구 완료"
+    :show-close="false"
+    :divider="false"
+    center-title
+    @update:model-value="handleRestoredNoticeVisibility"
+  >
+    <template #icon>
+      <IconCheck size="24" />
+    </template>
+    <p class="text-center text-(length:--font-md) leading-[1.55] text-(color:--color-slate-dark)">
+      탈퇴했던 계정이 복구되었습니다.
+    </p>
+    <template #footer>
+      <button
+        type="button"
+        class="h-(--control-height-lg) w-full rounded-(--radius-xl) bg-(--color-leaf) text-(length:--font-base) font-semibold text-(color:--color-navy)"
+        @click="completeRestoredLogin"
+      >
+        확인
+      </button>
+    </template>
+  </AppModal>
 </template>

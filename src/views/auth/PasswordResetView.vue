@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onBeforeUnmount, ref } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { authApi } from '@/api/auth'
 import { formatCountdown } from '@/utils/date'
@@ -25,6 +25,9 @@ const emailMessage = ref({ type: 'error', text: '' })
 const codeMessage = ref({ type: 'error', text: '' })
 const submitError = ref('')
 let timerId
+let emailSessionVersion = 0
+let sendRequestVersion = 0
+let verifyRequestVersion = 0
 
 const OTP_UNAVAILABLE_MESSAGE = '인증번호가 만료되었거나 발급되지 않았습니다.'
 const RESET_TOKEN_INVALID_MESSAGE = '유효하지 않거나 만료된 비밀번호 재설정 토큰입니다.'
@@ -72,6 +75,25 @@ const isNewPasswordConfirmed = computed(
   () => newPasswordConfirm.value === newPassword.value,
 )
 
+const resetEmailVerificationSession = () => {
+  window.clearInterval(timerId)
+  verificationCode.value = ''
+  resetToken.value = ''
+  isCodeSent.value = false
+  isVerified.value = false
+  remainingSeconds.value = 0
+  codeMessage.value = { type: 'error', text: '' }
+}
+
+watch(email, () => {
+  emailSessionVersion += 1
+  sendRequestVersion += 1
+  verifyRequestVersion += 1
+  isLoading.value = false
+  resetEmailVerificationSession()
+  emailMessage.value = { type: 'error', text: '' }
+})
+
 /**
  * 입력한 이메일로 비밀번호 재설정 인증번호를 요청한다.
  * @returns {Promise<void>}
@@ -86,12 +108,20 @@ const handleRequestCode = async () => {
   }
 
   isLoading.value = true
+  const requestVersion = ++sendRequestVersion
+  const requestSessionVersion = emailSessionVersion
+  const emailSnapshot = email.value
 
   try {
     // =========================
     // 인증번호 발송 API 요청
     // =========================
-    const { data } = await authApi.resetPasswordRequest(email.value)
+    const { data } = await authApi.resetPasswordRequest(emailSnapshot)
+    if (
+      requestVersion !== sendRequestVersion ||
+      requestSessionVersion !== emailSessionVersion ||
+      email.value !== emailSnapshot
+    ) return
     const expiresInSeconds = data?.result?.expiresInSeconds
     if (typeof expiresInSeconds !== 'number' || !Number.isFinite(expiresInSeconds) || expiresInSeconds <= 0) {
       emailMessage.value = { type: 'error', text: '인증번호 전송 결과를 확인할 수 없습니다' }
@@ -113,12 +143,13 @@ const handleRequestCode = async () => {
       text: data.message ?? '인증번호를 전송했습니다',
     }
   } catch (error) {
+    if (requestVersion !== sendRequestVersion || requestSessionVersion !== emailSessionVersion) return
     emailMessage.value = {
       type: 'error',
       text: error.response?.data?.message ?? '인증번호 전송에 실패했습니다',
     }
   } finally {
-    isLoading.value = false
+    if (requestVersion === sendRequestVersion) isLoading.value = false
   }
 }
 
@@ -146,12 +177,21 @@ const handleVerifyCode = async () => {
   }
 
   isLoading.value = true
+  const requestVersion = ++verifyRequestVersion
+  const requestSessionVersion = emailSessionVersion
+  const emailSnapshot = email.value
+  const verificationCodeSnapshot = verificationCode.value
 
   try {
     // =========================
     // 인증번호 검증 API 요청
     // =========================
-    const { data } = await authApi.resetPasswordVerify(email.value, verificationCode.value)
+    const { data } = await authApi.resetPasswordVerify(emailSnapshot, verificationCodeSnapshot)
+    if (
+      requestVersion !== verifyRequestVersion ||
+      requestSessionVersion !== emailSessionVersion ||
+      email.value !== emailSnapshot
+    ) return
     const verifiedResetToken = data?.result?.resetToken
     if (typeof verifiedResetToken !== 'string' || !verifiedResetToken.trim()) {
       codeMessage.value = { type: 'error', text: '인증 결과를 확인할 수 없습니다. 다시 시도해주세요.' }
@@ -167,6 +207,7 @@ const handleVerifyCode = async () => {
     window.clearInterval(timerId)
     codeMessage.value = { type: 'success', text: '인증되었습니다' }
   } catch (error) {
+    if (requestVersion !== verifyRequestVersion || requestSessionVersion !== emailSessionVersion) return
     const message = error.response?.data?.message
     if (message === OTP_UNAVAILABLE_MESSAGE) {
       window.clearInterval(timerId)
@@ -182,7 +223,7 @@ const handleVerifyCode = async () => {
         : message ?? '인증번호가 일치하지 않습니다',
     }
   } finally {
-    isLoading.value = false
+    if (requestVersion === verifyRequestVersion) isLoading.value = false
   }
 }
 
