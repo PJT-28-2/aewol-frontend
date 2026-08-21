@@ -87,9 +87,19 @@ const isLoadingMore = ref(false);
 const isError = ref(false);
 const loadMoreError = ref(false);
 
+// 지출리포트(DashboardView)에서 카테고리/반려동물 카드를 눌러 들어온 진입(=category 또는
+// petId 쿼리가 있는 상태)은 "이 카테고리/반려동물의 지출 상세"가 목적이라, REFUND가 섞여
+// 나오면 안 된다. 반면 지갑 메인 > 전체 거래내역처럼 필터 없이 들어온 일반 조회는 REFUND도
+// 함께 보여주는 게 기존 의도된 동작이라 그대로 둔다. activeFilter를 직접 '충전'/'출금'으로
+// 바꾼 경우는 사용자가 명시적으로 고른 값이라 이 분기로 덮어쓰지 않는다.
 function transactionRequestParams(cursor = null) {
+  const isExpenseFiltered = Boolean(categoryFilter.value || petFilter.value);
+  const type =
+    activeFilter.value === 'all' && isExpenseFiltered
+      ? 'PAYMENT'
+      : activeFilter.value.toUpperCase();
   return {
-    type: activeFilter.value.toUpperCase(),
+    type,
     period: `${activeMonth.value.year}-${String(activeMonth.value.month).padStart(2, '0')}`,
     size: 100,
     ...(cursor ? { cursor } : {}),
