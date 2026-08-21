@@ -14,6 +14,11 @@ export const useExploreStore = defineStore('explore', {
     isLoadingMore: false,
     error: '',
 
+    // 공개 게시물 상세
+    post: null,
+    isPostLoading: false,
+    postError: '',
+
     // 반려동물 프로필
     profile: null,
     profilePosts: [],
@@ -64,6 +69,20 @@ export const useExploreStore = defineStore('explore', {
         this.error = errorMessage(error, '다음 게시물을 불러오지 못했어요.')
       } finally {
         this.isLoadingMore = false
+      }
+    },
+
+    async fetchPost(diaryId) {
+      this.isPostLoading = true
+      this.postError = ''
+      this.post = null
+      try {
+        this.post = unwrap(await exploreApi.getPost(diaryId)) ?? null
+      } catch (error) {
+        // 신고로 내려갔거나 작성자가 비공개로 되돌린 글일 수 있다. 404를 그대로 알린다.
+        this.postError = errorMessage(error, '게시물을 볼 수 없어요. 삭제되었거나 비공개로 바뀌었을 수 있어요.')
+      } finally {
+        this.isPostLoading = false
       }
     },
 

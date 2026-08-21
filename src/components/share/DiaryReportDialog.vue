@@ -55,14 +55,18 @@ async function submit() {
       >
         신고를 접수했어요
       </h2>
+      <!--
+        "결과를 알려드릴게요"라고 쓰지 않는다. 고객센터에 답변 API가 아직 없어 개별 통지를
+        보장할 수 없다. 지킬 수 없는 약속을 하느니 지금 일어난 일만 정확히 적는다.
+      -->
       <p class="mb-0 mt-(--space-2) text-(length:--font-sm) leading-[1.6] text-(--color-slate-dark)">
-        이 게시물은 바로 보이지 않게 처리했어요. 고객센터에서 확인한 뒤 결과를 알려드릴게요.
+        이 게시물은 바로 보이지 않게 처리했어요. 고객센터에서 확인할게요.
       </p>
       <p
         v-if="receipt.inquiryNumber"
         class="mb-0 mt-(--space-2) text-(length:--font-xs) text-(--color-slate-muted)"
       >
-        접수번호 {{ receipt.inquiryNumber }} · 고객센터 문의 내역에서 진행 상태를 볼 수 있어요.
+        접수번호 {{ receipt.inquiryNumber }} · 고객센터 문의 내역에서 접수 사실을 확인할 수 있어요.
       </p>
 
       <AppButton

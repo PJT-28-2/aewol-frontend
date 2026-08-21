@@ -15,6 +15,11 @@ export const exploreApi = {
     return api.get('/explore/diaries', { params: { cursor, size } })
   },
 
+  /** result: { diaryId, petId, petName, imageUrl, content, diaryDate, createdAt } */
+  getPost(diaryId) {
+    return api.get(`/explore/diaries/${diaryId}`)
+  },
+
   getPetPosts(petId, { cursor, size } = {}) {
     return api.get(`/explore/pets/${petId}/diaries`, { params: { cursor, size } })
   },

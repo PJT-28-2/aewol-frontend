@@ -81,6 +81,8 @@ describe('DiaryReportDialog', () => {
 
     expect(host.textContent).toContain('신고를 접수했어요')
     expect(host.textContent).toContain('바로 보이지 않게 처리했어요')
+    // 개별 통지를 보장할 수 없으므로 결과를 알려준다고 쓰지 않는다.
+    expect(host.textContent).not.toContain('결과를 알려드릴게요')
     expect(host.textContent).toContain('AEW-20260821-0055')
   })
 
