@@ -18,7 +18,7 @@ const route = useRoute()
     />
 
     <main
-      class="flex-1 overflow-x-hidden [&>*]:min-h-[calc(100svh-var(--page-top-offset)-var(--page-bottom-offset))]"
+      class="flex-1 overflow-x-clip [&>*]:min-h-[calc(100svh-var(--page-top-offset)-var(--page-bottom-offset))]"
       :class="[
         route.meta.hideBottomNav ? 'pb-0' : 'pb-[calc(var(--bottom-nav-height)+var(--space-6)+env(safe-area-inset-bottom,0px))]',
         route.meta.hideHeader ? '' : 'pt-[calc(var(--header-height)+env(safe-area-inset-top,0px))]',
