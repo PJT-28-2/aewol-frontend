@@ -16,7 +16,7 @@ KB IT's Your Life 7기 팀 이파리 28-2팀 종합실무 프로젝트입니다.
 | State | Pinia | 도메인별 스토어 분리 |
 | Router | Vue Router 4 | 30+ 라우트, 인증 가드 |
 | HTTP | Axios | JWT 자동 갱신 인터셉터 |
-| Chart | Chart.js, ECharts | 지출 대시보드 시각화 |
+| Chart | ECharts (`vue-echarts`) | 지출 대시보드 시각화 |
 | Build | Vite 6 | 개발 서버 + 프록시 |
 | Node | >= 20 | |
 
@@ -43,7 +43,7 @@ src/
 │   ├── transaction.js          # 거래 내역
 │   ├── dashboard.js            # 지출 대시보드
 │   ├── insurance.js            # 보험 시뮬레이션/청구
-│   └── notification.js         # WebSocket 실시간 알림
+│   └── notification.js         # 알림함 (목데이터, WebSocket connect는 미연동)
 ├── api/                        # Axios API 모듈 (도메인별)
 │   ├── index.js                # Axios 인스턴스 + JWT 인터셉터
 │   ├── auth.js
@@ -134,11 +134,13 @@ npm run build
 
 ### 환경변수 설정
 
-`.env.development` 파일을 생성하고 카카오 JavaScript 키를 설정합니다.
+`.env.example`을 복사해 `.env.local`을 만들고 값을 채웁니다. `VITE_*` 값은 빌드 결과에 들어가므로 브라우저에서 보입니다.
 
 ```
-VITE_KAKAO_JS_KEY=카카오_JS_키
-VITE_API_BASE_URL=http://localhost:8080
+VITE_USE_MOCK_DATA=false
+VITE_KAKAO_REST_API_KEY=카카오_REST_API_키
+VITE_KAKAO_REDIRECT_URI=
+VITE_KAKAO_MAP_KEY=카카오_지도_JavaScript_키
 VITE_TOSS_CLIENT_KEY=TossPayments_클라이언트_키
 ```
 
