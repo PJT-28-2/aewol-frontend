@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, watch, onBeforeUnmount } from 'vue';
 import BankBadge from '@/components/common/BankBadge.vue';
+import IconClose from '@/components/common/icons/IconClose.vue';
 import { getBankName } from '@/utils/bankMeta';
 
 /**
@@ -75,7 +76,16 @@ onBeforeUnmount(clearShowTimer);
 </script>
 
 <template>
-  <Transition name="deposit-push">
+  <!-- 전환 효과는 BottomSheet.vue/AppModal.vue와 동일하게 Transition의 *-class prop에
+       Tailwind 유틸리티를 직접 넘기는 방식으로 맞춘다(프로젝트 규칙상 scoped CSS를 새로
+       작성하지 않는다). 실제 푸시처럼 화면 위에서 미끄러져 내려오되, 모션을 줄이도록
+       설정한 사용자에게는 motion-reduce로 이동 없이 페이드만 준다. -->
+  <Transition
+    enter-active-class="transition duration-300 ease-out"
+    enter-from-class="-translate-y-full opacity-0 motion-reduce:translate-y-0"
+    leave-active-class="transition duration-200 ease-in"
+    leave-to-class="-translate-y-full opacity-0 motion-reduce:translate-y-0"
+  >
     <div
       v-if="isVisible"
       class="fixed left-(--space-3) right-(--space-3) top-[calc(var(--space-3)+env(safe-area-inset-top,0px))] z-100 mx-auto max-w-[calc(var(--layout-max-width)-var(--space-6))] rounded-(--radius-xl) bg-(--color-white) p-(--space-3) shadow-[0_12px_32px_color-mix(in_srgb,var(--color-navy)_24%,transparent)]"
@@ -107,42 +117,13 @@ onBeforeUnmount(clearShowTimer);
         </div>
         <button
           type="button"
-          class="shrink-0 self-start px-(--space-1) text-(length:--font-sm) text-(color:--color-gray-500)"
+          class="shrink-0 self-start p-(--space-1) text-(color:--color-gray-500)"
           aria-label="알림 닫기"
           @click="dismiss"
         >
-          ✕
+          <IconClose size="16" />
         </button>
       </div>
     </div>
   </Transition>
 </template>
-
-<style scoped>
-/* 실제 푸시처럼 화면 위에서 미끄러져 내려오게 한다. */
-.deposit-push-enter-active {
-  transition: transform 0.32s ease-out, opacity 0.32s ease-out;
-}
-
-.deposit-push-leave-active {
-  transition: transform 0.2s ease-in, opacity 0.2s ease-in;
-}
-
-.deposit-push-enter-from,
-.deposit-push-leave-to {
-  transform: translateY(-120%);
-  opacity: 0;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .deposit-push-enter-active,
-  .deposit-push-leave-active {
-    transition: opacity 0.2s ease;
-  }
-
-  .deposit-push-enter-from,
-  .deposit-push-leave-to {
-    transform: none;
-  }
-}
-</style>
