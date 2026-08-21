@@ -107,7 +107,7 @@ async function handleCharge() {
         충전하기
       </h1>
       <p class="mt-(--space-1) text-(length:--font-md) text-(color:--color-slate-muted)">
-        연결한 계좌에서 애월지갑을 충전해요
+        계좌이체로 애월지갑을 충전해요
       </p>
     </header>
 
