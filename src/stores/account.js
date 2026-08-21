@@ -56,12 +56,11 @@ export const useAccountStore = defineStore('account', {
       // CODEF inPrintType=1(랜덤 한글 단어)이라 4~6자로 들쭉날쭉해요. 목데이터 모드나
       // 응답이 없는 경우를 대비해 기본값 4를 둬요.
       depositorNameLength: 4,
-      // local/test 프로파일에서만 백엔드가 verify-deposit 응답에 실어서 보내는
-      // 테스트용 입금자명(DepositVerificationResponse.depositorNameForTest). dev를 포함한
-      // 한때가 있었지만, 이 값은 로그가 아니라 API 응답 바디에 그대로 실리기 때문에 dev
-      // 서버 API를 호출할 수 있는 누구에게나 노출되는 셈이라 dev는 제외했다(2026-08-19,
-      // PR #236 리뷰). 운영에서는 항상 null이라 AccountAuthOneWon.vue의 힌트도 자연히
-      // 노출되지 않아요.
+      // 백엔드가 verify-deposit 응답에 실어서 보내는 시연용 입금자명
+      // (DepositVerificationResponse.depositorNameForTest). CODEF 데모 서버에 붙어 있고
+      // local/test 프로파일이거나 demo.expose-depositor-name이 켜져 있을 때만 값이 와요
+      // (#290). 실제 1원이 오가는 정식 서버에서는 어떤 설정이든 항상 null이라,
+      // AccountAuthOneWon.vue의 알림 카드도 자연히 뜨지 않아요.
       depositorNameForTest: null,
       // 비밀번호 설정 화면에서 입력한 값을 확인 화면으로 넘길 때까지만 메모리에 잠깐 보관
       password: '',
@@ -172,8 +171,8 @@ export const useAccountStore = defineStore('account', {
         this.linking.isConfirmLocked = false;
         // CODEF가 만든 입금자명 실제 길이 — 4자가 아닐 수 있어서 항상 이 값을 신뢰해요.
         this.linking.depositorNameLength = data.result.depositorNameLength || 4;
-        // local/test가 아니면 응답 자체에 필드가 없거나 null이라, 여기서도
-        // 항상 null로 정규화돼요 — AccountAuthOneWon.vue는 이 값이 있을 때만 힌트를 보여줘요.
+        // 시연 노출 조건이 아니면 응답 자체에 필드가 없거나 null이라, 여기서도
+        // 항상 null로 정규화돼요 — AccountAuthOneWon.vue는 이 값이 있을 때만 알림 카드를 띄워요.
         this.linking.depositorNameForTest = data.result.depositorNameForTest ?? null;
         return { verificationId: this.linking.verificationId };
       });

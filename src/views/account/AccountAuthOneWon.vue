@@ -6,7 +6,7 @@ import { getBankMeta } from '@/utils/bankMeta';
 import { formatCountdown } from '@/utils/date';
 import AppButton from '@/components/common/AppButton.vue';
 import BankBadge from '@/components/common/BankBadge.vue';
-import IconInfo from '@/components/common/icons/IconInfo.vue';
+import DepositPushToast from '@/components/common/DepositPushToast.vue';
 import IconLock from '@/components/common/icons/IconLock.vue';
 
 const router = useRouter();
@@ -24,7 +24,16 @@ const bankMeta = computed(() => getBankMeta(store.linking.bankCode));
 // 직접 쓰면 빌드가 깨진다("import.meta may appear only with 'sourceType: module'",
 // PR #301 CI 실패, 2026-08-19). script setup 쪽(모듈 스코프)에서 한 번 읽어서 상수로
 // 빼두고 템플릿에서는 이 값만 참조한다.
-const isDev = import.meta.env.DEV;
+//
+// 한때 import.meta.env.DEV(개발 빌드 여부)로 게이트했지만, 그러면 배포본으로는 시연을
+// 할 수 없었다 — CODEF 데모 서버는 실제 이체를 안 해서 은행 앱 알림이 오지 않으므로
+// 입금자명을 확인할 방법이 사라진다(#366). 그래서 빌드 종류가 아니라 명시적인 시연
+// 플래그로 바꾼다(VITE_USE_MOCK_DATA와 같은 방식). .env.production 기본값은 false이고,
+// 시연용 빌드에서만 true를 주입한다.
+//
+// 백엔드도 CODEF 데모 서버에 붙어 있을 때만 depositorNameForTest를 내려주므로(#290),
+// 둘 중 하나만 어긋나도 카드가 뜨지 않는 이중 방어는 그대로 유지된다.
+const isDemoMode = import.meta.env.VITE_DEMO_MODE === 'true';
 
 // step 1: 계좌번호 입력 (Figma 목업에 없는 보완 단계)
 // step 2: 1원 인증 - 입금자명(한글, CODEF inPrintType=1) 입력 (RF-CM 목업 그대로)
@@ -384,24 +393,16 @@ async function submitVerification() {
         은행 앱 알림이나 입출금 문자에서<br>입금자명(예: 푸른애월)의 앞 {{ depositorNameLength }}글자를 확인할 수 있어요
       </p>
 
-      <!-- local/test 환경에서만 백엔드가 내려주는 값이에요(운영에서는 항상 null이라
-           이 블록 자체가 안 보여요). CODEF 데모 서버라 실제 입금 알림이 없어서, 이 값이
-           없으면 서버 로그 접근 권한이 없는 이상 1원 인증을 끝낼 방법이 없었어요(2026-08-19).
-           import.meta.env.DEV를 추가 게이트로 걸어서, 배포 설정 실수로 백엔드가 이 필드를
-           잘못 내려보내도(defense-in-depth) 빌드된 배포본에서는 절대 노출되지 않게 한다
-           (PR #301 리뷰 반영, 2026-08-19). -->
-      <div
-        v-if="isDev && store.linking.depositorNameForTest"
-        class="flex items-center gap-(--space-2) p-3 rounded-(--radius-lg) bg-(--color-icon-yellow-soft) border border-(--color-icon-yellow) mb-(--space-2)"
-      >
-        <IconInfo
-          :size="14"
-          color="var(--color-icon-yellow)"
-        />
-        <span class="text-(length:--font-sm) text-(color:--color-navy)">
-          테스트 환경 정답: <strong class="font-bold">{{ store.linking.depositorNameForTest }}</strong>
-        </span>
-      </div>
+      <!-- 시연 환경에서만 백엔드가 내려주는 값이에요(그 외에는 항상 null이라 카드가 안 떠요).
+           CODEF 데모 서버는 실제 이체를 하지 않아서 은행 앱 알림이 오지 않기 때문에, 실서비스의
+           푸시 알림 화면을 재현해서 대신 보여줘요(#366). VITE_DEMO_MODE를 추가 게이트로 걸어서,
+           백엔드 설정 실수로 이 필드가 잘못 내려와도(defense-in-depth) 시연용이 아닌 빌드에서는
+           노출되지 않아요(PR #301 리뷰 취지 유지). -->
+      <DepositPushToast
+        v-if="isDemoMode"
+        :bank-code="store.linking.bankCode"
+        :depositor-name="store.linking.depositorNameForTest"
+      />
 
       <p
         v-if="verifyError"
