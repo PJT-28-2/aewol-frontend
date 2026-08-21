@@ -39,6 +39,7 @@ const memberName = ref('');
 
 const BIRTH_DATE_PATTERN = /^\d{4}\.\d{2}\.\d{2}$/;
 const REG_NUMBER_PATTERN = /^(\d{12}|\d{15})$/;
+const REGISTRATION_ERROR_PATTERN = /등록번호|등록정보|소유자|승인/;
 const birthDateInput = computed({
   get: () => form.value.birthDate,
   set: (value) => {
@@ -111,6 +112,12 @@ async function moveToRegistrationError() {
   registrationSection.value?.querySelector('input')?.focus({ preventScroll: true });
 }
 
+function isRegistrationFieldError(error, message) {
+  return error.response?.status === 400
+    && REGISTRATION_ERROR_PATTERN.test(message)
+    && !message.includes('반려동물 정보와 일치하지 않습니다');
+}
+
 async function handleSubmit() {
   errorMessage.value = '';
   registrationError.value = '';
@@ -149,7 +156,7 @@ async function handleSubmit() {
       error.response?.data?.message ||
       messages[error.response?.status] ||
       '반려동물 등록에 실패했습니다. 다시 시도해주세요.';
-    if (form.value.regNumber && error.response?.status !== 403 && error.response?.status !== 404) {
+    if (form.value.regNumber && isRegistrationFieldError(error, message)) {
       registrationError.value = message;
       await moveToRegistrationError();
     } else {
