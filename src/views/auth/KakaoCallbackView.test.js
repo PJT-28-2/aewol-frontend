@@ -86,8 +86,17 @@ describe('KakaoCallbackView OAuth result routing', () => {
     expect(mocks.fetchPets).toHaveBeenCalledOnce()
     expect(mocks.routerReplace).not.toHaveBeenCalled()
 
+    const title = [...document.body.querySelectorAll('h2')]
+      .find((heading) => heading.textContent.trim() === '계정 복구 완료')
+    const content = title.parentElement
+    expect(content.classList).toContain('items-center')
+    expect(content.classList).toContain('text-center')
+    expect(content.querySelector('p').classList).toContain('w-full')
+
     const confirmButton = [...document.body.querySelectorAll('button')]
       .find((button) => button.textContent.trim() === '확인')
+    expect(confirmButton.classList).toContain('w-full')
+    expect(confirmButton.classList).toContain('h-(--control-height-lg)')
     confirmButton.click()
     await flushUpdates()
 

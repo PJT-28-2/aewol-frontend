@@ -164,6 +164,30 @@ describe('KakaoAdditionalInfoView SMS 인증', () => {
     vi.useRealTimers()
   })
 
+  it('입력 행의 input과 버튼에 일관된 높이와 너비를 적용한다', async () => {
+    const phoneButton = getButton('인증번호 받기')
+    const verifyButton = getButton('확인')
+
+    expect(getPhoneInput().classList).toContain('h-(--control-height-md)')
+    expect(getCodeInput().classList).toContain('h-(--control-height-md)')
+    for (const button of [phoneButton, verifyButton]) {
+      expect(button.classList).toContain('h-(--control-height-md)')
+      expect(button.classList).toContain('w-full')
+      expect(button.classList).toContain('whitespace-nowrap')
+      expect(button.parentElement.className).toContain('grid-cols-[minmax(0,1fr)_7rem]')
+    }
+
+    await verifyPhone()
+    const zipButton = getButton('우편번호 찾기')
+    const zipInput = [...host.querySelectorAll('input')]
+      .find((input) => input.placeholder.includes('우편번호'))
+
+    expect(zipInput.classList).toContain('h-(--control-height-md)')
+    expect(zipButton.classList).toContain('h-(--control-height-md)')
+    expect(zipButton.classList).toContain('w-full')
+    expect(zipButton.parentElement.className).toContain('grid-cols-[minmax(0,1fr)_7rem]')
+  })
+
   it('잘못된 전화번호에서는 인증번호 발송을 차단한다', async () => {
     await inputValue(getPhoneInput(), 'abc0101234')
 

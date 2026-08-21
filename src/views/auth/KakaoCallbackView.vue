@@ -9,6 +9,7 @@ import {
 } from '@/stores/auth'
 import { usePetStore } from '@/stores/pet'
 import AewolLogo from '@/components/common/AewolLogo.vue'
+import AppButton from '@/components/common/AppButton.vue'
 import AppModal from '@/components/common/AppModal.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import IconCheck from '@/components/common/icons/IconCheck.vue'
@@ -169,26 +170,30 @@ onMounted(handleKakaoCallback)
   </main>
   <AppModal
     :model-value="isRestoredNoticeVisible"
-    title="계정 복구 완료"
+    :show-header="false"
     :show-close="false"
     :divider="false"
-    center-title
     @update:model-value="handleRestoredNoticeVisibility"
   >
-    <template #icon>
-      <IconCheck size="24" />
-    </template>
-    <p class="text-center text-(length:--font-md) leading-[1.55] text-(color:--color-slate-dark)">
-      탈퇴했던 계정이 복구되었습니다.
-    </p>
-    <template #footer>
-      <button
+    <div class="flex flex-col items-center text-center">
+      <span class="flex size-(--icon-badge-size) items-center justify-center rounded-(--radius-xl) bg-(--color-leaf-soft) text-(color:--color-navy)">
+        <IconCheck size="24" />
+      </span>
+      <h2 class="mt-(--space-4) text-(length:--font-lg) font-bold text-(color:--color-navy)">
+        계정 복구 완료
+      </h2>
+      <p class="mt-(--space-2) w-full text-(length:--font-md) leading-[1.55] text-(color:--color-slate-dark)">
+        탈퇴했던 계정이 복구되었습니다.
+      </p>
+      <AppButton
+        class="mt-(--space-6)"
         type="button"
-        class="h-(--control-height-lg) w-full rounded-(--radius-xl) bg-(--color-leaf) text-(length:--font-base) font-semibold text-(color:--color-navy)"
+        size="lg"
+        block
         @click="completeRestoredLogin"
       >
         확인
-      </button>
-    </template>
+      </AppButton>
+    </div>
   </AppModal>
 </template>
