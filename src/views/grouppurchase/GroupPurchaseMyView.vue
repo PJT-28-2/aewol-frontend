@@ -8,8 +8,6 @@ import EmptyState from '@/components/common/EmptyState.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import BottomSheet from '@/components/common/BottomSheet.vue';
 import AppButton from '@/components/common/AppButton.vue';
-import { MOCK_MY_GROUP_PURCHASES } from '@/mocks/groupPurchase';
-import { USE_MOCK_DATA } from '@/mocks/config';
 import { groupPurchaseApi } from '@/api/groupPurchase';
 import { formatDDayLabel } from '@/utils/date';
 import { useMidnightTick } from '@/composables/useMidnightTick';
@@ -70,10 +68,6 @@ async function loadMyGroupPurchases() {
   isError.value = false;
 
   try {
-    if (USE_MOCK_DATA) {
-      myGroupPurchases.value = MOCK_MY_GROUP_PURCHASES;
-      return;
-    }
 
     // '전체'는 상태 필터 없이 조회, 그 외에는 백엔드 상태 코드로 변환해서 전달
     const params = selectedStatus.value === '전체' ? {} : { status: GROUP_PURCHASE_STATUS_CODE[selectedStatus.value] };

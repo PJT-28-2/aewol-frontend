@@ -28,10 +28,6 @@ vi.mock('@/stores/auth', () => ({
   useAuthStore: () => ({ isAdmin: mocks.isAdmin }),
 }))
 
-vi.mock('@/mocks/config', () => ({
-  USE_MOCK_DATA: false,
-}))
-
 import GroupPurchaseListView from './GroupPurchaseListView.vue'
 
 const item = (overrides = {}) => ({

@@ -11,7 +11,7 @@ import IconChevronDown from '@/components/common/icons/IconChevronDown.vue';
 import IconClose from '@/components/common/icons/IconClose.vue';
 import IconCat from '@/components/common/icons/IconCat.vue';
 import IconDog from '@/components/common/icons/IconDog.vue';
-import { CATEGORY_LABELS } from '@/mocks/transaction';
+import { CATEGORY_LABELS } from '@/constants/transactionCategory';
 import { usePetStore } from '@/stores/pet';
 import { useTransactionStore } from '@/stores/transaction';
 

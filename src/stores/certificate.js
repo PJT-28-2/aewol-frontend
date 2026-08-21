@@ -1,8 +1,6 @@
 import { defineStore } from 'pinia'
 import { certificatesApi } from '@/api/certificates'
 import { petApi } from '@/api/pet'
-import { USE_MOCK_DATA } from '@/mocks/config'
-import { MOCK_PET_DOCUMENTS, MOCK_REGISTRATION_DETAIL } from '@/mocks/certificate'
 
 // 백엔드가 birthDate를 digits(...)로 저장·응답해 "20230512"처럼 구분자 없는 8자리 숫자로 내려온다.
 // 화면에서 쓰는 formatDateDot은 '-'만 '.'로 치환할 뿐이라 구분자가 없으면 그대로 노출돼버리므로,
@@ -18,22 +16,6 @@ function normalizeRegistrationDetail(detail) {
 
 // mock 모드의 펫 탭 목록은 MOCK_REGISTRATION_DETAIL에서 뽑아 쓴다(등록증 연동 여부와 무관하게
 // 모든 펫이 하나씩 항목을 가지고 있음). 문서 상세 전용 필드(docId, rfidCd 등)는 제외한다
-function toPetSummary(detail) {
-  return {
-    petId: detail.petId,
-    memberId: detail.memberId,
-    name: detail.name,
-    species: detail.species,
-    breed: detail.breed,
-    birthDate: detail.birthDate,
-    gender: detail.gender,
-    weight: detail.weight,
-    neutered: detail.neutered,
-    regNumber: detail.regNumber,
-    medicalHistory: detail.medicalHistory,
-  }
-}
-
 export const useCertificateStore = defineStore('certificate', {
   state: () => ({
     // 상단 펫 탭 — petId(문자열) 기준. usePetStore(id 기준)와는 별개로 이 도메인에서 자체 관리한다
@@ -86,15 +68,6 @@ export const useCertificateStore = defineStore('certificate', {
     // 화면 재진입마다 다시 호출되므로, 목데이터 시딩은 최초 1회만 — 그렇지 않으면
     // 세션 중 업로드/연동/삭제로 바뀐 documents/registrationDetails가 매번 초기화됨
     async fetchPets() {
-      if (USE_MOCK_DATA) {
-        if (this.pets.length === 0) {
-          this.registrationDetails = structuredClone(MOCK_REGISTRATION_DETAIL)
-          this.pets = Object.values(this.registrationDetails).map(toPetSummary)
-          this.documents = structuredClone(MOCK_PET_DOCUMENTS)
-        }
-        this._syncSelectedPetId()
-        return
-      }
       return this._withRequestState(async () => {
         const { data } = await petApi.getPets()
         this.pets = data.result ?? []
@@ -121,17 +94,6 @@ export const useCertificateStore = defineStore('certificate', {
     // 화면 재진입마다 다시 호출되므로, mock 문서 시딩은 documents가 비어있을 때만 — 그렇지 않으면
     // 세션 중 업로드/연동/삭제로 바뀐 documents/registrationDetails가 매번 초기화됨
     async fetchCertificates(petId) {
-      if (USE_MOCK_DATA) {
-        if (this.documents.length === 0) {
-          this.documents = structuredClone(MOCK_PET_DOCUMENTS)
-          this.registrationDetails = structuredClone(MOCK_REGISTRATION_DETAIL)
-        }
-        const docs = this.documents.filter((doc) => doc.petId === petId)
-        this.registrationDoc = docs.find((doc) => doc.docType === 'REGISTRATION') ?? null
-        this.vaccinationDocs = docs.filter((doc) => doc.docType === 'VACCINATION')
-        this.medicalDocs = docs.filter((doc) => doc.docType === 'MEDICAL_CONFIRMATION')
-        return
-      }
       await this._withRequestState(async () => {
         const { data } = await certificatesApi.getList(petId)
         // 응답을 받는 사이 다른 펫 탭으로 전환해 selectedPetId가 바뀌었으면, 이 응답은 더 이상
@@ -149,10 +111,6 @@ export const useCertificateStore = defineStore('certificate', {
     // GET /api/pets/{petId}/documents/{docId} — 동물등록증 상세
     // APMS를 매번 라이브 호출하는 게 아니라, 연동 시점에 이미 DB에 저장해둔 값을 조회하는 API라는 전제
     async fetchCertificateDetail(petId, docId) {
-      if (USE_MOCK_DATA) {
-        this.detail = this.registrationDetails[docId] ?? null
-        return this.detail
-      }
       return this._withRequestState(async () => {
         const { data } = await certificatesApi.getDetail(petId, docId)
         this.detail = normalizeRegistrationDetail(data.result ?? null)
@@ -177,49 +135,6 @@ export const useCertificateStore = defineStore('certificate', {
         throw new Error('동물등록번호를 입력해주세요.')
       }
 
-      if (USE_MOCK_DATA) {
-        // 인증 API 응답 지연 흉내
-        await new Promise((resolve) => setTimeout(resolve, 800))
-
-        const pet = this.pets.find((p) => p.petId === petId)
-        const nowIso = new Date().toISOString().slice(0, 19)
-        const docId = `doc-reg-${petId}`
-        const detail = {
-          docId,
-          petId,
-          regNumber,
-          name: pet?.name ?? '',
-          breed: pet?.breed ?? '',
-          gender: pet?.gender ?? 'MALE',
-          neutered: pet?.neutered ?? 'Y',
-          birthDate: pet?.birthDate ?? '',
-          rfidCd: regNumber,
-          rfidGubun: 'Y',
-          orgNm: '제주특별자치도 제주시',
-          officeTel: '064-728-2114',
-          aprGbnNm: '승인완료',
-          regTm: nowIso,
-          aprTm: nowIso,
-          verified: true,
-        }
-        this.registrationDetails = { ...this.registrationDetails, [docId]: detail }
-        if (pet) pet.regNumber = regNumber
-
-        const newDoc = {
-          docId,
-          petId,
-          docName: `${detail.name} · 동물등록증`,
-          docType: 'REGISTRATION',
-          fileUrl: '',
-          issuedDate: nowIso.slice(0, 10),
-          createdAt: new Date().toISOString(),
-        }
-        this.documents = [newDoc, ...this.documents.filter((doc) => doc.docId !== docId)]
-        this.detail = detail
-        if (this.selectedPetId === petId) await this.fetchCertificates(petId)
-        return detail
-      }
-
       return this._withRequestState(async () => {
         const { data } = await certificatesApi.verifyRegistration(petId, { regNumber, userName, birthDate })
         this.detail = normalizeRegistrationDetail(data.result ?? null)
@@ -230,21 +145,6 @@ export const useCertificateStore = defineStore('certificate', {
 
     // 동물등록증 연동 해제(삭제)
     async deleteRegistration(petId, docId) {
-      if (USE_MOCK_DATA) {
-        const doc = this.documents.find((d) => d.docId === docId)
-        this.documents = this.documents.filter((d) => d.docId !== docId)
-
-        const nextDetails = { ...this.registrationDetails }
-        delete nextDetails[docId]
-        this.registrationDetails = nextDetails
-
-        const pet = doc ? this.pets.find((p) => p.petId === doc.petId) : null
-        if (pet) pet.regNumber = ''
-
-        if (this.registrationDoc?.docId === docId) this.registrationDoc = null
-        if (this.detail?.docId === docId) this.detail = null
-        return
-      }
 
       return this._withRequestState(async () => {
         await certificatesApi.deleteDocument(petId, docId)
@@ -268,22 +168,6 @@ export const useCertificateStore = defineStore('certificate', {
 
     // POST /api/pets/{petId}/documents — file 필수, issuedDate 선택
     async uploadVaccination(petId, file, issuedDate) {
-      if (USE_MOCK_DATA) {
-        const newDoc = {
-          docId: `doc-vac-${Date.now()}`,
-          petId,
-          docName: file.name,
-          docType: 'VACCINATION',
-          // 실제 백엔드가 없어서 서버 파일 URL 대신, 방금 고른 파일을 그 자리에서
-          // 미리보기할 수 있도록 브라우저 로컬 objectURL을 사용함(새로고침하면 사라짐)
-          fileUrl: URL.createObjectURL(file),
-          issuedDate: issuedDate || new Date().toISOString().slice(0, 10),
-          createdAt: new Date().toISOString(),
-        }
-        this.documents = [newDoc, ...this.documents]
-        this.vaccinationDocs = [newDoc, ...this.vaccinationDocs]
-        return newDoc
-      }
       return this._withRequestState(async () => {
         const { data } = await certificatesApi.uploadVaccination(petId, file, issuedDate)
         // data.result는 POST 응답 그대로라 docName 등이 비어있을 수 있어 폴백을 먼저 깔고 덮어쓴다
@@ -305,20 +189,6 @@ export const useCertificateStore = defineStore('certificate', {
 
     // POST /api/pets/{petId}/documents (docType=MEDICAL_CONFIRMATION)
     async uploadMedicalConfirmation(petId, file) {
-      if (USE_MOCK_DATA) {
-        const newDoc = {
-          docId: `doc-med-${Date.now()}`,
-          petId,
-          docName: file.name,
-          docType: 'MEDICAL_CONFIRMATION',
-          fileUrl: URL.createObjectURL(file),
-          issuedDate: new Date().toISOString().slice(0, 10),
-          createdAt: new Date().toISOString(),
-        }
-        this.documents = [newDoc, ...this.documents]
-        this.medicalDocs = [newDoc, ...this.medicalDocs]
-        return newDoc
-      }
       return this._withRequestState(async () => {
         const formData = new FormData()
         formData.append('file', file)
@@ -342,18 +212,6 @@ export const useCertificateStore = defineStore('certificate', {
     // 접종증명서/진료확인서 삭제 — 두 타입 다 문서 배열에서 제거하는 것만 하면 되는 단순한 구조라
     // 동물등록증 해제(deleteRegistration)와 달리 하나의 액션으로 공용 처리
     async deleteDocument(petId, docId) {
-      if (USE_MOCK_DATA) {
-        const doc = this.documents.find((d) => d.docId === docId)
-        // 업로드 시 만든 blob: objectURL은 브라우저가 알아서 회수하지 않으므로 직접 해제
-        if (doc?.fileUrl?.startsWith('blob:')) {
-          URL.revokeObjectURL(doc.fileUrl)
-        }
-
-        this.documents = this.documents.filter((d) => d.docId !== docId)
-        this.vaccinationDocs = this.vaccinationDocs.filter((d) => d.docId !== docId)
-        this.medicalDocs = this.medicalDocs.filter((d) => d.docId !== docId)
-        return
-      }
 
       return this._withRequestState(async () => {
         await certificatesApi.deleteDocument(petId, docId)

@@ -8,11 +8,6 @@ import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import PinAuthSheet from '@/components/common/PinAuthSheet.vue';
 import StatusVisual from '@/components/common/StatusVisual.vue';
 import GroupPurchaseProgressBar from '@/components/grouppurchase/GroupPurchaseProgressBar.vue';
-import {
-  MOCK_GROUP_PURCHASE_STATUS,
-  MOCK_GROUP_PURCHASE_STATUS_ADMIN_BY_GP_ID,
-} from '@/mocks/groupPurchase';
-import { USE_MOCK_DATA } from '@/mocks/config';
 import { groupPurchaseApi } from '@/api/groupPurchase';
 import { formatArrivalDateLabel, formatDDayLabel, getDeadlineTimestamp } from '@/utils/date';
 import { goBackOr } from '@/utils/navigation';
@@ -38,18 +33,13 @@ async function loadStatus() {
   isError.value = false;
 
   try {
-    if (USE_MOCK_DATA) {
-      status.value = { gpId: route.params.gpId, ...MOCK_GROUP_PURCHASE_STATUS };
-      isAdmin.value = MOCK_GROUP_PURCHASE_STATUS_ADMIN_BY_GP_ID[route.params.gpId] ?? false;
-    } else {
-      const { data } = await groupPurchaseApi.getStatus(route.params.gpId);
-      status.value = data.result ?? null;
-      if (!status.value) {
-        isError.value = true;
-        return;
-      }
-      isAdmin.value = authStore.isAdmin;
+    const { data } = await groupPurchaseApi.getStatus(route.params.gpId);
+    status.value = data.result ?? null;
+    if (!status.value) {
+      isError.value = true;
+      return;
     }
+    isAdmin.value = authStore.isAdmin;
 
     // API 응답 경계에서 deadline 유효성을 검증한다. 잘못된 deadline은 getDeadlineTimestamp가
     // NaN을 반환하는데, 이 값을 그대로 타이머에 넘기면 0ms 타이머가 계속 재예약되며
@@ -166,13 +156,6 @@ const cancelSuccessMessage = computed(() =>
 // 2026-08-18 확인) — 검증 자체는 백엔드가 처리하고 프론트는 전달만 한다.
 // 관리자는 groupPurchaseApi.cancel(공동구매 취소), 참여자는 groupPurchaseApi.leave(참여 취소)를 호출
 async function handleCancelConfirm(password) {
-  if (USE_MOCK_DATA) {
-    isPinSheetOpen.value = false;
-    if (isAdmin.value) status.value = { ...status.value, status: 'CANCELLED' };
-    else hasLeft.value = true;
-    isCancelSuccessSheetOpen.value = true;
-    return;
-  }
 
   cancelError.value = '';
   isCancelling.value = true;
