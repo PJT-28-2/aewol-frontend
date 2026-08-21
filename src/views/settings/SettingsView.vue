@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useMemberStore } from '@/stores/member'
 import { usePetStore } from '@/stores/pet'
+import { withWaGwa } from '@/utils/korean'
 import AppButton from '@/components/common/AppButton.vue'
 import AppModal from '@/components/common/AppModal.vue'
 import PasswordInput from '@/components/common/PasswordInput.vue'
@@ -188,7 +189,7 @@ const confirmLogout = async () => {
         </div>
         <div class="relative min-w-0 flex-1">
           <p class="text-(length:--font-xs) font-semibold text-(color:--color-leaf-dark)">
-            {{ petName }}와 함께하는 보호자
+            {{ withWaGwa(petName) }} 함께하는 보호자
           </p>
           <p class="mt-(--space-1) truncate text-(length:--font-xl) font-bold text-(color:--color-navy)">
             {{ memberName ? `${memberName}님` : '회원님' }}
