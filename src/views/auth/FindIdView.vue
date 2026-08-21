@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onBeforeUnmount, ref } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { authApi } from '@/api/auth'
 import { formatCountdown } from '@/utils/date'
@@ -24,6 +24,9 @@ const nameMessage = ref({ type: 'error', text: '' })
 const phoneMessage = ref({ type: 'error', text: '' })
 const codeMessage = ref({ type: 'error', text: '' })
 let timerId
+let sessionVersion = 0
+let sendRequestVersion = 0
+let verifyRequestVersion = 0
 
 const formattedTime = computed(() => formatCountdown(remainingSeconds.value))
 
@@ -64,6 +67,16 @@ const resetVerificationSession = () => {
   isResultVisible.value = false
 }
 
+watch([name, phone], () => {
+  sessionVersion += 1
+  sendRequestVersion += 1
+  verifyRequestVersion += 1
+  isSending.value = false
+  isVerifying.value = false
+  resetVerificationSession()
+  phoneMessage.value = { type: 'error', text: '' }
+})
+
 const handleRequestCode = async () => {
   if (isSending.value || isVerifying.value) return
 
@@ -81,9 +94,18 @@ const handleRequestCode = async () => {
 
   resetVerificationSession()
   isSending.value = true
+  const requestVersion = ++sendRequestVersion
+  const requestSessionVersion = sessionVersion
+  const nameSnapshot = name.value.trim()
+  const phoneSnapshot = phone.value.replace(/\D/g, '')
   try {
-    const phoneDigits = phone.value.replace(/\D/g, '')
-    const { data } = await authApi.requestFindAccountCode(name.value.trim(), phoneDigits)
+    const { data } = await authApi.requestFindAccountCode(nameSnapshot, phoneSnapshot)
+    if (
+      requestVersion !== sendRequestVersion ||
+      requestSessionVersion !== sessionVersion ||
+      name.value.trim() !== nameSnapshot ||
+      phone.value.replace(/\D/g, '') !== phoneSnapshot
+    ) return
     const nextRequestId = data?.result?.requestId
     const expiresInSeconds = data?.result?.expiresInSeconds
     if (typeof nextRequestId !== 'string' || !nextRequestId.trim()
@@ -106,12 +128,13 @@ const handleRequestCode = async () => {
       text: data.message ?? '인증번호를 전송했습니다',
     }
   } catch (error) {
+    if (requestVersion !== sendRequestVersion || requestSessionVersion !== sessionVersion) return
     phoneMessage.value = {
       type: 'error',
       text: error.response?.data?.message ?? '인증번호 전송에 실패했습니다',
     }
   } finally {
-    isSending.value = false
+    if (requestVersion === sendRequestVersion) isSending.value = false
   }
 }
 
@@ -132,8 +155,17 @@ const handleVerifyCode = async () => {
     return
   }
   isVerifying.value = true
+  const requestVersion = ++verifyRequestVersion
+  const requestSessionVersion = sessionVersion
+  const requestIdSnapshot = requestId.value
+  const verificationCodeSnapshot = verificationCode.value
   try {
-    const { data } = await authApi.verifyFindAccountCode(requestId.value, verificationCode.value)
+    const { data } = await authApi.verifyFindAccountCode(requestIdSnapshot, verificationCodeSnapshot)
+    if (
+      requestVersion !== verifyRequestVersion ||
+      requestSessionVersion !== sessionVersion ||
+      requestId.value !== requestIdSnapshot
+    ) return
     const provider = data?.result?.provider
     const email = data?.result?.maskedEmail
     if (provider !== 'LOCAL' && provider !== 'KAKAO') {
@@ -151,12 +183,13 @@ const handleVerifyCode = async () => {
     remainingSeconds.value = 0
     isResultVisible.value = true
   } catch (error) {
+    if (requestVersion !== verifyRequestVersion || requestSessionVersion !== sessionVersion) return
     codeMessage.value = {
       type: 'error',
       text: error.response?.data?.message ?? '인증번호 확인에 실패했습니다',
     }
   } finally {
-    isVerifying.value = false
+    if (requestVersion === verifyRequestVersion) isVerifying.value = false
   }
 }
 

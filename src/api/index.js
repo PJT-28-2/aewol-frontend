@@ -27,6 +27,29 @@ api.interceptors.request.use(
 let isRefreshing = false
 let failedQueue = []
 
+const isValidToken = (token) => {
+  if (typeof token !== 'string') return false
+  const normalizedToken = token.trim().toLowerCase()
+  return normalizedToken.length > 0 && normalizedToken !== 'undefined' && normalizedToken !== 'null'
+}
+
+const syncAccessToken = async (accessToken) => {
+  const { useAuthStore } = await import('@/stores/auth')
+  useAuthStore().accessToken = accessToken
+}
+
+const clearAuthSession = async () => {
+  try {
+    const { useAuthStore } = await import('@/stores/auth')
+    useAuthStore().clearSession()
+  } catch {
+    localStorage.removeItem('accessToken')
+    localStorage.removeItem('refreshToken')
+    window.sessionStorage.removeItem('profileEditPasswordVerified')
+    window.sessionStorage.removeItem('kakaoOAuthState')
+  }
+}
+
 const processQueue = (error, token = null) => {
   failedQueue.forEach(({ resolve, reject }) => {
     if (error) {
@@ -73,9 +96,14 @@ api.interceptors.response.use(
         )
 
         const result = data.result ?? data
-        const newAccessToken = result.accessToken
+        const newAccessToken = result?.accessToken
+        if (!isValidToken(newAccessToken)) {
+          throw new Error('Invalid refresh response')
+        }
+
         localStorage.setItem('accessToken', newAccessToken)
-        if (result.refreshToken) {
+        await syncAccessToken(newAccessToken)
+        if (isValidToken(result.refreshToken)) {
           localStorage.setItem('refreshToken', result.refreshToken)
         }
 
@@ -85,10 +113,7 @@ api.interceptors.response.use(
         return api(originalRequest)
       } catch (refreshError) {
         processQueue(refreshError, null)
-        localStorage.removeItem('accessToken')
-        localStorage.removeItem('refreshToken')
-        window.sessionStorage.removeItem('profileEditPasswordVerified')
-        window.sessionStorage.removeItem('kakaoOAuthState')
+        await clearAuthSession()
         window.location.href = '/login'
         return Promise.reject(refreshError)
       } finally {
