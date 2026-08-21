@@ -38,6 +38,19 @@ const remainingToday = ref(null)
 const isShowingExistingCharacter = ref(false)
 let progressTimer
 
+// 서버가 단계별 진척도를 내려주지 않으므로 실제 파이프라인을 그대로 반영할 수는
+// 없다. 다만 순서(특징 파악 → 옮기기 → 그리기 → 마무리)는 실제 생성 흐름과
+// 같아서, 사용자가 읽는 순간의 기대와 어긋나지 않는다.
+const GENERATING_STATUSES = [
+  '사진 속 털색과 얼굴 특징을 살펴보고 있어요.',
+  '무늬와 귀 모양을 하나씩 옮기고 있어요.',
+  '애월 스타일로 캐릭터를 그리고 있어요.',
+  '마지막으로 색을 다듬고 있어요.',
+]
+const statusIndex = ref(0)
+const generatingStatus = computed(() => GENERATING_STATUSES[statusIndex.value])
+let statusTimer
+
 const stepTitle = computed(() => ({
   1: '갤러리 사진 업로드',
   2: '사진 확인',
@@ -95,11 +108,32 @@ function startProgress() {
   progressTimer = window.setInterval(() => {
     progress.value = Math.min(progress.value + 1, 92)
   }, 300)
+  startStatusRotation()
 }
 
 function stopProgress() {
   window.clearInterval(progressTimer)
   progressTimer = undefined
+  stopStatusRotation()
+}
+
+/**
+ * 진행률 막대만으로는 26초를 버티기 어렵다. 지금 무엇을 하는 중인지 문구가
+ * 바뀌면 같은 시간도 짧게 느껴진다.
+ *
+ * 마지막 문구에서 멈추고 처음으로 돌아가지 않는다. 순환시키면 "색을 다듬는"
+ * 단계에서 "살펴보는" 단계로 되돌아가 작업이 되감긴 것처럼 보인다.
+ */
+function startStatusRotation() {
+  statusIndex.value = 0
+  statusTimer = window.setInterval(() => {
+    statusIndex.value = Math.min(statusIndex.value + 1, GENERATING_STATUSES.length - 1)
+  }, 6000)
+}
+
+function stopStatusRotation() {
+  window.clearInterval(statusTimer)
+  statusTimer = undefined
 }
 
 async function handleConvert() {
@@ -459,7 +493,12 @@ onBeforeUnmount(() => {
           {{ withEulReul(petName) }} 닮은 캐릭터를<br>만들고 있어요
         </h1>
         <p class="mt-(--space-2) text-(length:--font-sm) leading-[1.55] text-(color:--color-slate-muted)">
-          사진 속 털색과 얼굴 특징을 살펴보고 있어요.<br>30초 정도 걸려요. 화면을 닫지 말아주세요.
+          <!-- 앞 문장만 단계에 따라 바뀐다. 뒷 문장은 화면을 닫지 말라는 안내라
+               계속 같은 자리에 보여야 한다. -->
+          <span
+            :key="generatingStatus"
+            class="inline-block animate-fade-in"
+          >{{ generatingStatus }}</span><br>30초 정도 걸려요. 화면을 닫지 말아주세요.
         </p>
       </div>
 
