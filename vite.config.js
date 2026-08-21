@@ -6,6 +6,7 @@ export default defineConfig({
   plugins: [vue(), tailwindcss()],
   test: {
     environment: 'jsdom',
+    exclude: ['**/node_modules/**', '**/e2e/**', '**/playwright-report/**'],
   },
   server: {
     port: 5173,

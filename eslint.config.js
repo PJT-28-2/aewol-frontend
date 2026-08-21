@@ -3,7 +3,14 @@ import pluginVue from 'eslint-plugin-vue'
 
 export default [
   {
-    ignores: ['dist/**', 'node_modules/**', '.claude/**', 'scripts/figma/**'],
+    ignores: [
+      'dist/**',
+      'node_modules/**',
+      '.claude/**',
+      'scripts/figma/**',
+      'playwright-report/**',
+      'test-results/**',
+    ],
   },
   js.configs.recommended,
   ...pluginVue.configs['flat/recommended'],
@@ -25,6 +32,15 @@ export default [
     rules: {
       'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
        'vue/multi-word-component-names': 'off',
+    },
+  },
+  {
+    files: ['e2e/**/*.js', 'playwright.config.js'],
+    languageOptions: {
+      globals: {
+        Buffer: 'readonly',
+        process: 'readonly',
+      },
     },
   },
 ]
