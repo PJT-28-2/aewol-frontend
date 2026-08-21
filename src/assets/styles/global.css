@@ -5,6 +5,82 @@
 @import './reset.css' layer(base);
 @import 'tailwindcss/utilities.css' layer(utilities);
 
+/*
+ * AI 캐릭터 생성 대기 화면(PetProfilePhotoView)처럼 30초 가까이 머무르는 자리에서
+ * 화면이 완전히 멈춰 있으면 응답이 끊긴 것처럼 보인다. 진행률 막대만으로는
+ * 부족해서 "분석 중"이 눈에 보이도록 하는 모션들이다.
+ */
+@theme {
+  --animate-ring-spin: ring-spin 12s linear infinite;
+  --animate-ring-orbit: ring-spin 18s linear infinite reverse;
+  --animate-float: float 3.2s ease-in-out infinite;
+  --animate-ripple: ripple 2.8s ease-out infinite;
+  --animate-sheen: sheen 2s ease-in-out infinite;
+  --animate-fade-in: fade-in 320ms ease-out;
+
+  @keyframes ring-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-7px);
+    }
+  }
+
+  @keyframes ripple {
+    0% {
+      transform: scale(0.94);
+      opacity: 0.5;
+    }
+    100% {
+      transform: scale(1.2);
+      opacity: 0;
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(3px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes sheen {
+    0% {
+      transform: translateX(-160%);
+    }
+    100% {
+      transform: translateX(360%);
+    }
+  }
+}
+
+/*
+ * 전정기관이 예민한 사용자에게 회전·부유 모션은 어지럼증을 유발한다.
+ * 진행률 막대는 그대로 차오르므로 진행 상황은 여전히 읽을 수 있다.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .animate-ring-spin,
+  .animate-ring-orbit,
+  .animate-float,
+  .animate-ripple,
+  .animate-sheen,
+  .animate-fade-in {
+    animation: none;
+  }
+}
+
 @layer base {
   body {
     font-family: var(--font-family);

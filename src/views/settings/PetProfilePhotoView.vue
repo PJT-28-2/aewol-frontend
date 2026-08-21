@@ -8,6 +8,7 @@ import IconCheck from '@/components/common/icons/IconCheck.vue'
 import IconImage from '@/components/common/icons/IconImage.vue'
 import IconPaw from '@/components/common/icons/IconPaw.vue'
 import { usePetStore } from '@/stores/pet'
+import { withEulReul } from '@/utils/korean'
 import { petApi } from '@/api/pet'
 
 const router = useRouter()
@@ -36,6 +37,19 @@ const errorMessage = ref('')
 const remainingToday = ref(null)
 const isShowingExistingCharacter = ref(false)
 let progressTimer
+
+// 서버가 단계별 진척도를 내려주지 않으므로 실제 파이프라인을 그대로 반영할 수는
+// 없다. 다만 순서(특징 파악 → 옮기기 → 그리기 → 마무리)는 실제 생성 흐름과
+// 같아서, 사용자가 읽는 순간의 기대와 어긋나지 않는다.
+const GENERATING_STATUSES = [
+  '사진 속 털색과 얼굴 특징을 살펴보고 있어요.',
+  '무늬와 귀 모양을 하나씩 옮기고 있어요.',
+  '애월 스타일로 캐릭터를 그리고 있어요.',
+  '마지막으로 색을 다듬고 있어요.',
+]
+const statusIndex = ref(0)
+const generatingStatus = computed(() => GENERATING_STATUSES[statusIndex.value])
+let statusTimer
 
 const stepTitle = computed(() => ({
   1: '갤러리 사진 업로드',
@@ -94,11 +108,32 @@ function startProgress() {
   progressTimer = window.setInterval(() => {
     progress.value = Math.min(progress.value + 1, 92)
   }, 300)
+  startStatusRotation()
 }
 
 function stopProgress() {
   window.clearInterval(progressTimer)
   progressTimer = undefined
+  stopStatusRotation()
+}
+
+/**
+ * 진행률 막대만으로는 26초를 버티기 어렵다. 지금 무엇을 하는 중인지 문구가
+ * 바뀌면 같은 시간도 짧게 느껴진다.
+ *
+ * 마지막 문구에서 멈추고 처음으로 돌아가지 않는다. 순환시키면 "색을 다듬는"
+ * 단계에서 "살펴보는" 단계로 되돌아가 작업이 되감긴 것처럼 보인다.
+ */
+function startStatusRotation() {
+  statusIndex.value = 0
+  statusTimer = window.setInterval(() => {
+    statusIndex.value = Math.min(statusIndex.value + 1, GENERATING_STATUSES.length - 1)
+  }, 6000)
+}
+
+function stopStatusRotation() {
+  window.clearInterval(statusTimer)
+  statusTimer = undefined
 }
 
 async function handleConvert() {
@@ -370,7 +405,7 @@ onBeforeUnmount(() => {
             현재 적용된 {{ petName }}의<br>캐릭터예요
           </template>
           <template v-else>
-            {{ petName }}를 닮은 모습이<br>완성됐어요!
+            {{ withEulReul(petName) }} 닮은 모습이<br>완성됐어요!
           </template>
         </h2>
         <p class="mt-(--space-2) text-(length:--font-sm) text-(color:--color-slate-muted)">
@@ -424,9 +459,14 @@ onBeforeUnmount(() => {
         <span class="ml-(--space-2) text-(length:--font-xs) font-bold text-(color:--color-leaf-dark)">AI</span>
       </div>
 
+      <!--
+        사진(가운데)은 고정하고 그 주위만 움직인다. 분석 대상이 흔들리면 결과가
+        불안정해 보이고, 대기 시간 내내 시선이 사진에서 떨어지지 않는다.
+      -->
       <div class="relative mx-auto mt-[70px] flex size-[250px] items-center justify-center">
+        <span class="absolute inset-0 animate-ripple rounded-full border border-(--color-leaf)" />
         <span class="absolute inset-0 animate-pulse rounded-full border border-(--color-leaf) opacity-40" />
-        <span class="absolute inset-[14px] rounded-full border-2 border-dashed border-(--color-leaf-dark) opacity-60" />
+        <span class="absolute inset-[14px] animate-ring-spin rounded-full border-2 border-dashed border-(--color-leaf-dark) opacity-60" />
         <span class="absolute inset-[28px] overflow-hidden rounded-full bg-(--color-white) shadow-(--shadow-card)">
           <img
             :src="photoPreviewUrl"
@@ -434,31 +474,42 @@ onBeforeUnmount(() => {
             class="size-full object-cover brightness-110"
           >
         </span>
-        <span class="absolute right-[13px] bottom-[25px] flex size-[54px] items-center justify-center rounded-full border-[5px] border-(--color-leaf-soft) bg-(--color-leaf) text-(color:--color-navy) shadow-(--shadow-md)">
+        <span class="absolute right-[13px] bottom-[25px] flex size-[54px] animate-float items-center justify-center rounded-full border-[5px] border-(--color-leaf-soft) bg-(--color-leaf) text-(color:--color-navy) shadow-(--shadow-md)">
           <IconPaw
             size="25"
             filled
           />
         </span>
-        <span class="absolute top-[22px] left-[9px] size-[10px] rounded-full bg-(--color-chart-amber)" />
-        <span class="absolute top-[70px] right-[2px] size-[7px] rounded-full bg-(--color-chart-teal)" />
+        <!-- 점 두 개는 각자 떠다니는 대신 원 둘레를 함께 돈다. 점선 링과 반대로
+             돌려서 두 궤도가 겹쳐 보이지 않게 했다. -->
+        <span class="pointer-events-none absolute inset-0 animate-ring-orbit">
+          <span class="absolute top-[22px] left-[9px] size-[10px] rounded-full bg-(--color-chart-amber)" />
+          <span class="absolute top-[70px] right-[2px] size-[7px] rounded-full bg-(--color-chart-teal)" />
+        </span>
       </div>
 
       <div class="mt-(--space-10) text-center">
         <h1 class="text-[24px] leading-[1.4] font-bold text-(color:--color-navy)">
-          {{ petName }}를 닮은 캐릭터를<br>만들고 있어요
+          {{ withEulReul(petName) }} 닮은 캐릭터를<br>만들고 있어요
         </h1>
         <p class="mt-(--space-2) text-(length:--font-sm) leading-[1.55] text-(color:--color-slate-muted)">
-          사진 속 털색과 얼굴 특징을 살펴보고 있어요.<br>30초 정도 걸려요. 화면을 닫지 말아주세요.
+          <!-- 앞 문장만 단계에 따라 바뀐다. 뒷 문장은 화면을 닫지 말라는 안내라
+               계속 같은 자리에 보여야 한다. -->
+          <span
+            :key="generatingStatus"
+            class="inline-block animate-fade-in"
+          >{{ generatingStatus }}</span><br>30초 정도 걸려요. 화면을 닫지 말아주세요.
         </p>
       </div>
 
       <div class="mt-auto pb-(--space-10)">
-        <div class="h-[8px] overflow-hidden rounded-full bg-(--color-white)">
+        <div class="relative h-[8px] overflow-hidden rounded-full bg-(--color-white)">
           <span
             class="block h-full rounded-full bg-(--color-leaf) transition-[width] duration-150"
             :style="{ width: `${progress}%` }"
           />
+          <!-- 진행률이 한동안 같은 값에 머물러도 막대가 살아 있음을 보여준다. -->
+          <span class="pointer-events-none absolute inset-y-0 left-0 w-[28%] animate-sheen rounded-full bg-(--color-white) opacity-45" />
         </div>
         <p class="mt-(--space-3) text-center text-(length:--font-sm) font-bold text-(color:--color-leaf-dark)">
           {{ progress }}%
