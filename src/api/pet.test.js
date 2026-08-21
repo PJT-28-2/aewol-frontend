@@ -42,3 +42,17 @@ describe('petApi.generateCharacter', () => {
     expect(config?.timeout).toBeGreaterThanOrEqual(60000)
   })
 })
+
+describe('petApi.disconnectRegistration', () => {
+  afterEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('동물등록번호 연동 해제 전용 API를 호출한다', async () => {
+    api.delete.mockResolvedValue({ data: { result: null } })
+
+    await petApi.disconnectRegistration('9001')
+
+    expect(api.delete).toHaveBeenCalledWith('/pets/9001/registration')
+  })
+})

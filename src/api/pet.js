@@ -25,6 +25,10 @@ export const petApi = {
     return api.post(`/pets/${id}/verify`, data)
   },
 
+  disconnectRegistration(id) {
+    return api.delete(`/pets/${id}/registration`)
+  },
+
   uploadDocument(id, file, issuedDate) {
     const formData = new FormData()
     formData.append('file', file)

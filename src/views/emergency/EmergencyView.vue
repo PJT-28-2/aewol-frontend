@@ -354,6 +354,12 @@ onMounted(async () => {
   await renderMarkers();
 
   await locating;
+
+  // 지도는 측위를 기다리지 않고 기본 좌표로 먼저 띄운다. 그래서 측위가 끝나면 지도도
+  // 따라 옮겨줘야 한다. 이게 없으면 목록만 내 위치 기준으로 바뀌고 화면은 기본 좌표에
+  // 머물러서, 사용자가 재시도를 눌러야 비로소 내 위치가 보였다.
+  // 여기는 initKakaoMap() 이후라 map이 준비돼 있다.
+  if (!isFallbackLocation.value) moveToUserLocation();
 });
 
 onBeforeUnmount(() => {
