@@ -137,6 +137,38 @@ export const useShareDiaryStore = defineStore('shareDiary', {
       }
     },
 
+    /**
+     * 공개 여부 전환. 권한은 서버가 최종 판정한다.
+     *
+     * 화면에서 버튼을 감추는 것은 편의일 뿐이고, 실제 차단은 서버 몫이다. 그래서 403/409를
+     * 삼키지 않고 그대로 올려보내 화면이 사유를 보여줄 수 있게 한다.
+     */
+    async changeDiaryVisibility(diaryId, visibility) {
+      this.isSubmitting = true
+      try {
+        const updated = unwrap(await shareApi.changeDiaryVisibility(diaryId, visibility))
+        const index = this.diaries.findIndex((diary) => diary.id === diaryId)
+        if (index !== -1) {
+          this.diaries[index] = { ...this.diaries[index], ...updated }
+        }
+        return updated
+      } finally {
+        this.isSubmitting = false
+      }
+    },
+
+    /** 접수 즉시 노출이 멈춘다. 목록에서도 바로 빼서 다시 신고하지 않게 한다. */
+    async reportDiary(diaryId, reason) {
+      this.isSubmitting = true
+      try {
+        const result = unwrap(await shareApi.reportDiary(diaryId, reason))
+        this.diaries = this.diaries.filter((diary) => diary.id !== diaryId)
+        return result
+      } finally {
+        this.isSubmitting = false
+      }
+    },
+
     async deleteDiary(diaryId) {
       this.isSubmitting = true
       try {
