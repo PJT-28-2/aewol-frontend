@@ -93,9 +93,9 @@ const loadMoreError = ref(false);
 // 함께 보여주는 게 기존 의도된 동작이라 그대로 둔다. activeFilter를 직접 '충전'/'출금'으로
 // 바꾼 경우는 사용자가 명시적으로 고른 값이라 이 분기로 덮어쓰지 않는다.
 function transactionRequestParams(cursor = null) {
-  const isExpenseFiltered = Boolean(categoryFilter.value || petFilter.value);
+  const isCategoryOrPetEntry = Boolean(categoryFilter.value || petFilter.value);
   const type =
-    activeFilter.value === 'all' && isExpenseFiltered
+    activeFilter.value === 'all' && isCategoryOrPetEntry
       ? 'PAYMENT'
       : activeFilter.value.toUpperCase();
   return {

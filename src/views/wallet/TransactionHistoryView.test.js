@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { createApp, nextTick } from 'vue'
+import { createApp } from 'vue'
 import { createPinia } from 'pinia'
+import { usePetStore } from '@/stores/pet'
 
 const mocks = vi.hoisted(() => ({
   getTransactions: vi.fn(),
@@ -30,18 +31,45 @@ import TransactionHistoryView from './TransactionHistoryView.vue'
 let app
 let host
 
-async function flush() {
-  for (let i = 0; i < 8; i += 1) await Promise.resolve()
-  await nextTick()
+// 내부 await 체인 깊이에 맞춰 임의의 횟수만큼 Promise.resolve()를 반복하는 대신,
+// 실제로 기다리는 조건(getTransactions 호출 횟수)으로 대기한다. onMounted 로직에
+// await이 추가/제거돼도 이 조건 자체는 매직 넘버로 남지 않는다
+async function waitForFetchCall(callIndex) {
+  await vi.waitFor(() => {
+    if (mocks.getTransactions.mock.calls.length <= callIndex) {
+      throw new Error('getTransactions not called yet')
+    }
+  })
 }
 
-async function mountView() {
+// 로딩 스피너가 걷히고 실제 버튼이 렌더링될 때까지 기다린다 — fetch 호출 여부가 아니라
+// 화면에 그 요소가 나타났는지 자체를 기다리는 조건이라 렌더링 체인이 길어져도 안전하다
+async function waitForText(root, selector, text) {
+  return vi.waitFor(() => {
+    const target = [...root.querySelectorAll(selector)].find(
+      (el) => el.textContent.trim() === text,
+    )
+    if (!target) throw new Error(`"${text}" not rendered yet`)
+    return target
+  })
+}
+
+// 지갑 메인 등에서 이미 반려동물 목록을 불러온 뒤 진입하는 실제 사용 흐름을 재현하기 위해,
+// petStore.fetchPets()의 비동기 왕복 없이 pinia 상태를 미리 채워둔다. 그래야 petId 쿼리가
+// setup 시점에 바로 해석되어, 마운트 직후 첫 조회부터 petFilter가 반영된다
+function seedPets(pinia, pets) {
+  usePetStore(pinia).pets = pets
+}
+
+async function mountView({ pets } = {}) {
   host = document.createElement('div')
   document.body.appendChild(host)
   app = createApp(TransactionHistoryView)
-  app.use(createPinia())
+  const pinia = createPinia()
+  app.use(pinia)
+  if (pets) seedPets(pinia, pets)
   app.mount(host)
-  await flush()
+  await waitForFetchCall(0)
 }
 
 describe('TransactionHistoryView 진입 조건별 거래 조회 type', () => {
@@ -72,13 +100,45 @@ describe('TransactionHistoryView 진입 조건별 거래 조회 type', () => {
     )
   })
 
-  // 지갑 메인 > 전체 거래내역처럼 필터 없이 들어온 일반 조회는 REFUND도 함께 보여주는 게
-  // 기존 의도된 동작이라 type=ALL을 그대로 유지해야 한다
+  // 지출리포트 "반려동물별" 탭에서 반려동물 카드를 눌러 petId 쿼리로 들어온 경우도
+  // category와 동일하게 REFUND 없이 지출만 보여야 한다
+  it('petId 쿼리로 진입하면 type=PAYMENT로 조회한다', async () => {
+    mocks.routeQuery = { petId: '5' }
+
+    await mountView({ pets: [{ id: '5', petId: '5', name: '초코', species: 'DOG' }] })
+
+    expect(mocks.getTransactions).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'PAYMENT' }),
+    )
+  })
+
+  // 필터 없이 들어오면 기존처럼 type=ALL로 요청한다
   it('필터 없이 들어오면 기존처럼 type=ALL로 조회한다', async () => {
     await mountView()
 
     expect(mocks.getTransactions).toHaveBeenCalledWith(
       expect.objectContaining({ type: 'ALL' }),
+    )
+  })
+
+  // category 쿼리로 들어온 상태에서 사용자가 "유형" 시트에서 '출금'을 직접 고르면,
+  // PAYMENT로 덮어쓰지 않고 사용자가 고른 값을 그대로 백엔드에 보내야 한다
+  it('category 쿼리로 진입해도 유형을 직접 고르면 그 값을 그대로 요청한다', async () => {
+    mocks.routeQuery = { category: 'ETC' }
+
+    await mountView()
+    expect(mocks.getTransactions).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'PAYMENT' }),
+    )
+
+    const typeButton = await waitForText(host, 'button', '유형')
+    typeButton.click()
+    const withdrawOption = await waitForText(document.body, 'button', '출금')
+    withdrawOption.click()
+    await waitForFetchCall(1)
+
+    expect(mocks.getTransactions).toHaveBeenLastCalledWith(
+      expect.objectContaining({ type: 'WITHDRAW' }),
     )
   })
 })
