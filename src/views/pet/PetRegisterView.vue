@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, nextTick, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import AppButton from '@/components/common/AppButton.vue';
 import AppInput from '@/components/common/AppInput.vue';
@@ -31,7 +31,8 @@ const breedPlaceholder = computed(() =>
 );
 const isLoading = ref(false);
 const errorMessage = ref('');
-const createdPetId = ref(null);
+const registrationError = ref('');
+const registrationSection = ref(null);
 const registrationOwnerType = ref('SELF');
 const registrationOwnerName = ref('');
 const memberName = ref('');
@@ -104,47 +105,39 @@ function onFileChange(event) {
   vaccinationFile.value = file;
 }
 
+async function moveToRegistrationError() {
+  await nextTick();
+  registrationSection.value?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  registrationSection.value?.querySelector('input')?.focus({ preventScroll: true });
+}
+
 async function handleSubmit() {
+  errorMessage.value = '';
+  registrationError.value = '';
   const validationError = validateForm();
   if (validationError) {
-    errorMessage.value = validationError;
+    if (validationError.includes('동물등록')) {
+      registrationError.value = validationError;
+      await moveToRegistrationError();
+    } else errorMessage.value = validationError;
     return;
   }
-  errorMessage.value = '';
   isLoading.value = true;
   try {
-    let registrationVerificationFailed = false;
-    if (!createdPetId.value) {
-      const petForm = { ...form.value };
-      delete petForm.regNumber;
-      const { data } = await petApi.createPet({
-        ...petForm,
-        birthDate: form.value.birthDate.replaceAll('.', '-'),
-        neutered: form.value.neutered == null ? null : form.value.neutered ? 'Y' : 'N',
-      });
-      const createdPet = data.result ?? data;
-      createdPetId.value = createdPet.petId ?? createdPet.id;
-    }
-
-    if (form.value.regNumber) {
-      try {
-        await petApi.verifyRegistration(createdPetId.value, {
-          regNumber: form.value.regNumber,
-          userName: registrationOwnerName.value.trim(),
-          birthDate: '',
-        });
-      } catch {
-        registrationVerificationFailed = true;
-      }
-    }
+    const { data } = await petApi.createPet({
+      ...form.value,
+      registrationOwnerName: form.value.regNumber ? registrationOwnerName.value.trim() : null,
+      birthDate: form.value.birthDate.replaceAll('.', '-'),
+      neutered: form.value.neutered == null ? null : form.value.neutered ? 'Y' : 'N',
+    });
+    const createdPet = data.result ?? data;
+    const createdPetId = createdPet.petId ?? createdPet.id;
     if (vaccinationFile.value) {
-      await petApi.uploadDocument(createdPetId.value, vaccinationFile.value);
+      await petApi.uploadDocument(createdPetId, vaccinationFile.value);
     }
     await router.push({
       path: '/settings/pet-photo',
-      query: registrationVerificationFailed
-        ? { mode: 'create', next: '/pets', registration: 'unverified', petId: createdPetId.value }
-        : { mode: 'create', next: '/home', petId: createdPetId.value },
+      query: { mode: 'create', next: '/home', petId: createdPetId },
     });
   } catch (error) {
     const messages = {
@@ -152,10 +145,16 @@ async function handleSubmit() {
       403: '반려동물을 등록할 권한이 없습니다.',
       404: '등록한 반려동물 정보를 찾을 수 없습니다.',
     };
-    errorMessage.value =
+    const message =
       error.response?.data?.message ||
       messages[error.response?.status] ||
       '반려동물 등록에 실패했습니다. 다시 시도해주세요.';
+    if (form.value.regNumber && error.response?.status !== 403 && error.response?.status !== 404) {
+      registrationError.value = message;
+      await moveToRegistrationError();
+    } else {
+      errorMessage.value = message;
+    }
   } finally {
     isLoading.value = false;
   }
@@ -235,7 +234,7 @@ async function handleSubmit() {
           placeholder="소로"
         />
 
-        <div>
+        <div ref="registrationSection">
           <AppInput
             v-model="form.regNumber"
             variant="soft"
@@ -243,6 +242,7 @@ async function handleSubmit() {
             placeholder="12자리 또는 15자리 숫자 입력"
             inputmode="numeric"
             maxlength="15"
+            :error="registrationError"
           />
           <p
             class="text-(length:--font-xs) text-(color:--color-slate-muted) mt-(--space-1)"
