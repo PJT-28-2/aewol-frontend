@@ -102,16 +102,16 @@ describe('useUserLocation', () => {
     )
   })
 
-  it('사이트 권한이 prompt인 code 1이면 OS 위치 설정을 안내한다', async () => {
+  // prompt는 아직 허용/거부를 고르지 않은 상태다. 권한 팝업을 그냥 닫아도 여기로 오므로
+  // OS가 막았다고 단정하면 팝업을 닫은 사용자에게 엉뚱한 안내가 나간다.
+  it('사이트 권한이 prompt인 code 1이면 중립적인 재시도를 안내한다', async () => {
     stubPermissionState('prompt')
     stubGeolocation((_success, failure) => failure({ code: 1, message: 'User denied Geolocation' }))
     const { locationError, locate } = useUserLocation(SEOUL)
 
     await settleLocate(locate)
 
-    expect(locationError.value).toBe(
-      '기기의 위치 서비스가 꺼져 있어요. 설정에서 위치를 켠 뒤 다시 시도해주세요',
-    )
+    expect(locationError.value).toBe('위치 확인이 취소됐어요. 다시 시도해주세요')
   })
 
   it('인앱 브라우저의 code 1이면 외부 브라우저로 열도록 안내한다', async () => {

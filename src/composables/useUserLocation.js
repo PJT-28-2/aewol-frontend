@@ -28,7 +28,7 @@ const ERROR_GRACE_MS = 1000
 
 // PositionError.code 별 안내. 원인마다 사용자가 할 수 있는 조치가 달라서 문구를 나눠요.
 // code 1(PERMISSION_DENIED)만은 코드 하나에 서로 다른 상황이 섞여 있어서
-// resolveDeniedMessage()가 따로 판별해요.
+// resolveDeniedMessage()가 권한 상태로 따로 판별해요.
 const ERROR_MESSAGES = {
   2: '현재 위치를 확인할 수 없어요. 네트워크 연결을 확인해주세요',
   3: '위치 확인이 오래 걸려요. 다시 시도해주세요',
@@ -37,6 +37,9 @@ const SITE_PERMISSION_MESSAGE =
   '위치 권한이 꺼져 있어요. 주소창의 자물쇠 아이콘에서 위치를 허용해주세요'
 const OS_LOCATION_MESSAGE =
   '기기의 위치 서비스가 꺼져 있어요. 설정에서 위치를 켠 뒤 다시 시도해주세요'
+// prompt는 아직 허용도 거부도 고르지 않은 상태예요. 권한 팝업을 그냥 닫아도 여기로 와요.
+// 원인을 단정할 수 없으니 어느 쪽이든 통하는 중립적인 재시도 안내를 해요.
+const RETRY_MESSAGE = '위치 확인이 취소됐어요. 다시 시도해주세요'
 const IN_APP_BROWSER_MESSAGE =
   '앱 안에서 열린 화면에서는 위치를 쓸 수 없어요. 크롬이나 사파리로 열어주세요'
 const FALLBACK_MESSAGE = '현재 위치를 확인할 수 없어요'
@@ -142,7 +145,10 @@ async function resolveDeniedMessage() {
   // 상태를 못 읽는 브라우저(구형 Safari 등)에서는 가장 흔한 사이트 권한 거부로 안내해요.
   if (state === null || state === 'denied') return SITE_PERMISSION_MESSAGE
 
-  // granted/prompt인데 거부됐다면 브라우저 밖(OS)에서 막은 거예요.
+  // 아직 선택하지 않은 상태. 팝업을 닫았을 수도, OS가 막았을 수도 있어 단정하지 않아요.
+  if (state === 'prompt') return RETRY_MESSAGE
+
+  // granted인데 거부됐다면 사이트 권한은 이미 열려 있으니 브라우저 밖(OS)에서 막은 거예요.
   return OS_LOCATION_MESSAGE
 }
 
