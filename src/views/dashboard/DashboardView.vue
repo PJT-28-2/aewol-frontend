@@ -214,7 +214,7 @@ onMounted(fetchDashboard);
 
 <template>
   <div
-    class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))] bg-(--color-app-bg) min-h-screen"
+    class="p-(--space-4) bg-(--color-app-bg) min-h-screen"
   >
     <header class="mb-(--space-6)">
       <h1

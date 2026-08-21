@@ -243,7 +243,7 @@ async function handlePhotoDelete() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-7))]">
+  <div class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-(--space-7)">
     <header class="mb-(--space-5)">
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-2)">
         {{ pageTitle }}

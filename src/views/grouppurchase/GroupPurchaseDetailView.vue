@@ -167,7 +167,7 @@ function goToPaymentPreview() {
 
 <template>
   <div
-    class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--size-cta-bar-height))]"
+    class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-(--size-cta-bar-height)"
   >
     <!-- 로딩 상태 -->
     <div

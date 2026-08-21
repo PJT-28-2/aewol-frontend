@@ -82,7 +82,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-(--color-app-bg) px-(--space-5) pt-(--space-3) pb-[calc(var(--bottom-nav-height)+var(--space-8))]">
+  <div class="min-h-screen bg-(--color-app-bg) px-(--space-5) pt-(--space-3) pb-(--space-8)">
     <header class="mb-(--space-5) flex h-[42px] items-center">
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">
         반려생활
@@ -212,11 +212,15 @@ onMounted(async () => {
       <section class="mt-(--space-6)">
         <div class="flex items-center justify-between">
           <h2 class="text-(length:--font-base) font-bold text-(color:--color-navy)">
-            오늘도 추억 한 장
+            오늘도 육아일기 한 장
           </h2><span class="rounded-full bg-(--color-leaf-soft) px-(--space-3) py-(--space-2) text-(length:--font-xs) font-bold text-(color:--color-leaf-dark)">하루 1장</span>
         </div>
+        <!--
+          petId를 실어 보내지 않으면 ShareDiaryView가 route.query.petId 대신 pets[0]으로
+          떨어져, 여러 마리인 경우 지금 고른 반려동물이 아닌 첫 번째 일기가 열린다.
+        -->
         <router-link
-          to="/pets/memories"
+          :to="{ path: '/share/diary', query: { petId: primaryPet.id } }"
           class="mt-(--space-3) flex items-center gap-(--space-4) rounded-[22px] bg-(--color-white) p-(--space-4) text-inherit no-underline"
         >
           <FeatureIconTile
@@ -224,8 +228,8 @@ onMounted(async () => {
             tone="pink"
           />
           <div>
-            <strong class="text-(length:--font-sm) text-(color:--color-navy)">차곡차곡 쌓인 추억을 만나보세요</strong><p class="mt-(--space-1) text-(length:--font-xs) text-(color:--color-slate-muted)">
-              오늘의 한 장도 여기에서 남길 수 있어요.
+            <strong class="text-(length:--font-sm) text-(color:--color-navy)">가족과 함께 쌓은 기록을 만나보세요</strong><p class="mt-(--space-1) text-(length:--font-xs) text-(color:--color-slate-muted)">
+              오늘 하루도 여기에서 남길 수 있어요.
             </p>
           </div>
         </router-link>
