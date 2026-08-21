@@ -12,6 +12,7 @@ import IconChevronRight from '@/components/common/icons/IconChevronRight.vue'
 import { useDashboardStore } from '@/stores/dashboard'
 import { useMemberStore } from '@/stores/member'
 import { usePetStore } from '@/stores/pet'
+import { useNotificationStore } from '@/stores/notification'
 import { getHomeInsights } from '@/api/insight'
 import RecommendedProductCarousel from '@/components/home/RecommendedProductCarousel.vue'
 import CategoryDonutChart from '@/components/home/CategoryDonutChart.vue'
@@ -22,6 +23,7 @@ import catHero from '@/assets/images/pet-cat-default-home-v3.png'
 const memberStore = useMemberStore()
 const petStore = usePetStore()
 const dashboardStore = useDashboardStore()
+const notificationStore = useNotificationStore()
 const isLoading = ref(true)
 const loadError = ref(false)
 const insights = ref([])
@@ -148,7 +150,10 @@ function dedupeByType(cards) {
   })
 }
 
-onMounted(fetchHome)
+onMounted(() => {
+  fetchHome()
+  notificationStore.fetchUnreadCount()
+})
 </script>
 
 <template>
@@ -180,10 +185,15 @@ onMounted(fetchHome)
           <AewolLogo size="18" />
           <router-link
             to="/notifications"
-            class="flex size-[42px] items-center justify-center text-(color:--color-navy)"
+            class="relative flex size-[42px] items-center justify-center text-(color:--color-navy)"
             aria-label="알림함"
           >
             <IconNotificationBell size="22" />
+            <span
+              v-if="notificationStore.unreadCount"
+              class="absolute top-0 right-0 flex min-w-[18px] h-[18px] items-center justify-center rounded-full bg-(--color-danger-strong) px-[4px] text-[10px] font-bold leading-none text-(color:--color-white)"
+              aria-label="읽지 않은 알림 수"
+            >{{ notificationStore.unreadCount > 99 ? '99+' : notificationStore.unreadCount }}</span>
           </router-link>
         </div>
         <h1 class="mt-(--space-3) text-(length:--font-lg) font-bold text-(color:--color-navy)">
