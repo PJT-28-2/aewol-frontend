@@ -149,7 +149,7 @@ const confirmLogout = async () => {
 
 <template>
   <section
-    class="min-h-screen w-full bg-(--color-app-bg) px-(--space-5) pt-(--space-3) pb-[calc(var(--bottom-nav-height)+var(--space-8))]"
+    class="min-h-screen w-full bg-(--color-app-bg) px-(--space-5) pt-(--space-3) pb-(--space-4)"
     aria-labelledby="mypage-title"
   >
     <header class="mb-(--space-5) flex h-[42px] items-center">

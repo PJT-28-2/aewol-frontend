@@ -11,7 +11,7 @@ import IconChevronDown from '@/components/common/icons/IconChevronDown.vue';
 import IconClose from '@/components/common/icons/IconClose.vue';
 import IconCat from '@/components/common/icons/IconCat.vue';
 import IconDog from '@/components/common/icons/IconDog.vue';
-import { CATEGORY_LABELS } from '@/mocks/transaction';
+import { CATEGORY_LABELS } from '@/constants/transactionCategory';
 import { usePetStore } from '@/stores/pet';
 import { useTransactionStore } from '@/stores/transaction';
 
@@ -224,7 +224,7 @@ onMounted(async () => {
 
 <template>
   <div
-    class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))] bg-(--color-app-bg) min-h-screen"
+    class="p-(--space-4) bg-(--color-app-bg) min-h-screen"
   >
     <h1
       class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-6)"

@@ -113,7 +113,7 @@ const goToInsuranceHome = () => {
 <template>
   <div class="min-h-screen bg-(--color-app-bg) flex flex-col">
     <!-- PDF 미리보기 영역 -->
-    <div class="flex-1 p-(--space-5) px-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-5))] overflow-y-auto">
+    <div class="flex-1 p-(--space-5) px-(--space-4) overflow-y-auto">
       <header class="mb-(--space-5) max-w-(--layout-max-width) mx-auto">
         <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">
           PDF 초안 미리보기

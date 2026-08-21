@@ -51,7 +51,7 @@ const handleWithdraw = async () => {
 </script>
 
 <template>
-  <main class="mx-auto min-h-screen w-full max-w-(--content-max-width) bg-(--color-app-bg) px-(--space-5) pt-(--space-5) pb-[calc(var(--bottom-nav-height)+var(--space-8))]">
+  <main class="mx-auto min-h-screen w-full max-w-(--content-max-width) bg-(--color-app-bg) px-(--space-5) pt-(--space-5) pb-(--space-8)">
     <StatusVisual
       variant="danger"
       size="96"
@@ -69,8 +69,8 @@ const handleWithdraw = async () => {
         정말 탈퇴하시겠어요?
       </h1>
       <p class="mt-[7px] text-(length:--font-md) leading-[1.45] text-(color:--color-slate-muted)">
-        탈퇴하면 아래 정보가 모두 삭제되며<br>
-        복구할 수 없어요
+        탈퇴 후 30일 동안 계정 정보가 보관되며<br>
+        기간 내에는 계정을 복구할 수 있어요
       </p>
     </section>
 

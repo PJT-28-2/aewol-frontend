@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router';
 import { withEulReul } from '@/utils/korean';
 import AppButton from '@/components/common/AppButton.vue';
@@ -42,15 +42,21 @@ const vaccinationFileName = computed(
 const isSaving = ref(false);
 const isDeleting = ref(false);
 const errorMessage = ref('');
+const registrationError = ref('');
+const registrationSection = ref(null);
 const isDeleteModalOpen = ref(false);
 const isDocumentDeleteModalOpen = ref(false);
 const isDocumentMarkedForDeletion = ref(false);
 const registrationOwnerType = ref('SELF');
 const registrationOwnerName = ref('');
 const memberName = ref('');
+const isChangingRegistration = ref(false);
+const isRegistrationDisconnectModalOpen = ref(false);
+const isDisconnectingRegistration = ref(false);
 
 const BIRTH_DATE_PATTERN = /^\d{4}\.\d{2}\.\d{2}$/;
 const REG_NUMBER_PATTERN = /^(\d{12}|\d{15})$/;
+const REGISTRATION_ERROR_PATTERN = /등록번호|등록정보|소유자|승인/;
 const birthDateInput = computed({
   get: () => form.value.birthDate,
   set: (value) => {
@@ -157,9 +163,12 @@ const breedPlaceholder = computed(() =>
 const shouldVerifyRegistration = computed(() =>
   Boolean(form.value.regNumber) && (
     form.value.regNumber !== (pet.value?.regNumber ?? '') ||
+    form.value.name !== (pet.value?.name ?? '') ||
+    form.value.birthDate !== (pet.value?.birthDate?.replaceAll('-', '.') ?? '') ||
     registrationOwnerType.value === 'OTHER'
   ),
 );
+const hasVerifiedRegistration = computed(() => Boolean(pet.value?.regNumber));
 
 function selectSpecies(species) {
   form.value.species = species;
@@ -172,6 +181,20 @@ function selectNeutered(neutered) {
 function selectRegistrationOwner(type) {
   registrationOwnerType.value = type;
   registrationOwnerName.value = type === 'SELF' ? memberName.value : '';
+}
+
+function startRegistrationChange() {
+  isChangingRegistration.value = true;
+  form.value.regNumber = '';
+  registrationError.value = '';
+}
+
+function cancelRegistrationChange() {
+  isChangingRegistration.value = false;
+  form.value.regNumber = pet.value?.regNumber ?? '';
+  registrationOwnerType.value = 'SELF';
+  registrationOwnerName.value = memberName.value;
+  registrationError.value = '';
 }
 
 function onFileChange(event) {
@@ -192,34 +215,39 @@ function onFileChange(event) {
   vaccinationFile.value = file;
 }
 
+async function moveToRegistrationError() {
+  await nextTick();
+  registrationSection.value?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  registrationSection.value?.querySelector('input')?.focus({ preventScroll: true });
+}
+
+function isRegistrationFieldError(error, message) {
+  return error.response?.status === 400
+    && REGISTRATION_ERROR_PATTERN.test(message)
+    && !message.includes('반려동물 정보와 일치하지 않습니다');
+}
+
 async function handleSave() {
+  errorMessage.value = '';
+  registrationError.value = '';
   const validationError = validateForm();
   if (validationError) {
-    errorMessage.value = validationError;
+    if (validationError.includes('동물등록')) {
+      registrationError.value = validationError;
+      await moveToRegistrationError();
+    } else errorMessage.value = validationError;
     return;
   }
-  errorMessage.value = '';
   isSaving.value = true;
   try {
-    let registrationVerificationFailed = false;
-    const petForm = { ...form.value };
-    delete petForm.regNumber;
     await petApi.updatePet(petId.value, {
-      ...petForm,
+      ...form.value,
+      registrationOwnerName: shouldVerifyRegistration.value
+        ? registrationOwnerName.value.trim()
+        : null,
       birthDate: form.value.birthDate.replaceAll('.', '-'),
       neutered: form.value.neutered == null ? null : form.value.neutered ? 'Y' : 'N',
     });
-    if (shouldVerifyRegistration.value) {
-      try {
-        await petApi.verifyRegistration(petId.value, {
-          regNumber: form.value.regNumber,
-          userName: registrationOwnerName.value.trim(),
-          birthDate: '',
-        });
-      } catch {
-        registrationVerificationFailed = true;
-      }
-    }
     if (
       isDocumentMarkedForDeletion.value &&
       existingVaccinationDocument.value
@@ -232,24 +260,44 @@ async function handleSave() {
     if (vaccinationFile.value) {
       await petApi.uploadDocument(petId.value, vaccinationFile.value);
     }
-    await router.push({
-      path: '/pets',
-      query: registrationVerificationFailed
-        ? { registration: 'unverified', petId: petId.value }
-        : undefined,
-    });
+    await router.push('/pets');
   } catch (error) {
     const messages = {
       400: '입력 내용과 접종증명서 파일을 확인해주세요.',
       403: '반려동물을 수정할 권한이 없습니다.',
       404: '반려동물 정보를 찾을 수 없습니다.',
     };
-    errorMessage.value =
+    const message =
       error.response?.data?.message ||
       messages[error.response?.status] ||
       '반려동물 수정에 실패했습니다. 다시 시도해주세요.';
+    if (form.value.regNumber && isRegistrationFieldError(error, message)) {
+      registrationError.value = message;
+      await moveToRegistrationError();
+    } else {
+      errorMessage.value = message;
+    }
   } finally {
     isSaving.value = false;
+  }
+}
+
+async function handleRegistrationDisconnect() {
+  if (isDisconnectingRegistration.value) return;
+  registrationError.value = '';
+  isDisconnectingRegistration.value = true;
+  try {
+    await petApi.disconnectRegistration(petId.value);
+    pet.value = { ...pet.value, regNumber: '' };
+    form.value.regNumber = '';
+    isChangingRegistration.value = false;
+    isRegistrationDisconnectModalOpen.value = false;
+  } catch (error) {
+    registrationError.value =
+      error.response?.data?.message || '동물등록증 연동 해제에 실패했습니다.';
+    isRegistrationDisconnectModalOpen.value = false;
+  } finally {
+    isDisconnectingRegistration.value = false;
   }
 }
 
@@ -287,7 +335,7 @@ function handleDocumentDelete() {
 
 <template>
   <div
-    class="min-h-screen bg-(--color-app-bg) px-(--space-4) pt-(--space-3) pb-[calc(var(--bottom-nav-height)+var(--space-7))]"
+    class="min-h-screen bg-(--color-app-bg) px-(--space-4) pt-(--space-3) pb-(--space-7)"
   >
     <header class="mb-(--space-5)">
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">
@@ -366,7 +414,7 @@ function handleDocumentDelete() {
           placeholder="소로"
         />
 
-        <div>
+        <div ref="registrationSection">
           <AppInput
             v-model="form.regNumber"
             variant="soft"
@@ -374,6 +422,8 @@ function handleDocumentDelete() {
             placeholder="12자리 또는 15자리 숫자 입력"
             inputmode="numeric"
             maxlength="15"
+            :readonly="hasVerifiedRegistration && !isChangingRegistration"
+            :error="registrationError"
           />
           <p
             class="text-(length:--font-xs) text-(color:--color-slate-muted) mt-(--space-1)"
@@ -381,9 +431,34 @@ function handleDocumentDelete() {
             국가동물보호정보시스템(APMS)에 등록된 번호예요. 나중에
             추가하셔도 돼요.
           </p>
+          <div v-if="hasVerifiedRegistration" class="mt-(--space-2) flex gap-(--space-2)">
+            <button
+              v-if="!isChangingRegistration"
+              type="button"
+              class="text-(length:--font-sm) font-semibold text-(--color-navy)"
+              @click="startRegistrationChange"
+            >
+              등록번호 변경
+            </button>
+            <button
+              v-else
+              type="button"
+              class="text-(length:--font-sm) font-semibold text-(--color-slate-muted)"
+              @click="cancelRegistrationChange"
+            >
+              변경 취소
+            </button>
+            <button
+              type="button"
+              class="text-(length:--font-sm) font-semibold text-(--color-danger-strong)"
+              @click="isRegistrationDisconnectModalOpen = true"
+            >
+              연동 해제
+            </button>
+          </div>
         </div>
 
-        <div v-if="form.regNumber">
+        <div v-if="form.regNumber && (!hasVerifiedRegistration || isChangingRegistration || shouldVerifyRegistration)">
           <div class="mb-(--space-2) flex items-center justify-between gap-(--space-2)">
             <p class="text-(length:--font-sm) font-medium text-(color:--color-slate-dark)">
               등록증에 기재된 소유자
@@ -588,6 +663,15 @@ function handleDocumentDelete() {
       description="저장하면 접종증명서가 삭제돼요. 삭제 후에는 복구할 수 없어요."
       confirm-label="삭제"
       @confirm="handleDocumentDelete"
+    />
+
+    <ConfirmDeleteModal
+      v-model="isRegistrationDisconnectModalOpen"
+      title="동물등록증 연동을 해제할까요?"
+      description="등록번호와 동물등록증 정보가 프로필에서 제거됩니다. 반려동물 프로필은 유지돼요."
+      confirm-label="연동 해제"
+      :confirm-loading="isDisconnectingRegistration"
+      @confirm="handleRegistrationDisconnect"
     />
   </div>
 </template>

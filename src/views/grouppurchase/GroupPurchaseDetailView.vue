@@ -6,8 +6,6 @@ import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import GroupPurchaseProgressBar from '@/components/grouppurchase/GroupPurchaseProgressBar.vue';
 import IconPlus from '@/components/common/icons/IconPlus.vue';
 import IconMinus from '@/components/common/icons/IconMinus.vue';
-import { MOCK_GROUP_PURCHASE_DETAIL } from '@/mocks/groupPurchase';
-import { USE_MOCK_DATA } from '@/mocks/config';
 import { groupPurchaseApi } from '@/api/groupPurchase';
 import { formatArrivalDateLabel, formatDDayLabel } from '@/utils/date';
 import { useDeadlineTimer } from '@/composables/useDeadlineTimer';
@@ -36,14 +34,6 @@ async function loadDetail() {
   isLoading.value = true;
   isError.value = false;
   try {
-    if (USE_MOCK_DATA) {
-      if (MOCK_GROUP_PURCHASE_DETAIL.isAdmin) {
-        router.replace(`/group-purchase/${route.params.gpId}/status`);
-        return;
-      }
-      groupPurchase.value = MOCK_GROUP_PURCHASE_DETAIL;
-      return;
-    }
     const { data } = await groupPurchaseApi.getDetail(route.params.gpId);
     const detail = data.result ?? null;
     if (!detail) {
@@ -177,7 +167,7 @@ function goToPaymentPreview() {
 
 <template>
   <div
-    class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--size-cta-bar-height))]"
+    class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-(--size-cta-bar-height)"
   >
     <!-- 로딩 상태 -->
     <div

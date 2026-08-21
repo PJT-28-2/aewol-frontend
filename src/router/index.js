@@ -161,18 +161,6 @@ const authRoutes = [
     },
   },
   {
-    path: '/pets/memories',
-    name: 'PetMemoryList',
-    component: () => import('@/views/pet/PetMemoryListView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
-  },
-  {
-    path: '/pets/memories/new',
-    name: 'PetMemoryCreate',
-    component: () => import('@/views/pet/PetMemoryCreateView.vue'),
-    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true, title: '오늘의 추억' },
-  },
-  {
     path: '/pets/register',
     name: 'PetRegister',
     component: () => import('@/views/pet/PetRegisterView.vue'),

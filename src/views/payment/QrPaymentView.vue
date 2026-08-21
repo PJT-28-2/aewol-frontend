@@ -161,7 +161,7 @@ function toPaymentErrorMessage(error) {
 </script>
 
 <template>
-  <section class="min-h-svh bg-(--color-navy) px-(--space-5) pt-(--space-3) pb-[calc(var(--bottom-nav-height)+var(--space-8))] text-(color:--color-white)">
+  <section class="min-h-svh bg-(--color-navy) px-(--space-5) pt-(--space-3) pb-(--space-8) text-(color:--color-white)">
     <header class="mb-(--space-5) flex h-[42px] items-center justify-between">
       <h1 class="text-(length:--font-2xl) font-bold">
         QR 결제

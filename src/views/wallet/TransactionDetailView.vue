@@ -6,7 +6,7 @@ import FeatureIconTile from '@/components/common/FeatureIconTile.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import PetSelectorChip from '@/components/common/PetSelectorChip.vue';
 import IconWallet from '@/components/common/icons/IconWallet.vue';
-import { CATEGORY_LABELS } from '@/mocks/transaction';
+import { CATEGORY_LABELS } from '@/constants/transactionCategory';
 import { getRecurringCategory } from '@/utils/recurringCategory';
 import { usePetStore } from '@/stores/pet';
 import { useTransactionStore } from '@/stores/transaction';
@@ -178,7 +178,7 @@ onMounted(fetchTransaction);
 
 <template>
   <div
-    class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))] bg-(--color-app-bg) min-h-screen"
+    class="p-(--space-4) bg-(--color-app-bg) min-h-screen"
   >
     <div
       v-if="isLoading"

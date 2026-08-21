@@ -1,6 +1,6 @@
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { transactionApi } from '@/api/transaction'
-import { CATEGORY_LABELS } from '@/mocks/transaction'
+import { CATEGORY_LABELS } from '@/constants/transactionCategory'
 
 const UI_CATEGORY_BY_API = {
   HOSPITAL: 'MEDICAL',
@@ -45,16 +45,21 @@ function normalizeTransaction(transaction) {
   // 부호는 +로 같이 취급한다. type은 TYPE_BY_TXN_TYPE 기준으로 정해지는데, "애월지갑 충전"
   // 문구·충전수단 표시는 REFUND에는 안 맞으므로 그건 isDeposit로 따로 따진다
   const isDeposit = transaction.txnType === 'DEPOSIT'
-  const isIncoming = isDeposit || transaction.txnType === 'REFUND'
+  const isRefund = transaction.txnType === 'REFUND'
+  const isIncoming = isDeposit || isRefund
   const type = TYPE_BY_TXN_TYPE[transaction.txnType] ?? 'withdraw'
   const amount = isIncoming ? Math.abs(rawAmount) : -Math.abs(rawAmount)
   const categoryLabel = CATEGORY_LABELS[category] ?? '기타'
   const title = transaction.merchantName
     || (isDeposit ? '애월지갑 충전' : transaction.memo)
     || '거래 내역'
+  // 환불은 실제로 소비 카테고리가 없는데도 category가 항상 'ETC'로 떨어져 부제목에
+  // "기타"만 뜨는 게 오해를 준다(뭔가 분류된 것처럼 보임) — 부제목 자체를 비워둔다
   const subtitle = isDeposit
     ? transaction.memo || '애월지갑 충전'
-    : [categoryLabel, transaction.memo].filter(Boolean).join(' · ')
+    : isRefund
+      ? ''
+      : categoryLabel
   const chargeMethod = isDeposit
     ? (transaction.memo?.includes('TossPayments') ? 'TossPayments' : '직접 충전')
     : normalizePaymentMethod(transaction.paymentMethod)

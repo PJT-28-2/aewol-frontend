@@ -106,7 +106,7 @@ onBeforeUnmount(() => {
 
 <template>
   <main
-    class="relative flex min-h-svh w-full flex-col overflow-hidden bg-(--color-app-bg) px-(--space-5) pt-[calc(var(--space-5)+env(safe-area-inset-top,0px))] pb-[calc(var(--space-5)+env(safe-area-inset-bottom,0px))] [@media(max-height:720px)]:pt-[calc(var(--space-3)+env(safe-area-inset-top,0px))] [@media(max-height:720px)]:pb-[calc(var(--space-3)+env(safe-area-inset-bottom,0px))]"
+    class="relative flex min-h-svh w-full flex-col overflow-x-hidden overflow-y-auto bg-(--color-app-bg) px-(--space-5) pt-[calc(var(--space-5)+env(safe-area-inset-top,0px))] pb-[calc(var(--space-5)+env(safe-area-inset-bottom,0px))] [@media(max-height:720px)]:pt-[calc(var(--space-3)+env(safe-area-inset-top,0px))] [@media(max-height:720px)]:pb-[calc(var(--space-3)+env(safe-area-inset-bottom,0px))]"
     @touchstart.passive="handleTouchStart"
     @touchend.passive="handleTouchEnd"
     @wheel="handleWheel"
@@ -123,14 +123,14 @@ onBeforeUnmount(() => {
       </button>
     </div>
 
-    <div class="relative z-1 -mx-[4px] mt-(--space-5) h-[54svh] min-h-[450px] max-h-[480px] w-[calc(100%+8px)] [@media(max-height:720px)]:mt-(--space-3) [@media(max-height:720px)]:h-[44svh] [@media(max-height:720px)]:min-h-0">
+    <div class="relative z-1 -mx-[4px] mt-(--space-5) h-[clamp(320px,50svh,480px)] shrink-0 w-[calc(100%+8px)] [@media(max-height:720px)]:mt-(--space-3) [@media(max-height:720px)]:h-[clamp(270px,43svh,330px)]">
       <OnboardingVisual
         :key="currentSlide.visual"
         :type="currentSlide.visual"
       />
     </div>
 
-    <section class="relative z-1 mt-(--space-7) text-center [@media(max-height:720px)]:mt-(--space-4)">
+    <section class="relative z-1 flex min-h-[150px] flex-1 flex-col justify-center py-[clamp(24px,4svh,40px)] text-center [@media(max-height:720px)]:min-h-[132px] [@media(max-height:720px)]:py-(--space-5)">
       <h1
         class="text-[26px] leading-[1.28] font-bold tracking-[-0.03em] text-(color:--color-navy) whitespace-pre-line [@media(max-height:720px)]:text-[22px]"
       >
@@ -143,7 +143,7 @@ onBeforeUnmount(() => {
       </p>
     </section>
 
-    <div class="relative z-1 mt-auto flex justify-center gap-(--space-2) pt-(--space-4) [@media(max-height:720px)]:pt-(--space-2)">
+    <div class="relative z-1 flex justify-center gap-(--space-2)">
       <button
         v-for="(_, index) in slides"
         :key="index"

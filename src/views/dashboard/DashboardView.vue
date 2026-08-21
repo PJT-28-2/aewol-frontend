@@ -8,7 +8,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import IconCat from '@/components/common/icons/IconCat.vue';
 import IconDog from '@/components/common/icons/IconDog.vue';
 import IconStats from '@/components/common/icons/IconStats.vue';
-import { CATEGORY_LABELS } from '@/mocks/transaction';
+import { CATEGORY_LABELS } from '@/constants/transactionCategory';
 import { useDashboardStore } from '@/stores/dashboard';
 import { usePetStore } from '@/stores/pet';
 
@@ -214,7 +214,7 @@ onMounted(fetchDashboard);
 
 <template>
   <div
-    class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))] bg-(--color-app-bg) min-h-screen"
+    class="p-(--space-4) bg-(--color-app-bg) min-h-screen"
   >
     <header class="mb-(--space-6)">
       <h1

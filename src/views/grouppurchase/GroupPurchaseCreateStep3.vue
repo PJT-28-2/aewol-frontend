@@ -6,7 +6,6 @@ import AppButton from '@/components/common/AppButton.vue'
 import IconImage from '@/components/common/icons/IconImage.vue'
 import IconInfo from '@/components/common/icons/IconInfo.vue'
 import { groupPurchaseApi } from '@/api/groupPurchase'
-import { USE_MOCK_DATA } from '@/mocks/config'
 import { useGroupPurchaseCreateStore } from '@/stores/groupPurchase'
 import { formatDDayLabel } from '@/utils/date'
 import { useMidnightTick } from '@/composables/useMidnightTick'
@@ -90,14 +89,6 @@ async function handleSubmit() {
   }
   if (!groupPurchaseCreateStore.isStep2Complete()) {
     router.push('/group-purchase/create/step2')
-    return
-  }
-
-  if (USE_MOCK_DATA) {
-    groupPurchaseCreateStore.reset()
-    // 이 플로우는 requiresAdmin이라 여기 도달하는 사람은 항상 관리자 — /group-purchase/my는
-    // requiresNonAdmin이라 관리자를 다시 튕겨내므로 목적지가 될 수 없다
-    router.push('/group-purchase')
     return
   }
 

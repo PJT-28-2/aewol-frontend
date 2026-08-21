@@ -9,9 +9,6 @@ import {
   unlinkAccount,
   setSimplePassword,
 } from '@/api/account';
-import { getBankMeta } from '@/utils/bankMeta';
-import { MOCK_BANKS, MOCK_ACCOUNTS } from '@/mocks/account';
-import { USE_MOCK_DATA } from '@/mocks/config';
 
 // 계좌 연동 진행 상태(linking)에 대한 요청 세대 토큰. Pinia reactive state에 넣지 않고
 // emergency.js의 latestRequestId/AbortController와 같은 방식으로 스토어 밖(모듈 스코프)에
@@ -59,12 +56,11 @@ export const useAccountStore = defineStore('account', {
       // CODEF inPrintType=1(랜덤 한글 단어)이라 4~6자로 들쭉날쭉해요. 목데이터 모드나
       // 응답이 없는 경우를 대비해 기본값 4를 둬요.
       depositorNameLength: 4,
-      // local/test 프로파일에서만 백엔드가 verify-deposit 응답에 실어서 보내는
-      // 테스트용 입금자명(DepositVerificationResponse.depositorNameForTest). dev를 포함한
-      // 한때가 있었지만, 이 값은 로그가 아니라 API 응답 바디에 그대로 실리기 때문에 dev
-      // 서버 API를 호출할 수 있는 누구에게나 노출되는 셈이라 dev는 제외했다(2026-08-19,
-      // PR #236 리뷰). 운영에서는 항상 null이라 AccountAuthOneWon.vue의 힌트도 자연히
-      // 노출되지 않아요.
+      // 백엔드가 verify-deposit 응답에 실어서 보내는 시연용 입금자명
+      // (DepositVerificationResponse.depositorNameForTest). CODEF 데모 서버에 붙어 있고
+      // local/test 프로파일이거나 demo.expose-depositor-name이 켜져 있을 때만 값이 와요
+      // (#290). 실제 1원이 오가는 정식 서버에서는 어떤 설정이든 항상 null이라,
+      // AccountAuthOneWon.vue의 알림 카드도 자연히 뜨지 않아요.
       depositorNameForTest: null,
       // 비밀번호 설정 화면에서 입력한 값을 확인 화면으로 넘길 때까지만 메모리에 잠깐 보관
       password: '',
@@ -110,25 +106,13 @@ export const useAccountStore = defineStore('account', {
         localStorage.removeItem('hasSimplePassword');
       }
     },
-
-    // GET /api/banks — API 연동 전엔 USE_MOCK_DATA로 바로 목데이터 사용
     async fetchBanks() {
-      if (USE_MOCK_DATA) {
-        this.banks = MOCK_BANKS;
-        return;
-      }
       await this._withRequestState(async () => {
         const { data } = await getBanks();
         this.banks = data.result ?? [];
       });
     },
-
-    // GET /api/accounts — API 연동 전엔 USE_MOCK_DATA로 바로 목데이터 사용
     async fetchAccounts() {
-      if (USE_MOCK_DATA) {
-        this.accounts = structuredClone(MOCK_ACCOUNTS);
-        return;
-      }
       await this._withRequestState(async () => {
         const { data } = await getAccounts();
         this.accounts = data.result ?? [];
@@ -168,17 +152,6 @@ export const useAccountStore = defineStore('account', {
           : accountNumber;
       const DEPOSIT_AUTH_TIMEOUT_SECONDS = 180;
 
-      if (USE_MOCK_DATA) {
-        this.linking.verificationId = `mock-${Date.now()}`;
-        this.linking.maskedAccountNumber = masked;
-        this.linking.expiresInSeconds = DEPOSIT_AUTH_TIMEOUT_SECONDS;
-        this.linking.depositAuthExpiresAt = Date.now() + DEPOSIT_AUTH_TIMEOUT_SECONDS * 1000;
-        this.linking.isConfirmLocked = false;
-        this.linking.depositorNameLength = 4;
-        this.linking.depositorNameForTest = null;
-        return { verificationId: this.linking.verificationId };
-      }
-
       return this._withRequestState(async () => {
         // 예금주명(accountHolder)은 더 이상 안 보내요(2026-08-06) — CODEF와 대조하지
         // 않고 저장만 하던 값이라 검증 효과가 없었어요.
@@ -198,8 +171,8 @@ export const useAccountStore = defineStore('account', {
         this.linking.isConfirmLocked = false;
         // CODEF가 만든 입금자명 실제 길이 — 4자가 아닐 수 있어서 항상 이 값을 신뢰해요.
         this.linking.depositorNameLength = data.result.depositorNameLength || 4;
-        // local/test가 아니면 응답 자체에 필드가 없거나 null이라, 여기서도
-        // 항상 null로 정규화돼요 — AccountAuthOneWon.vue는 이 값이 있을 때만 힌트를 보여줘요.
+        // 시연 노출 조건이 아니면 응답 자체에 필드가 없거나 null이라, 여기서도
+        // 항상 null로 정규화돼요 — AccountAuthOneWon.vue는 이 값이 있을 때만 알림 카드를 띄워요.
         this.linking.depositorNameForTest = data.result.depositorNameForTest ?? null;
         return { verificationId: this.linking.verificationId };
       });
@@ -212,10 +185,6 @@ export const useAccountStore = defineStore('account', {
     // 구분해서 다른 안내 문구를 보여줄 수 있게 reason도 그대로 넘겨요.
     async confirmDepositAuth(verificationCode) {
       const requestGeneration = linkingRequestGeneration;
-      if (USE_MOCK_DATA) {
-        const verified = verificationCode.length === this.linking.depositorNameLength;
-        return { verified, reason: verified ? null : 'MISMATCH' };
-      }
       return this._withRequestState(async () => {
         const { data } = await confirmDepositVerification({
           transactionId: this.linking.verificationId,
@@ -237,18 +206,6 @@ export const useAccountStore = defineStore('account', {
 
     // POST /api/accounts — 목데이터 모드에선 로컬로 계좌를 바로 추가
     async completeAccountLink() {
-      if (USE_MOCK_DATA) {
-        const bankMeta = getBankMeta(this.linking.bankCode);
-        const mockAccount = {
-          accountId: Date.now(),
-          bankCode: this.linking.bankCode,
-          accountNumberMasked: this.linking.maskedAccountNumber || bankMeta.name,
-          isPrimary: this.accounts.length === 0,
-        };
-        this.accounts.push(mockAccount);
-        this.lastLinkedAccountId = mockAccount.accountId;
-        return mockAccount;
-      }
       return this._withRequestState(async () => {
         // 명세서 요구사항: body는 transactionId 하나뿐. bankCode/accountNumber는
         // 이미 인증 단계(transactionId)로 서버가 알고 있어서 다시 보낼 필요 없어요.
@@ -298,11 +255,9 @@ export const useAccountStore = defineStore('account', {
       if (password !== this.linking.password) {
         return false;
       }
-      if (!USE_MOCK_DATA) {
-        await this._withRequestState(async () => {
-          await setSimplePassword(password);
-        });
-      }
+      await this._withRequestState(async () => {
+        await setSimplePassword(password);
+      });
       this.setHasSimplePassword(true);
       this.linking.password = '';
       return true;
@@ -310,13 +265,6 @@ export const useAccountStore = defineStore('account', {
 
     // PATCH /api/accounts/{accountId}
     async makePrimary(accountId) {
-      if (USE_MOCK_DATA) {
-        this.accounts = this.accounts.map((a) => ({
-          ...a,
-          isPrimary: a.accountId === accountId,
-        }));
-        return;
-      }
       await this._withRequestState(async () => {
         await setPrimaryAccount(accountId);
         this.accounts = this.accounts.map((a) => ({
@@ -340,11 +288,6 @@ export const useAccountStore = defineStore('account', {
     async confirmUnlink() {
       const targetAccountId = this.pendingUnlinkAccount?.accountId;
       if (!targetAccountId) return;
-
-      if (USE_MOCK_DATA) {
-        this.accounts = this.accounts.filter((a) => a.accountId !== targetAccountId);
-        return;
-      }
 
       await this._withRequestState(async () => {
         await unlinkAccount(targetAccountId);
