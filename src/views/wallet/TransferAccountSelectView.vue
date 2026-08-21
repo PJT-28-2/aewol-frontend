@@ -62,7 +62,7 @@ function confirmChange() {
 
 <template>
   <div
-    class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+96px)] bg-(--color-app-bg) min-h-screen"
+    class="p-(--space-4) pb-[96px] bg-(--color-app-bg) min-h-screen"
   >
     <header class="mb-(--space-5)">
       <h1

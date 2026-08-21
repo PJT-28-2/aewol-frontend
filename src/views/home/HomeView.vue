@@ -152,7 +152,7 @@ onMounted(fetchHome)
 </script>
 
 <template>
-  <div class="min-h-screen bg-(--color-app-bg) px-(--space-5) pt-(--space-3) pb-[calc(var(--bottom-nav-height)+var(--space-8))]">
+  <div class="min-h-screen bg-(--color-app-bg) px-(--space-5) pt-(--space-3) pb-(--space-8)">
     <LoadingSpinner
       v-if="isLoading"
       class="py-(--space-10)"

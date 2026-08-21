@@ -333,7 +333,7 @@ const isPinSheetOpen = ref(false);
 
 <template>
   <div
-    class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-[calc(var(--bottom-nav-height)+88px)]"
+    class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-[88px]"
   >
     <!-- 로딩 상태 -->
     <div

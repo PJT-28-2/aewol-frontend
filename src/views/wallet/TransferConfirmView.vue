@@ -107,7 +107,7 @@ async function handlePinComplete(password) {
 </script>
 
 <template>
-  <div class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-[calc(var(--bottom-nav-height)+96px)]">
+  <div class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-[96px]">
     <header class="mb-(--space-6)">
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">
         출금 전에 확인해주세요

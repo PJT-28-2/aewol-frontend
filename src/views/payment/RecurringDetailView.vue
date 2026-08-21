@@ -53,7 +53,7 @@ function goToEdit() {
 
 <template>
   <div
-    class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-6))]"
+    class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-(--space-6)"
   >
     <LoadingSpinner v-if="isLoading" />
 

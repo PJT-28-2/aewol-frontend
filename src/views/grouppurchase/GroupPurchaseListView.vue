@@ -209,7 +209,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div
-    class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-[calc(var(--bottom-nav-height)+88px)]"
+    class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-[88px]"
   >
     <!-- 헤더 -->
     <header class="flex items-start justify-between mb-(--space-5)">

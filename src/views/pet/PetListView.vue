@@ -82,7 +82,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-(--color-app-bg) px-(--space-5) pt-(--space-3) pb-[calc(var(--bottom-nav-height)+var(--space-8))]">
+  <div class="min-h-screen bg-(--color-app-bg) px-(--space-5) pt-(--space-3) pb-(--space-8)">
     <header class="mb-(--space-5) flex h-[42px] items-center">
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">
         반려생활
