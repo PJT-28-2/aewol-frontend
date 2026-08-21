@@ -54,7 +54,7 @@ function normalizeTransaction(transaction) {
     || '거래 내역'
   const subtitle = isDeposit
     ? transaction.memo || '애월지갑 충전'
-    : [categoryLabel, transaction.memo].filter(Boolean).join(' · ')
+    : categoryLabel
   const chargeMethod = isDeposit
     ? (transaction.memo?.includes('TossPayments') ? 'TossPayments' : '직접 충전')
     : normalizePaymentMethod(transaction.paymentMethod)
