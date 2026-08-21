@@ -129,10 +129,11 @@ async function loadMore() {
 onMounted(resetAndLoad);
 
 // 썸네일 로드 실패(깨진 URL 등) 시 브라우저 기본 깨짐 아이콘 대신 플레이스홀더로 대체하기 위해
-// 실패한 gp.id를 기록해둔다. gp.image가 있어도 이 Set에 들어있으면 플레이스홀더를 보여준다
-const brokenImageIds = ref(new Set());
-function markImageBroken(id) {
-  brokenImageIds.value = new Set(brokenImageIds.value).add(id);
+// 실패한 URL을 기록한다. 서명 URL이 만료돼 실패한 뒤 목록을 다시 불러오면 같은 상품에도
+// 새 URL이 내려올 수 있으므로, 상품 id로 막으면 정상 URL까지 계속 숨기게 된다.
+const brokenImageUrls = ref(new Set());
+function markImageBroken(url) {
+  brokenImageUrls.value = new Set(brokenImageUrls.value).add(url);
 }
 
 // 카테고리 필터 — 상품등록 화면(GroupPurchaseCreateStep1.vue)이 쓰는 백엔드 허용값과 동일하게 맞춤.
@@ -337,17 +338,17 @@ onBeforeUnmount(() => {
           class="flex items-center gap-(--space-3) rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-(--space-4) shadow-(--shadow-card)"
         >
           <!-- 상품 썸네일: 상세 화면(GroupPurchaseDetailView)과 동일하게 image 필드를 그대로 사용.
-               image가 없거나 로드에 실패하면(brokenImageIds) 깨진 이미지 아이콘 대신 아이콘 플레이스홀더를 보여준다 -->
+               image가 없거나 로드에 실패하면 깨진 이미지 아이콘 대신 아이콘 플레이스홀더를 보여준다 -->
           <div
             class="flex shrink-0 items-center justify-center w-(--size-thumb-md) h-(--size-thumb-md) rounded-(--radius-lg) bg-(--color-surface) overflow-hidden"
           >
             <img
-              v-if="gp.image && !brokenImageIds.has(gp.id)"
+              v-if="gp.image && !brokenImageUrls.has(gp.image)"
               :src="gp.image"
               :alt="gp.productName"
               loading="lazy"
               class="w-full h-full object-cover"
-              @error="markImageBroken(gp.id)"
+              @error="markImageBroken(gp.image)"
             >
             <IconGroupPurchase
               v-else
