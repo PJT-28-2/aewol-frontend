@@ -34,10 +34,10 @@ const isSafeTargetPath = (path) => typeof path === 'string' && path.startsWith('
 async function openNotification(item) {
   try {
     await store.markAsRead(item.notificationId)
-    if (isSafeTargetPath(item.targetPath)) await router.push(item.targetPath)
   } catch {
     // store가 사용자에게 보여줄 오류 문구를 유지한다.
   }
+  if (isSafeTargetPath(item.targetPath)) await router.push(item.targetPath)
 }
 
 async function markAllAsRead() {

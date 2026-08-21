@@ -106,6 +106,34 @@ describe('NotificationInboxView', () => {
     expect(mocks.push).toHaveBeenCalledWith('/wallet')
   })
 
+  it('읽음 처리에 실패해도 안전한 내부 경로로 이동한다', async () => {
+    mocks.getNotifications.mockResolvedValue({
+      data: {
+        result: {
+          notifications: [{
+            notificationId: '10',
+            title: '지갑 알림',
+            message: '내역을 확인해 주세요.',
+            targetPath: '/wallet',
+            read: false,
+            createdAt: '2026-08-20T10:00:00',
+          }],
+          unreadCount: 1,
+          page: 0,
+          hasNext: false,
+        },
+      },
+    })
+    mocks.markAsRead.mockRejectedValue(new Error('network error'))
+    await mountView()
+
+    host.querySelector('.grid button').click()
+    await flush()
+
+    expect(mocks.markAsRead).toHaveBeenCalledWith('10')
+    expect(mocks.push).toHaveBeenCalledWith('/wallet')
+  })
+
   it('알림이 없으면 빈 상태를 보여준다', async () => {
     mocks.getNotifications.mockResolvedValue({
       data: { result: { notifications: [], unreadCount: 0, page: 0, hasNext: false } },
