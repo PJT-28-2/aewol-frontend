@@ -132,6 +132,18 @@ npm run build
 
 빌드 결과물은 `dist/` 디렉토리에 생성됩니다.
 
+### 발표용 E2E
+
+백엔드 없이 로그인 → 홈 → 지갑 경로를 Playwright로 재현합니다. 화면은 iPhone 13 크기이고, HTML 리포트에 스크린샷이 남습니다.
+
+```bash
+npx playwright install chromium
+npm run test:e2e
+npm run test:e2e:ui
+```
+
+리포트는 `playwright-report/`에 생성됩니다. `npm run test:e2e:report`로 다시 엽니다.
+
 ### 환경변수 설정
 
 `.env.development` 파일을 생성하고 카카오 JavaScript 키를 설정합니다.
