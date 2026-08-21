@@ -22,7 +22,7 @@ const props = defineProps({
   size: {
     type: String,
     default: 'md',
-    validator: (value) => ['xs', 'sm', 'md', 'lg'].includes(value),
+    validator: (value) => ['xs', 'sm', 'md', 'form', 'lg'].includes(value),
   },
   loading: {
     type: Boolean,
@@ -79,6 +79,7 @@ const sizeClasses = {
   xs: 'h-(--support-action-height) min-w-(--support-action-width) px-(--space-2) text-(length:--font-xs)',
   sm: 'h-(--space-7) px-(--space-3) text-(length:--font-sm)',
   md: 'h-(--space-8) px-(--space-5) text-(length:--font-md)',
+  form: 'h-(--control-height-md) px-(--space-3) text-(length:--font-md)',
   lg: 'h-(--control-height-lg) px-(--space-6) text-(length:--font-base)',
 }
 
@@ -86,6 +87,7 @@ const radiusClasses = {
   xs: 'rounded-(--radius-md)',
   sm: 'rounded-(--radius-xl)',
   md: 'rounded-(--radius-xl)',
+  form: 'rounded-(--radius-lg)',
   lg: 'rounded-(--radius-xl)',
 }
 

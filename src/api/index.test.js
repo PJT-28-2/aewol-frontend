@@ -85,6 +85,35 @@ describe('auth refresh interceptor', () => {
     expect(store.accessToken).toBeNull()
   })
 
+  it('cleans up storage directly when Pinia is not active', async () => {
+    localStorage.setItem('accessToken', 'expired-access')
+    localStorage.setItem('refreshToken', 'old-refresh')
+    sessionStorage.setItem('profileEditPasswordVerified', 'true')
+    sessionStorage.setItem('kakaoOAuthState', 'state')
+    setActivePinia(undefined)
+    const refreshError = new Error('refresh failed')
+    vi.spyOn(axios, 'post').mockRejectedValue(refreshError)
+
+    await expect(api.get('/protected', { adapter: unauthorized })).rejects.toBe(refreshError)
+
+    expect(localStorage.getItem('accessToken')).toBeNull()
+    expect(localStorage.getItem('refreshToken')).toBeNull()
+    expect(sessionStorage.getItem('profileEditPasswordVerified')).toBeNull()
+    expect(sessionStorage.getItem('kakaoOAuthState')).toBeNull()
+  })
+
+  it('does not swallow an active store cleanup error', async () => {
+    localStorage.setItem('refreshToken', 'old-refresh')
+    const store = useAuthStore()
+    const cleanupError = new Error('cleanup failed')
+    vi.spyOn(store, 'clearSession').mockImplementation(() => {
+      throw cleanupError
+    })
+    vi.spyOn(axios, 'post').mockRejectedValue(new Error('refresh failed'))
+
+    await expect(api.get('/protected', { adapter: unauthorized })).rejects.toBe(cleanupError)
+  })
+
   it('refreshes once for concurrent 401s and replays every queued request', async () => {
     localStorage.setItem('accessToken', 'expired-access')
     localStorage.setItem('refreshToken', 'old-refresh')

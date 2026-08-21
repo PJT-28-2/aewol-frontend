@@ -1,4 +1,6 @@
 import axios from 'axios'
+import { getActivePinia } from 'pinia'
+import { isValidToken } from '@/utils/token'
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
@@ -27,27 +29,22 @@ api.interceptors.request.use(
 let isRefreshing = false
 let failedQueue = []
 
-const isValidToken = (token) => {
-  if (typeof token !== 'string') return false
-  const normalizedToken = token.trim().toLowerCase()
-  return normalizedToken.length > 0 && normalizedToken !== 'undefined' && normalizedToken !== 'null'
-}
-
 const syncAccessToken = async (accessToken) => {
   const { useAuthStore } = await import('@/stores/auth')
   useAuthStore().accessToken = accessToken
 }
 
 const clearAuthSession = async () => {
-  try {
+  if (getActivePinia()) {
     const { useAuthStore } = await import('@/stores/auth')
     useAuthStore().clearSession()
-  } catch {
-    localStorage.removeItem('accessToken')
-    localStorage.removeItem('refreshToken')
-    window.sessionStorage.removeItem('profileEditPasswordVerified')
-    window.sessionStorage.removeItem('kakaoOAuthState')
+    return
   }
+
+  localStorage.removeItem('accessToken')
+  localStorage.removeItem('refreshToken')
+  window.sessionStorage.removeItem('profileEditPasswordVerified')
+  window.sessionStorage.removeItem('kakaoOAuthState')
 }
 
 const processQueue = (error, token = null) => {
