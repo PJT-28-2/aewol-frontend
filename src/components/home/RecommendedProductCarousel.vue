@@ -1,5 +1,5 @@
 <script setup>
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 const props = defineProps({
   products: {
@@ -12,6 +12,7 @@ const AUTO_ADVANCE_MS = 3500
 const SWIPE_THRESHOLD = 40
 
 const activeIndex = ref(0)
+const isPaused = ref(false)
 let timer = null
 
 function goTo(index) {
@@ -20,17 +21,30 @@ function goTo(index) {
 }
 
 function next() {
+  if (!props.products.length) return
   activeIndex.value = (activeIndex.value + 1) % props.products.length
 }
 
 function restartTimer() {
   window.clearInterval(timer)
-  if (props.products.length <= 1) return
+  if (isPaused.value || props.products.length <= 1) return
   timer = window.setInterval(next, AUTO_ADVANCE_MS)
+}
+
+function toggleAutoAdvance() {
+  isPaused.value = !isPaused.value
+  restartTimer()
 }
 
 onMounted(restartTimer)
 onBeforeUnmount(() => window.clearInterval(timer))
+watch(
+  () => props.products,
+  () => {
+    activeIndex.value = 0
+    restartTimer()
+  },
+)
 
 const touchStartX = ref(0)
 
@@ -91,7 +105,7 @@ function handleTouchEnd(event) {
 
     <div
       v-if="products.length > 1"
-      class="mt-(--space-3) flex justify-center gap-(--space-1)"
+      class="mt-(--space-3) flex items-center justify-center gap-(--space-1)"
     >
       <button
         v-for="(product, index) in products"
@@ -102,6 +116,15 @@ function handleTouchEnd(event) {
         :aria-label="`${index + 1}번째 추천 상품으로 이동`"
         @click="goTo(index)"
       />
+      <button
+        type="button"
+        class="ml-(--space-2) grid size-(--space-5) place-items-center rounded-full text-[10px] text-(color:--color-slate-muted)"
+        :aria-label="isPaused ? '추천 상품 자동 넘김 재생' : '추천 상품 자동 넘김 일시정지'"
+        :title="isPaused ? '자동 넘김 재생' : '자동 넘김 일시정지'"
+        @click="toggleAutoAdvance"
+      >
+        <span aria-hidden="true">{{ isPaused ? '▶' : 'Ⅱ' }}</span>
+      </button>
     </div>
   </div>
 </template>
