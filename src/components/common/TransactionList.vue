@@ -47,8 +47,13 @@ function formatAmount(amount) {
           >
             {{ tx.title }}
           </p>
+          <!-- subtitle이 빈 값(환불)이어도 이 줄의 높이는 유지한다. 완전히 빈 텍스트 노드는
+               브라우저가 line box 자체를 만들지 않아 높이가 0이 돼버려서(카테고리가 있는
+               다른 거래 행과 목록 안에서 높이가 들쭉날쭉해짐), min-h-[1lh]로 내용과 무관하게
+               한 줄 높이를 강제로 확보한다 (DOM에 보이지 않는 문자를 넣는 방식은 textContent
+               단언이나 스크린리더, 복사·붙여넣기에 부작용이 있어 피한다) -->
           <p
-            class="text-(length:--font-xs) text-(color:--color-slate-muted) mt-(--space-1)"
+            class="min-h-[1lh] text-(length:--font-xs) text-(color:--color-slate-muted) mt-(--space-1)"
           >
             {{ tx.subtitle }}
           </p>

@@ -226,7 +226,7 @@ function handleReset() {
 
 <template>
   <div
-    class="p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-4))] bg-(--color-app-bg) min-h-screen"
+    class="p-(--space-4) bg-(--color-app-bg) min-h-screen"
   >
     <header class="mb-(--space-5)">
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">

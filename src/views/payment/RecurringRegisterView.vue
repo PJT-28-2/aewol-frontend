@@ -148,7 +148,7 @@ async function handleSubmit() {
 
 <template>
   <div
-    class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-[calc(var(--bottom-nav-height)+96px)]"
+    class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-[96px]"
   >
     <LoadingSpinner v-if="isLoading" />
 

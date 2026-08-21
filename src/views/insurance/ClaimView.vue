@@ -183,7 +183,7 @@ const docGuideItems = [
   <!-- Step 1: 보험금 청구 서류 작성 -->
   <div
     v-if="step === 1"
-    class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-6))]"
+    class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-(--space-6)"
   >
     <header class="mb-(--space-6)">
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-1)">
@@ -270,7 +270,7 @@ const docGuideItems = [
   <!-- Step 2: 보험금 청구 서류 확인 -->
   <div
     v-else-if="step === 2"
-    class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-6))]"
+    class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-(--space-6)"
   >
     <header class="mb-(--space-6)">
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-1)">
@@ -297,7 +297,7 @@ const docGuideItems = [
   <!-- Step 3: 보험금 청구 서류 초안 -->
   <div
     v-else
-    class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-6))]"
+    class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-(--space-6)"
   >
     <header class="mb-(--space-5)">
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-1)">
