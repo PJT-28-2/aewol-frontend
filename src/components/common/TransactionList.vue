@@ -47,11 +47,14 @@ function formatAmount(amount) {
           >
             {{ tx.title }}
           </p>
+          <!-- subtitle이 빈 값(환불)이어도 이 줄의 높이는 유지한다. 완전히 빈 텍스트 노드는
+               브라우저가 line box 자체를 만들지 않아 높이가 0이 돼버려서(카테고리가 있는
+               다른 거래 행과 목록 안에서 높이가 들쭉날쭉해짐), 최소한 줄바꿈 없는 공백
+               문자 하나(\u00A0)는 항상 넣어 line box를 유지한다 -->
           <p
-            v-if="tx.subtitle"
             class="text-(length:--font-xs) text-(color:--color-slate-muted) mt-(--space-1)"
           >
-            {{ tx.subtitle }}
+            {{ tx.subtitle || '\u00A0' }}
           </p>
         </div>
         <p
