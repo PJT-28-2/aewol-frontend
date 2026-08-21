@@ -7,6 +7,8 @@ const mocks = vi.hoisted(() => ({
   fetchProfile: vi.fn(),
   fetchPets: vi.fn(),
   fetchSummary: vi.fn(),
+  fetchUnreadCount: vi.fn(),
+  unreadCount: 0,
 }))
 
 vi.mock('vue-router', () => ({
@@ -33,6 +35,13 @@ vi.mock('@/stores/dashboard', () => ({
   useDashboardStore: () => ({
     summary: { walletBalance: 0, monthlySpend: { totalAmount: 0, changeRate: 0 } },
     fetchSummary: mocks.fetchSummary,
+  }),
+}))
+
+vi.mock('@/stores/notification', () => ({
+  useNotificationStore: () => ({
+    unreadCount: mocks.unreadCount,
+    fetchUnreadCount: mocks.fetchUnreadCount,
   }),
 }))
 
@@ -84,6 +93,17 @@ describe('HomeView AI 인사이트 카드', () => {
     mocks.fetchProfile.mockResolvedValue({})
     mocks.fetchPets.mockResolvedValue([])
     mocks.fetchSummary.mockResolvedValue({})
+    mocks.fetchUnreadCount.mockResolvedValue()
+    mocks.unreadCount = 0
+  })
+
+  it('읽지 않은 알림 수를 홈 알림 배지에 보여준다', async () => {
+    mocks.unreadCount = 12
+    mocks.getHomeInsights.mockResolvedValue({ data: { result: [] } })
+
+    await mountView()
+
+    expect(host.querySelector('[aria-label="읽지 않은 알림 수"]')?.textContent).toBe('12')
   })
 
   afterEach(() => {

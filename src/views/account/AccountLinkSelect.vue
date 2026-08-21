@@ -2,7 +2,7 @@
 import { onMounted, computed, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAccountStore } from '@/stores/account';
-import { ENABLED_BANK_CODES } from '@/mocks/account';
+import { ENABLED_BANK_CODES } from '@/constants/bank';
 import AppButton from '@/components/common/AppButton.vue';
 import BankBadge from '@/components/common/BankBadge.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';

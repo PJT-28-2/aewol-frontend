@@ -28,10 +28,6 @@ vi.mock('@/stores/auth', () => ({
   useAuthStore: () => ({ isAdmin: mocks.isAdmin }),
 }))
 
-vi.mock('@/mocks/config', () => ({
-  USE_MOCK_DATA: false,
-}))
-
 import GroupPurchaseListView from './GroupPurchaseListView.vue'
 
 const item = (overrides = {}) => ({
@@ -120,5 +116,29 @@ describe('GroupPurchaseListView 참여 여부', () => {
     expect(link).toBeTruthy()
     expect(link.getAttribute('href')).toBe('/group-purchase/12')
     expect(cardLink('참여중')).toBeUndefined()
+  })
+
+  it('실패한 이미지가 새 서명 URL로 갱신되면 다시 표시한다', async () => {
+    mocks.getList
+      .mockResolvedValueOnce({
+        data: { result: { items: [item({ image: '/old-signed-url' })], hasNext: false } },
+      })
+      .mockResolvedValueOnce({
+        data: { result: { items: [item({ image: '/new-signed-url' })], hasNext: false } },
+      })
+    await mountView()
+
+    const oldImage = host.querySelector('img[src="/old-signed-url"]')
+    expect(oldImage).toBeTruthy()
+    oldImage.dispatchEvent(new Event('error'))
+    await nextTick()
+    expect(host.querySelector('img[src="/old-signed-url"]')).toBeNull()
+
+    const foodFilter = [...host.querySelectorAll('button')]
+      .find((button) => button.textContent.trim() === '사료')
+    foodFilter.click()
+    await flush()
+
+    expect(host.querySelector('img[src="/new-signed-url"]')).toBeTruthy()
   })
 })

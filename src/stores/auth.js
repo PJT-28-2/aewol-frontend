@@ -9,9 +9,13 @@ const unwrapResult = (data) => data?.result ?? data
 const KAKAO_REGISTRATION_TOKEN_KEY = 'kakaoRegistrationToken'
 export const KAKAO_LOGIN_COMPLETE = 'LOGIN_COMPLETE'
 export const KAKAO_ADDITIONAL_INFO_REQUIRED = 'ADDITIONAL_INFO_REQUIRED'
+export const KAKAO_ACCOUNT_RESTORED = 'ACCOUNT_RESTORED'
 
-const isValidToken = (token) =>
-  typeof token === 'string' && token.trim().length > 0
+const isValidToken = (token) => {
+  if (typeof token !== 'string') return false
+  const normalizedToken = token.trim().toLowerCase()
+  return normalizedToken.length > 0 && normalizedToken !== 'undefined' && normalizedToken !== 'null'
+}
 
 const getStoredKakaoRegistrationToken = () => {
   const token = window.sessionStorage.getItem(KAKAO_REGISTRATION_TOKEN_KEY)
@@ -22,10 +26,14 @@ const invalidKakaoLoginResponse = () =>
   new Error('카카오 로그인 응답을 확인할 수 없습니다.')
 
 const assertKakaoLoginComplete = (result) => {
+  const isAuthenticatedStatus =
+    result?.authStatus === KAKAO_LOGIN_COMPLETE ||
+    result?.authStatus === KAKAO_ACCOUNT_RESTORED
   if (
     !result ||
     typeof result !== 'object' ||
-    result.authStatus !== KAKAO_LOGIN_COMPLETE ||
+    !isAuthenticatedStatus ||
+    (result.authStatus === KAKAO_ACCOUNT_RESTORED && result.registrationToken !== null) ||
     !isValidToken(result.accessToken) ||
     !isValidToken(result.refreshToken)
   ) {
@@ -133,6 +141,16 @@ export const useAuthStore = defineStore('auth', {
         return result
       }
 
+      if (result.authStatus === KAKAO_ACCOUNT_RESTORED) {
+        try {
+          assertKakaoLoginComplete(result)
+        } catch (error) {
+          this.clearSession()
+          throw error
+        }
+        return this.finishKakaoLogin(result)
+      }
+
       return this.finishKakaoLogin(result)
     },
 
@@ -173,9 +191,13 @@ export const useAuthStore = defineStore('auth', {
 
       const { data } = await authApi.refresh(refreshToken)
       const result = unwrapResult(data)
+      if (!isValidToken(result?.accessToken)) {
+        this.clearSession()
+        throw new Error('Invalid refresh response')
+      }
       this.accessToken = result.accessToken
       localStorage.setItem('accessToken', result.accessToken)
-      if (result.refreshToken) {
+      if (isValidToken(result.refreshToken)) {
         localStorage.setItem('refreshToken', result.refreshToken)
       }
       return result

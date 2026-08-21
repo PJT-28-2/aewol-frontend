@@ -1,6 +1,6 @@
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { transactionApi } from '@/api/transaction'
-import { CATEGORY_LABELS } from '@/mocks/transaction'
+import { CATEGORY_LABELS } from '@/constants/transactionCategory'
 
 const UI_CATEGORY_BY_API = {
   HOSPITAL: 'MEDICAL',
