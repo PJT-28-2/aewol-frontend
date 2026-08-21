@@ -145,11 +145,14 @@ describe('useTransactionStore', () => {
     // amount만 양수로 바뀌고 type이 'charge'/'withdraw' 둘 중 하나로 남으면, WalletView/
     // TransactionHistoryView의 "충전"/"출금" 필터 탭 어느 한쪽에 잘못 걸리게 된다 —
     // "전체" 탭에서만 보이도록 별도 type('refund')이어야 한다
+    // 환불은 실제 소비 카테고리가 없는데도 category가 항상 'ETC'로 떨어져, 그대로 두면
+    // 부제목에 "기타"만 떠서 뭔가로 분류된 것처럼 오해를 준다 — 부제목은 비운다 (#354)
     expect(store.recentTransactions[0]).toMatchObject({
       id: '21',
       amount: 28000,
       type: 'refund',
       title: '공동구매 참여취소 환불',
+      subtitle: '',
     })
   })
 

@@ -48,6 +48,7 @@ function formatAmount(amount) {
             {{ tx.title }}
           </p>
           <p
+            v-if="tx.subtitle"
             class="text-(length:--font-xs) text-(color:--color-slate-muted) mt-(--space-1)"
           >
             {{ tx.subtitle }}
