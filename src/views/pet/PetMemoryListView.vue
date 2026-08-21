@@ -80,7 +80,7 @@ onMounted(() => petStore.fetchPets())
 </script>
 
 <template>
-  <div class="min-h-screen bg-(--color-app-bg) px-(--space-5) pt-(--space-4) pb-[calc(var(--bottom-nav-height)+var(--space-8))]">
+  <div class="min-h-screen bg-(--color-app-bg) px-(--space-5) pt-(--space-4) pb-(--space-8)">
     <header>
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">
         추억 한 장

@@ -51,7 +51,7 @@ const handleWithdraw = async () => {
 </script>
 
 <template>
-  <main class="mx-auto min-h-screen w-full max-w-(--content-max-width) bg-(--color-app-bg) px-(--space-5) pt-(--space-5) pb-[calc(var(--bottom-nav-height)+var(--space-8))]">
+  <main class="mx-auto min-h-screen w-full max-w-(--content-max-width) bg-(--color-app-bg) px-(--space-5) pt-(--space-5) pb-(--space-8)">
     <StatusVisual
       variant="danger"
       size="96"
