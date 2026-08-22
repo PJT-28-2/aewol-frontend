@@ -20,6 +20,11 @@ const authStore = useAuthStore();
 // 백엔드 페이지네이션 계약(GET /api/group-purchase?cursor&size)의 size 기본값과 맞춰둔 값이라 값만 바꾸면 조절된다.
 const PAGE_SIZE = 10;
 
+// 백엔드가 product_name FULLTEXT(ngram) 인덱스로 검색하는데, ngram_token_size 기본값이 2라
+// 2자 미만 검색어는 400(BusinessException)으로 거부한다. 아직 다 입력되지 않은 걸로 보고
+// 요청 자체를 보내지 않는다 — keyword 파라미터를 생략하면 다른 필터 기준으로만 조회된다.
+const MIN_KEYWORD_LENGTH = 2;
+
 const groupPurchases = ref([]);
 // cursor는 백엔드가 내려준 불투명(opaque) 토큰 — 내부 구조를 몰라도 되고, 다음 요청에 그대로 실어 보내면 된다.
 // null이면 첫 페이지를 의미한다.
@@ -39,7 +44,7 @@ function buildFilterParams() {
     params.status = GROUP_PURCHASE_STATUS_CODE[selectedStatus.value];
   }
   const keyword = searchKeyword.value.trim();
-  if (keyword) params.keyword = keyword;
+  if (keyword.length >= MIN_KEYWORD_LENGTH) params.keyword = keyword;
   return params;
 }
 

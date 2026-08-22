@@ -168,6 +168,44 @@ describe('GroupPurchaseListView 커서 페이지네이션', () => {
     app?.unmount()
     host?.remove()
     vi.unstubAllGlobals()
+    vi.useRealTimers()
+  })
+
+  it('2자 미만 검색어는 keyword 파라미터 없이 조회하고, 2자 이상이면 keyword로 조회한다', async () => {
+    vi.useFakeTimers()
+    mocks.getList
+      .mockResolvedValueOnce({
+        data: { result: { items: [item({ id: 41 })], hasNext: false, nextCursor: null } },
+      })
+      .mockResolvedValueOnce({
+        data: { result: { items: [item({ id: 41 })], hasNext: false, nextCursor: null } },
+      })
+      .mockResolvedValueOnce({
+        data: { result: { items: [item({ id: 42 })], hasNext: false, nextCursor: null } },
+      })
+
+    await mountView()
+    expect(mocks.getList).toHaveBeenCalledTimes(1)
+
+    const input = host.querySelector('input[type="text"]')
+
+    input.value = '사'
+    input.dispatchEvent(new Event('input'))
+    await nextTick()
+    vi.advanceTimersByTime(300)
+    await flush()
+
+    expect(mocks.getList).toHaveBeenCalledTimes(2)
+    expect(mocks.getList.mock.calls[1][0]).not.toHaveProperty('keyword')
+
+    input.value = '사료'
+    input.dispatchEvent(new Event('input'))
+    await nextTick()
+    vi.advanceTimersByTime(300)
+    await flush()
+
+    expect(mocks.getList).toHaveBeenCalledTimes(3)
+    expect(mocks.getList.mock.calls[2][0]).toMatchObject({ keyword: '사료' })
   })
 
   it('첫 로드는 cursor 없이 요청하고, 더 불러오기는 이전 응답의 nextCursor를 그대로 실어 보낸다', async () => {
