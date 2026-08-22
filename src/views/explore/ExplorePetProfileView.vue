@@ -60,24 +60,36 @@ onBeforeUnmount(() => observer?.disconnect())
       <!--
         계정 주체가 반려동물이다. 사람 이름은 어디에도 넣지 않는다. 서버 응답에도 없다.
       -->
-      <header class="flex items-center gap-(--space-4)">
-        <img
-          :src="profileImage"
-          :alt="`${exploreStore.profile.name} 프로필 사진`"
-          class="size-[84px] shrink-0 rounded-full object-cover"
-        >
-        <div class="min-w-0">
-          <h1 class="m-0 truncate text-(length:--font-xl) font-bold leading-[1.3]">
+      <!--
+        인스타그램 프로필 구조를 따른다. 아바타 옆에 숫자 지표를 두고, 이름과 소개는
+        그 아래 한 덩어리로 놓는다. 지표가 하나뿐이라 가운데로 몰지 않고 왼쪽에 붙인다.
+      -->
+      <header>
+        <div class="flex items-center gap-(--space-6)">
+          <img
+            :src="profileImage"
+            :alt="`${exploreStore.profile.name} 프로필 사진`"
+            class="size-[84px] shrink-0 rounded-full object-cover"
+          >
+          <div class="text-center">
+            <strong class="block text-(length:--font-lg) font-bold leading-[1.2]">
+              {{ exploreStore.profile.postCount }}
+            </strong>
+            <span class="mt-[2px] block text-(length:--font-xs) text-(--color-slate-muted)">
+              게시물
+            </span>
+          </div>
+        </div>
+
+        <div class="mt-(--space-4)">
+          <h1 class="m-0 truncate text-(length:--font-md) font-bold leading-[1.3]">
             {{ exploreStore.profile.name }}
           </h1>
           <p
             v-if="exploreStore.profile.breed"
-            class="mb-0 mt-(--space-1) truncate text-(length:--font-sm) text-(--color-slate-muted)"
+            class="mb-0 mt-[2px] truncate text-(length:--font-sm) text-(--color-slate-muted)"
           >
             {{ exploreStore.profile.breed }}
-          </p>
-          <p class="mb-0 mt-(--space-1) text-(length:--font-sm) font-bold text-(--color-slate-dark)">
-            게시물 {{ exploreStore.profile.postCount }}
           </p>
         </div>
       </header>

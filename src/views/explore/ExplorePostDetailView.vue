@@ -62,6 +62,15 @@ onMounted(() => exploreStore.fetchPost(diaryId.value))
           :to="{ name: 'ExplorePetProfile', params: { petId: exploreStore.post.petId } }"
           class="flex items-center gap-(--space-3) px-(--space-4) py-(--space-3) text-inherit no-underline"
         >
+          <!--
+            인스타 게시물 헤더처럼 아바타와 계정명을 나란히 둔다. 공개 게시물 응답에는
+            프로필 이미지가 없어(사람 정보를 담지 않는 설계라 필드를 최소로 뒀다) 이름
+            첫 글자로 원형을 채운다.
+          -->
+          <span
+            class="grid size-[32px] shrink-0 place-items-center rounded-full bg-(--color-leaf-soft) text-(length:--font-sm) font-bold text-(--color-leaf-dark)"
+            aria-hidden="true"
+          >{{ exploreStore.post.petName?.slice(0, 1) }}</span>
           <strong class="text-(length:--font-sm)">{{ exploreStore.post.petName }}</strong>
           <span class="ml-auto text-(length:--font-xs) text-(--color-slate-muted)">
             {{ dateLabel }}
@@ -75,11 +84,15 @@ onMounted(() => exploreStore.fetchPost(diaryId.value))
           class="block aspect-square w-full object-cover"
         >
 
+        <!--
+          인스타그램 캡션처럼 계정명을 앞에 굵게 두고 내용을 이어 쓴다. 누가 쓴 글인지
+          사진 아래에서 다시 읽히게 하려는 것이다.
+        -->
         <p
           v-if="exploreStore.post.content"
           class="mb-0 whitespace-pre-wrap px-(--space-4) py-(--space-4) text-(length:--font-md) leading-[1.6]"
         >
-          {{ exploreStore.post.content }}
+          <strong class="mr-(--space-2) font-bold">{{ exploreStore.post.petName }}</strong>{{ exploreStore.post.content }}
         </p>
       </article>
 
