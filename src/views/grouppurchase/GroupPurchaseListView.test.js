@@ -142,3 +142,75 @@ describe('GroupPurchaseListView 참여 여부', () => {
     expect(host.querySelector('img[src="/new-signed-url"]')).toBeTruthy()
   })
 })
+
+describe('GroupPurchaseListView 커서 페이지네이션', () => {
+  let observerCallback
+
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+    mocks.isAdmin = false
+    observerCallback = undefined
+    vi.stubGlobal(
+      'IntersectionObserver',
+      class {
+        constructor(callback) {
+          observerCallback = callback
+        }
+        observe() {}
+        unobserve() {}
+        disconnect() {}
+      },
+    )
+  })
+
+  afterEach(() => {
+    app?.unmount()
+    host?.remove()
+    vi.unstubAllGlobals()
+  })
+
+  it('첫 로드는 cursor 없이 요청하고, 더 불러오기는 이전 응답의 nextCursor를 그대로 실어 보낸다', async () => {
+    mocks.getList
+      .mockResolvedValueOnce({
+        data: { result: { items: [item({ id: 21 })], hasNext: true, nextCursor: 'CURSOR_1' } },
+      })
+      .mockResolvedValueOnce({
+        data: { result: { items: [item({ id: 22 })], hasNext: false, nextCursor: null } },
+      })
+
+    await mountView()
+
+    expect(mocks.getList).toHaveBeenNthCalledWith(1, expect.objectContaining({ cursor: null }))
+
+    observerCallback([{ isIntersecting: true }])
+    await flush()
+
+    expect(mocks.getList).toHaveBeenNthCalledWith(2, expect.objectContaining({ cursor: 'CURSOR_1' }))
+    expect(mocks.getList).not.toHaveBeenCalledWith(expect.objectContaining({ page: expect.anything() }))
+    expect([...host.querySelectorAll('h3')].map((el) => el.textContent.trim())).toHaveLength(2)
+  })
+
+  it('필터가 바뀌면 cursor를 초기화하고 첫 페이지부터 다시 요청한다', async () => {
+    mocks.getList
+      .mockResolvedValueOnce({
+        data: { result: { items: [item({ id: 31 })], hasNext: true, nextCursor: 'CURSOR_1' } },
+      })
+      .mockResolvedValueOnce({
+        data: { result: { items: [item({ id: 32, category: '간식' })], hasNext: false, nextCursor: null } },
+      })
+
+    await mountView()
+    observerCallback([{ isIntersecting: true }])
+    await flush()
+
+    const snackFilter = [...host.querySelectorAll('button')]
+      .find((button) => button.textContent.trim() === '간식')
+    snackFilter.click()
+    await flush()
+
+    expect(mocks.getList).toHaveBeenLastCalledWith(
+      expect.objectContaining({ cursor: null, category: '간식' }),
+    )
+  })
+})

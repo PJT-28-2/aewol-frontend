@@ -17,11 +17,13 @@ import { GROUP_PURCHASE_STATUS_CODE, getGroupPurchaseStatusLabel } from '@/utils
 const authStore = useAuthStore();
 
 // 한 페이지에 몇 개씩 불러올지 — 스크롤이 바닥에 닿을 때마다 이 개수만큼 추가로 이어붙인다.
-// 백엔드 페이지네이션 계약(GET /api/group-purchase?page&size)의 size 기본값과 맞춰둔 값이라 값만 바꾸면 조절된다.
+// 백엔드 페이지네이션 계약(GET /api/group-purchase?cursor&size)의 size 기본값과 맞춰둔 값이라 값만 바꾸면 조절된다.
 const PAGE_SIZE = 10;
 
 const groupPurchases = ref([]);
-const page = ref(0);
+// cursor는 백엔드가 내려준 불투명(opaque) 토큰 — 내부 구조를 몰라도 되고, 다음 요청에 그대로 실어 보내면 된다.
+// null이면 첫 페이지를 의미한다.
+const cursor = ref(null);
 const hasNext = ref(false);
 const isLoading = ref(true);
 const isLoadingMore = ref(false);
@@ -41,14 +43,14 @@ function buildFilterParams() {
   return params;
 }
 
-async function fetchPage(pageToLoad) {
+async function fetchPage(cursorToLoad) {
 
   const { data } = await groupPurchaseApi.getList({
-    page: pageToLoad,
+    cursor: cursorToLoad,
     size: PAGE_SIZE,
     ...buildFilterParams(),
   });
-  const result = data.result ?? { items: [], hasNext: false };
+  const result = data.result ?? { items: [], hasNext: false, nextCursor: null };
   // 관리자면 진행중일 때 '참여하기' 대신 '확인하기'로 상태 화면으로 바로 이동한다.
   // isParticipating은 목록 API가 로그인 회원 기준으로 내려준다.
   const items = (result.items ?? []).map((item) => ({
@@ -56,7 +58,7 @@ async function fetchPage(pageToLoad) {
     isAdmin: authStore.isAdmin,
     isParticipating: Boolean(item.isParticipating),
   }));
-  return { items, hasNext: result.hasNext ?? false };
+  return { items, hasNext: result.hasNext ?? false, nextCursor: result.nextCursor ?? null };
 }
 
 // 필터가 바뀔 때마다 새로 시작하는 요청을 구분하기 위한 세대(generation) 번호.
@@ -66,17 +68,18 @@ let requestGeneration = 0;
 // 최초 진입 또는 필터가 바뀌었을 때 — 첫 페이지부터 다시 조회
 async function resetAndLoad() {
   const generation = ++requestGeneration;
-  page.value = 0;
+  cursor.value = null;
   hasNext.value = false;
   groupPurchases.value = [];
   isLoading.value = true;
   isLoadingMore.value = false;
   isError.value = false;
   try {
-    const { items, hasNext: next } = await fetchPage(0);
+    const { items, hasNext: next, nextCursor } = await fetchPage(null);
     if (generation !== requestGeneration) return;
     groupPurchases.value = items;
     hasNext.value = next;
+    cursor.value = nextCursor;
   } catch {
     if (generation === requestGeneration) isError.value = true;
   } finally {
@@ -90,11 +93,10 @@ async function loadMore() {
   const generation = requestGeneration;
   isLoadingMore.value = true;
   try {
-    const nextPage = page.value + 1;
-    const { items, hasNext: next } = await fetchPage(nextPage);
+    const { items, hasNext: next, nextCursor } = await fetchPage(cursor.value);
     if (generation !== requestGeneration) return;
     groupPurchases.value = [...groupPurchases.value, ...items];
-    page.value = nextPage;
+    cursor.value = nextCursor;
     hasNext.value = next;
   } catch {
     // 다음 페이지 로드 실패는 전체 화면 에러로 덮지 않고, 다시 스크롤하면 자동으로 재시도된다
