@@ -30,7 +30,10 @@ const isConfirming = ref(false)
 const isPublic = computed(() => props.diary.visibility === 'PUBLIC')
 const isHiddenByReport = computed(() => Boolean(props.diary.hiddenByReport))
 
-const canPublish = computed(() => props.isAuthor && !isHiddenByReport.value)
+// 멍스타그램은 사진으로 훑어보는 화면이라 사진 없는 글은 그리드에 자리가 없다.
+// 서버도 막지만, 누른 뒤에 거절당하는 것보다 먼저 알려주는 편이 낫다.
+const hasPhoto = computed(() => (props.diary.images?.length ?? 0) > 0)
+const canPublish = computed(() => props.isAuthor && !isHiddenByReport.value && hasPhoto.value)
 const canUnpublish = computed(() => props.isAuthor || props.isPetOwner)
 
 async function apply(visibility) {
@@ -111,6 +114,13 @@ async function apply(visibility) {
       >
         비공개로 바꾸기
       </AppButton>
+
+      <p
+        v-else-if="!isPublic && isAuthor && !hasPhoto"
+        class="mb-0 mt-(--space-3) text-(length:--font-xs) leading-[1.5] text-(--color-slate-muted)"
+      >
+        사진이 있는 일기만 공개할 수 있어요. 사진을 추가하면 공개할 수 있어요.
+      </p>
 
       <!-- 작성자가 아니면 공개 스위치 자체를 보여주지 않는다. -->
       <p

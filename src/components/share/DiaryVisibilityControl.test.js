@@ -36,8 +36,9 @@ const mount = async (props) => {
 const buttonWith = (text) =>
   [...host.querySelectorAll('button')].find((button) => button.textContent.includes(text))
 
-const privateDiary = { id: 'd-1', visibility: 'PRIVATE', hiddenByReport: false }
-const publicDiary = { id: 'd-1', visibility: 'PUBLIC', hiddenByReport: false }
+// 사진이 있어야 공개할 수 있다. 기본 픽스처는 사진이 있는 상태로 둔다.
+const privateDiary = { id: 'd-1', visibility: 'PRIVATE', hiddenByReport: false, images: ['a.png'] }
+const publicDiary = { id: 'd-1', visibility: 'PUBLIC', hiddenByReport: false, images: ['a.png'] }
 
 describe('DiaryVisibilityControl 권한', () => {
   beforeEach(() => {
@@ -101,6 +102,19 @@ describe('DiaryVisibilityControl 권한', () => {
 
     expect(host.textContent).toContain('신고로 노출이 멈춘 글이에요')
     expect(buttonWith('멍스타그램에 공개하기')).toBeUndefined()
+  })
+
+  // 사진 없는 글은 공개해도 탐색 그리드와 프로필 어디에도 안 뜬다. 누른 뒤에 거절당하기
+  // 전에 먼저 알린다.
+  it('사진이 없으면 공개 버튼 대신 이유를 보여준다', async () => {
+    await mount({
+      diary: { id: 'd-1', visibility: 'PRIVATE', hiddenByReport: false, images: [] },
+      isAuthor: true,
+      isPetOwner: true,
+    })
+
+    expect(buttonWith('멍스타그램에 공개하기')).toBeUndefined()
+    expect(host.textContent).toContain('사진이 있는 일기만 공개할 수 있어요')
   })
 
   it('서버가 거부하면 사유를 보여준다', async () => {
