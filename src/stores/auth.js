@@ -12,6 +12,23 @@ export const KAKAO_LOGIN_COMPLETE = 'LOGIN_COMPLETE'
 export const KAKAO_ADDITIONAL_INFO_REQUIRED = 'ADDITIONAL_INFO_REQUIRED'
 export const KAKAO_ACCOUNT_RESTORED = 'ACCOUNT_RESTORED'
 
+const getStoredAccessToken = () => {
+  const accessToken = localStorage.getItem('accessToken')
+  const refreshToken = localStorage.getItem('refreshToken')
+
+  if (!isValidToken(accessToken)) {
+    localStorage.removeItem('accessToken')
+    localStorage.removeItem('refreshToken')
+    return null
+  }
+
+  if (refreshToken !== null && !isValidToken(refreshToken)) {
+    localStorage.removeItem('refreshToken')
+  }
+
+  return accessToken
+}
+
 const getStoredKakaoRegistrationToken = () => {
   const token = window.sessionStorage.getItem(KAKAO_REGISTRATION_TOKEN_KEY)
   return isValidToken(token) ? token : null
@@ -38,13 +55,13 @@ const assertKakaoLoginComplete = (result) => {
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
-    accessToken: localStorage.getItem('accessToken') || null,
+    accessToken: getStoredAccessToken(),
     registrationToken: getStoredKakaoRegistrationToken(),
     user: null,
   }),
 
   getters: {
-    isAuthenticated: (state) => !!state.accessToken,
+    isAuthenticated: (state) => isValidToken(state.accessToken),
     // 값은 ADMIN/USER로 확정됨. 클레임 키 이름("role")은 백엔드 JWT 스펙 확정 전 가정치라
     // 실제 스펙이 다르면 이 부분만 맞춰서 수정하면 된다
     role: (state) => decodeJwtPayload(state.accessToken)?.role ?? null,
@@ -92,11 +109,18 @@ export const useAuthStore = defineStore('auth', {
     async login(email, password) {
       const { data } = await authApi.login(email, password)
       const result = unwrapResult(data)
+
+      if (
+        !isValidToken(result?.accessToken) ||
+        !isValidToken(result?.refreshToken)
+      ) {
+        this.clearSession()
+        throw new Error('로그인 응답을 확인할 수 없습니다.')
+      }
+
       this.accessToken = result.accessToken
       localStorage.setItem('accessToken', result.accessToken)
-      if (result.refreshToken) {
-        localStorage.setItem('refreshToken', result.refreshToken)
-      }
+      localStorage.setItem('refreshToken', result.refreshToken)
       try {
         this.user = await useMemberStore().fetchProfile()
       } catch (error) {
@@ -179,7 +203,10 @@ export const useAuthStore = defineStore('auth', {
 
     async refreshToken() {
       const refreshToken = localStorage.getItem('refreshToken')
-      if (!refreshToken) throw new Error('No refresh token')
+      if (!isValidToken(refreshToken)) {
+        this.clearSession()
+        throw new Error('No valid refresh token')
+      }
 
       const { data } = await authApi.refresh(refreshToken)
       const result = unwrapResult(data)

@@ -15,7 +15,7 @@ api.interceptors.request.use(
       if (!config.useExplicitAuthorization) {
         delete config.headers.Authorization
       }
-    } else if (token) {
+    } else if (isValidToken(token)) {
       config.headers.Authorization = `Bearer ${token}`
     } else {
       delete config.headers.Authorization
@@ -37,7 +37,7 @@ const syncAccessToken = async (accessToken) => {
 const clearAuthSession = async () => {
   if (getActivePinia()) {
     const { useAuthStore } = await import('@/stores/auth')
-    useAuthStore().clearSession()
+    await useAuthStore().clearSession()
     return
   }
 
@@ -83,8 +83,8 @@ api.interceptors.response.use(
 
       try {
         const refreshToken = localStorage.getItem('refreshToken')
-        if (!refreshToken) {
-          throw new Error('No refresh token')
+        if (!isValidToken(refreshToken)) {
+          throw new Error('No valid refresh token')
         }
         const { data } = await axios.post(
           `${import.meta.env.VITE_API_BASE_URL}/auth/refresh`,
@@ -109,8 +109,12 @@ api.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
         return api(originalRequest)
       } catch (refreshError) {
+        try {
+          await clearAuthSession()
+        } catch {
+          // Preserve the refresh failure as the rejection reason.
+        }
         processQueue(refreshError, null)
-        await clearAuthSession()
         window.location.href = '/login'
         return Promise.reject(refreshError)
       } finally {
