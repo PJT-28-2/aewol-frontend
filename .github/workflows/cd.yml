@@ -118,7 +118,7 @@ jobs:
       - name: 배포 확인
         run: |
           set -euo pipefail
-          URL=https://d2wzfpczojllq5.cloudfront.net
+          URL=https://aewol.store
           for i in $(seq 1 10); do
             if curl -fsS --max-time 10 "$URL" | grep -q '<div id="app">'; then
               echo "SPA 응답 확인"
