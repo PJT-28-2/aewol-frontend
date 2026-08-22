@@ -67,6 +67,17 @@ export const shareApi = {
     return api.put(`/share/diaries/${diaryId}`, { diaryDate, content, version })
   },
 
+  // 공개는 작성자만, 비공개는 작성자와 대표 보호자가 할 수 있다. 권한이 다르므로
+  // 화면도 버튼을 다르게 보여줘야 한다.
+  changeDiaryVisibility(diaryId, visibility) {
+    return api.patch(`/share/diaries/${diaryId}/visibility`, { visibility })
+  },
+
+  // 접수 즉시 노출이 멈추고 고객센터 문의로 이어진다.
+  reportDiary(diaryId, reason) {
+    return api.post(`/share/diaries/${diaryId}/report`, { reason })
+  },
+
   deleteDiary(diaryId) {
     return api.delete(`/share/diaries/${diaryId}`)
   },
