@@ -63,7 +63,12 @@ async function fetchPage(cursorToLoad) {
     isAdmin: authStore.isAdmin,
     isParticipating: Boolean(item.isParticipating),
   }));
-  return { items, hasNext: result.hasNext ?? false, nextCursor: result.nextCursor ?? null };
+  const nextCursor = result.nextCursor ?? null;
+  // hasNext=true인데 nextCursor가 없는 건 계약 위반이지만, 그대로 믿으면 loadMore()가
+  // cursor: null로 요청해 첫 페이지를 다시 가져오고 그대로 이어붙여 목록에 중복이 생긴다.
+  // 다음 페이지가 없는 것으로 처리해 방어한다.
+  const hasNext = Boolean(result.hasNext) && nextCursor !== null;
+  return { items, hasNext, nextCursor };
 }
 
 // 필터가 바뀔 때마다 새로 시작하는 요청을 구분하기 위한 세대(generation) 번호.

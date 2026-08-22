@@ -208,6 +208,25 @@ describe('GroupPurchaseListView 커서 페이지네이션', () => {
     expect(mocks.getList.mock.calls[2][0]).toMatchObject({ keyword: '사료' })
   })
 
+  it('hasNext=true인데 nextCursor가 없으면(계약 위반) 다음 페이지가 없는 것으로 처리한다', async () => {
+    mocks.getList.mockResolvedValueOnce({
+      data: { result: { items: [item({ id: 51 })], hasNext: true, nextCursor: null } },
+    })
+
+    await mountView()
+
+    expect(mocks.getList).toHaveBeenCalledTimes(1)
+    // hasNext가 false로 방어됐다면 sentinel(v-if="hasNext")이 렌더링되지 않아 observer가 연결되지 않는다
+    expect(observerCallback).toBeUndefined()
+
+    observerCallback?.([{ isIntersecting: true }])
+    await flush()
+
+    // sentinel이 렌더링되지 않아 observer가 아예 연결되지 않았어야 하고,
+    // 연결됐더라도 추가 요청은 발생하지 않아야 한다(첫 페이지 재조회로 인한 중복 방지)
+    expect(mocks.getList).toHaveBeenCalledTimes(1)
+  })
+
   it('첫 로드는 cursor 없이 요청하고, 더 불러오기는 이전 응답의 nextCursor를 그대로 실어 보낸다', async () => {
     mocks.getList
       .mockResolvedValueOnce({
