@@ -141,4 +141,33 @@ describe('TransactionHistoryView 진입 조건별 거래 조회 type', () => {
       expect.objectContaining({ type: 'WITHDRAW' }),
     )
   })
+
+  // 새로고침 등으로 petStore.pets가 비어있는 상태에서 petId 쿼리로 진입하면, pets가 로드되기
+  // 전까지는 route.query.petId를 유효한 값으로 확인할 방법이 없다. pets 로드를 기다리지 않고
+  // 거래내역 조회를 먼저 보내면 petFilter가 null인 채로 나가 type=ALL이 되어버린다(#376 후속) —
+  // 반려동물을 먼저 불러온 뒤에 조회가 나가야 한다
+  it('petStore가 비어있는 상태로 petId 진입하면 반려동물을 먼저 불러온 뒤 거래내역을 조회한다', async () => {
+    mocks.routeQuery = { petId: '5' }
+    let resolveGetPets
+    mocks.getPets.mockImplementation(
+      () => new Promise((resolve) => { resolveGetPets = resolve }),
+    )
+
+    host = document.createElement('div')
+    document.body.appendChild(host)
+    app = createApp(TransactionHistoryView)
+    app.use(createPinia())
+    app.mount(host)
+
+    // 반려동물 목록이 아직 로드되지 않은 시점에는 거래내역 조회가 시작되면 안 된다
+    expect(mocks.getPets).toHaveBeenCalled()
+    expect(mocks.getTransactions).not.toHaveBeenCalled()
+
+    resolveGetPets({ data: { result: [{ id: 5, name: '초코', species: 'DOG' }] } })
+    await waitForFetchCall(0)
+
+    expect(mocks.getTransactions).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'PAYMENT' }),
+    )
+  })
 })

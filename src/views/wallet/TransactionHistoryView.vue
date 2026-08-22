@@ -92,6 +92,8 @@ const loadMoreError = ref(false);
 // 나오면 안 된다. 반면 지갑 메인 > 전체 거래내역처럼 필터 없이 들어온 일반 조회는 REFUND도
 // 함께 보여주는 게 기존 의도된 동작이라 그대로 둔다. activeFilter를 직접 '충전'/'출금'으로
 // 바꾼 경우는 사용자가 명시적으로 고른 값이라 이 분기로 덮어쓰지 않는다.
+// 백엔드가 type=PAYMENT를 지원하며, PAYMENT/WITHDRAW 필터 양쪽 다 환불(REFUND)된 원 결제를
+// NOT EXISTS로 이미 제외해준다(TransactionMapper.xml) — 클라이언트에서 따로 걸러낼 필요 없음.
 function transactionRequestParams(cursor = null) {
   const isCategoryOrPetEntry = Boolean(categoryFilter.value || petFilter.value);
   const type =
@@ -224,11 +226,16 @@ const filteredTransactions = computed(() => {
 });
 
 onMounted(async () => {
-  await Promise.allSettled([
-    petStore.pets.length ? Promise.resolve() : petStore.fetchPets(),
-    fetchTransactions(),
-  ]);
+  // petFilter는 petStore.pets가 로드돼 있어야 route.query.petId를 유효한 값으로 해석할 수
+  // 있다. 예전처럼 fetchTransactions()와 petStore.fetchPets()를 Promise.allSettled로 동시에
+  // 돌리면, 새로고침 등 pets가 비어있는 상태에서는 petFilter가 null인 채로 첫 조회가 나가고
+  // 화면이 잠깐 필터 안 걸린 전체 목록으로 보였다가 나중에 좁혀진다. 반려동물 목록을 먼저
+  // 불러와 petFilter를 확정한 뒤에 거래내역을 조회하도록 순서를 맞춘다.
+  if (!petStore.pets.length) {
+    await petStore.fetchPets().catch(() => {});
+  }
   petFilter.value = resolvePetFilterFromQuery();
+  await fetchTransactions();
 });
 </script>
 
