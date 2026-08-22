@@ -106,15 +106,20 @@ onBeforeUnmount(() => observer?.disconnect())
         <li
           v-for="post in exploreStore.profilePosts"
           :key="post.diaryId"
-          class="aspect-square overflow-hidden bg-(--color-surface)"
         >
-          <img
-            v-if="post.imageUrl"
-            :src="post.imageUrl"
-            :alt="`${post.petName}의 일기 사진`"
-            loading="lazy"
-            class="size-full object-cover"
+          <router-link
+            :to="{ name: 'ExplorePostDetail', params: { diaryId: post.diaryId } }"
+            class="block aspect-square overflow-hidden bg-(--color-surface)"
+            :aria-label="`${post.petName}의 일기 보기`"
           >
+            <img
+              v-if="post.imageUrl"
+              :src="post.imageUrl"
+              :alt="`${post.petName}의 일기 사진`"
+              loading="lazy"
+              class="size-full object-cover"
+            >
+          </router-link>
         </li>
       </ul>
 

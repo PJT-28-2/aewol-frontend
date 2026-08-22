@@ -2,6 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppButton from '@/components/common/AppButton.vue'
+import DiaryVisibilityControl from '@/components/share/DiaryVisibilityControl.vue'
 import IconSearch from '@/components/common/icons/IconSearch.vue'
 import ConfirmDeleteModal from '@/components/common/ConfirmDeleteModal.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
@@ -24,6 +25,7 @@ const diaryStore = useShareDiaryStore()
 
 const selectedPetId = ref('')
 const deleteTargetId = ref('')
+const visibilityTargetId = ref('')
 const deleteError = ref('')
 // 파일이 지워졌거나 서버가 사진을 못 내려줄 때 깨진 이미지 아이콘 대신 글만 보여준다.
 const brokenImageIds = ref(new Set())
@@ -290,6 +292,32 @@ onMounted(initializeDiary)
                 >
                   {{ diary.content }}
                 </p>
+
+                <!--
+                  공개 설정을 목록에서 연다. 작성자와 대표 보호자가 할 수 있는 일이 달라
+                  들어가는 화면을 나누면 규칙이 흩어진다. 판단은 전부
+                  DiaryVisibilityControl 안에 있고 여기서는 열고 닫기만 한다.
+                -->
+                <template v-if="diary.deletable">
+                  <AppButton
+                    v-if="visibilityTargetId !== diary.id"
+                    class="mt-[var(--space-3)]"
+                    variant="ghost"
+                    size="xs"
+                    @click="visibilityTargetId = diary.id"
+                  >
+                    {{ diary.visibility === 'PUBLIC' ? '멍스타그램에 공개 중' : '공개 설정' }}
+                  </AppButton>
+
+                  <DiaryVisibilityControl
+                    v-else
+                    class="mt-[var(--space-3)]"
+                    :diary="diary"
+                    :is-author="Boolean(diary.editable)"
+                    :is-pet-owner="Boolean(diary.deletable)"
+                    @changed="visibilityTargetId = ''"
+                  />
+                </template>
               </div>
             </li>
           </ul>

@@ -14,8 +14,9 @@ const exploreStore = useExploreStore()
 const sentinel = ref(null)
 let observer
 
-function goPet(petId) {
-  router.push({ name: 'ExplorePetProfile', params: { petId } })
+// 사진을 누르면 그 게시물을 연다. 계정으로는 상세 안에서 이름을 눌러 넘어간다.
+function goPost(diaryId) {
+  router.push({ name: 'ExplorePostDetail', params: { diaryId } })
 }
 
 onMounted(async () => {
@@ -66,7 +67,7 @@ onBeforeUnmount(() => observer?.disconnect())
             type="button"
             class="block aspect-square w-full overflow-hidden bg-(--color-surface) p-0"
             :aria-label="`${post.petName}의 일기 보기`"
-            @click="goPet(post.petId)"
+            @click="goPost(post.diaryId)"
           >
             <img
               v-if="post.imageUrl"
