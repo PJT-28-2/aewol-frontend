@@ -184,4 +184,26 @@ describe('TransactionHistoryView 진입 조건별 거래 조회 type', () => {
       expect.objectContaining({ type: 'ALL' }),
     )
   })
+
+  // category 진입은 petFilter 계산에 pets가 필요 없어 거래내역 조회를 pets 로드로 막으면 안
+  // 되지만, 반려동물 필터 버튼 노출(hasMultiplePets)/필터 시트 목록은 여전히 petStore.pets를
+  // 쓰므로 pets 로드 자체는 백그라운드로라도 시작돼야 한다 — 둘 다 확인한다
+  it('category 진입에서 pets가 비어있어도 거래내역 조회를 기다리게 하지 않고, pets 로드는 백그라운드로 시작한다', async () => {
+    mocks.routeQuery = { category: 'ETC' }
+    let resolveGetPets
+    mocks.getPets.mockImplementation(
+      () => new Promise((resolve) => { resolveGetPets = resolve }),
+    )
+
+    await mountView()
+
+    // pets가 아직 안 끝났어도 거래내역 조회는 이미 나갔어야 한다(대기 없음)
+    expect(mocks.getTransactions).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'PAYMENT' }),
+    )
+    // 그렇다고 pets 로드 자체를 안 하는 건 아니다
+    expect(mocks.getPets).toHaveBeenCalled()
+
+    resolveGetPets({ data: { result: [] } })
+  })
 })
