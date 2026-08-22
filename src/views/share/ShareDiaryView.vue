@@ -2,6 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppButton from '@/components/common/AppButton.vue'
+import IconSearch from '@/components/common/icons/IconSearch.vue'
 import ConfirmDeleteModal from '@/components/common/ConfirmDeleteModal.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
@@ -99,11 +100,13 @@ onMounted(initializeDiary)
         </p>
       </div>
 
+      <!-- 인스타그램 탐색과 같은 돋보기다. 아이콘만 두므로 aria-label로 이름을 남긴다. -->
       <router-link
         to="/explore"
-        class="shrink-0 rounded-full bg-(--color-leaf-soft) px-[var(--space-3)] py-[var(--space-2)] text-(length:--font-xs) font-bold text-(--color-leaf-dark) no-underline"
+        class="grid size-[40px] shrink-0 place-items-center rounded-full bg-(--color-leaf-soft) text-(--color-leaf-dark) no-underline"
+        aria-label="멍스타그램 둘러보기"
       >
-        멍스타그램
+        <IconSearch :size="20" />
       </router-link>
     </header>
 
