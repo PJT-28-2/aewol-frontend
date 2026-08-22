@@ -229,9 +229,10 @@ onMounted(async () => {
   // petFilter는 petStore.pets가 로드돼 있어야 route.query.petId를 유효한 값으로 해석할 수
   // 있다. 예전처럼 fetchTransactions()와 petStore.fetchPets()를 Promise.allSettled로 동시에
   // 돌리면, 새로고침 등 pets가 비어있는 상태에서는 petFilter가 null인 채로 첫 조회가 나가고
-  // 화면이 잠깐 필터 안 걸린 전체 목록으로 보였다가 나중에 좁혀진다. 반려동물 목록을 먼저
-  // 불러와 petFilter를 확정한 뒤에 거래내역을 조회하도록 순서를 맞춘다.
-  if (!petStore.pets.length) {
+  // 화면이 잠깐 필터 안 걸린 전체 목록으로 보였다가 나중에 좁혀진다. petId 쿼리로 들어온
+  // 경우에만 반려동물 목록을 먼저 기다려 petFilter를 확정한다 — category 진입이나 필터 없는
+  // 일반 진입은 pets 데이터가 필요 없으니 이 대기의 영향을 받지 않는다.
+  if (route.query.petId && !petStore.pets.length) {
     await petStore.fetchPets().catch(() => {});
   }
   petFilter.value = resolvePetFilterFromQuery();

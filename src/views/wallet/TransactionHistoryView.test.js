@@ -170,4 +170,18 @@ describe('TransactionHistoryView 진입 조건별 거래 조회 type', () => {
       expect.objectContaining({ type: 'PAYMENT' }),
     )
   })
+
+  // fetchPets 실패를 .catch(() => {})로 삼키지 않으면 예외가 onMounted를 타고 전파돼
+  // fetchTransactions()가 아예 호출되지 않는다 — 반려동물 목록 조회가 실패해도 거래내역
+  // 조회는 계속 진행돼야 한다(petId를 못 구했으니 type은 PAYMENT로 좁혀지지 않고 ALL로 나간다)
+  it('반려동물 목록 조회가 실패해도 거래내역 조회는 계속 진행된다', async () => {
+    mocks.routeQuery = { petId: '5' }
+    mocks.getPets.mockRejectedValue(new Error('network error'))
+
+    await mountView()
+
+    expect(mocks.getTransactions).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'ALL' }),
+    )
+  })
 })
