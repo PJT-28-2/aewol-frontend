@@ -85,13 +85,26 @@ onMounted(initializeDiary)
   <div
     class="mx-auto min-h-[calc(100dvh-var(--header-height)-var(--bottom-nav-height))] w-full max-w-(--content-max-width) box-border bg-(--color-app-bg) px-[var(--space-5)] pt-[var(--space-4)] pb-[calc(var(--space-6)+env(safe-area-inset-bottom))] text-(--color-navy)"
   >
-    <header>
-      <h1 class="m-0 text-(length:--font-2xl) font-bold leading-[1.3] text-(--color-navy)">
-        육아일기
-      </h1>
-      <p class="mb-0 mt-[var(--space-1)] text-(length:--font-md) text-(--color-slate-muted)">
-        가족과 함께 오늘 하루를 남겨요
-      </p>
+    <!--
+      멍스타그램은 육아일기의 공개판이라 여기에 입구를 둔다. 하단 네비게이션에 넣으면
+      기존 다섯 개 중 하나를 밀어내야 하는데, 그건 정보구조를 바꾸는 일이라 별개다.
+    -->
+    <header class="flex items-start justify-between gap-[var(--space-3)]">
+      <div class="min-w-0">
+        <h1 class="m-0 text-(length:--font-2xl) font-bold leading-[1.3] text-(--color-navy)">
+          육아일기
+        </h1>
+        <p class="mb-0 mt-[var(--space-1)] text-(length:--font-md) text-(--color-slate-muted)">
+          가족과 함께 오늘 하루를 남겨요
+        </p>
+      </div>
+
+      <router-link
+        to="/explore"
+        class="shrink-0 rounded-full bg-(--color-leaf-soft) px-[var(--space-3)] py-[var(--space-2)] text-(length:--font-xs) font-bold text-(--color-leaf-dark) no-underline"
+      >
+        멍스타그램
+      </router-link>
     </header>
 
     <EmptyState
