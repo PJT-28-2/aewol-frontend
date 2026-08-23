@@ -171,12 +171,9 @@ describe('GroupPurchaseListView 커서 페이지네이션', () => {
     vi.useRealTimers()
   })
 
-  it('2자 미만 검색어는 keyword 파라미터 없이 조회하고, 2자 이상이면 keyword로 조회한다', async () => {
+  it('2자 미만 검색어는 조회를 보류하고 안내 문구를 보여주며, 2자 이상이면 keyword로 조회한다', async () => {
     vi.useFakeTimers()
     mocks.getList
-      .mockResolvedValueOnce({
-        data: { result: { items: [item({ id: 41 })], hasNext: false, nextCursor: null } },
-      })
       .mockResolvedValueOnce({
         data: { result: { items: [item({ id: 41 })], hasNext: false, nextCursor: null } },
       })
@@ -195,8 +192,9 @@ describe('GroupPurchaseListView 커서 페이지네이션', () => {
     vi.advanceTimersByTime(300)
     await flush()
 
-    expect(mocks.getList).toHaveBeenCalledTimes(2)
-    expect(mocks.getList.mock.calls[1][0]).not.toHaveProperty('keyword')
+    // 조회 자체를 보류하므로 요청이 추가로 나가지 않는다
+    expect(mocks.getList).toHaveBeenCalledTimes(1)
+    expect(host.textContent).toContain('검색어는 2자 이상 입력해주세요')
 
     input.value = '사료'
     input.dispatchEvent(new Event('input'))
@@ -204,8 +202,9 @@ describe('GroupPurchaseListView 커서 페이지네이션', () => {
     vi.advanceTimersByTime(300)
     await flush()
 
-    expect(mocks.getList).toHaveBeenCalledTimes(3)
-    expect(mocks.getList.mock.calls[2][0]).toMatchObject({ keyword: '사료' })
+    expect(mocks.getList).toHaveBeenCalledTimes(2)
+    expect(mocks.getList.mock.calls[1][0]).toMatchObject({ keyword: '사료' })
+    expect(host.textContent).not.toContain('검색어는 2자 이상 입력해주세요')
   })
 
   it('hasNext=true인데 nextCursor가 없으면(계약 위반) 다음 페이지가 없는 것으로 처리한다', async () => {
@@ -225,6 +224,29 @@ describe('GroupPurchaseListView 커서 페이지네이션', () => {
     // sentinel이 렌더링되지 않아 observer가 아예 연결되지 않았어야 하고,
     // 연결됐더라도 추가 요청은 발생하지 않아야 한다(첫 페이지 재조회로 인한 중복 방지)
     expect(mocks.getList).toHaveBeenCalledTimes(1)
+  })
+
+  it('정렬 키가 실시간으로 바뀌어 이미 본 항목이 다음 페이지에 다시 오면 중복 없이 걸러낸다', async () => {
+    mocks.getList
+      .mockResolvedValueOnce({
+        data: { result: { items: [item({ id: 61 })], hasNext: true, nextCursor: 'CURSOR_1' } },
+      })
+      .mockResolvedValueOnce({
+        data: {
+          result: {
+            items: [item({ id: 61 }), item({ id: 62 })],
+            hasNext: false,
+            nextCursor: null,
+          },
+        },
+      })
+
+    await mountView()
+    observerCallback([{ isIntersecting: true }])
+    await flush()
+
+    const ids = [...host.querySelectorAll('h3')].map((el) => el.textContent.trim())
+    expect(ids).toHaveLength(2)
   })
 
   it('첫 로드는 cursor 없이 요청하고, 더 불러오기는 이전 응답의 nextCursor를 그대로 실어 보낸다', async () => {

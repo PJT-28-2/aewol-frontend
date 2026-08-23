@@ -106,7 +106,11 @@ async function loadMore() {
   try {
     const { items, hasNext: next, nextCursor } = await fetchPage(cursor.value);
     if (generation !== requestGeneration) return;
-    groupPurchases.value = [...groupPurchases.value, ...items];
+    // 정렬 키(is_urgent_active)가 참여/취소로 실시간 갱신되므로, 스크롤 도중 순서가 바뀌면
+    // keyset 커서 특성상 이미 받은 항목이 다음 페이지에 다시 섞여 나올 수 있다 — id로 걸러낸다.
+    const existingIds = new Set(groupPurchases.value.map((gp) => gp.id));
+    const newItems = items.filter((gp) => !existingIds.has(gp.id));
+    groupPurchases.value = [...groupPurchases.value, ...newItems];
     cursor.value = nextCursor;
     hasNext.value = next;
   } catch {
@@ -163,9 +167,16 @@ function selectStatus(status) {
 
 // 검색어: productName에 검색어가 포함된 게시글만 노출. 타이핑마다 요청을 보내지 않도록 300ms 디바운스
 const searchKeyword = ref('');
+// 백엔드가 2자 미만 검색어를 거부하므로, keyword를 생략한 채 조회해 "전체 목록이 검색 결과"처럼
+// 보이게 하는 대신 조회 자체를 보류하고 안내 문구를 보여준다
+const isKeywordTooShort = computed(() => {
+  const length = searchKeyword.value.trim().length;
+  return length > 0 && length < MIN_KEYWORD_LENGTH;
+});
 let searchDebounceTimer = null;
 watch(searchKeyword, () => {
   clearTimeout(searchDebounceTimer);
+  if (isKeywordTooShort.value) return;
   searchDebounceTimer = setTimeout(resetAndLoad, 300);
 });
 
@@ -288,9 +299,19 @@ onBeforeUnmount(() => {
       </div>
     </div>
 
+    <!-- 검색어 2자 미만: 조회를 보류하고 안내만 보여준다(백엔드가 2자 미만 검색어를 거부함) -->
+    <div
+      v-if="isKeywordTooShort"
+      class="flex justify-center py-(--space-9) px-(--space-4) text-center"
+    >
+      <p class="text-(length:--font-sm) text-(color:--color-slate-muted)">
+        검색어는 2자 이상 입력해주세요
+      </p>
+    </div>
+
     <!-- 로딩 상태 -->
     <div
-      v-if="isLoading"
+      v-else-if="isLoading"
       class="flex justify-center py-(--space-9)"
     >
       <LoadingSpinner />
