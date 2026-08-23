@@ -17,11 +17,18 @@ import { GROUP_PURCHASE_STATUS_CODE, getGroupPurchaseStatusLabel } from '@/utils
 const authStore = useAuthStore();
 
 // 한 페이지에 몇 개씩 불러올지 — 스크롤이 바닥에 닿을 때마다 이 개수만큼 추가로 이어붙인다.
-// 백엔드 페이지네이션 계약(GET /api/group-purchase?page&size)의 size 기본값과 맞춰둔 값이라 값만 바꾸면 조절된다.
+// 백엔드 페이지네이션 계약(GET /api/group-purchase?cursor&size)의 size 기본값과 맞춰둔 값이라 값만 바꾸면 조절된다.
 const PAGE_SIZE = 10;
 
+// 백엔드가 product_name FULLTEXT(ngram) 인덱스로 검색하는데, ngram_token_size 기본값이 2라
+// 2자 미만 검색어는 400(BusinessException)으로 거부한다. 아직 다 입력되지 않은 걸로 보고
+// 요청 자체를 보내지 않는다 — keyword 파라미터를 생략하면 다른 필터 기준으로만 조회된다.
+const MIN_KEYWORD_LENGTH = 2;
+
 const groupPurchases = ref([]);
-const page = ref(0);
+// cursor는 백엔드가 내려준 불투명(opaque) 토큰 — 내부 구조를 몰라도 되고, 다음 요청에 그대로 실어 보내면 된다.
+// null이면 첫 페이지를 의미한다.
+const cursor = ref(null);
 const hasNext = ref(false);
 const isLoading = ref(true);
 const isLoadingMore = ref(false);
@@ -37,18 +44,18 @@ function buildFilterParams() {
     params.status = GROUP_PURCHASE_STATUS_CODE[selectedStatus.value];
   }
   const keyword = searchKeyword.value.trim();
-  if (keyword) params.keyword = keyword;
+  if (keyword.length >= MIN_KEYWORD_LENGTH) params.keyword = keyword;
   return params;
 }
 
-async function fetchPage(pageToLoad) {
+async function fetchPage(cursorToLoad) {
 
   const { data } = await groupPurchaseApi.getList({
-    page: pageToLoad,
+    cursor: cursorToLoad,
     size: PAGE_SIZE,
     ...buildFilterParams(),
   });
-  const result = data.result ?? { items: [], hasNext: false };
+  const result = data.result ?? { items: [], hasNext: false, nextCursor: null };
   // 관리자면 진행중일 때 '참여하기' 대신 '확인하기'로 상태 화면으로 바로 이동한다.
   // isParticipating은 목록 API가 로그인 회원 기준으로 내려준다.
   const items = (result.items ?? []).map((item) => ({
@@ -56,7 +63,13 @@ async function fetchPage(pageToLoad) {
     isAdmin: authStore.isAdmin,
     isParticipating: Boolean(item.isParticipating),
   }));
-  return { items, hasNext: result.hasNext ?? false };
+  const nextCursor = result.nextCursor ?? null;
+  // hasNext=true인데 nextCursor가 없는 건 계약 위반이지만, 그대로 믿으면 loadMore()가
+  // cursor: null로 요청해 첫 페이지를 다시 가져오고 그대로 이어붙여 목록에 중복이 생긴다.
+  // 다음 페이지가 없는 것으로 처리해 방어한다.
+  // (모듈 상단의 hasNext ref와 이름이 겹치는 걸 피하려고 hasNextPage로 명명)
+  const hasNextPage = Boolean(result.hasNext) && nextCursor !== null;
+  return { items, hasNext: hasNextPage, nextCursor };
 }
 
 // 필터가 바뀔 때마다 새로 시작하는 요청을 구분하기 위한 세대(generation) 번호.
@@ -66,17 +79,18 @@ let requestGeneration = 0;
 // 최초 진입 또는 필터가 바뀌었을 때 — 첫 페이지부터 다시 조회
 async function resetAndLoad() {
   const generation = ++requestGeneration;
-  page.value = 0;
+  cursor.value = null;
   hasNext.value = false;
   groupPurchases.value = [];
   isLoading.value = true;
   isLoadingMore.value = false;
   isError.value = false;
   try {
-    const { items, hasNext: next } = await fetchPage(0);
+    const { items, hasNext: next, nextCursor } = await fetchPage(null);
     if (generation !== requestGeneration) return;
     groupPurchases.value = items;
     hasNext.value = next;
+    cursor.value = nextCursor;
   } catch {
     if (generation === requestGeneration) isError.value = true;
   } finally {
@@ -90,11 +104,14 @@ async function loadMore() {
   const generation = requestGeneration;
   isLoadingMore.value = true;
   try {
-    const nextPage = page.value + 1;
-    const { items, hasNext: next } = await fetchPage(nextPage);
+    const { items, hasNext: next, nextCursor } = await fetchPage(cursor.value);
     if (generation !== requestGeneration) return;
-    groupPurchases.value = [...groupPurchases.value, ...items];
-    page.value = nextPage;
+    // 정렬 키(is_urgent_active)가 참여/취소로 실시간 갱신되므로, 스크롤 도중 순서가 바뀌면
+    // keyset 커서 특성상 이미 받은 항목이 다음 페이지에 다시 섞여 나올 수 있다 — id로 걸러낸다.
+    const existingIds = new Set(groupPurchases.value.map((gp) => gp.id));
+    const newItems = items.filter((gp) => !existingIds.has(gp.id));
+    groupPurchases.value = [...groupPurchases.value, ...newItems];
+    cursor.value = nextCursor;
     hasNext.value = next;
   } catch {
     // 다음 페이지 로드 실패는 전체 화면 에러로 덮지 않고, 다시 스크롤하면 자동으로 재시도된다
@@ -150,9 +167,25 @@ function selectStatus(status) {
 
 // 검색어: productName에 검색어가 포함된 게시글만 노출. 타이핑마다 요청을 보내지 않도록 300ms 디바운스
 const searchKeyword = ref('');
+// 백엔드가 2자 미만 검색어를 거부하므로, keyword를 생략한 채 조회해 "전체 목록이 검색 결과"처럼
+// 보이게 하는 대신 조회 자체를 보류하고 안내 문구를 보여준다
+const isKeywordTooShort = computed(() => {
+  const length = searchKeyword.value.trim().length;
+  return length > 0 && length < MIN_KEYWORD_LENGTH;
+});
 let searchDebounceTimer = null;
 watch(searchKeyword, () => {
   clearTimeout(searchDebounceTimer);
+  if (isKeywordTooShort.value) {
+    // 진행 중이던 이전 조회가 이 상태로 바뀐 뒤 뒤늦게 응답하면 generation을 안 올렸을 때
+    // 그 결과가 안내 문구 아래에 그대로 반영된다 — generation을 올려 무효화하고 목록도 비운다
+    requestGeneration += 1;
+    groupPurchases.value = [];
+    hasNext.value = false;
+    isLoading.value = false;
+    isError.value = false;
+    return;
+  }
   searchDebounceTimer = setTimeout(resetAndLoad, 300);
 });
 
@@ -275,9 +308,19 @@ onBeforeUnmount(() => {
       </div>
     </div>
 
+    <!-- 검색어 2자 미만: 조회를 보류하고 안내만 보여준다(백엔드가 2자 미만 검색어를 거부함) -->
+    <div
+      v-if="isKeywordTooShort"
+      class="flex justify-center py-(--space-9) px-(--space-4) text-center"
+    >
+      <p class="text-(length:--font-sm) text-(color:--color-slate-muted)">
+        검색어는 2자 이상 입력해주세요
+      </p>
+    </div>
+
     <!-- 로딩 상태 -->
     <div
-      v-if="isLoading"
+      v-else-if="isLoading"
       class="flex justify-center py-(--space-9)"
     >
       <LoadingSpinner />
