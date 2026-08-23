@@ -50,7 +50,15 @@ describe('petApi 캐릭터 생성', () => {
 
     await petApi.fetchCharacterJob('9001', 'job-1')
 
-    expect(api.get).toHaveBeenCalledWith('/pets/9001/character/jobs/job-1')
+    expect(api.get).toHaveBeenCalledWith('/pets/9001/character/jobs/job-1', { timeout: 10000 })
+  })
+
+  it('전체 폴링 상한에 맞춰 조회 타임아웃을 줄일 수 있다', async () => {
+    api.get.mockResolvedValue({ data: { result: { status: 'RUNNING' } } })
+
+    await petApi.fetchCharacterJob('9001', 'job-1', 750)
+
+    expect(api.get).toHaveBeenCalledWith('/pets/9001/character/jobs/job-1', { timeout: 750 })
   })
 })
 

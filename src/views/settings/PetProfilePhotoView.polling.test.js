@@ -125,6 +125,44 @@ describe('PetProfilePhotoView 캐릭터 생성 폴링', () => {
     expect(findButtonByText('이 사진으로 만들기')).toBeTruthy()
   })
 
+  it('일시적인 조회 오류는 다시 시도하고 완성 결과를 보여준다', async () => {
+    mocks.fetchCharacterJob
+      .mockRejectedValueOnce(Object.assign(new Error('timeout'), { code: 'ECONNABORTED' }))
+      .mockRejectedValueOnce({ response: { status: 503 } })
+      .mockResolvedValue({
+        data: { result: { status: 'DONE', profileImg: 'https://cdn/recovered.png' } },
+      })
+
+    await startGeneration()
+    await advance(6000)
+
+    expect(mocks.fetchCharacterJob).toHaveBeenCalledTimes(3)
+    expect(host.querySelector('img[src="https://cdn/recovered.png"]')).toBeTruthy()
+  })
+
+  it('조회가 연속 세 번 실패하면 사용자에게 연결 오류를 보여준다', async () => {
+    mocks.fetchCharacterJob.mockRejectedValue({ response: { status: 503 } })
+
+    await startGeneration()
+    await advance(6000)
+
+    expect(mocks.fetchCharacterJob).toHaveBeenCalledTimes(3)
+    expect(host.textContent).toContain('서버 연결이 원활하지 않아요')
+    expect(findButtonByText('이 사진으로 만들기')).toBeTruthy()
+  })
+
+  it('재시도할 수 없는 조회 오류는 즉시 중단한다', async () => {
+    mocks.fetchCharacterJob.mockRejectedValue({
+      response: { status: 400, data: { message: '잘못된 작업 요청이에요.' } },
+    })
+
+    await startGeneration()
+    await advance(2000)
+
+    expect(mocks.fetchCharacterJob).toHaveBeenCalledOnce()
+    expect(host.textContent).toContain('잘못된 작업 요청이에요.')
+  })
+
   /*
    * 서버가 상태를 남기지 못하면 RUNNING이 영원히 이어진다. 상한이 없으면 화면이 계속
    * 돌아가고 사용자는 무엇이 잘못됐는지 알 수 없다.
@@ -157,18 +195,14 @@ describe('PetProfilePhotoView 캐릭터 생성 폴링', () => {
   })
 
   /*
-   * "이 사진으로 만들기"를 빠르게 두 번 누르면 DOM이 갱신되기 전에 두 번 들어간다.
-   * 그러면 폴링 루프가 둘이 되고, 먼저 시작한 쪽의 결과가 뒤늦게 도착해 나중 결과를
-   * 덮어쓸 수 있다.
+   * "이 사진으로 만들기"를 빠르게 두 번 눌러도 DOM 갱신보다 먼저 잠금 상태를
+   * 바꿔야 한다. 서버 요청이 두 번 나가면 결과는 하나만 보여도 일일 할당량은 두 번
+   * 소모된다.
    */
-  it('두 번 눌러도 먼저 시작한 쪽의 결과가 화면을 덮지 않는다', async () => {
-    mocks.submitCharacterJob
-      .mockResolvedValueOnce({ data: { result: { jobId: 'job-1' } } })
-      .mockResolvedValue({ data: { result: { jobId: 'job-2' } } })
-    mocks.fetchCharacterJob.mockImplementation((_petId, jobId) =>
-      Promise.resolve({
-        data: { result: { status: 'DONE', profileImg: `https://cdn/${jobId}.png` } },
-      }))
+  it('두 번 눌러도 생성 요청은 한 번만 보낸다', async () => {
+    mocks.fetchCharacterJob.mockResolvedValue({
+      data: { result: { status: 'DONE', profileImg: 'https://cdn/job-1.png' } },
+    })
 
     const input = host.querySelector('input[type="file"]')
     const file = new File(['x'], 'pet.png', { type: 'image/png' })
@@ -182,8 +216,7 @@ describe('PetProfilePhotoView 캐릭터 생성 폴링', () => {
     await flush()
     await advance(2000)
 
-    // 나중에 시작한 쪽만 화면에 남는다.
-    expect(host.querySelector('img[src="https://cdn/job-2.png"]')).toBeTruthy()
-    expect(host.querySelector('img[src="https://cdn/job-1.png"]')).toBeNull()
+    expect(mocks.submitCharacterJob).toHaveBeenCalledOnce()
+    expect(host.querySelector('img[src="https://cdn/job-1.png"]')).toBeTruthy()
   })
 })
