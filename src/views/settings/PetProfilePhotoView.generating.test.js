@@ -3,7 +3,8 @@ import { createApp, nextTick } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
 
 const mocks = vi.hoisted(() => ({
-  generateCharacter: vi.fn(),
+  submitCharacterJob: vi.fn(),
+  fetchCharacterJob: vi.fn(),
   fetchPets: vi.fn(),
 }))
 
@@ -14,7 +15,10 @@ vi.mock('vue-router', () => ({
 }))
 
 vi.mock('@/api/pet', () => ({
-  petApi: { generateCharacter: mocks.generateCharacter },
+  petApi: {
+    submitCharacterJob: mocks.submitCharacterJob,
+    fetchCharacterJob: mocks.fetchCharacterJob,
+  },
 }))
 
 vi.mock('@/stores/pet', () => ({
@@ -64,7 +68,9 @@ describe('PetProfilePhotoView 생성 대기 화면', () => {
     URL.revokeObjectURL = vi.fn()
     mocks.fetchPets.mockResolvedValue(undefined)
     // 응답이 오면 step 4로 넘어가 버리므로, 대기 화면을 붙잡아두기 위해 매달아 둔다.
-    mocks.generateCharacter.mockReturnValue(new Promise(() => {}))
+    // 접수는 곧바로 끝나고, 그 뒤로는 계속 생성 중인 상태를 유지한다.
+    mocks.submitCharacterJob.mockResolvedValue({ data: { result: { jobId: 'job-1' } } })
+    mocks.fetchCharacterJob.mockResolvedValue({ data: { result: { status: 'RUNNING' } } })
 
     host = document.createElement('div')
     document.body.appendChild(host)

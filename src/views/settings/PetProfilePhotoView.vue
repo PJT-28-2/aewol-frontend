@@ -149,8 +149,9 @@ async function handleConvert() {
   startProgress()
 
   try {
-    const { data } = await petApi.generateCharacter(petId, photoFile.value)
-    const result = data.result ?? data
+    const { data: accepted } = await petApi.submitCharacterJob(petId, photoFile.value)
+    const jobId = (accepted.result ?? accepted).jobId
+    const result = await waitForCharacterJob(petId, jobId)
     // 정면 얼굴 생성만 실패하면 전신 이미지라도 내려온다.
     resultUrl.value = result.profileImg || result.characterImg || ''
     remainingToday.value = result.remainingToday ?? null
@@ -172,13 +173,46 @@ async function handleConvert() {
     isShowingExistingCharacter.value = false
     step.value = 4
   } catch (error) {
+    // 서버가 준 이유(응답 본문)와 폴링이 판단한 이유(Error) 둘 다 그대로 보여준다.
     errorMessage.value =
-      error.response?.data?.message ?? '캐릭터를 만들지 못했어요. 다른 사진으로 다시 시도해 주세요.'
+      error.response?.data?.message
+      ?? error.message
+      ?? '캐릭터를 만들지 못했어요. 다른 사진으로 다시 시도해 주세요.'
     // 사진 확인 단계로 돌려보내 같은 사진으로 재시도하거나 다른 사진을 고르게 한다.
     step.value = 2
   } finally {
     stopProgress()
   }
+}
+
+/**
+ * 생성이 끝날 때까지 상태를 물어본다.
+ *
+ * 서버가 접수만 하고 곧바로 끊으므로 결과는 따로 받아와야 한다. 생성은 20~25초가
+ * 걸리고 그보다 빨리 끝나는 경우는 없으므로 첫 조회부터 간격을 두고 시작한다.
+ *
+ * 상한을 둔다. 서버가 상태를 남기지 못하는 상황(작업 유실 등)에서 화면이 영원히
+ * 돌아가면 사용자는 무엇이 잘못됐는지 알 수 없다.
+ */
+const JOB_POLL_INTERVAL_MS = 2000
+const JOB_POLL_TIMEOUT_MS = 180000
+
+async function waitForCharacterJob(petId, jobId) {
+  const deadline = Date.now() + JOB_POLL_TIMEOUT_MS
+
+  while (Date.now() < deadline) {
+    await new Promise((resolve) => setTimeout(resolve, JOB_POLL_INTERVAL_MS))
+
+    const { data } = await petApi.fetchCharacterJob(petId, jobId)
+    const job = data.result ?? data
+
+    if (job.status === 'DONE') return job
+    if (job.status === 'FAILED') {
+      throw new Error(job.message || '캐릭터를 만들지 못했어요. 다른 사진으로 다시 시도해 주세요.')
+    }
+  }
+
+  throw new Error('시간이 너무 오래 걸리고 있어요. 잠시 후 다시 시도해 주세요.')
 }
 
 function handleReset() {

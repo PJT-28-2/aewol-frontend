@@ -11,35 +11,46 @@ vi.mock('./index', () => ({
   },
 }))
 
-describe('petApi.generateCharacter', () => {
+describe('petApi 캐릭터 생성', () => {
   afterEach(() => {
     vi.clearAllMocks()
   })
 
   // 회귀 테스트: 이 화면은 원래 API를 부르지 않고 정적 마스코트 PNG를 보여줬다(#212).
-  it('POST /pets/{id}/character 로 photo를 multipart로 보낸다', async () => {
-    api.post.mockResolvedValue({ data: { result: {} } })
+  it('POST /pets/{id}/character/jobs 로 photo를 multipart로 보낸다', async () => {
+    api.post.mockResolvedValue({ data: { result: { jobId: 'job-1' } } })
     const file = new File(['fake'], 'poodle.png', { type: 'image/png' })
 
-    await petApi.generateCharacter('9001', file)
+    await petApi.submitCharacterJob('9001', file)
 
     expect(api.post).toHaveBeenCalledTimes(1)
     const [path, body] = api.post.mock.calls[0]
-    expect(path).toBe('/pets/9001/character')
+    expect(path).toBe('/pets/9001/character/jobs')
     expect(body).toBeInstanceOf(FormData)
     // 서버는 파트 이름을 'photo'로 받는다. 다른 이름이면 400이 난다.
     expect(body.get('photo')).toBe(file)
   })
 
-  // 외부 LLM을 두 단계로 호출해 20초 이상 걸린다. 공용 axios 인스턴스에는
-  // 타임아웃이 없어 무한 대기하므로 이 호출만 상한을 명시한다.
-  it('생성이 오래 걸리므로 넉넉한 타임아웃을 명시한다', async () => {
-    api.post.mockResolvedValue({ data: { result: {} } })
+  /*
+   * 접수는 검증과 할당량 차감만 하고 곧바로 끊긴다. 예전처럼 완성을 기다리지 않으므로
+   * 이 호출에 긴 타임아웃을 주면 안 된다 — 오래 걸린다는 것은 서버가 접수조차 못 하고
+   * 있다는 뜻이고, 그때는 빨리 실패하는 편이 낫다.
+   */
+  it('접수 요청에는 긴 타임아웃을 걸지 않는다', async () => {
+    api.post.mockResolvedValue({ data: { result: { jobId: 'job-1' } } })
 
-    await petApi.generateCharacter('9001', new File([''], 'a.png', { type: 'image/png' }))
+    await petApi.submitCharacterJob('9001', new File([''], 'a.png', { type: 'image/png' }))
 
     const [, , config] = api.post.mock.calls[0]
-    expect(config?.timeout).toBeGreaterThanOrEqual(60000)
+    expect(config?.timeout).toBeUndefined()
+  })
+
+  it('진행 상태는 작업 id로 조회한다', async () => {
+    api.get.mockResolvedValue({ data: { result: { status: 'RUNNING' } } })
+
+    await petApi.fetchCharacterJob('9001', 'job-1')
+
+    expect(api.get).toHaveBeenCalledWith('/pets/9001/character/jobs/job-1')
   })
 })
 
