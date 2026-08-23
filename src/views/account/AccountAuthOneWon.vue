@@ -6,7 +6,6 @@ import { getBankMeta } from '@/utils/bankMeta';
 import { formatCountdown } from '@/utils/date';
 import AppButton from '@/components/common/AppButton.vue';
 import BankBadge from '@/components/common/BankBadge.vue';
-import DepositPushToast from '@/components/common/DepositPushToast.vue';
 import IconLock from '@/components/common/icons/IconLock.vue';
 
 const router = useRouter();
@@ -19,21 +18,6 @@ if (!store.linking.bankCode) {
 }
 
 const bankMeta = computed(() => getBankMeta(store.linking.bankCode));
-
-// Vue 템플릿의 v-if 표현식은 sourceType: "script"로 파싱돼서 import.meta를 템플릿에
-// 직접 쓰면 빌드가 깨진다("import.meta may appear only with 'sourceType: module'",
-// PR #301 CI 실패, 2026-08-19). script setup 쪽(모듈 스코프)에서 한 번 읽어서 상수로
-// 빼두고 템플릿에서는 이 값만 참조한다.
-//
-// 한때 import.meta.env.DEV(개발 빌드 여부)로 게이트했지만, 그러면 배포본으로는 시연을
-// 할 수 없었다 — CODEF 데모 서버는 실제 이체를 안 해서 은행 앱 알림이 오지 않으므로
-// 입금자명을 확인할 방법이 사라진다(#366). 그래서 빌드 종류가 아니라 명시적인 시연
-// 플래그로 바꾼다(VITE_USE_MOCK_DATA와 같은 방식). .env.production 기본값은 false이고,
-// 시연용 빌드에서만 true를 주입한다.
-//
-// 백엔드도 CODEF 데모 서버에 붙어 있을 때만 depositorNameForTest를 내려주므로(#290),
-// 둘 중 하나만 어긋나도 카드가 뜨지 않는 이중 방어는 그대로 유지된다.
-const isDemoMode = import.meta.env.VITE_DEMO_MODE === 'true';
 
 // step 1: 계좌번호 입력 (Figma 목업에 없는 보완 단계)
 // step 2: 1원 인증 - 입금자명(한글, CODEF inPrintType=1) 입력 (RF-CM 목업 그대로)
@@ -79,6 +63,7 @@ async function submitAccountNumber() {
     step.value = 'depositorName';
     startTicking();
     await nextTick();
+    applyDemoDepositorName();
     focusHiddenInput();
   } catch (err) {
     // 3분 내 5회 요청 제한(2026-08-07) — 백엔드가 429로 내려주는 전용 메시지를 그대로 보여줘요.
@@ -141,6 +126,30 @@ function filterHangul(value) {
   return value.replace(/[^가-힣]/g, '').slice(0, depositorNameLength.value);
 }
 
+// 시연 환경에서는 백엔드가 verify-deposit 응답에 입금자명을 실어 보내요
+// (DepositVerificationResponse.depositorNameForTest, #290). CODEF 데모 서버는 실제
+// 이체를 하지 않아서 은행 앱 알림이 오지 않으므로, 이 값이 내려오면 사용자가 직접
+// 찾아 입력할 방법이 없어요 — 그래서 입력 박스에 바로 채워요(#366).
+//
+// 한때는 푸시 알림 카드(DepositPushToast)로 보여주고 사용자가 보고 입력하게 했지만,
+// 프론트 빌드 플래그(VITE_DEMO_MODE)까지 맞춰야 해서 배포본에서 자주 안 떴어요.
+// 지금은 노출 여부를 백엔드가 단독으로 판단해요(CODEF 데모 서버에 붙어 있고
+// DEMO_EXPOSE_DEPOSITOR_NAME=true일 때만 값이 내려오고, 그 외에는 항상 null이라
+// 아무 일도 일어나지 않아요). 프론트는 값이 오면 채우기만 해요.
+//
+// hidden input이 step 2 템플릿에만 있어서, step을 바꾼 직후에는 nextTick 뒤에 불러야
+// hiddenInputRef.value.value까지 같이 맞춰져요(안 맞추면 다음 input 이벤트 때
+// 빈 값으로 덮어써요).
+function applyDemoDepositorName() {
+  const name = store.linking.depositorNameForTest;
+  if (!name) return;
+  const filtered = filterHangul(name);
+  depositorInput.value = filtered;
+  composingPreview.value = '';
+  isComposing.value = false;
+  if (hiddenInputRef.value) hiddenInputRef.value.value = filtered;
+}
+
 function onCompositionStart() {
   isComposing.value = true;
 }
@@ -164,13 +173,16 @@ function onDepositorInput(event) {
   event.target.value = filtered;
 }
 
-onMounted(() => {
+onMounted(async () => {
   // 나갔다 들어왔을 때(컴포넌트 재마운트) 아직 유효한 인증이 진행 중이면(만료 전)
   // Step 1로 되돌리지 않고 Step 2부터 이어서 보여줘요 — 잠금 상태(store.linking.isConfirmLocked)도
   // store에 있어서 그대로 유지돼요(2026-08-07).
   if (store.linking.verificationId && store.linking.depositAuthExpiresAt > Date.now()) {
     step.value = 'depositorName';
     startTicking();
+    // 재마운트로 로컬 입력값은 비워졌지만 store의 입금자명은 남아 있으니 다시 채워요.
+    await nextTick();
+    applyDemoDepositorName();
   }
 });
 
@@ -205,6 +217,8 @@ async function resendDeposit() {
     verifyError.value = '';
     startTicking();
     await nextTick();
+    // 재전송하면 새 입금자명이 내려오므로, 비운 자리에 새 값을 다시 채워요.
+    applyDemoDepositorName();
     focusHiddenInput();
   } catch (err) {
     // 3분 내 5회 요청 제한(2026-08-07) — 최초 요청과 동일한 카운터를 공유해요.
@@ -392,17 +406,6 @@ async function submitVerification() {
       <p class="text-(length:--font-sm) text-(color:--color-gray-500) leading-relaxed mb-(--space-2)">
         은행 앱 알림이나 입출금 문자에서<br>입금자명(예: 푸른애월)의 앞 {{ depositorNameLength }}글자를 확인할 수 있어요
       </p>
-
-      <!-- 시연 환경에서만 백엔드가 내려주는 값이에요(그 외에는 항상 null이라 카드가 안 떠요).
-           CODEF 데모 서버는 실제 이체를 하지 않아서 은행 앱 알림이 오지 않기 때문에, 실서비스의
-           푸시 알림 화면을 재현해서 대신 보여줘요(#366). VITE_DEMO_MODE를 추가 게이트로 걸어서,
-           백엔드 설정 실수로 이 필드가 잘못 내려와도(defense-in-depth) 시연용이 아닌 빌드에서는
-           노출되지 않아요(PR #301 리뷰 취지 유지). -->
-      <DepositPushToast
-        v-if="isDemoMode"
-        :bank-code="store.linking.bankCode"
-        :depositor-name="store.linking.depositorNameForTest"
-      />
 
       <p
         v-if="verifyError"
