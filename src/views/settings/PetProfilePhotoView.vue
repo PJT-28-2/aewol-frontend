@@ -148,10 +148,15 @@ async function handleConvert() {
   step.value = 3
   startProgress()
 
+  // 이전 시도가 아직 돌고 있으면 물러나게 한다.
+  const token = ++activeJobToken
+
   try {
     const { data: accepted } = await petApi.submitCharacterJob(petId, photoFile.value)
     const jobId = (accepted.result ?? accepted).jobId
-    const result = await waitForCharacterJob(petId, jobId)
+    const result = await waitForCharacterJob(petId, jobId, token)
+    // 화면을 떠났거나 다시 시작했다. 지금 화면에 손대지 않는다.
+    if (result === null) return
     // 정면 얼굴 생성만 실패하면 전신 이미지라도 내려온다.
     resultUrl.value = result.profileImg || result.characterImg || ''
     remainingToday.value = result.remainingToday ?? null
@@ -173,6 +178,8 @@ async function handleConvert() {
     isShowingExistingCharacter.value = false
     step.value = 4
   } catch (error) {
+    // 떠난 뒤에 도착한 실패로 다음 화면을 어지럽히지 않는다.
+    if (token !== activeJobToken) return
     // 서버가 준 이유(응답 본문)와 폴링이 판단한 이유(Error) 둘 다 그대로 보여준다.
     errorMessage.value =
       error.response?.data?.message
@@ -197,15 +204,33 @@ async function handleConvert() {
 const JOB_POLL_INTERVAL_MS = 2000
 const JOB_POLL_TIMEOUT_MS = 180000
 
-async function waitForCharacterJob(petId, jobId) {
+/**
+ * 지금 화면이 기다리고 있는 작업을 가리키는 표.
+ *
+ * 폴링은 setInterval이 아니라 루프라 stopProgress로는 멈추지 않는다. 표가 바뀌면
+ * 돌고 있던 루프가 스스로 물러난다.
+ *
+ * 이게 없으면 두 가지가 어긋난다. 화면을 떠난 뒤에도 3분 동안 계속 조회하고, 다시
+ * 시도했을 때 이전 작업의 결과가 뒤늦게 도착해 새 결과를 덮어쓴다.
+ */
+let activeJobToken = 0
+
+function cancelCharacterJobPolling() {
+  activeJobToken += 1
+}
+
+async function waitForCharacterJob(petId, jobId, token) {
   const deadline = Date.now() + JOB_POLL_TIMEOUT_MS
 
   while (Date.now() < deadline) {
     await new Promise((resolve) => setTimeout(resolve, JOB_POLL_INTERVAL_MS))
+    if (token !== activeJobToken) return null
 
     const { data } = await petApi.fetchCharacterJob(petId, jobId)
-    const job = data.result ?? data
+    // 응답을 기다리는 사이에도 화면을 떠났거나 다시 시작했을 수 있다.
+    if (token !== activeJobToken) return null
 
+    const job = data.result ?? data
     if (job.status === 'DONE') return job
     if (job.status === 'FAILED') {
       throw new Error(job.message || '캐릭터를 만들지 못했어요. 다른 사진으로 다시 시도해 주세요.')
@@ -216,6 +241,7 @@ async function waitForCharacterJob(petId, jobId) {
 }
 
 function handleReset() {
+  cancelCharacterJobPolling()
   stopProgress()
   photoFile.value = null
   if (photoPreviewUrl.value) URL.revokeObjectURL(photoPreviewUrl.value)
@@ -270,6 +296,7 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => {
+  cancelCharacterJobPolling()
   stopProgress()
   if (photoPreviewUrl.value) URL.revokeObjectURL(photoPreviewUrl.value)
 })

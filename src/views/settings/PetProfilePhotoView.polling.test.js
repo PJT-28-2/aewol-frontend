@@ -137,4 +137,53 @@ describe('PetProfilePhotoView 캐릭터 생성 폴링', () => {
 
     expect(host.textContent).toContain('시간이 너무 오래 걸리고 있어요')
   })
+
+  /*
+   * 폴링은 setInterval이 아니라 루프라 컴포넌트가 사라져도 저절로 멈추지 않는다.
+   * 그대로 두면 화면을 떠난 뒤에도 3분 동안 90번을 더 조회한다.
+   */
+  it('화면을 떠나면 더 이상 물어보지 않는다', async () => {
+    mocks.fetchCharacterJob.mockResolvedValue({ data: { result: { status: 'RUNNING' } } })
+
+    await startGeneration()
+    await advance(2000)
+    const calledWhileMounted = mocks.fetchCharacterJob.mock.calls.length
+    expect(calledWhileMounted).toBeGreaterThan(0)
+
+    app.unmount()
+    await advance(20000)
+
+    expect(mocks.fetchCharacterJob).toHaveBeenCalledTimes(calledWhileMounted)
+  })
+
+  /*
+   * "이 사진으로 만들기"를 빠르게 두 번 누르면 DOM이 갱신되기 전에 두 번 들어간다.
+   * 그러면 폴링 루프가 둘이 되고, 먼저 시작한 쪽의 결과가 뒤늦게 도착해 나중 결과를
+   * 덮어쓸 수 있다.
+   */
+  it('두 번 눌러도 먼저 시작한 쪽의 결과가 화면을 덮지 않는다', async () => {
+    mocks.submitCharacterJob
+      .mockResolvedValueOnce({ data: { result: { jobId: 'job-1' } } })
+      .mockResolvedValue({ data: { result: { jobId: 'job-2' } } })
+    mocks.fetchCharacterJob.mockImplementation((_petId, jobId) =>
+      Promise.resolve({
+        data: { result: { status: 'DONE', profileImg: `https://cdn/${jobId}.png` } },
+      }))
+
+    const input = host.querySelector('input[type="file"]')
+    const file = new File(['x'], 'pet.png', { type: 'image/png' })
+    Object.defineProperty(input, 'files', { value: [file], configurable: true })
+    input.dispatchEvent(new Event('change'))
+    await flush()
+
+    const convert = findButtonByText('이 사진으로 만들기')
+    convert.click()
+    convert.click()
+    await flush()
+    await advance(2000)
+
+    // 나중에 시작한 쪽만 화면에 남는다.
+    expect(host.querySelector('img[src="https://cdn/job-2.png"]')).toBeTruthy()
+    expect(host.querySelector('img[src="https://cdn/job-1.png"]')).toBeNull()
+  })
 })
