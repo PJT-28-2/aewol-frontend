@@ -207,6 +207,71 @@ describe('GroupPurchaseListView 커서 페이지네이션', () => {
     expect(host.textContent).not.toContain('검색어는 2자 이상 입력해주세요')
   })
 
+  it('검색 결과가 있는 상태에서 2자 미만으로 되돌아가면 목록을 비우고 안내 문구만 보여준다', async () => {
+    vi.useFakeTimers()
+    mocks.getList.mockResolvedValueOnce({
+      data: { result: { items: [item({ id: 71 })], hasNext: false, nextCursor: null } },
+    })
+
+    await mountView()
+
+    const input = host.querySelector('input[type="text"]')
+    input.value = '사료'
+    input.dispatchEvent(new Event('input'))
+    await nextTick()
+    vi.advanceTimersByTime(300)
+    await flush()
+
+    expect(host.querySelectorAll('h3')).toHaveLength(1)
+
+    input.value = '사'
+    input.dispatchEvent(new Event('input'))
+    await nextTick()
+    await flush()
+
+    expect(host.querySelectorAll('h3')).toHaveLength(0)
+    expect(host.textContent).toContain('검색어는 2자 이상 입력해주세요')
+  })
+
+  it('2자 미만 상태로 바뀐 뒤 진행 중이던 이전 조회가 뒤늦게 응답해도 목록에 반영되지 않는다', async () => {
+    vi.useFakeTimers()
+    let resolveSearch
+    mocks.getList
+      .mockResolvedValueOnce({
+        data: { result: { items: [], hasNext: false, nextCursor: null } },
+      })
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveSearch = resolve
+          }),
+      )
+
+    await mountView()
+
+    const input = host.querySelector('input[type="text"]')
+    input.value = '사료'
+    input.dispatchEvent(new Event('input'))
+    await nextTick()
+    vi.advanceTimersByTime(300)
+    await flush()
+
+    input.value = '사'
+    input.dispatchEvent(new Event('input'))
+    await nextTick()
+    await flush()
+
+    expect(host.textContent).toContain('검색어는 2자 이상 입력해주세요')
+
+    resolveSearch({
+      data: { result: { items: [item({ id: 81 })], hasNext: false, nextCursor: null } },
+    })
+    await flush()
+
+    expect(host.querySelectorAll('h3')).toHaveLength(0)
+    expect(host.textContent).toContain('검색어는 2자 이상 입력해주세요')
+  })
+
   it('hasNext=true인데 nextCursor가 없으면(계약 위반) 다음 페이지가 없는 것으로 처리한다', async () => {
     mocks.getList.mockResolvedValueOnce({
       data: { result: { items: [item({ id: 51 })], hasNext: true, nextCursor: null } },

@@ -176,7 +176,16 @@ const isKeywordTooShort = computed(() => {
 let searchDebounceTimer = null;
 watch(searchKeyword, () => {
   clearTimeout(searchDebounceTimer);
-  if (isKeywordTooShort.value) return;
+  if (isKeywordTooShort.value) {
+    // 진행 중이던 이전 조회가 이 상태로 바뀐 뒤 뒤늦게 응답하면 generation을 안 올렸을 때
+    // 그 결과가 안내 문구 아래에 그대로 반영된다 — generation을 올려 무효화하고 목록도 비운다
+    requestGeneration += 1;
+    groupPurchases.value = [];
+    hasNext.value = false;
+    isLoading.value = false;
+    isError.value = false;
+    return;
+  }
   searchDebounceTimer = setTimeout(resetAndLoad, 300);
 });
 
