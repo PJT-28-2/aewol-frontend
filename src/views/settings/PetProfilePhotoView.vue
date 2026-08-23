@@ -36,6 +36,7 @@ const fileInput = ref(null)
 const errorMessage = ref('')
 const remainingToday = ref(null)
 const isShowingExistingCharacter = ref(false)
+const isGenerating = ref(false)
 let progressTimer
 
 // 서버가 단계별 진척도를 내려주지 않으므로 실제 파이프라인을 그대로 반영할 수는
@@ -137,6 +138,9 @@ function stopStatusRotation() {
 }
 
 async function handleConvert() {
+  // DOM이 step 변경을 반영하기 전에 연속 클릭이 들어와도 POST는 한 번만 보낸다.
+  if (isGenerating.value) return
+
   const petId = targetPet.value?.id
   if (!petId) {
     errorMessage.value = '반려동물 정보를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.'
@@ -144,6 +148,7 @@ async function handleConvert() {
   }
   if (!photoFile.value) return
 
+  isGenerating.value = true
   errorMessage.value = ''
   step.value = 3
   startProgress()
@@ -153,6 +158,7 @@ async function handleConvert() {
 
   try {
     const { data: accepted } = await petApi.submitCharacterJob(petId, photoFile.value)
+    if (token !== activeJobToken) return
     const jobId = (accepted.result ?? accepted).jobId
     const result = await waitForCharacterJob(petId, jobId, token)
     // 화면을 떠났거나 다시 시작했다. 지금 화면에 손대지 않는다.
@@ -188,7 +194,10 @@ async function handleConvert() {
     // 사진 확인 단계로 돌려보내 같은 사진으로 재시도하거나 다른 사진을 고르게 한다.
     step.value = 2
   } finally {
-    stopProgress()
+    if (token === activeJobToken) {
+      isGenerating.value = false
+      stopProgress()
+    }
   }
 }
 
@@ -203,6 +212,8 @@ async function handleConvert() {
  */
 const JOB_POLL_INTERVAL_MS = 2000
 const JOB_POLL_TIMEOUT_MS = 180000
+const JOB_POLL_REQUEST_TIMEOUT_MS = 10000
+const JOB_POLL_MAX_CONSECUTIVE_ERRORS = 3
 
 /**
  * 지금 화면이 기다리고 있는 작업을 가리키는 표.
@@ -221,12 +232,36 @@ function cancelCharacterJobPolling() {
 
 async function waitForCharacterJob(petId, jobId, token) {
   const deadline = Date.now() + JOB_POLL_TIMEOUT_MS
+  let consecutiveErrors = 0
+
+  if (token !== activeJobToken) return null
 
   while (Date.now() < deadline) {
-    await new Promise((resolve) => setTimeout(resolve, JOB_POLL_INTERVAL_MS))
+    const sleepMs = Math.min(JOB_POLL_INTERVAL_MS, deadline - Date.now())
+    await new Promise((resolve) => setTimeout(resolve, sleepMs))
     if (token !== activeJobToken) return null
+    if (Date.now() >= deadline) break
 
-    const { data } = await petApi.fetchCharacterJob(petId, jobId)
+    let data
+    try {
+      const remainingMs = deadline - Date.now()
+      const response = await petApi.fetchCharacterJob(
+        petId,
+        jobId,
+        Math.min(JOB_POLL_REQUEST_TIMEOUT_MS, remainingMs),
+      )
+      data = response.data
+      consecutiveErrors = 0
+    } catch (error) {
+      if (token !== activeJobToken) return null
+      if (!isRetryablePollingError(error)) throw error
+
+      consecutiveErrors += 1
+      if (consecutiveErrors >= JOB_POLL_MAX_CONSECUTIVE_ERRORS) {
+        throw new Error('서버 연결이 원활하지 않아요. 잠시 후 다시 시도해 주세요.')
+      }
+      continue
+    }
     // 응답을 기다리는 사이에도 화면을 떠났거나 다시 시작했을 수 있다.
     if (token !== activeJobToken) return null
 
@@ -238,6 +273,11 @@ async function waitForCharacterJob(petId, jobId, token) {
   }
 
   throw new Error('시간이 너무 오래 걸리고 있어요. 잠시 후 다시 시도해 주세요.')
+}
+
+function isRetryablePollingError(error) {
+  const status = error.response?.status
+  return status === undefined || status === 408 || status === 429 || status >= 500
 }
 
 function handleReset() {
@@ -451,6 +491,7 @@ onBeforeUnmount(() => {
           class="mt-auto"
           size="lg"
           block
+          :disabled="isGenerating"
           @click="handleConvert"
         >
           이 사진으로 만들기

@@ -67,7 +67,7 @@ export const petApi = {
    * GET /api/pets/{petId}/character/jobs/{jobId}
    * result: { status: 'RUNNING' | 'DONE' | 'FAILED', profileImg?, characterImg?, remainingToday?, message? }
    */
-  fetchCharacterJob(id, jobId) {
-    return api.get(`/pets/${id}/character/jobs/${jobId}`)
+  fetchCharacterJob(id, jobId, timeout = 10000) {
+    return api.get(`/pets/${id}/character/jobs/${jobId}`, { timeout })
   },
 }
