@@ -1,7 +1,7 @@
 <script setup>
-import welcomePets from '@/assets/images/onboarding-welcome-pets-v4.png'
-import memoryPlay from '@/assets/images/onboarding-memory-play-v1.png'
-import memoryWalk from '@/assets/images/onboarding-memory-walk-v1.png'
+import welcomePets from '@/assets/images/onboarding-welcome-pets-v4.webp'
+import memoryPlay from '@/assets/images/onboarding-memory-play-v1.webp'
+import memoryWalk from '@/assets/images/onboarding-memory-walk-v1.webp'
 import IconChevronRight from '@/components/common/icons/IconChevronRight.vue'
 import IconDocument from '@/components/common/icons/IconDocument.vue'
 import IconPlus from '@/components/common/icons/IconPlus.vue'

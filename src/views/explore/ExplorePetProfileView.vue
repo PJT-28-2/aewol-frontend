@@ -4,8 +4,8 @@ import { useRoute } from 'vue-router'
 import EmptyState from '@/components/common/EmptyState.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import IconPaw from '@/components/common/icons/IconPaw.vue'
-import dogHero from '@/assets/images/pet-dog-default-home-v3.png'
-import catHero from '@/assets/images/pet-cat-default-home-v3.png'
+import dogHero from '@/assets/images/pet-dog-default-home-v3.webp'
+import catHero from '@/assets/images/pet-cat-default-home-v3.webp'
 import { useExploreStore } from '@/stores/explore'
 
 const route = useRoute()

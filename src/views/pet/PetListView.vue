@@ -13,8 +13,8 @@ import IconEmergencyCross from '@/components/common/icons/IconEmergencyCross.vue
 import IconFamilyCare from '@/components/common/icons/IconFamilyCare.vue'
 import IconPetInsurance from '@/components/common/icons/IconPetInsurance.vue'
 import IconImage from '@/components/common/icons/IconImage.vue'
-import dogHero from '@/assets/images/pet-dog-default-home-v3.png'
-import catHero from '@/assets/images/pet-cat-default-home-v3.png'
+import dogHero from '@/assets/images/pet-dog-default-home-v3.webp'
+import catHero from '@/assets/images/pet-cat-default-home-v3.webp'
 import { usePetStore } from '@/stores/pet'
 
 const petStore = usePetStore()
