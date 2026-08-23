@@ -22,7 +22,7 @@ export function useAuth() {
     }
 
     try {
-      authStore.user = await useMemberStore().fetchProfile()
+      authStore.setUser(await useMemberStore().fetchProfile())
       return true
     } catch {
       authStore.clearSession()

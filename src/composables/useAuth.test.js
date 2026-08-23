@@ -65,15 +65,17 @@ describe('useAuth', () => {
   it('프로필 조회가 실패하면 세션을 지우고 false를 반환한다', async () => {
     const authStore = useAuthStore()
     authStore.accessToken = 'dummy-access-token'
+    // clearSession이 지우는 대상이 실제로 있는 상태를 만든다.
     localStorage.setItem('accessToken', 'dummy-access-token')
     localStorage.setItem('refreshToken', 'dummy-refresh-token')
     mocks.fetchProfile.mockRejectedValue(new Error('unauthorized'))
     const { checkAuth } = useAuth()
 
     await expect(checkAuth()).resolves.toBe(false)
+
+    // 여기서 볼 것은 "세션이 끊겼는가"까지다. clearSession이 안에서 무엇을 더 지우는지는
+    // stores/auth.test.js가 본다. 양쪽에서 같은 걸 검증하면 구현을 바꿀 때 둘 다 깨진다.
     expect(authStore.accessToken).toBeNull()
     expect(localStorage.getItem('accessToken')).toBeNull()
-    expect(localStorage.getItem('refreshToken')).toBeNull()
-    expect(mocks.clearProfile).toHaveBeenCalledOnce()
   })
 })

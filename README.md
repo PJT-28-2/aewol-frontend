@@ -137,15 +137,22 @@ npm run build
 `.env.example`을 복사해 `.env.local`을 만들고 값을 채웁니다. `VITE_*` 값은 빌드 결과에 들어가므로 브라우저에서 보입니다.
 
 ```
-VITE_USE_MOCK_DATA=false
 VITE_KAKAO_REST_API_KEY=카카오_REST_API_키
 VITE_KAKAO_REDIRECT_URI=
 VITE_KAKAO_MAP_KEY=카카오_지도_JavaScript_키
 VITE_TOSS_CLIENT_KEY=TossPayments_클라이언트_키
+VITE_DEMO_MODE=false
 ```
 
 `VITE_TOSS_CLIENT_KEY`에는 브라우저용 API 개별 연동 클라이언트 키만 설정합니다.
 TossPayments 시크릿 키는 백엔드에서만 관리하며 프론트 환경변수에 넣지 않습니다.
+
+`VITE_DEMO_MODE=true`는 1원 인증 화면에서 시연용 입금자명 카드를 띄웁니다. CODEF 데모
+서버는 실제 이체를 하지 않아 은행 앱 알림이 오지 않기 때문입니다. 실서비스에서는 켜지
+않습니다.
+
+`VITE_API_BASE_URL`은 배포 빌드에서만 씁니다. 로컬 개발은 `vite.config.js`의 프록시가
+`http://localhost:8080`으로 넘겨주므로 비워 둡니다.
 
 ### 백엔드 API 프록시
 
