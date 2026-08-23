@@ -45,18 +45,29 @@ export const petApi = {
   },
 
   /**
-   * 반려동물 사진으로 AI 캐릭터 이미지 생성
-   * POST /api/pets/{petId}/character
+   * AI 캐릭터 이미지 생성 접수
+   * POST /api/pets/{petId}/character/jobs
    * body: photo (multipart, PNG/JPG/WEBP, 최대 10MB)
-   * result: { petId, profileImg, characterImg, remainingToday }
+   * result: { jobId, petId, status: 'RUNNING' }
    *
-   * 외부 LLM을 전신 캐릭터 → 정면 얼굴 두 단계로 호출해 20초 이상 걸린다.
-   * 공용 axios 인스턴스에는 타임아웃이 없지만, 이 호출만은 무한 대기하지 않도록
-   * 넉넉한 상한을 명시한다.
+   * 서버가 검증과 할당량 차감만 하고 곧바로 202로 끊는다. 생성은 백그라운드에서 돌고
+   * 진행 상태는 fetchCharacterJob으로 확인한다.
+   *
+   * 예전에는 완성될 때까지 기다리는 방식이라 응답이 20초 이상 걸렸고, 그 사이 서버
+   * 스레드가 묶이고 앞단 프록시 타임아웃에 걸릴 위험도 있었다.
    */
-  generateCharacter(id, photo) {
+  submitCharacterJob(id, photo) {
     const formData = new FormData()
     formData.append('photo', photo)
-    return api.post(`/pets/${id}/character`, formData, { timeout: 120000 })
+    return api.post(`/pets/${id}/character/jobs`, formData)
+  },
+
+  /**
+   * AI 캐릭터 생성 진행 상태 조회
+   * GET /api/pets/{petId}/character/jobs/{jobId}
+   * result: { status: 'RUNNING' | 'DONE' | 'FAILED', profileImg?, characterImg?, remainingToday?, message? }
+   */
+  fetchCharacterJob(id, jobId, timeout = 10000) {
+    return api.get(`/pets/${id}/character/jobs/${jobId}`, { timeout })
   },
 }

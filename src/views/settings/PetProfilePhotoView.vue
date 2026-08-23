@@ -36,6 +36,7 @@ const fileInput = ref(null)
 const errorMessage = ref('')
 const remainingToday = ref(null)
 const isShowingExistingCharacter = ref(false)
+const isGenerating = ref(false)
 let progressTimer
 
 // 서버가 단계별 진척도를 내려주지 않으므로 실제 파이프라인을 그대로 반영할 수는
@@ -137,6 +138,9 @@ function stopStatusRotation() {
 }
 
 async function handleConvert() {
+  // DOM이 step 변경을 반영하기 전에 연속 클릭이 들어와도 POST는 한 번만 보낸다.
+  if (isGenerating.value) return
+
   const petId = targetPet.value?.id
   if (!petId) {
     errorMessage.value = '반려동물 정보를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.'
@@ -144,13 +148,21 @@ async function handleConvert() {
   }
   if (!photoFile.value) return
 
+  isGenerating.value = true
   errorMessage.value = ''
   step.value = 3
   startProgress()
 
+  // 이전 시도가 아직 돌고 있으면 물러나게 한다.
+  const token = ++activeJobToken
+
   try {
-    const { data } = await petApi.generateCharacter(petId, photoFile.value)
-    const result = data.result ?? data
+    const { data: accepted } = await petApi.submitCharacterJob(petId, photoFile.value)
+    if (token !== activeJobToken) return
+    const jobId = (accepted.result ?? accepted).jobId
+    const result = await waitForCharacterJob(petId, jobId, token)
+    // 화면을 떠났거나 다시 시작했다. 지금 화면에 손대지 않는다.
+    if (result === null) return
     // 정면 얼굴 생성만 실패하면 전신 이미지라도 내려온다.
     resultUrl.value = result.profileImg || result.characterImg || ''
     remainingToday.value = result.remainingToday ?? null
@@ -172,16 +184,104 @@ async function handleConvert() {
     isShowingExistingCharacter.value = false
     step.value = 4
   } catch (error) {
+    // 떠난 뒤에 도착한 실패로 다음 화면을 어지럽히지 않는다.
+    if (token !== activeJobToken) return
+    // 서버가 준 이유(응답 본문)와 폴링이 판단한 이유(Error) 둘 다 그대로 보여준다.
     errorMessage.value =
-      error.response?.data?.message ?? '캐릭터를 만들지 못했어요. 다른 사진으로 다시 시도해 주세요.'
+      error.response?.data?.message
+      ?? error.message
+      ?? '캐릭터를 만들지 못했어요. 다른 사진으로 다시 시도해 주세요.'
     // 사진 확인 단계로 돌려보내 같은 사진으로 재시도하거나 다른 사진을 고르게 한다.
     step.value = 2
   } finally {
-    stopProgress()
+    if (token === activeJobToken) {
+      isGenerating.value = false
+      stopProgress()
+    }
   }
 }
 
+/**
+ * 생성이 끝날 때까지 상태를 물어본다.
+ *
+ * 서버가 접수만 하고 곧바로 끊으므로 결과는 따로 받아와야 한다. 생성은 20~25초가
+ * 걸리고 그보다 빨리 끝나는 경우는 없으므로 첫 조회부터 간격을 두고 시작한다.
+ *
+ * 상한을 둔다. 서버가 상태를 남기지 못하는 상황(작업 유실 등)에서 화면이 영원히
+ * 돌아가면 사용자는 무엇이 잘못됐는지 알 수 없다.
+ */
+const JOB_POLL_INTERVAL_MS = 2000
+const JOB_POLL_TIMEOUT_MS = 180000
+const JOB_POLL_REQUEST_TIMEOUT_MS = 10000
+const JOB_POLL_MAX_CONSECUTIVE_ERRORS = 3
+
+/**
+ * 지금 화면이 기다리고 있는 작업을 가리키는 표.
+ *
+ * 폴링은 setInterval이 아니라 루프라 stopProgress로는 멈추지 않는다. 표가 바뀌면
+ * 돌고 있던 루프가 스스로 물러난다.
+ *
+ * 이게 없으면 두 가지가 어긋난다. 화면을 떠난 뒤에도 3분 동안 계속 조회하고, 다시
+ * 시도했을 때 이전 작업의 결과가 뒤늦게 도착해 새 결과를 덮어쓴다.
+ */
+let activeJobToken = 0
+
+function cancelCharacterJobPolling() {
+  activeJobToken += 1
+}
+
+async function waitForCharacterJob(petId, jobId, token) {
+  const deadline = Date.now() + JOB_POLL_TIMEOUT_MS
+  let consecutiveErrors = 0
+
+  if (token !== activeJobToken) return null
+
+  while (Date.now() < deadline) {
+    const sleepMs = Math.min(JOB_POLL_INTERVAL_MS, deadline - Date.now())
+    await new Promise((resolve) => setTimeout(resolve, sleepMs))
+    if (token !== activeJobToken) return null
+    if (Date.now() >= deadline) break
+
+    let data
+    try {
+      const remainingMs = deadline - Date.now()
+      const response = await petApi.fetchCharacterJob(
+        petId,
+        jobId,
+        Math.min(JOB_POLL_REQUEST_TIMEOUT_MS, remainingMs),
+      )
+      data = response.data
+      consecutiveErrors = 0
+    } catch (error) {
+      if (token !== activeJobToken) return null
+      if (!isRetryablePollingError(error)) throw error
+
+      consecutiveErrors += 1
+      if (consecutiveErrors >= JOB_POLL_MAX_CONSECUTIVE_ERRORS) {
+        throw new Error('서버 연결이 원활하지 않아요. 잠시 후 다시 시도해 주세요.')
+      }
+      continue
+    }
+    // 응답을 기다리는 사이에도 화면을 떠났거나 다시 시작했을 수 있다.
+    if (token !== activeJobToken) return null
+
+    const job = data.result ?? data
+    if (job.status === 'DONE') return job
+    if (job.status === 'FAILED') {
+      throw new Error(job.message || '캐릭터를 만들지 못했어요. 다른 사진으로 다시 시도해 주세요.')
+    }
+  }
+
+  throw new Error('시간이 너무 오래 걸리고 있어요. 잠시 후 다시 시도해 주세요.')
+}
+
+function isRetryablePollingError(error) {
+  const status = error.response?.status
+  return status === undefined || status === 408 || status === 429 || status >= 500
+}
+
 function handleReset() {
+  cancelCharacterJobPolling()
   stopProgress()
   photoFile.value = null
   if (photoPreviewUrl.value) URL.revokeObjectURL(photoPreviewUrl.value)
@@ -236,6 +336,7 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => {
+  cancelCharacterJobPolling()
   stopProgress()
   if (photoPreviewUrl.value) URL.revokeObjectURL(photoPreviewUrl.value)
 })
@@ -390,6 +491,7 @@ onBeforeUnmount(() => {
           class="mt-auto"
           size="lg"
           block
+          :disabled="isGenerating"
           @click="handleConvert"
         >
           이 사진으로 만들기
