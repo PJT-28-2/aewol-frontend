@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import AewolLogo from '@/components/common/AewolLogo.vue'
 import AppButton from '@/components/common/AppButton.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
+import EmptyState from '@/components/common/EmptyState.vue'
 import IconNotificationBell from '@/components/common/icons/IconNotificationBell.vue'
 import IconPublicSupport from '@/components/common/icons/IconPublicSupport.vue'
 import IconWallet from '@/components/common/icons/IconWallet.vue'
@@ -201,7 +202,24 @@ onMounted(() => {
         </h1>
       </header>
 
+      <!--
+        등록된 반려동물이 없으면 기본 마스코트를 보여주는 대신 등록을 안내한다.
+        기본 이미지를 그대로 쓰면 내 반려동물이 등록된 것처럼 오해할 수 있다.
+      -->
       <section
+        v-if="!primaryPet"
+        class="mt-(--space-4) rounded-[30px] bg-(--color-white) shadow-(--shadow-card)"
+      >
+        <EmptyState
+          :icon="IconPaw"
+          message="아직 등록된 반려동물이 없어요."
+          action-text="반려동물 등록하기"
+          action-route="/pets/register"
+        />
+      </section>
+
+      <section
+        v-else
         class="relative mt-(--space-4) flex h-[286px] items-end justify-center overflow-hidden rounded-[30px] bg-(--color-leaf-soft)"
         :aria-label="`${petName} 대표 이미지`"
       >
