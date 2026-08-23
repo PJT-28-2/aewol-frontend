@@ -1,4 +1,6 @@
 import axios from 'axios'
+import { getActivePinia } from 'pinia'
+import { isValidToken } from '@/utils/token'
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
@@ -13,7 +15,7 @@ api.interceptors.request.use(
       if (!config.useExplicitAuthorization) {
         delete config.headers.Authorization
       }
-    } else if (token) {
+    } else if (isValidToken(token)) {
       config.headers.Authorization = `Bearer ${token}`
     } else {
       delete config.headers.Authorization
@@ -27,27 +29,22 @@ api.interceptors.request.use(
 let isRefreshing = false
 let failedQueue = []
 
-const isValidToken = (token) => {
-  if (typeof token !== 'string') return false
-  const normalizedToken = token.trim().toLowerCase()
-  return normalizedToken.length > 0 && normalizedToken !== 'undefined' && normalizedToken !== 'null'
-}
-
 const syncAccessToken = async (accessToken) => {
   const { useAuthStore } = await import('@/stores/auth')
   useAuthStore().accessToken = accessToken
 }
 
 const clearAuthSession = async () => {
-  try {
+  if (getActivePinia()) {
     const { useAuthStore } = await import('@/stores/auth')
-    useAuthStore().clearSession()
-  } catch {
-    localStorage.removeItem('accessToken')
-    localStorage.removeItem('refreshToken')
-    window.sessionStorage.removeItem('profileEditPasswordVerified')
-    window.sessionStorage.removeItem('kakaoOAuthState')
+    await useAuthStore().clearSession()
+    return
   }
+
+  localStorage.removeItem('accessToken')
+  localStorage.removeItem('refreshToken')
+  window.sessionStorage.removeItem('profileEditPasswordVerified')
+  window.sessionStorage.removeItem('kakaoOAuthState')
 }
 
 const processQueue = (error, token = null) => {
@@ -86,8 +83,8 @@ api.interceptors.response.use(
 
       try {
         const refreshToken = localStorage.getItem('refreshToken')
-        if (!refreshToken) {
-          throw new Error('No refresh token')
+        if (!isValidToken(refreshToken)) {
+          throw new Error('No valid refresh token')
         }
         const { data } = await axios.post(
           `${import.meta.env.VITE_API_BASE_URL}/auth/refresh`,
@@ -112,8 +109,12 @@ api.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
         return api(originalRequest)
       } catch (refreshError) {
+        try {
+          await clearAuthSession()
+        } catch {
+          // Preserve the refresh failure as the rejection reason.
+        }
         processQueue(refreshError, null)
-        await clearAuthSession()
         window.location.href = '/login'
         return Promise.reject(refreshError)
       } finally {

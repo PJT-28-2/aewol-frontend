@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   login: vi.fn(),
   kakaoLogin: vi.fn(),
   completeKakaoSignup: vi.fn(),
+  refresh: vi.fn(),
   fetchProfile: vi.fn(),
   clearProfile: vi.fn(),
   setHasSimplePassword: vi.fn(),
@@ -16,6 +17,7 @@ vi.mock('@/api/auth', () => ({
     login: mocks.login,
     kakaoLogin: mocks.kakaoLogin,
     completeKakaoSignup: mocks.completeKakaoSignup,
+    refresh: mocks.refresh,
   },
 }))
 
@@ -107,6 +109,8 @@ describe('useAuthStore Kakao OAuth', () => {
     { name: 'accessToken 누락', accessToken: null, refreshToken: 'restored-refresh-token', registrationToken: null },
     { name: 'accessToken 비정상 문자열', accessToken: 'undefined', refreshToken: 'restored-refresh-token', registrationToken: null },
     { name: 'refreshToken 누락', accessToken: 'restored-access-token', refreshToken: null, registrationToken: null },
+    { name: 'registrationToken 필드 누락', accessToken: 'restored-access-token', refreshToken: 'restored-refresh-token' },
+    { name: '빈 registrationToken', accessToken: 'restored-access-token', refreshToken: 'restored-refresh-token', registrationToken: '' },
     { name: 'registrationToken 잔존', accessToken: 'restored-access-token', refreshToken: 'restored-refresh-token', registrationToken: 'unexpected-token' },
   ])('ACCOUNT_RESTORED의 $name 응답은 fail-closed 처리한다', async (response) => {
     localStorage.setItem('accessToken', 'stale-access-token')
@@ -143,10 +147,157 @@ describe('useAuthStore Kakao OAuth', () => {
 
     expect(store.accessToken).toBe('local-access-token')
     expect(store.user).toEqual({ id: 2, provider: 'LOCAL' })
+    expect(localStorage.getItem('accessToken')).toBe('local-access-token')
     expect(localStorage.getItem('refreshToken')).toBe('local-refresh-token')
     expect(store.registrationToken).toBeNull()
     expect(sessionStorage.getItem(REGISTRATION_TOKEN_KEY)).toBeNull()
   })
+
+  it.each([
+    {
+      name: 'accessToken이 undefined',
+      result: { accessToken: undefined, refreshToken: 'valid-refresh-token' },
+    },
+    {
+      name: 'accessToken이 undefined 문자열',
+      result: { accessToken: 'undefined', refreshToken: 'valid-refresh-token' },
+    },
+    {
+      name: 'accessToken이 null 문자열',
+      result: { accessToken: 'null', refreshToken: 'valid-refresh-token' },
+    },
+    {
+      name: 'accessToken이 공백',
+      result: { accessToken: '   ', refreshToken: 'valid-refresh-token' },
+    },
+    {
+      name: 'refreshToken이 undefined',
+      result: { accessToken: 'valid-access-token', refreshToken: undefined },
+    },
+    {
+      name: 'refreshToken이 undefined 문자열',
+      result: { accessToken: 'valid-access-token', refreshToken: 'undefined' },
+    },
+    {
+      name: 'refreshToken이 null 문자열',
+      result: { accessToken: 'valid-access-token', refreshToken: 'null' },
+    },
+    {
+      name: 'refreshToken이 공백',
+      result: { accessToken: 'valid-access-token', refreshToken: '   ' },
+    },
+  ])('LOCAL 로그인 응답의 $name이면 fail-closed 처리한다', async ({ result }) => {
+    mocks.login.mockResolvedValue({ data: { result } })
+    const store = useAuthStore()
+    store.accessToken = 'stale-access-token'
+    store.user = { id: 99 }
+    localStorage.setItem('accessToken', 'stale-access-token')
+    localStorage.setItem('refreshToken', 'stale-refresh-token')
+    store.startKakaoRegistration('stale-registration-token')
+
+    await expect(
+      store.login('user@example.com', 'dummy-password'),
+    ).rejects.toThrow('로그인 응답을 확인할 수 없습니다.')
+
+    expect(store.accessToken).toBeNull()
+    expect(store.user).toBeNull()
+    expect(localStorage.getItem('accessToken')).toBeNull()
+    expect(localStorage.getItem('refreshToken')).toBeNull()
+    expect(store.registrationToken).toBeNull()
+    expect(sessionStorage.getItem(REGISTRATION_TOKEN_KEY)).toBeNull()
+    expect(mocks.fetchProfile).not.toHaveBeenCalled()
+  })
+
+  it('유효한 persisted token을 인증 상태로 복원한다', () => {
+    localStorage.setItem('accessToken', 'persisted-access-token')
+    localStorage.setItem('refreshToken', 'persisted-refresh-token')
+
+    const store = useAuthStore()
+
+    expect(store.accessToken).toBe('persisted-access-token')
+    expect(store.isAuthenticated).toBe(true)
+    expect(localStorage.getItem('accessToken')).toBe('persisted-access-token')
+    expect(localStorage.getItem('refreshToken')).toBe('persisted-refresh-token')
+  })
+
+  it.each(['undefined', 'null', '   '])(
+    'persisted accessToken %j은 인증 상태로 복원하지 않고 token storage를 정리한다',
+    (accessToken) => {
+      localStorage.setItem('accessToken', accessToken)
+      localStorage.setItem('refreshToken', 'persisted-refresh-token')
+
+      const store = useAuthStore()
+
+      expect(store.accessToken).toBeNull()
+      expect(store.isAuthenticated).toBe(false)
+      expect(localStorage.getItem('accessToken')).toBeNull()
+      expect(localStorage.getItem('refreshToken')).toBeNull()
+    },
+  )
+
+  it('malformed persisted refreshToken은 제거하고 유효한 accessToken만 복원한다', () => {
+    localStorage.setItem('accessToken', 'persisted-access-token')
+    localStorage.setItem('refreshToken', 'undefined')
+
+    const store = useAuthStore()
+
+    expect(store.accessToken).toBe('persisted-access-token')
+    expect(store.isAuthenticated).toBe(true)
+    expect(localStorage.getItem('accessToken')).toBe('persisted-access-token')
+    expect(localStorage.getItem('refreshToken')).toBeNull()
+  })
+
+  it('Pinia state에 malformed accessToken이 들어와도 인증 상태로 판단하지 않는다', () => {
+    const store = useAuthStore()
+
+    store.accessToken = 'undefined'
+
+    expect(store.isAuthenticated).toBe(false)
+  })
+
+  it('유효한 refreshToken으로 store refresh 요청을 수행한다', async () => {
+    localStorage.setItem('accessToken', 'old-access-token')
+    localStorage.setItem('refreshToken', 'valid-refresh-token')
+    mocks.refresh.mockResolvedValue({
+      data: {
+        result: {
+          accessToken: 'new-access-token',
+          refreshToken: 'new-refresh-token',
+        },
+      },
+    })
+    const store = useAuthStore()
+
+    await store.refreshToken()
+
+    expect(mocks.refresh).toHaveBeenCalledWith('valid-refresh-token')
+    expect(store.accessToken).toBe('new-access-token')
+    expect(localStorage.getItem('accessToken')).toBe('new-access-token')
+    expect(localStorage.getItem('refreshToken')).toBe('new-refresh-token')
+  })
+
+  it.each([undefined, 'undefined', 'null', '   '])(
+    'malformed refreshToken %j이면 store refresh API를 호출하지 않고 정리한다',
+    async (refreshToken) => {
+      localStorage.setItem('accessToken', 'valid-access-token')
+      localStorage.setItem('refreshToken', 'initial-refresh-token')
+      const store = useAuthStore()
+      if (refreshToken === undefined) {
+        localStorage.removeItem('refreshToken')
+      } else {
+        localStorage.setItem('refreshToken', refreshToken)
+      }
+
+      await expect(store.refreshToken()).rejects.toThrow(
+        'No valid refresh token',
+      )
+
+      expect(mocks.refresh).not.toHaveBeenCalled()
+      expect(store.accessToken).toBeNull()
+      expect(localStorage.getItem('accessToken')).toBeNull()
+      expect(localStorage.getItem('refreshToken')).toBeNull()
+    },
+  )
 
   it('clearSession이 JWT와 stale Kakao 가입 세션을 함께 제거한다', () => {
     const store = useAuthStore()
@@ -168,7 +319,7 @@ describe('useAuthStore Kakao OAuth', () => {
     expect(mocks.setHasSimplePassword).toHaveBeenCalledWith(false)
   })
 
-  it('잘못된 Kakao LOGIN_COMPLETE 응답은 stale 가입 세션을 삭제하지 않는다', async () => {
+  it('잘못된 Kakao LOGIN_COMPLETE 응답은 기존 인증과 stale 가입 세션을 제거한다', async () => {
     mocks.kakaoLogin.mockResolvedValue({
       data: {
         result: {
@@ -179,6 +330,9 @@ describe('useAuthStore Kakao OAuth', () => {
       },
     })
     const store = useAuthStore()
+    store.accessToken = 'stale-access-token'
+    localStorage.setItem('accessToken', 'stale-access-token')
+    localStorage.setItem('refreshToken', 'stale-refresh-token')
     store.startKakaoRegistration('stale-registration-token')
 
     await expect(store.kakaoLogin('dummy-code')).rejects.toThrow(
@@ -188,11 +342,56 @@ describe('useAuthStore Kakao OAuth', () => {
     expect(store.accessToken).toBeNull()
     expect(localStorage.getItem('accessToken')).toBeNull()
     expect(localStorage.getItem('refreshToken')).toBeNull()
-    expect(store.registrationToken).toBe('stale-registration-token')
-    expect(sessionStorage.getItem(REGISTRATION_TOKEN_KEY)).toBe(
-      'stale-registration-token',
-    )
+    expect(store.registrationToken).toBeNull()
+    expect(sessionStorage.getItem(REGISTRATION_TOKEN_KEY)).toBeNull()
     expect(mocks.fetchProfile).not.toHaveBeenCalled()
+  })
+
+  it('비정상 refreshToken의 Kakao LOGIN_COMPLETE 응답은 fail-closed 처리한다', async () => {
+    mocks.kakaoLogin.mockResolvedValue({
+      data: {
+        result: {
+          authStatus: 'LOGIN_COMPLETE',
+          accessToken: 'new-access-token',
+          refreshToken: 'null',
+        },
+      },
+    })
+    const store = useAuthStore()
+    store.accessToken = 'stale-access-token'
+    localStorage.setItem('accessToken', 'stale-access-token')
+    localStorage.setItem('refreshToken', 'stale-refresh-token')
+
+    await expect(store.kakaoLogin('dummy-code')).rejects.toThrow(
+      '카카오 로그인 응답을 확인할 수 없습니다.',
+    )
+
+    expect(store.accessToken).toBeNull()
+    expect(localStorage.getItem('accessToken')).toBeNull()
+    expect(localStorage.getItem('refreshToken')).toBeNull()
+    expect(mocks.fetchProfile).not.toHaveBeenCalled()
+  })
+
+  it('Kakao LOGIN_COMPLETE 후 프로필 조회가 실패하면 발급받은 인증 상태를 제거한다', async () => {
+    mocks.kakaoLogin.mockResolvedValue({
+      data: {
+        result: {
+          authStatus: 'LOGIN_COMPLETE',
+          accessToken: 'new-access-token',
+          refreshToken: 'new-refresh-token',
+          registrationToken: null,
+        },
+      },
+    })
+    mocks.fetchProfile.mockRejectedValueOnce(new Error('profile failed'))
+    const store = useAuthStore()
+
+    await expect(store.kakaoLogin('dummy-code')).rejects.toThrow('profile failed')
+
+    expect(store.accessToken).toBeNull()
+    expect(store.user).toBeNull()
+    expect(localStorage.getItem('accessToken')).toBeNull()
+    expect(localStorage.getItem('refreshToken')).toBeNull()
   })
 
   it('신규 Kakao 회원은 registrationToken만 현재 탭에 저장한다', async () => {

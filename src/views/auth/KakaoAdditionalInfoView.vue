@@ -458,7 +458,7 @@ onBeforeUnmount(() => {
     <section
       class="mt-(--space-8) flex flex-col"
     >
-      <div class="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-(--space-2)">
+      <div class="grid grid-cols-[minmax(0,1fr)_7rem] items-end gap-(--space-2)">
         <AppInput
           :model-value="phone"
           label="전화번호"
@@ -471,9 +471,9 @@ onBeforeUnmount(() => {
           @update:model-value="handlePhoneInput"
         />
         <AppButton
-          class="shrink-0"
+          class="w-full whitespace-nowrap"
           type="button"
-          size="md"
+          size="form"
           :loading="isSending"
           :disabled="!isPhoneValid || isVerifying || isPhoneVerified"
           @click="handleRequestCode"
@@ -490,7 +490,7 @@ onBeforeUnmount(() => {
         {{ phoneMessage.text }}
       </p>
 
-      <div class="mt-(--space-6) grid grid-cols-[minmax(0,1fr)_auto] items-end gap-(--space-2)">
+      <div class="mt-(--space-6) grid grid-cols-[minmax(0,1fr)_7rem] items-end gap-(--space-2)">
         <AppInput
           :model-value="verificationCode"
           label="인증번호"
@@ -504,9 +504,9 @@ onBeforeUnmount(() => {
           @update:model-value="handleVerificationCodeInput"
         />
         <AppButton
-          class="shrink-0"
+          class="w-full whitespace-nowrap"
           type="button"
-          size="md"
+          size="form"
           :loading="isVerifying"
           :disabled="!canVerify"
           @click="handleVerifyCode"
@@ -545,7 +545,7 @@ onBeforeUnmount(() => {
       novalidate
       @submit.prevent="handleCompleteSignup"
     >
-      <div class="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-(--space-2)">
+      <div class="grid grid-cols-[minmax(0,1fr)_7rem] items-end gap-(--space-2)">
         <AppInput
           :model-value="address.zipCode"
           label="우편번호"
@@ -555,9 +555,9 @@ onBeforeUnmount(() => {
           required
         />
         <AppButton
-          class="shrink-0"
+          class="w-full whitespace-nowrap"
           type="button"
-          size="md"
+          size="form"
           @click="isAddressSearchOpen = true"
         >
           우편번호 찾기

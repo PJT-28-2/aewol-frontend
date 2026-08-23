@@ -87,9 +87,21 @@ const isLoadingMore = ref(false);
 const isError = ref(false);
 const loadMoreError = ref(false);
 
+// 지출리포트(DashboardView)에서 카테고리/반려동물 카드를 눌러 들어온 진입(=category 또는
+// petId 쿼리가 있는 상태)은 "이 카테고리/반려동물의 지출 상세"가 목적이라, REFUND가 섞여
+// 나오면 안 된다. 반면 지갑 메인 > 전체 거래내역처럼 필터 없이 들어온 일반 조회는 REFUND도
+// 함께 보여주는 게 기존 의도된 동작이라 그대로 둔다. activeFilter를 직접 '충전'/'출금'으로
+// 바꾼 경우는 사용자가 명시적으로 고른 값이라 이 분기로 덮어쓰지 않는다.
+// 백엔드가 type=PAYMENT를 지원하며, PAYMENT/WITHDRAW 필터 양쪽 다 환불(REFUND)된 원 결제를
+// NOT EXISTS로 이미 제외해준다(TransactionMapper.xml) — 클라이언트에서 따로 걸러낼 필요 없음.
 function transactionRequestParams(cursor = null) {
+  const isCategoryOrPetEntry = Boolean(categoryFilter.value || petFilter.value);
+  const type =
+    activeFilter.value === 'all' && isCategoryOrPetEntry
+      ? 'PAYMENT'
+      : activeFilter.value.toUpperCase();
   return {
-    type: activeFilter.value.toUpperCase(),
+    type,
     period: `${activeMonth.value.year}-${String(activeMonth.value.month).padStart(2, '0')}`,
     size: 100,
     ...(cursor ? { cursor } : {}),
@@ -214,11 +226,19 @@ const filteredTransactions = computed(() => {
 });
 
 onMounted(async () => {
-  await Promise.allSettled([
-    petStore.pets.length ? Promise.resolve() : petStore.fetchPets(),
-    fetchTransactions(),
-  ]);
+  // hasMultiplePets/반려동물 필터 시트도 petStore.pets를 쓰므로, petId 쿼리 유무와 무관하게
+  // pets가 비어있으면 로드는 항상 시도한다. 다만 petFilter 계산(=petId를 유효한 값으로
+  // 해석하는 것)에만 pets 데이터가 필요하므로, petId 쿼리로 들어온 경우에만 그 로드를
+  // 기다렸다가 거래내역을 조회한다 — 예전처럼 Promise.allSettled로 무조건 병렬 실행하면
+  // 새로고침 등 pets가 비어있는 상태에서 petFilter가 null인 채로 첫 조회가 나가버린다.
+  // category 진입이나 필터 없는 일반 진입은 pets 로드를 기다릴 필요가 없으니 백그라운드로
+  // 흘려보내고 거래내역 조회를 바로 시작한다.
+  if (!petStore.pets.length) {
+    const petsLoaded = petStore.fetchPets().catch(() => {});
+    if (route.query.petId) await petsLoaded;
+  }
   petFilter.value = resolvePetFilterFromQuery();
+  await fetchTransactions();
 });
 </script>
 
