@@ -17,8 +17,8 @@ import { getHomeInsights } from '@/api/insight'
 import RecommendedProductCarousel from '@/components/home/RecommendedProductCarousel.vue'
 import CategoryDonutChart from '@/components/home/CategoryDonutChart.vue'
 import { CATEGORY_CHART_PALETTE } from '@/utils/categoryChartPalette'
-import dogHero from '@/assets/images/pet-dog-default-home-v3.png'
-import catHero from '@/assets/images/pet-cat-default-home-v3.png'
+import dogHero from '@/assets/images/pet-dog-default-home-v3.webp'
+import catHero from '@/assets/images/pet-cat-default-home-v3.webp'
 
 const memberStore = useMemberStore()
 const petStore = usePetStore()

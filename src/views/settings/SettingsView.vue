@@ -17,8 +17,8 @@ import IconNotificationBell from '@/components/common/icons/IconNotificationBell
 import IconRecurring from '@/components/common/icons/IconRecurring.vue'
 import IconSavings from '@/components/common/icons/IconSavings.vue'
 import IconWallet from '@/components/common/icons/IconWallet.vue'
-import dogProfileMascot from '@/assets/images/pet-dog-default-profile-v3.png'
-import catProfileMascot from '@/assets/images/pet-cat-default-profile-v3.png'
+import dogProfileMascot from '@/assets/images/pet-dog-default-profile-v3.webp'
+import catProfileMascot from '@/assets/images/pet-cat-default-profile-v3.webp'
 
 const router = useRouter()
 const authStore = useAuthStore()
