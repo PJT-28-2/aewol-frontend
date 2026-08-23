@@ -360,6 +360,12 @@ const authRoutes = [
     meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true, title: '멍스타그램' },
   },
   {
+    path: '/explore/diaries/:diaryId',
+    name: 'ExplorePostDetail',
+    component: () => import('@/views/explore/ExplorePostDetailView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
+  },
+  {
     // 계정 주체가 반려동물이라 경로도 pet 기준이다. 사람 id는 어디에도 쓰지 않는다.
     path: '/explore/pets/:petId',
     name: 'ExplorePetProfile',

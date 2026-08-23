@@ -2,12 +2,14 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppButton from '@/components/common/AppButton.vue'
+import FeatureIconTile from '@/components/common/FeatureIconTile.vue'
+import IconChevronRight from '@/components/common/icons/IconChevronRight.vue'
+import IconImage from '@/components/common/icons/IconImage.vue'
 import BottomSheet from '@/components/common/BottomSheet.vue'
 import ContributionDonutChart from '@/components/share/ContributionDonutChart.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import PetSelectorChip from '@/components/common/PetSelectorChip.vue'
-import IconDocument from '@/components/common/icons/IconDocument.vue'
 import IconPaw from '@/components/common/icons/IconPaw.vue'
 import IconPlus from '@/components/common/icons/IconPlus.vue'
 import { useShareStore } from '@/stores/share'
@@ -199,15 +201,29 @@ onMounted(initializeSharedCare)
         </p>
       </section>
 
-      <AppButton
-        class="mt-[var(--space-5)]"
-        variant="secondary"
-        block
-        @click="router.push({ path: '/share/diary', query: { petId: selectedPetId } })"
+      <!--
+        평범한 외곽선 버튼이라 다른 기능 카드들 사이에서 눈에 띄지 않았다. 반려생활
+        화면이 쓰는 카드 형태(FeatureIconTile + 제목·설명)로 맞춰 같은 결로 보이게 한다.
+      -->
+      <router-link
+        :to="{ path: '/share/diary', query: { petId: selectedPetId } }"
+        class="mt-[var(--space-5)] flex items-center gap-[var(--space-4)] rounded-[22px] bg-(--color-white) p-[var(--space-4)] text-inherit no-underline shadow-(--shadow-sm)"
       >
-        <IconDocument :size="20" />
-        육아일기 보기
-      </AppButton>
+        <FeatureIconTile
+          :icon="IconImage"
+          tone="pink"
+        />
+        <div class="min-w-0">
+          <strong class="block text-(length:--font-sm) text-(color:--color-navy)">육아일기 보기</strong>
+          <p class="mb-0 mt-[var(--space-1)] text-(length:--font-xs) leading-[1.45] text-(color:--color-slate-muted)">
+            가족이 함께 남긴 하루를 모아 봐요.
+          </p>
+        </div>
+        <IconChevronRight
+          class="ml-auto shrink-0 text-(--color-slate)"
+          :size="18"
+        />
+      </router-link>
 
       <section
         class="mt-[var(--space-5)] grid place-items-center rounded-[24px] bg-(--color-white) p-(--space-6) shadow-(--shadow-sm)"

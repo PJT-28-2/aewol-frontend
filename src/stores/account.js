@@ -60,7 +60,7 @@ export const useAccountStore = defineStore('account', {
       // (DepositVerificationResponse.depositorNameForTest). CODEF 데모 서버에 붙어 있고
       // local/test 프로파일이거나 demo.expose-depositor-name이 켜져 있을 때만 값이 와요
       // (#290). 실제 1원이 오가는 정식 서버에서는 어떤 설정이든 항상 null이라,
-      // AccountAuthOneWon.vue의 알림 카드도 자연히 뜨지 않아요.
+      // AccountAuthOneWon.vue의 입금자명 자동 입력도 자연히 일어나지 않아요.
       depositorNameForTest: null,
       // 비밀번호 설정 화면에서 입력한 값을 확인 화면으로 넘길 때까지만 메모리에 잠깐 보관
       password: '',
@@ -172,7 +172,7 @@ export const useAccountStore = defineStore('account', {
         // CODEF가 만든 입금자명 실제 길이 — 4자가 아닐 수 있어서 항상 이 값을 신뢰해요.
         this.linking.depositorNameLength = data.result.depositorNameLength || 4;
         // 시연 노출 조건이 아니면 응답 자체에 필드가 없거나 null이라, 여기서도
-        // 항상 null로 정규화돼요 — AccountAuthOneWon.vue는 이 값이 있을 때만 알림 카드를 띄워요.
+        // 항상 null로 정규화돼요 — AccountAuthOneWon.vue는 이 값이 있을 때만 입력 박스에 바로 채워요.
         this.linking.depositorNameForTest = data.result.depositorNameForTest ?? null;
         return { verificationId: this.linking.verificationId };
       });
