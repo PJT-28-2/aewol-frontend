@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import EmptyState from '@/components/common/EmptyState.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
@@ -32,7 +32,18 @@ function handleReported() {
   isReported.value = true
 }
 
-onMounted(() => exploreStore.fetchPost(diaryId.value))
+/*
+ * 라우트가 같으면 Vue Router가 컴포넌트를 재사용한다. onMounted로만 불러오면
+ * 게시물 사이를 오갈 때 이전 글이 그대로 남는다. 지금은 그리드에서 들어오는 길밖에
+ * 없지만 "다음 게시물" 같은 걸 붙이는 순간 바로 드러난다.
+ *
+ * isReported도 같이 되돌린다. 안 그러면 A를 신고한 뒤 B로 옮겨도 신고 화면이 남는다.
+ */
+watch(diaryId, (id) => {
+  isReported.value = false
+  isReporting.value = false
+  if (id) exploreStore.fetchPost(id)
+}, { immediate: true })
 </script>
 
 <template>
@@ -70,7 +81,7 @@ onMounted(() => exploreStore.fetchPost(diaryId.value))
           <span
             class="grid size-[32px] shrink-0 place-items-center rounded-full bg-(--color-leaf-soft) text-(length:--font-sm) font-bold text-(--color-leaf-dark)"
             aria-hidden="true"
-          >{{ exploreStore.post.petName?.slice(0, 1) }}</span>
+          >{{ exploreStore.post.petName?.slice(0, 1) || '🐾' }}</span>
           <strong class="text-(length:--font-sm)">{{ exploreStore.post.petName }}</strong>
           <span class="ml-auto text-(length:--font-xs) text-(--color-slate-muted)">
             {{ dateLabel }}
