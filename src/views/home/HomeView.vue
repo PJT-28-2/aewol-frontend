@@ -239,7 +239,11 @@ onMounted(() => {
         >
       </section>
 
-      <section class="relative z-2 -mt-(--space-1) rounded-[28px] bg-(--color-white) p-(--space-6) shadow-(--shadow-card)">
+      <!-- 히어로가 있을 땐 카드가 살짝 겹치게(-mt) 올라오지만, 빈 상태 안내일 땐 겹치지 않고 간격을 둔다. -->
+      <section
+        class="relative z-2 rounded-[28px] bg-(--color-white) p-(--space-6) shadow-(--shadow-card)"
+        :class="primaryPet ? '-mt-(--space-1)' : 'mt-(--space-5)'"
+      >
         <div class="flex items-start justify-between gap-(--space-4)">
           <div>
             <p class="text-(length:--font-sm) font-medium text-(color:--color-slate-muted)">
