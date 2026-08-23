@@ -86,6 +86,16 @@ export const useAuthStore = defineStore('auth', {
       window.sessionStorage.removeItem(KAKAO_REGISTRATION_TOKEN_KEY)
     },
 
+    /**
+     * 로그인한 회원 정보를 갈아끼운다.
+     *
+     * <p>밖에서 user에 직접 대입하면, 나중에 이 값이 바뀔 때 함께 해야 할 일이
+     * 생겨도 그 대입 지점들을 찾아 고치기 어렵다. 통로를 하나로 둔다.
+     */
+    setUser(user) {
+      this.user = user
+    },
+
     clearSession() {
       this.clearKakaoRegistration()
       this.accessToken = null

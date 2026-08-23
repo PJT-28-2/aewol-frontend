@@ -1,5 +1,6 @@
 import { computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import { useMemberStore } from '@/stores/member'
 
 export function useAuth() {
   const authStore = useAuthStore()
@@ -16,18 +17,15 @@ export function useAuth() {
   }
 
   async function checkAuth() {
-    const token = localStorage.getItem('accessToken')
-    if (!token) {
+    if (!authStore.isAuthenticated) {
       return false
     }
 
     try {
-      await authStore.fetchUser()
+      authStore.setUser(await useMemberStore().fetchProfile())
       return true
     } catch {
-      localStorage.removeItem('accessToken')
-      localStorage.removeItem('refreshToken')
-      authStore.$reset()
+      authStore.clearSession()
       return false
     }
   }
