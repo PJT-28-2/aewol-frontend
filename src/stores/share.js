@@ -88,23 +88,30 @@ export const useShareStore = defineStore('share', {
       this.isLoading = true
       this.error = ''
       try {
-        const [membersResponse, contributionsResponse, logsResponse] = await Promise.all([
+        const [membersResult, contributionsResult, logsResult] = await Promise.allSettled([
           shareApi.getMembers(petId),
           shareApi.getContributions(petId),
           shareApi.getLogs(petId),
         ])
         if (requestId !== this.sharedCareRequestId) return
+        if (membersResult.status === 'rejected') {
+          throw membersResult.reason
+        }
         // 멤버 목록을 먼저 훑어 색을 정한다. 기여도는 그 색을 id로 찾아 쓰기만 한다.
         const toneOf = createToneLookup()
-        this.members = (unwrap(membersResponse) ?? []).map((member) => {
+        this.members = (unwrap(membersResult.value) ?? []).map((member) => {
           const [avatarClass, colorToken] = toneOf(member.id)
           return { ...member, avatarClass, colorToken }
         })
-        this.contributions = (unwrap(contributionsResponse) ?? []).map((contribution) => {
-          const [toneClass, colorToken] = toneOf(contribution.id)
-          return { ...contribution, toneClass, colorToken }
-        })
-        this.activities = unwrap(logsResponse) ?? []
+        this.contributions = contributionsResult.status === 'fulfilled'
+          ? (unwrap(contributionsResult.value) ?? []).map((contribution) => {
+            const [toneClass, colorToken] = toneOf(contribution.id)
+            return { ...contribution, toneClass, colorToken }
+          })
+          : []
+        this.activities = logsResult.status === 'fulfilled'
+          ? unwrap(logsResult.value) ?? []
+          : []
       } catch (error) {
         if (requestId !== this.sharedCareRequestId) return
         this.members = []
