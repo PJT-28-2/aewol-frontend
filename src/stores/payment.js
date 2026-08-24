@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia'
 import { recurringApi } from '@/api/recurring'
 
+const PENDING_CREATE_KEY = 'pendingRecurringCreate'
+
 // API 명세(recurringId/itemName/cycleDay/price/nextPaymentDate)를
 // 화면이 쓰는 내부 필드명(id/merchantName/dayOfMonth/amount/nextPaymentLabel)으로 변환한다.
 function nextPaymentDateToLabel(isoDate) {
@@ -37,17 +39,47 @@ function toApiPayload({ merchantName, amount, dayOfMonth, category, petId, idemp
   return payload
 }
 
+function readPendingCreate() {
+  try {
+    const parsed = JSON.parse(sessionStorage.getItem(PENDING_CREATE_KEY))
+    if (
+      parsed
+      && typeof parsed.key === 'string'
+      && parsed.key
+      && typeof parsed.signature === 'string'
+    ) {
+      return parsed
+    }
+  } catch {
+    // 깨진 값은 버리고 새로 만든다.
+  }
+  sessionStorage.removeItem(PENDING_CREATE_KEY)
+  return { key: null, signature: '' }
+}
+
+function writePendingCreate(key, signature) {
+  sessionStorage.setItem(PENDING_CREATE_KEY, JSON.stringify({ key, signature }))
+}
+
+function clearPendingCreateStorage() {
+  sessionStorage.removeItem(PENDING_CREATE_KEY)
+}
+
 export const usePaymentStore = defineStore('payment', {
-  state: () => ({
-    recurringPayments: [],
-    // recurringPayments.length로 재조회 여부를 판단하면, 마지막 항목을 해지해서
-    // 배열이 비었을 때 조회를 반복하는 문제가 있어 별도 플래그로 관리한다.
-    hasFetchedRecurringPayments: false,
-    // 응답만 유실된 재시도에서 서버가 첫 회차를 두 번 받지 않도록
-    // 같은 등록 내용에 묶인 멱등키를 성공 전까지 보관한다.
-    pendingCreateKey: null,
-    pendingCreateSignature: '',
-  }),
+  state: () => {
+    const pending = readPendingCreate()
+    return {
+      recurringPayments: [],
+      // recurringPayments.length로 재조회 여부를 판단하면, 마지막 항목을 해지해서
+      // 배열이 비었을 때 조회를 반복하는 문제가 있어 별도 플래그로 관리한다.
+      hasFetchedRecurringPayments: false,
+      // 응답만 유실된 재시도에서 서버가 첫 회차를 두 번 받지 않도록
+      // 같은 등록 내용에 묶인 멱등키를 성공 전까지 보관한다.
+      // 새로고침 뒤에도 같은 키를 쓰기 위해 sessionStorage에도 둔다.
+      pendingCreateKey: pending.key,
+      pendingCreateSignature: pending.signature,
+    }
+  },
 
   getters: {
     findRecurringPayment: (state) => (id) =>
@@ -106,17 +138,20 @@ export const usePaymentStore = defineStore('payment', {
         payload.category ?? '',
       ].join(':')
       if (this.pendingCreateKey && this.pendingCreateSignature === signature) {
+        writePendingCreate(this.pendingCreateKey, signature)
         return this.pendingCreateKey
       }
       this.pendingCreateSignature = signature
       this.pendingCreateKey = globalThis.crypto?.randomUUID?.()
         ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`
+      writePendingCreate(this.pendingCreateKey, this.pendingCreateSignature)
       return this.pendingCreateKey
     },
 
     clearCreateKey() {
       this.pendingCreateKey = null
       this.pendingCreateSignature = ''
+      clearPendingCreateStorage()
     },
   },
 })

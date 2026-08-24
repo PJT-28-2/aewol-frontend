@@ -108,6 +108,7 @@ export const useAuthStore = defineStore('auth', {
       window.sessionStorage.removeItem('pendingTossCharge')
       window.sessionStorage.removeItem('completedTossCharge')
       window.sessionStorage.removeItem('pendingWalletWithdrawal')
+      window.sessionStorage.removeItem('pendingRecurringCreate')
       useMemberStore().clearProfile()
       // 로그아웃/세션 종료 시 간편비밀번호 로컬 상태도 같이 지운다. fetchProfile이
       // 다시 호출될 때 서버 값으로 동기화되긴 하지만, 로그아웃 직후처럼 그 호출이
