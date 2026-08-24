@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useMemberStore } from '@/stores/member'
 import { usePetStore } from '@/stores/pet'
+import { useThemeStore } from '@/stores/theme'
 import { withWaGwa } from '@/utils/korean'
 import AppButton from '@/components/common/AppButton.vue'
 import AppModal from '@/components/common/AppModal.vue'
@@ -17,6 +18,8 @@ import IconNotificationBell from '@/components/common/icons/IconNotificationBell
 import IconRecurring from '@/components/common/icons/IconRecurring.vue'
 import IconSavings from '@/components/common/icons/IconSavings.vue'
 import IconWallet from '@/components/common/icons/IconWallet.vue'
+import IconWarning from '@/components/common/icons/IconWarning.vue'
+import IconMoon from '@/components/common/icons/IconMoon.vue'
 import dogProfileMascot from '@/assets/images/pet-dog-default-profile-v3.webp'
 import catProfileMascot from '@/assets/images/pet-cat-default-profile-v3.webp'
 
@@ -24,6 +27,7 @@ const router = useRouter()
 const authStore = useAuthStore()
 const memberStore = useMemberStore()
 const petStore = usePetStore()
+const themeStore = useThemeStore()
 const showPasswordModal = ref(false)
 const showLogoutModal = ref(false)
 const profilePassword = ref('')
@@ -98,6 +102,23 @@ const settingItems = [
   {
     title: '고객센터',
     path: '/support',
+    icon: IconChatBubble,
+    tone: 'gray',
+  },
+]
+
+const adminItems = [
+  {
+    title: '멍스타그램 신고 관리',
+    description: '신고 게시물 확인 및 처리',
+    path: '/admin/diary-reports',
+    icon: IconWarning,
+    tone: 'pink',
+  },
+  {
+    title: '고객문의 관리',
+    description: '1:1 문의 답변',
+    path: '/admin/inquiries',
     icon: IconChatBubble,
     tone: 'gray',
   },
@@ -234,6 +255,72 @@ const confirmLogout = async () => {
           <span class="mt-[3px] block truncate text-[10px] text-(color:--color-slate-muted)">{{ item.description }}</span>
         </button>
       </nav>
+    </section>
+
+    <section
+      v-if="authStore.isAdmin"
+      class="mt-(--space-7)"
+    >
+      <h2 class="mb-(--space-3) px-(--space-1) text-(length:--font-lg) font-bold text-(color:--color-navy)">
+        관리자
+      </h2>
+      <nav
+        class="overflow-hidden rounded-[22px] bg-(--color-white)"
+        aria-label="관리자 메뉴"
+      >
+        <button
+          v-for="item in adminItems"
+          :key="item.path"
+          type="button"
+          class="flex min-h-20 w-full items-center gap-(--space-3) px-(--space-4) text-left transition-colors active:bg-(--color-info-surface)"
+          @click="handleMenuClick(item)"
+        >
+          <FeatureIconTile
+            :icon="item.icon"
+            :tone="item.tone"
+          />
+          <span class="min-w-0 flex-1">
+            <strong class="block text-[13px] font-bold text-(color:--color-navy)">{{ item.title }}</strong>
+            <span class="mt-[3px] block text-[10px] text-(color:--color-slate-muted)">{{ item.description }}</span>
+          </span>
+        </button>
+      </nav>
+    </section>
+
+    <section
+      class="mt-(--space-7)"
+      aria-labelledby="display-settings-title"
+    >
+      <h2
+        id="display-settings-title"
+        class="mb-(--space-3) px-(--space-1) text-(length:--font-lg) font-bold text-(color:--color-navy)"
+      >
+        화면 설정
+      </h2>
+      <div class="flex min-h-20 items-center gap-(--space-3) rounded-[22px] bg-(--color-white) px-(--space-4)">
+        <FeatureIconTile
+          :icon="IconMoon"
+          tone="purple"
+        />
+        <span class="min-w-0 flex-1">
+          <strong class="block text-[13px] font-semibold text-(color:--color-navy)">다크 모드</strong>
+          <span class="mt-[3px] block text-[10px] text-(color:--color-slate-muted)">어두운 화면으로 눈의 피로를 줄여요</span>
+        </span>
+        <label class="cursor-pointer">
+          <input
+            class="peer sr-only"
+            type="checkbox"
+            role="switch"
+            aria-label="다크 모드"
+            :checked="themeStore.isDark"
+            @change="themeStore.setTheme($event.target.checked ? 'dark' : 'light')"
+          >
+          <span
+            class="relative block h-6 w-11 shrink-0 rounded-full bg-(--color-border) transition-colors after:absolute after:top-0.5 after:left-0.5 after:size-5 after:rounded-full after:bg-(--color-contrast) after:shadow-(--shadow-sm) after:transition-transform peer-checked:bg-(--color-leaf) peer-checked:after:translate-x-5 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-(--color-leaf-dark)"
+            aria-hidden="true"
+          />
+        </label>
+      </div>
     </section>
 
     <section class="mt-(--space-7)">

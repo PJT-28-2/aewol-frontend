@@ -253,7 +253,7 @@ onMounted(fetchTransaction);
                 class="inline-flex items-center gap-(--space-2) h-(--control-height-sm) px-(--space-4) rounded-(--radius-full) border text-(length:--font-sm) font-medium"
                 :class="
                   selectedCategory === category.key
-                    ? 'bg-(--color-gray-900) border-(--color-gray-900) text-(color:--color-white)'
+                    ? 'bg-(--color-gray-900) border-(--color-gray-900) text-(color:--color-contrast)'
                     : 'bg-(--color-white) border-(--color-border) text-(color:--color-slate-dark)'
                 "
                 @click="selectCategory(category.key)"

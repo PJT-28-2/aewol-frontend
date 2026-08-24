@@ -228,7 +228,7 @@ onMounted(() => {
 
     <!-- 잔액 + 충전/출금 카드 -->
     <div
-      class="relative mb-(--space-4) overflow-hidden rounded-[28px] bg-(--color-navy) px-(--space-6) py-(--space-6) text-(color:--color-white) shadow-(--shadow-card)"
+      class="relative mb-(--space-4) overflow-hidden rounded-[28px] bg-(--color-brand-dark) px-(--space-6) py-(--space-6) text-(color:--color-contrast) shadow-(--shadow-card)"
     >
       <p
         class="text-(length:--font-sm) text-(color:--color-slate-light)"
@@ -236,7 +236,7 @@ onMounted(() => {
         {{ memberName }}님의 애월지갑
       </p>
       <p
-        class="relative z-1 mt-(--space-2) text-[30px] font-bold tracking-[-0.03em] text-(color:--color-white)"
+        class="relative z-1 mt-(--space-2) text-[30px] font-bold tracking-[-0.03em] text-(color:--color-contrast)"
         aria-live="polite"
       >
         <span v-if="walletLoading">잔액 조회 중</span>

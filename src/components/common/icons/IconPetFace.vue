@@ -22,7 +22,7 @@ defineProps({
       stroke-linecap="round"
       stroke-linejoin="round"
     />
-    <g :fill="filled ? 'var(--color-white)' : color">
+    <g :fill="filled ? 'var(--color-contrast)' : color">
       <ellipse
         cx="12"
         cy="14.25"

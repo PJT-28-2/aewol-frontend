@@ -140,7 +140,7 @@ const goToInsuranceHome = () => {
         </div>
 
         <!-- 구분선 -->
-        <div class="h-0.5 rounded-full mb-(--space-5) bg-(--color-navy)" />
+        <div class="h-0.5 rounded-full mb-(--space-5) bg-(--color-brand-dark)" />
 
         <!-- 청구 정보 -->
         <ul class="mb-(--space-5)">

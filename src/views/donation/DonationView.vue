@@ -558,42 +558,60 @@ onMounted(loadDonationData)
         v-if="donationStore.filteredCampaigns.length"
         class="mt-[var(--space-5)] grid grid-cols-2 gap-[var(--space-3)]"
       >
-        <button
+        <article
           v-for="item in donationStore.filteredCampaigns"
           :key="item.id"
-          class="cursor-pointer overflow-hidden rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-0 text-left text-(--color-navy) shadow-(--shadow-card) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-leaf)"
-          type="button"
-          @click="chooseCampaign(item.id)"
+          class="relative overflow-hidden rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) text-(--color-navy) shadow-(--shadow-card)"
         >
-          <span class="grid h-24 place-items-center bg-(--color-leaf-soft)">
-            <IconDog
-              class="text-(--color-navy)"
-              :size="30"
-              color="currentColor"
-            />
-          </span>
-          <b
-            class="mx-[var(--space-3)] mt-[var(--space-2)] block text-[length:var(--font-sm)] text-(--color-gold-dark)"
-          >{{ item.organization }}</b>
-          <strong
-            class="mx-[var(--space-3)] mt-[var(--space-2)] block text-[length:var(--font-sm)]"
-          >{{ item.title }}</strong>
-          <span
-            class="mx-[var(--space-3)] mt-[var(--space-3)] block h-1.5 overflow-hidden rounded-(--radius-full) bg-(--color-border)"
-            role="progressbar"
-            :aria-valuenow="item.progress"
-            aria-valuemin="0"
-            aria-valuemax="100"
+          <button
+            class="w-full cursor-pointer p-0 pb-[var(--space-3)] text-left text-inherit focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-(--color-leaf)"
+            type="button"
+            @click="chooseCampaign(item.id)"
           >
-            <i
-              class="block h-full rounded-(--radius-full) bg-(--color-gold)"
-              :style="{ width: `${item.progress}%` }"
+            <span class="grid h-24 place-items-center bg-(--color-leaf-soft)">
+              <IconDog
+                class="text-(--color-navy)"
+                :size="30"
+                color="currentColor"
+              />
+            </span>
+            <b
+              class="mx-[var(--space-3)] mt-[var(--space-2)] block text-[length:var(--font-sm)] text-(--color-gold-dark)"
+            >{{ item.organization }}</b>
+            <strong
+              class="mx-[var(--space-3)] mt-[var(--space-2)] block text-[length:var(--font-sm)]"
+            >{{ item.title }}</strong>
+            <span
+              class="mx-[var(--space-3)] mt-[var(--space-3)] block h-1.5 overflow-hidden rounded-(--radius-full) bg-(--color-border)"
+              role="progressbar"
+              :aria-valuenow="item.progress"
+              aria-valuemin="0"
+              aria-valuemax="100"
+            >
+              <i
+                class="block h-full rounded-(--radius-full) bg-(--color-gold)"
+                :style="{ width: `${item.progress}%` }"
+              />
+            </span>
+            <small
+              class="mx-[var(--space-3)] mt-[var(--space-2)] block text-[length:var(--font-sm)] text-(--color-slate-muted)"
+            >{{ item.progress }}% 달성</small>
+          </button>
+          <button
+            type="button"
+            class="absolute right-[var(--space-2)] top-[var(--space-2)] grid h-10 w-10 cursor-pointer place-items-center rounded-full border border-(--color-card-border) bg-(--color-white) text-(--color-leaf-dark) shadow-(--shadow-sm) disabled:cursor-wait disabled:opacity-60"
+            :aria-label="item.preferred ? `${item.organization} 선호 기부처 해제` : `${item.organization} 선호 기부처 등록`"
+            :aria-pressed="item.preferred"
+            :disabled="donationStore.preferenceUpdatingIds.includes(item.organizationId)"
+            @click="donationStore.togglePreference(item)"
+          >
+            <IconHeart
+              :size="20"
+              color="currentColor"
+              :class="item.preferred ? 'fill-(--color-leaf)' : 'fill-none'"
             />
-          </span>
-          <small
-            class="mx-[var(--space-3)] mb-[var(--space-3)] mt-[var(--space-2)] block text-[length:var(--font-sm)] text-(--color-slate-muted)"
-          >{{ item.progress }}% 달성</small>
-        </button>
+          </button>
+        </article>
       </div>
       <EmptyState
         v-else
@@ -604,6 +622,13 @@ onMounted(loadDonationData)
             : '등록된 기부처가 아직 없어요.'
         "
       />
+      <p
+        v-if="donationStore.operationError"
+        class="mt-[var(--space-3)] text-[length:var(--font-sm)] text-(--color-danger-strong)"
+        role="alert"
+      >
+        {{ donationStore.operationError }}
+      </p>
     </template>
 
     <!-- RF-SI-06 · 저금통설정 -->

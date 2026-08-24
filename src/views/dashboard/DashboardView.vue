@@ -260,7 +260,7 @@ onMounted(fetchDashboard);
           class="h-(--control-height-sm) px-(--space-4) rounded-(--radius-full) text-(length:--font-sm) font-semibold"
           :class="
             activeTab === 'category'
-              ? 'bg-(--color-gray-900) text-(color:--color-white)'
+              ? 'bg-(--color-gray-900) text-(color:--color-contrast)'
               : 'bg-(--color-white) text-(color:--color-slate-muted) shadow-(--shadow-sm)'
           "
           @click="selectTab('category')"
@@ -274,7 +274,7 @@ onMounted(fetchDashboard);
           class="h-(--control-height-sm) px-(--space-4) rounded-(--radius-full) text-(length:--font-sm) font-semibold"
           :class="
             activeTab === 'pet'
-              ? 'bg-(--color-gray-900) text-(color:--color-white)'
+              ? 'bg-(--color-gray-900) text-(color:--color-contrast)'
               : 'bg-(--color-white) text-(color:--color-slate-muted) shadow-(--shadow-sm)'
           "
           @click="selectTab('pet')"

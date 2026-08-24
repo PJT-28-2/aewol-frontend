@@ -151,7 +151,7 @@ function goToRelated(relatedFaqId) {
           >
             <IconThumbsUp
               :size="16"
-              :color="feedback === 'HELPFUL' ? 'var(--color-white)' : 'var(--color-gray-600)'"
+              :color="feedback === 'HELPFUL' ? 'var(--color-contrast)' : 'var(--color-gray-600)'"
             />
             도움됨
           </button>
@@ -166,7 +166,7 @@ function goToRelated(relatedFaqId) {
           >
             <IconThumbsDown
               :size="16"
-              :color="feedback === 'NOT_HELPFUL' ? 'var(--color-white)' : 'var(--color-gray-600)'"
+              :color="feedback === 'NOT_HELPFUL' ? 'var(--color-contrast)' : 'var(--color-gray-600)'"
             />
             아쉬워요
           </button>

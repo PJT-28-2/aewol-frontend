@@ -395,7 +395,7 @@ async function submitVerification() {
         >
           <span
             v-if="!digit && isFocused && i === activeIndex"
-            class="w-0.5 h-6 bg-(--color-navy) animate-pulse"
+            class="w-0.5 h-6 bg-(--color-brand-dark) animate-pulse"
           />
           <template v-else>
             {{ digit }}

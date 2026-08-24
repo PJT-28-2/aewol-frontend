@@ -40,6 +40,7 @@ export const useDonationStore = defineStore('donation', {
     isInitialized: false,
     error: '',
     operationError: '',
+    preferenceUpdatingIds: [],
   }),
 
   getters: {
@@ -160,6 +161,34 @@ export const useDonationStore = defineStore('donation', {
     setAutoDonate(enabled) {
       if (this.isSubmitting) return
       this.autoDonate = enabled
+    },
+
+    async togglePreference(campaign) {
+      const organizationId = campaign?.organizationId
+      if (!organizationId || this.preferenceUpdatingIds.includes(organizationId)) return false
+
+      const preferred = !campaign.preferred
+      this.preferenceUpdatingIds.push(organizationId)
+      this.operationError = ''
+      try {
+        const request = preferred
+          ? donationApi.addPreference(organizationId)
+          : donationApi.removePreference(organizationId)
+        const result = unwrap(await request)
+        const saved = Boolean(result?.preferred)
+        this.campaigns = this.campaigns.map((item) =>
+          item.organizationId === organizationId ? { ...item, preferred: saved } : item,
+        )
+        return true
+      } catch (error) {
+        this.operationError = error.response?.data?.message
+          || '선호 기부처를 저장하지 못했어요. 다시 시도해 주세요.'
+        return false
+      } finally {
+        this.preferenceUpdatingIds = this.preferenceUpdatingIds.filter(
+          (id) => id !== organizationId,
+        )
+      }
     },
 
     async donate() {

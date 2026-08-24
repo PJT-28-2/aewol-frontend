@@ -24,7 +24,7 @@ const iconToneClass = computed(() => {
     type="button"
     class="inline-flex h-(--control-height-sm) shrink-0 items-center gap-(--space-2) whitespace-nowrap rounded-full border px-(--space-4) text-(length:--font-sm) font-semibold transition-colors"
     :class="selected
-      ? 'border-(--color-navy) bg-(--color-navy) text-(color:--color-white)'
+      ? 'border-(--color-navy) bg-(--color-brand-dark) text-(color:--color-contrast)'
       : 'border-(--color-card-border) bg-(--color-white) text-(color:--color-slate-dark)'"
     :aria-pressed="selected"
   >
