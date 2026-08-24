@@ -103,7 +103,7 @@ function handleBackspace() {
         <button
           v-else
           type="button"
-          class="h-14 flex items-center justify-center text-(length:--font-2xl) font-bold text-(color:--color-navy)"
+          class="h-14 flex touch-manipulation select-none items-center justify-center text-(length:--font-2xl) font-bold text-(color:--color-navy)"
           :aria-label="key === '⌫' ? '지우기' : key"
           @click="key === '⌫' ? handleBackspace() : handleKeyPress(key)"
         >

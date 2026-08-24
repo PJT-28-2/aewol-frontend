@@ -53,7 +53,7 @@ function handleBiometricSwitch() {
 </script>
 
 <template>
-  <div class="min-h-[calc(100svh-var(--header-height))] flex flex-col bg-(--color-app-bg)">
+  <div class="h-[calc(100svh-var(--header-height))] flex flex-col overflow-y-auto bg-(--color-app-bg)">
     <div class="mx-auto w-full max-w-(--content-max-width) px-(--space-5) pt-(--space-7) text-center">
       <header class="mb-(--space-4)">
         <span class="mx-auto mb-(--space-4) flex size-[52px] items-center justify-center rounded-[18px] bg-(--color-leaf-soft)">
