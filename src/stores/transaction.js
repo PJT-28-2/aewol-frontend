@@ -50,7 +50,12 @@ function normalizeTransaction(transaction) {
   const type = TYPE_BY_TXN_TYPE[transaction.txnType] ?? 'withdraw'
   const amount = isIncoming ? Math.abs(rawAmount) : -Math.abs(rawAmount)
   const categoryLabel = CATEGORY_LABELS[category] ?? '기타'
-  const title = transaction.merchantName
+  // 예전 공동구매 거래는 상품 전체 이름이 merchantName에 저장돼 목록을 밀어냈다.
+  // memo에는 거래 출처와 상품명이 남아 있으므로 목록 제목만 간결하게 통일한다.
+  const isGroupPurchase = transaction.memo?.startsWith('공동구매') === true
+  const title = isGroupPurchase
+    ? (isRefund ? '공동구매 환불' : '공동구매 결제')
+    : transaction.merchantName
     || (isDeposit ? '애월지갑 충전' : transaction.memo)
     || '거래 내역'
   // 환불은 실제로 소비 카테고리가 없는데도 category가 항상 'ETC'로 떨어져 부제목에

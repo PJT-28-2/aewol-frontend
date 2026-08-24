@@ -37,7 +37,7 @@ const finishEdit = () => {
         {{ props.fileName }}
       </p>
       <p class="text-(length:--font-sm) text-(color:--color-gray-500) mb-(--space-2)">
-        OCR 인식 완료 · Gemini Vision
+        영수증 정보 인식 완료
       </p>
       <span class="inline-block rounded-(--radius-full) bg-(--color-leaf-soft) px-(--space-3) py-[3px] text-(length:--font-xs) font-semibold text-(color:--color-leaf-dark)">
         인식 완료
