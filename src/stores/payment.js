@@ -2,6 +2,8 @@ import { defineStore } from 'pinia'
 import { recurringApi } from '@/api/recurring'
 import { beginSessionTask, isCurrentSession } from '@/utils/sessionEpoch'
 
+const PENDING_CREATE_KEY = 'pendingRecurringCreate'
+
 // API 명세(recurringId/itemName/cycleDay/price/nextPaymentDate)를
 // 화면이 쓰는 내부 필드명(id/merchantName/dayOfMonth/amount/nextPaymentLabel)으로 변환한다.
 function nextPaymentDateToLabel(isoDate) {
@@ -26,23 +28,59 @@ function fromApiShape(item) {
   }
 }
 
-function toApiPayload({ merchantName, amount, dayOfMonth, category, petId }) {
-  return {
+function toApiPayload({ merchantName, amount, dayOfMonth, category, petId, idempotencyKey }) {
+  const payload = {
     itemName: merchantName,
     price: amount,
     cycleDay: dayOfMonth,
     category,
     petId,
   }
+  if (idempotencyKey) payload.idempotencyKey = idempotencyKey
+  return payload
+}
+
+function readPendingCreate() {
+  try {
+    const parsed = JSON.parse(sessionStorage.getItem(PENDING_CREATE_KEY))
+    if (
+      parsed
+      && typeof parsed.key === 'string'
+      && parsed.key
+      && typeof parsed.signature === 'string'
+    ) {
+      return parsed
+    }
+  } catch {
+    // 깨진 값은 버리고 새로 만든다.
+  }
+  sessionStorage.removeItem(PENDING_CREATE_KEY)
+  return { key: null, signature: '' }
+}
+
+function writePendingCreate(key, signature) {
+  sessionStorage.setItem(PENDING_CREATE_KEY, JSON.stringify({ key, signature }))
+}
+
+function clearPendingCreateStorage() {
+  sessionStorage.removeItem(PENDING_CREATE_KEY)
 }
 
 export const usePaymentStore = defineStore('payment', {
-  state: () => ({
-    recurringPayments: [],
-    // recurringPayments.length로 재조회 여부를 판단하면, 마지막 항목을 해지해서
-    // 배열이 비었을 때 조회를 반복하는 문제가 있어 별도 플래그로 관리한다.
-    hasFetchedRecurringPayments: false,
-  }),
+  state: () => {
+    const pending = readPendingCreate()
+    return {
+      recurringPayments: [],
+      // recurringPayments.length로 재조회 여부를 판단하면, 마지막 항목을 해지해서
+      // 배열이 비었을 때 조회를 반복하는 문제가 있어 별도 플래그로 관리한다.
+      hasFetchedRecurringPayments: false,
+      // 응답만 유실된 재시도에서 서버가 첫 회차를 두 번 받지 않도록
+      // 같은 등록 내용에 묶인 멱등키를 성공 전까지 보관한다.
+      // 새로고침 뒤에도 같은 키를 쓰기 위해 sessionStorage에도 둔다.
+      pendingCreateKey: pending.key,
+      pendingCreateSignature: pending.signature,
+    }
+  },
 
   getters: {
     findRecurringPayment: (state) => (id) =>
@@ -69,7 +107,11 @@ export const usePaymentStore = defineStore('payment', {
     },
 
     async createRecurringPayment(payload) {
-      const { data } = await recurringApi.createRecurring(toApiPayload(payload))
+      const idempotencyKey = this.resolveCreateKey(payload)
+      const { data } = await recurringApi.createRecurring(
+        toApiPayload({ ...payload, idempotencyKey }),
+      )
+      this.clearCreateKey()
       const created = fromApiShape(data.result)
       this.recurringPayments.push(created)
       return created
@@ -84,6 +126,35 @@ export const usePaymentStore = defineStore('payment', {
       if (index !== -1) this.recurringPayments[index] = updated
       else this.recurringPayments.push(updated)
       return updated
+    },
+
+    /**
+     * 같은 반려동물·상품·금액·결제일·카테고리로 다시 시도하면 이전 키를 그대로 쓴다.
+     * 내용이 바뀌면 다른 등록이므로 새 키를 만든다.
+     */
+    resolveCreateKey(payload) {
+      const signature = [
+        payload.petId ?? '',
+        payload.merchantName ?? '',
+        payload.amount ?? '',
+        payload.dayOfMonth ?? '',
+        payload.category ?? '',
+      ].join(':')
+      if (this.pendingCreateKey && this.pendingCreateSignature === signature) {
+        writePendingCreate(this.pendingCreateKey, signature)
+        return this.pendingCreateKey
+      }
+      this.pendingCreateSignature = signature
+      this.pendingCreateKey = globalThis.crypto?.randomUUID?.()
+        ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`
+      writePendingCreate(this.pendingCreateKey, this.pendingCreateSignature)
+      return this.pendingCreateKey
+    },
+
+    clearCreateKey() {
+      this.pendingCreateKey = null
+      this.pendingCreateSignature = ''
+      clearPendingCreateStorage()
     },
   },
 })

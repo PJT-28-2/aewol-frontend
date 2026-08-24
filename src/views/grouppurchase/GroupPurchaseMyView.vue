@@ -119,9 +119,6 @@ watch(selectedStatus, loadMyGroupPurchases);
           />
         </button>
       </div>
-      <p class="text-(length:--font-md) text-(color:--color-slate-muted)">
-        내가 참여한 게시물을 확인해요
-      </p>
     </header>
 
     <!-- 상태 선택 바텀시트 -->

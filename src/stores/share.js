@@ -57,6 +57,16 @@ export const useShareStore = defineStore('share', {
     error: '',
   }),
 
+  getters: {
+    /** 대표 보호자(목록에서 ADMIN)와 MANAGER만 일기를 쓸 수 있다. VIEWER는 조회만. */
+    canWriteDiary: (state) => (memberId) => {
+      if (!memberId) return false
+      const me = state.members.find((member) => String(member.id) === String(memberId))
+      const role = String(me?.role ?? '').toUpperCase()
+      return role === 'ADMIN' || role === 'MANAGER'
+    },
+  },
+
   actions: {
     async fetchPets() {
       const epoch = beginSessionTask()
@@ -84,24 +94,31 @@ export const useShareStore = defineStore('share', {
       this.isLoading = true
       this.error = ''
       try {
-        const [membersResponse, contributionsResponse, logsResponse] = await Promise.all([
+        const [membersResult, contributionsResult, logsResult] = await Promise.allSettled([
           shareApi.getMembers(petId),
           shareApi.getContributions(petId),
           shareApi.getLogs(petId),
         ])
         // $reset() 뒤 새 세션의 첫 요청도 1부터라, 순번만 보면 이전 계정 응답을 받는다.
         if (!isCurrentSession(epoch) || requestId !== this.sharedCareRequestId) return
+        if (membersResult.status === 'rejected') {
+          throw membersResult.reason
+        }
         // 멤버 목록을 먼저 훑어 색을 정한다. 기여도는 그 색을 id로 찾아 쓰기만 한다.
         const toneOf = createToneLookup()
-        this.members = (unwrap(membersResponse) ?? []).map((member) => {
+        this.members = (unwrap(membersResult.value) ?? []).map((member) => {
           const [avatarClass, colorToken] = toneOf(member.id)
           return { ...member, avatarClass, colorToken }
         })
-        this.contributions = (unwrap(contributionsResponse) ?? []).map((contribution) => {
-          const [toneClass, colorToken] = toneOf(contribution.id)
-          return { ...contribution, toneClass, colorToken }
-        })
-        this.activities = unwrap(logsResponse) ?? []
+        this.contributions = contributionsResult.status === 'fulfilled'
+          ? (unwrap(contributionsResult.value) ?? []).map((contribution) => {
+            const [toneClass, colorToken] = toneOf(contribution.id)
+            return { ...contribution, toneClass, colorToken }
+          })
+          : []
+        this.activities = logsResult.status === 'fulfilled'
+          ? unwrap(logsResult.value) ?? []
+          : []
       } catch (error) {
         if (!isCurrentSession(epoch) || requestId !== this.sharedCareRequestId) return
         this.members = []

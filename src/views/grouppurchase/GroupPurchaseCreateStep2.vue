@@ -139,9 +139,6 @@ function goToNextStep() {
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-1)">
         구매 조건
       </h1>
-      <p class="text-(length:--font-md) text-(color:--color-slate-muted)">
-        공동구매 목표와 마감일을 정해주세요
-      </p>
     </header>
 
     <!-- 목표 수량: 기본값 2, 1 이상의 숫자만 입력 가능 -->

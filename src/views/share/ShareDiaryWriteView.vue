@@ -57,10 +57,6 @@ const diaryDateLabel = computed(() => {
 
 const isToday = computed(() => diaryDate.value === todayText)
 
-const petName = computed(
-  () => shareStore.pets.find((pet) => pet.id === petId.value)?.name ?? '',
-)
-
 const canSubmit = computed(
   () => Boolean(petId.value)
     && Boolean(diaryDate.value)
@@ -182,9 +178,6 @@ onBeforeUnmount(releasePreview)
             <h1 class="m-0 text-[length:var(--font-lg)] font-bold leading-[1.3]">
               {{ diaryDateLabel }}
             </h1>
-            <p class="mb-0 mt-[var(--space-1)] truncate text-(length:--font-sm) text-(--color-slate-muted)">
-              {{ isEditMode ? '남긴 일기를 고쳐요' : (petName ? `${petName}와 보낸 하루` : '오늘 하루를 남겨요') }}
-            </p>
           </div>
           <!--
             날짜는 대부분 오늘 그대로다. 그래서 입력칸을 앞세우지 않고, 바꾸고 싶을 때만

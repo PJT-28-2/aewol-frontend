@@ -316,4 +316,15 @@ describe('HomeView AI 인사이트 카드', () => {
 
     expect(host.querySelector('[aria-labelledby="home-insight-title"] svg[role="img"]')).toBeNull()
   })
+
+  it('네임택은 앱 폰트를 쓰고 시스템 산돌고딕을 강제하지 않는다', async () => {
+    mocks.getHomeInsights.mockResolvedValue({ data: { result: [] } })
+    await mountView()
+
+    const tag = host.querySelector('[aria-label="보리 네임택"]')
+    expect(tag).toBeTruthy()
+    expect(tag.getAttribute('class')).toContain('[font-family:var(--font-family)]')
+    expect(tag.style.fontFamily).toBe('')
+    expect(tag.getAttribute('class')).not.toContain('-translate-x-[10px]')
+  })
 })

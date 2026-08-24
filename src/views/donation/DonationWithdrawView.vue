@@ -113,9 +113,6 @@ onMounted(() => {
         <strong class="block text-[length:var(--font-2xl)]">
           ₩{{ balance.toLocaleString('ko-KR') }}
         </strong>
-        <small
-          class="block text-[length:var(--font-sm)] text-(--color-slate-light)"
-        >지갑으로 옮길 금액을 입력해주세요</small>
       </section>
 
       <template v-if="hasBalance">
@@ -211,7 +208,7 @@ onMounted(() => {
       <EmptyState
         v-else
         :icon="IconSavings"
-        message="저금통에 모인 잔돈이 아직 없어요. 결제할 때마다 잔돈이 모여요."
+        message="저금통에 모인 잔돈이 아직 없어요. 매일 밤 지갑 잔돈이 모여요."
         action-text="저금통으로 돌아가기"
         action-route="/donation"
       />

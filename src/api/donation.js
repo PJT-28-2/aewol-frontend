@@ -9,8 +9,12 @@ export const donationApi = {
     return api.get('/donation/pot')
   },
 
-  withdrawPot(amount) {
-    return api.post('/donation/pot/withdraw', { amount })
+  withdrawPot(amount, idempotencyKey) {
+    return api.post('/donation/pot/withdraw', { amount, idempotencyKey })
+  },
+
+  depositPot(amount, idempotencyKey) {
+    return api.post('/donation/pot/deposit', { amount, idempotencyKey })
   },
 
   donate(data) {

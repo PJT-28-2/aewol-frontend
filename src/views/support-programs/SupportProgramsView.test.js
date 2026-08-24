@@ -154,4 +154,25 @@ describe('SupportProgramsView', () => {
     expect(mocks.getMatchedPrograms).toHaveBeenCalledTimes(2)
     expect(mocks.push).not.toHaveBeenCalled()
   })
+
+  it('정부 도메인이 아닌 신청 주소는 열지 않는다', async () => {
+    mocks.route.params = { programId: '9041' }
+    respond({
+      petId: '9001',
+      petName: '보리',
+      programs: [program({ applyUrl: 'javascript:alert(1)' })],
+    })
+    await mountView()
+
+    button('신청하기').click()
+    await flush()
+
+    expect(window.open).not.toHaveBeenCalled()
+    expect(openedWindow.location.replace).not.toHaveBeenCalled()
+    expect(mocks.markApplyPageOpened).toHaveBeenCalledWith('9041', '9001')
+    expect(host.textContent).not.toContain('신청 페이지를 열었어요')
+    expect(host.textContent).not.toContain('신청 페이지 다시 열기')
+    expect(host.textContent).toContain('관심 정책으로 저장했어요')
+    expect(button('관심 정책으로 저장됨').disabled).toBe(true)
+  })
 })

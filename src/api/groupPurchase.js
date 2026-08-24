@@ -46,8 +46,8 @@ export const groupPurchaseApi = {
     return api.post(`/group-purchase/${id}/leave`, { password })
   },
 
-  // 관리자가 공동구매 자체를 취소(판매취소)할 때 사용 — 작성자 본인 여부와 무관하게 관리자면 누구나
-  // 호출 가능(2026-08-10 정책 확정). 참여자 전원 환불은 백엔드가 처리.
+  // 작성자(관리자)가 공동구매 자체를 취소(판매취소)할 때 사용 — 다른 관리자는 호출해도 403이다.
+  // 참여자 전원 환불은 백엔드가 처리.
   // password는 leave와 동일하게 결제 비밀번호 검증용 — 백엔드가 body에 필수로 요구함(2026-08-18 확인)
   cancel(id, password) {
     return api.post(`/group-purchase/${id}/cancel`, { password })

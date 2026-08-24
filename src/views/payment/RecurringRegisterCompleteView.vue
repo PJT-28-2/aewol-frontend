@@ -18,7 +18,7 @@ function confirmComplete() {
 <template>
   <CompletionPageLayout
     title="정기결제 등록 완료"
-    :description="`매월 ${dayOfMonth}일에 ${amount.toLocaleString()}원이 자동으로 결제돼요`"
+    :description="`오늘 ${amount.toLocaleString()}원이 결제됐어요. 다음부터 매월 ${dayOfMonth}일에 자동으로 결제돼요`"
   >
     <template #action>
       <AppButton

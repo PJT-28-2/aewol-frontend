@@ -108,9 +108,6 @@ function goToNextStep() {
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-1)">
         상품 정보
       </h1>
-      <p class="text-(length:--font-md) text-(color:--color-slate-muted)">
-        판매할 상품 정보를 입력해주세요
-      </p>
     </header>
 
     <!-- 사진 업로드 (필수) -->

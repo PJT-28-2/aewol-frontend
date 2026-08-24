@@ -76,6 +76,7 @@ describe('PetListView 육아일기 진입', () => {
   beforeEach(async () => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
+    sessionStorage.clear()
     mocks.query = {}
     mocks.fetchPets.mockResolvedValue(undefined)
     await mountView()
@@ -94,5 +95,28 @@ describe('PetListView 육아일기 진입', () => {
 
   it('대표 반려동물이 첫 번째가 아니어도 그 반려동물을 가리킨다', () => {
     expect(diaryLink()?.getAttribute('href')).not.toBe('/share/diary?petId=9001')
+  })
+})
+
+describe('PetListView 마지막 선택', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+    sessionStorage.clear()
+    mocks.query = {}
+    mocks.fetchPets.mockResolvedValue(undefined)
+  })
+
+  afterEach(() => {
+    app?.unmount()
+    host?.remove()
+    sessionStorage.clear()
+  })
+
+  it('나갔다 다시 들어오면 직전에 고른 동물을 보여 준다', async () => {
+    sessionStorage.setItem('lastViewedPetId', '9001')
+    await mountView()
+
+    expect(diaryLink()?.getAttribute('href')).toBe('/share/diary?petId=9001')
   })
 })
