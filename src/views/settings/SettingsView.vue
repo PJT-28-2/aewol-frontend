@@ -103,6 +103,16 @@ const settingItems = [
   },
 ]
 
+const adminItems = [
+  {
+    title: '고객문의 관리',
+    description: '1:1 문의 답변',
+    path: '/admin/inquiries',
+    icon: IconChatBubble,
+    tone: 'gray',
+  },
+]
+
 const handleMenuClick = (item) => {
   if (item.action === 'verifyProfile') {
     if (memberStore.profile?.provider === 'KAKAO') {
@@ -232,6 +242,36 @@ const confirmLogout = async () => {
           />
           <strong class="mt-(--space-3) block truncate text-[13px] font-bold text-(color:--color-navy)">{{ item.title }}</strong>
           <span class="mt-[3px] block truncate text-[10px] text-(color:--color-slate-muted)">{{ item.description }}</span>
+        </button>
+      </nav>
+    </section>
+
+    <section
+      v-if="authStore.isAdmin"
+      class="mt-(--space-7)"
+    >
+      <h2 class="mb-(--space-3) px-(--space-1) text-(length:--font-lg) font-bold text-(color:--color-navy)">
+        관리자
+      </h2>
+      <nav
+        class="overflow-hidden rounded-[22px] bg-(--color-white)"
+        aria-label="관리자 메뉴"
+      >
+        <button
+          v-for="item in adminItems"
+          :key="item.path"
+          type="button"
+          class="flex min-h-20 w-full items-center gap-(--space-3) px-(--space-4) text-left transition-colors active:bg-(--color-info-surface)"
+          @click="handleMenuClick(item)"
+        >
+          <FeatureIconTile
+            :icon="item.icon"
+            :tone="item.tone"
+          />
+          <span class="min-w-0 flex-1">
+            <strong class="block text-[13px] font-bold text-(color:--color-navy)">{{ item.title }}</strong>
+            <span class="mt-[3px] block text-[10px] text-(color:--color-slate-muted)">{{ item.description }}</span>
+          </span>
         </button>
       </nav>
     </section>
