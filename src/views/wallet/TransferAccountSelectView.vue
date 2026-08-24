@@ -70,11 +70,6 @@ function confirmChange() {
       >
         출금 계좌 선택
       </h1>
-      <p
-        class="text-(length:--font-md) text-(color:--color-slate-muted) mt-(--space-1)"
-      >
-        애월지갑의 돈을 받을 본인 계좌를 선택해주세요
-      </p>
     </header>
 
     <div

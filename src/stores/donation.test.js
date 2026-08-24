@@ -237,4 +237,23 @@ describe('donation store 시연 캠페인', () => {
     expect(store.isCurrentCampaignDonatable).toBe(true)
     expect(store.canDonate).toBe(true)
   })
+
+  it('시연 캠페인은 자동 기부 설정으로 저장하지 않는다', async () => {
+    const store = useDonationStore()
+    store.campaigns = [
+      { id: 'demo-1', title: '[시연] 캠페인', donatable: false },
+    ]
+
+    const result = await store.saveSettings({
+      piggyBankEnabled: true,
+      savingUnit: 1000,
+      autoDonate: true,
+      campaignId: 'demo-1',
+    })
+
+    expect(result).toBe(false)
+    expect(mocks.saveSettings).not.toHaveBeenCalled()
+    expect(store.operationError).toBe('시연용 캠페인은 자동 기부로 저장할 수 없어요.')
+    expect(store.isSubmitting).toBe(false)
+  })
 })

@@ -207,11 +207,6 @@ onMounted(fetchDashboard);
       >
         이번 달 지출
       </h1>
-      <p
-        class="text-(length:--font-md) text-(color:--color-slate-muted) mt-(--space-1)"
-      >
-        이번 달 지출을 한눈에 확인해요
-      </p>
     </header>
 
     <div

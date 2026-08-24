@@ -170,11 +170,8 @@ async function handleMedicalSelect(event) {
   <div class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-(--space-7)">
     <header class="mb-(--space-5)">
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-2)">
-        증명서 관리
+        증명서
       </h1>
-      <p class="text-(length:--font-md) text-(color:--color-gray-600)">
-        동물등록증・접종증명서를 한곳에서 확인해요
-      </p>
     </header>
 
     <!-- 반려동물 탭 -->

@@ -9,6 +9,7 @@ import IconClose from '@/components/common/icons/IconClose.vue'
 import IconInfo from '@/components/common/icons/IconInfo.vue'
 import IconPaw from '@/components/common/icons/IconPaw.vue'
 import { useSupportProgramsStore } from '@/stores/supportPrograms'
+import { isSafeGovernmentApplyUrl } from '@/utils/governmentApplyUrl'
 
 const route = useRoute()
 const router = useRouter()
@@ -27,13 +28,30 @@ const isApplied = computed(() =>
     : false,
 )
 
+// 서버 applyUrl이 오염돼 있어도 화면 안내와 실제 열기는 같은 검증 결과를 쓴다.
+const safeApplyUrl = computed(() => {
+  const url = selectedProgram.value?.applyUrl
+  return isSafeGovernmentApplyUrl(url) ? url : null
+})
+
 // 한 번 눌렀다고 버튼을 잠그면, 팝업이 막혔거나 탭을 닫은 사람은 신청 페이지로
-// 돌아갈 길이 없어진다. 신청 기록이 남았어도 링크가 있으면 계속 열 수 있게 둔다.
-// 링크가 없는 정책은 '관심 저장'이 전부라 그때만 잠근다.
+// 돌아갈 길이 없어진다. 신청 기록이 남았어도 안전한 링크가 있으면 계속 열 수 있게 둔다.
+// 링크가 없거나 차단된 주소는 '관심 저장'이 전부라 그때만 잠근다.
 const applyButtonLabel = computed(() => {
   if (!isApplied.value) return '신청하기'
-  return selectedProgram.value?.applyUrl ? '신청 페이지 다시 열기' : '관심 정책으로 저장됨'
+  return safeApplyUrl.value ? '신청 페이지 다시 열기' : '관심 정책으로 저장됨'
 })
+
+const applyStatusMessage = computed(() => {
+  if (!isApplied.value) return ''
+  return safeApplyUrl.value
+    ? '신청 페이지를 열었어요. 창이 닫혔다면 아래에서 다시 열 수 있어요.'
+    : '관심 정책으로 저장했어요. 주관 기관에 신청 방법을 문의해 주세요.'
+})
+
+const isApplyLocked = computed(
+  () => (isApplied.value && !safeApplyUrl.value) || supportProgramsStore.isApplying,
+)
 
 function loadPrograms() {
   supportProgramsStore.fetchPrograms()
@@ -51,7 +69,7 @@ async function applyForProgram() {
   const program = selectedProgram.value
   if (!program?.eligible) return
 
-  const { applyUrl } = program
+  const applyUrl = safeApplyUrl.value
   // window.open은 클릭 핸들러 안에서 동기적으로 불러야 팝업 차단을 통과한다.
   // await 뒤로 미루면 사용자 제스처와의 연결이 끊긴다.
   const applyWindow = applyUrl ? window.open('about:blank', '_blank') : null
@@ -159,11 +177,6 @@ watch(
         <h1 class="m-0 text-[length:var(--font-2xl)] font-bold leading-[1.3]">
           {{ supportProgramsStore.petName || '반려동물' }} 맞춤 지원사업
         </h1>
-        <p
-          class="mb-0 mt-[var(--space-1)] text-[length:var(--font-md)] text-(--color-slate-muted)"
-        >
-          {{ supportProgramsStore.petName || '반려동물' }}의 조건에 맞는 지원사업을 모아봤어요
-        </p>
       </header>
 
       <ul class="m-0 mt-[var(--space-5)] list-none space-y-[var(--space-3)] p-0">
@@ -293,9 +306,7 @@ watch(
         class="mb-0 mt-[var(--space-4)] rounded-(--radius-xl) bg-(--color-leaf-soft) p-[var(--space-3)] text-center text-[length:var(--font-sm)] font-bold text-(--color-leaf-dark)"
         role="status"
       >
-        {{ selectedProgram.applyUrl
-          ? '신청 페이지를 열었어요. 창이 닫혔다면 아래에서 다시 열 수 있어요.'
-          : '관심 정책으로 저장했어요. 주관 기관에 신청 방법을 문의해 주세요.' }}
+        {{ applyStatusMessage }}
       </p>
 
       <div class="mt-[var(--space-4)] space-y-[var(--space-3)]">
@@ -304,7 +315,7 @@ watch(
           block
           size="lg"
           variant="primary"
-          :disabled="(isApplied && !selectedProgram.applyUrl) || supportProgramsStore.isApplying"
+          :disabled="isApplyLocked"
           :loading="supportProgramsStore.isApplying"
           @click="applyForProgram"
         >

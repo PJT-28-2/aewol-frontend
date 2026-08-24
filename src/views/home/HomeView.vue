@@ -267,20 +267,19 @@ onMounted(() => {
             aria-hidden="true"
           >
           <span
-            class="absolute -translate-y-1/2 truncate text-center font-semibold tracking-[-0.005em] [text-shadow:0_0_0.4px_currentColor]"
+            class="absolute -translate-y-1/2 truncate text-center font-semibold tracking-[-0.005em] [font-family:var(--font-family)] [text-shadow:0_0_0.4px_currentColor]"
             :class="[
               primaryPet?.species === 'CAT'
                 ? (petName.length > 5 ? 'text-[11px]' : 'text-[14px]')
                 : (petName.length > 5 ? 'text-[12px]' : 'text-[16px]'),
               primaryPet?.species === 'CAT'
-                ? '-translate-x-[10px] text-[#3f596b]'
+                ? 'text-[#3f596b]'
                 : 'text-[#405d2d]',
             ]"
             :style="{
               top: primaryPet?.species === 'CAT' ? '34px' : '41px',
               left: primaryPet?.species === 'CAT' ? '0' : '18px',
               right: primaryPet?.species === 'CAT' ? '0' : '18px',
-              fontFamily: `'Apple SD Gothic Neo', 'Apple SD 산돌고딕 Neo', ui-rounded, 'SF Pro Rounded', var(--font-logo)`,
             }"
             :aria-label="`${petName} 네임택`"
           >

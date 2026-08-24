@@ -11,6 +11,7 @@ vi.mock('@/api/recurring', () => ({
 }))
 
 import { recurringApi } from '@/api/recurring'
+import { useAuthStore } from './auth'
 import { usePaymentStore } from './payment'
 
 const payload = {
@@ -33,6 +34,7 @@ const createdResult = {
 
 describe('usePaymentStore', () => {
   beforeEach(() => {
+    sessionStorage.clear()
     setActivePinia(createPinia())
     vi.clearAllMocks()
   })
@@ -52,6 +54,7 @@ describe('usePaymentStore', () => {
     )
     expect(retriedRequest.idempotencyKey).toBe(firstRequest.idempotencyKey)
     expect(store.pendingCreateKey).toBeNull()
+    expect(sessionStorage.getItem('pendingRecurringCreate')).toBeNull()
   })
 
   it('등록 내용이 바뀌면 새 멱등키를 사용한다', async () => {
@@ -74,5 +77,38 @@ describe('usePaymentStore', () => {
     await store.updateRecurringPayment('11', payload)
 
     expect(recurringApi.updateRecurring.mock.calls[0][1].idempotencyKey).toBeUndefined()
+  })
+
+  it('새로고침 뒤에도 같은 등록 내용이면 멱등키를 재사용한다', async () => {
+    recurringApi.createRecurring.mockRejectedValue(new Error('network error'))
+    const store = usePaymentStore()
+    await expect(store.createRecurringPayment(payload)).rejects.toThrow()
+    const firstKey = store.pendingCreateKey
+
+    setActivePinia(createPinia())
+    const restored = usePaymentStore()
+    await expect(restored.createRecurringPayment(payload)).rejects.toThrow()
+
+    expect(restored.pendingCreateKey).toBe(firstKey)
+    expect(recurringApi.createRecurring.mock.calls[1][0].idempotencyKey).toBe(firstKey)
+  })
+
+  it('등록 실패 후 로그아웃하면 같은 내용도 새 멱등키를 쓴다', async () => {
+    recurringApi.createRecurring.mockRejectedValue(new Error('network error'))
+    const paymentStore = usePaymentStore()
+    await expect(paymentStore.createRecurringPayment(payload)).rejects.toThrow()
+    const firstKey = paymentStore.pendingCreateKey
+    expect(firstKey).toBeTruthy()
+    expect(paymentStore.pendingCreateSignature).toBe('pet-1:강아지 사료:32000:15:FOOD')
+
+    useAuthStore().clearSession()
+
+    expect(paymentStore.pendingCreateKey).toBeNull()
+    expect(paymentStore.pendingCreateSignature).toBe('')
+    expect(sessionStorage.getItem('pendingRecurringCreate')).toBeNull()
+
+    await expect(paymentStore.createRecurringPayment(payload)).rejects.toThrow()
+    expect(paymentStore.pendingCreateKey).not.toBe(firstKey)
+    expect(recurringApi.createRecurring.mock.calls[1][0].idempotencyKey).not.toBe(firstKey)
   })
 })

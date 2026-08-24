@@ -5,6 +5,7 @@ import {
   savingUnits,
 } from '@/constants/donation'
 import { formatWon } from '@/utils/bankMeta'
+import { beginSessionTask, isCurrentSession } from '@/utils/sessionEpoch'
 
 const DEFAULT_CATEGORY = donationCategories[0]
 const DEFAULT_SAVING_UNIT = savingUnits[savingUnits.length - 1]
@@ -109,12 +110,14 @@ export const useDonationStore = defineStore('donation', {
 
   actions: {
     async fetchDonationData() {
+      const epoch = beginSessionTask()
       this.isLoading = true
       this.error = ''
       this.operationError = ''
 
       try {
         const result = unwrap(await donationApi.getOverview())
+        if (!isCurrentSession(epoch)) return
         this.balance = Number(result?.balance ?? 0)
         this.walletBalance = Number(result?.walletBalance ?? 0)
         this.monthlySaved = Number(result?.monthlySaved ?? 0)
@@ -140,11 +143,12 @@ export const useDonationStore = defineStore('donation', {
         }
         this.isInitialized = true
       } catch (error) {
+        if (!isCurrentSession(epoch)) return
         this.campaigns = []
         this.selectedCampaignId = ''
         this.error = error.response?.data?.message || '저금통 정보를 불러오지 못했어요. 다시 시도해 주세요.'
       } finally {
-        this.isLoading = false
+        if (isCurrentSession(epoch)) this.isLoading = false
       }
     },
 
@@ -383,16 +387,25 @@ export const useDonationStore = defineStore('donation', {
 
     async saveSettings(draft = {}) {
       if (this.isSubmitting) return false
+      const autoDonate = draft.autoDonate ?? this.autoDonate
+      const campaignId = draft.campaignId !== undefined
+        ? draft.campaignId
+        : (autoDonate ? this.currentCampaign?.id : null)
+      if (autoDonate) {
+        const campaign = this.campaigns.find((item) => item.id === campaignId)
+        if (campaign?.donatable === false) {
+          this.operationError = '시연용 캠페인은 자동 기부로 저장할 수 없어요.'
+          return false
+        }
+      }
       this.isSubmitting = true
       this.operationError = ''
       try {
         const payload = {
           piggyBankEnabled: draft.piggyBankEnabled ?? this.piggyBankEnabled,
           savingUnit: draft.savingUnit ?? this.savingUnit,
-          autoDonate: draft.autoDonate ?? this.autoDonate,
-          campaignId: draft.campaignId !== undefined
-            ? draft.campaignId
-            : (this.autoDonate ? this.currentCampaign?.id : null),
+          autoDonate,
+          campaignId: autoDonate ? campaignId : null,
         }
         const settings = unwrap(await donationApi.saveSettings(payload))
         this.savingUnit = Number(settings.savingUnit)

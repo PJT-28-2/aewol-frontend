@@ -1,15 +1,19 @@
 /**
- * QR 결제 페이로드 규약과 파싱 유틸.
+ * QR·앱 결제 페이로드 규약과 파싱 유틸.
  *
- * 규약(A안): `aewol://pay?merchant=<URL 인코딩된 가맹점명>&amount=<정수 원화>`
+ * 공통 필드: merchant(가맹점명), amount(정수 원화).
  *
- * 가맹점명과 금액을 QR에 직접 담는다. 결제요청 ID만 담고 서버에서 조회하는 방식(B안)에 비해
- * 백엔드 변경이 전혀 없다는 장점이 있지만, 사용자가 QR을 위조해 금액을 조작할 수 있다.
+ * - QR(A안): `aewol://pay?merchant=<URL 인코딩된 가맹점명>&amount=<정수 원화>`
+ * - 앱 열기: `/payment/qr?merchant=...&amount=...`
+ *
+ * 가맹점명과 금액을 클라이언트에 직접 담는다. 결제요청 ID만 담고 서버에서 조회하는 방식(B안)에 비해
+ * 백엔드 변경이 전혀 없다는 장점이 있지만, 사용자가 금액을 조작할 수 있다.
  * 시연 범위에서는 이 위험을 감수하고 A안을 쓴다. 실서비스로 가려면 서버가 발급한 결제요청을
  * 조회하는 B안(`payment_request` 테이블 + 생성/조회 API)으로 바꿔야 한다.
  */
 
 const QR_SCHEME = 'aewol://pay?'
+const APP_PAYMENT_PATH = '/payment/qr'
 
 /** 가맹점명 최대 길이. 백엔드 `transaction.merchant_name`이 VARCHAR(100)이다. */
 const MAX_MERCHANT_NAME_LENGTH = 100
@@ -23,6 +27,40 @@ export const QR_ERROR_MESSAGES = {
   MISSING_FIELD: 'QR에 가맹점 정보나 금액이 없어요. 매장에 문의해주세요.',
   INVALID_MERCHANT: 'QR의 가맹점 정보를 읽을 수 없어요. 매장에 문의해주세요.',
   INVALID_AMOUNT: 'QR의 결제 금액을 읽을 수 없어요. 매장에 문의해주세요.',
+}
+
+/**
+ * 가맹점명·금액을 결제 정보로 검증한다. QR 스캔과 앱 URL 쿼리가 같은 규칙을 쓴다.
+ *
+ * @param {string | string[] | null | undefined} merchantParam
+ * @param {string | string[] | null | undefined} amountParam
+ * @returns {{ ok: true, merchantName: string, amount: number }
+ *   | { ok: false, code: keyof typeof QR_ERROR_MESSAGES, message: string }}
+ */
+export function parsePaymentFields(merchantParam, amountParam) {
+  const merchantText = firstQueryValue(merchantParam)
+  const amountTextRaw = firstQueryValue(amountParam)
+  if (merchantText === null || amountTextRaw === null) {
+    return fail('MISSING_FIELD')
+  }
+
+  const merchantName = merchantText.trim()
+  if (!merchantName || merchantName.length > MAX_MERCHANT_NAME_LENGTH) {
+    return fail('INVALID_MERCHANT')
+  }
+
+  // 소수점·부호·지수 표기를 모두 거른다. Number()만 쓰면 "1e3"이나 " 3000 "도 통과한다.
+  const amountText = amountTextRaw.trim()
+  if (!/^\d+$/.test(amountText)) {
+    return fail('INVALID_AMOUNT')
+  }
+
+  const amount = Number(amountText)
+  if (amount <= 0 || amount > MAX_AMOUNT) {
+    return fail('INVALID_AMOUNT')
+  }
+
+  return { ok: true, merchantName, amount }
 }
 
 /**
@@ -42,29 +80,19 @@ export function parseQrPayment(text) {
   }
 
   const params = new URLSearchParams(raw.slice(QR_SCHEME.length))
-  const merchantParam = params.get('merchant')
-  const amountParam = params.get('amount')
-  if (merchantParam === null || amountParam === null) {
-    return fail('MISSING_FIELD')
-  }
+  return parsePaymentFields(params.get('merchant'), params.get('amount'))
+}
 
-  const merchantName = merchantParam.trim()
-  if (!merchantName || merchantName.length > MAX_MERCHANT_NAME_LENGTH) {
-    return fail('INVALID_MERCHANT')
-  }
-
-  // 소수점·부호·지수 표기를 모두 거른다. Number()만 쓰면 "1e3"이나 " 3000 "도 통과한다.
-  const amountText = amountParam.trim()
-  if (!/^\d+$/.test(amountText)) {
-    return fail('INVALID_AMOUNT')
-  }
-
-  const amount = Number(amountText)
-  if (amount <= 0 || amount > MAX_AMOUNT) {
-    return fail('INVALID_AMOUNT')
-  }
-
-  return { ok: true, merchantName, amount }
+/**
+ * 앱 결제 URL 쿼리(`?merchant=&amount=`)를 결제 정보로 파싱한다.
+ * 멍냥마켓처럼 외부 쇼핑몰이 애월 앱을 열 때 쓴다.
+ *
+ * @param {{ merchant?: string | string[], amount?: string | string[] }} query
+ * @returns {{ ok: true, merchantName: string, amount: number }
+ *   | { ok: false, code: keyof typeof QR_ERROR_MESSAGES, message: string }}
+ */
+export function parsePaymentQuery(query) {
+  return parsePaymentFields(query?.merchant, query?.amount)
 }
 
 /**
@@ -74,8 +102,28 @@ export function parseQrPayment(text) {
  * @returns {string} `aewol://pay?merchant=...&amount=...` 형식의 문자열
  */
 export function buildQrPayment({ merchantName, amount }) {
-  const params = new URLSearchParams({ merchant: merchantName, amount: String(amount) })
-  return `${QR_SCHEME}${params.toString()}`
+  return `${QR_SCHEME}${paymentSearchParams({ merchantName, amount })}`
+}
+
+/**
+ * 애월 앱에서 결제 확인 화면을 여는 경로를 만든다.
+ * 예: `/payment/qr?merchant=%EB%A9%8D%EB%83%A5%EB%A7%88%EC%BC%93&amount=51800`
+ *
+ * @param {{ merchantName: string, amount: number }} payment 가맹점명과 결제 금액
+ * @returns {string}
+ */
+export function buildAppPaymentPath({ merchantName, amount }) {
+  return `${APP_PAYMENT_PATH}?${paymentSearchParams({ merchantName, amount })}`
+}
+
+function paymentSearchParams({ merchantName, amount }) {
+  return new URLSearchParams({ merchant: merchantName, amount: String(amount) }).toString()
+}
+
+function firstQueryValue(value) {
+  if (value === null || value === undefined) return null
+  const text = Array.isArray(value) ? value[0] : value
+  return typeof text === 'string' ? text : null
 }
 
 function fail(code) {

@@ -79,14 +79,9 @@ onMounted(() => {
   <main
     class="relative mx-auto flex min-h-[calc(100dvh-var(--header-height)-var(--bottom-nav-height))] w-full max-w-(--content-max-width) box-border flex-col bg-(--color-app-bg) px-[var(--space-5)] pt-[var(--space-4)] pb-[calc(var(--space-6)+env(safe-area-inset-bottom))] text-(--color-navy)"
   >
-    <h1 class="m-0 text-[length:var(--font-2xl)] font-bold">
+    <h1 class="m-0 mb-[var(--space-7)] text-[length:var(--font-2xl)] font-bold">
       초대 링크 입력
     </h1>
-    <p
-      class="mb-[var(--space-7)] mt-[var(--space-1)] text-[length:var(--font-md)] text-(--color-slate-muted)"
-    >
-      가족이나 친구가 보낸 초대 링크를 입력해주세요
-    </p>
 
     <label
       class="mb-[var(--space-2)] block text-[length:var(--font-sm)] font-bold text-(--color-slate-dark)"

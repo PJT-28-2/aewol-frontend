@@ -9,6 +9,7 @@ import {
   unlinkAccount,
   setSimplePassword,
 } from '@/api/account';
+import { beginSessionTask, isCurrentSession } from '@/utils/sessionEpoch';
 
 // 계좌 연동 진행 상태(linking)에 대한 요청 세대 토큰. Pinia reactive state에 넣지 않고
 // emergency.js의 latestRequestId/AbortController와 같은 방식으로 스토어 밖(모듈 스코프)에
@@ -114,7 +115,9 @@ export const useAccountStore = defineStore('account', {
     },
     async fetchAccounts() {
       await this._withRequestState(async () => {
+        const epoch = beginSessionTask();
         const { data } = await getAccounts();
+        if (!isCurrentSession(epoch)) return;
         this.accounts = data.result ?? [];
       });
     },
@@ -279,6 +282,14 @@ export const useAccountStore = defineStore('account', {
     },
 
     closeUnlinkConfirm() {
+      this.pendingUnlinkAccount = null;
+    },
+
+    resetForLogout() {
+      this.accounts = [];
+      this.error = null;
+      this.setHasSimplePassword(false);
+      this.resetLinkingState();
       this.pendingUnlinkAccount = null;
     },
 

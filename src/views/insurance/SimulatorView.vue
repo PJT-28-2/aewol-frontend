@@ -232,9 +232,6 @@ function handleReset() {
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">
         손익분기 시뮬레이터
       </h1>
-      <p class="text-(length:--font-md) text-(color:--color-slate-muted) mt-(--space-1)">
-        가입이 유리한지 미리 계산해보세요
-      </p>
     </header>
 
     <p
