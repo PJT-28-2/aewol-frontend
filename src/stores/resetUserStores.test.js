@@ -11,6 +11,7 @@ import { usePaymentStore } from './payment'
 import { usePetStore } from './pet'
 import { useShareStore } from './share'
 import { useWalletStore } from './wallet'
+import { useNotificationStore } from './notification'
 
 vi.mock('@/api/donation', () => ({
   donationApi: {
@@ -24,8 +25,15 @@ vi.mock('@/api/recurring', () => ({
   },
 }))
 
+vi.mock('@/api/notification', () => ({
+  notificationApi: {
+    getUnreadCount: vi.fn(),
+  },
+}))
+
 import { donationApi } from '@/api/donation'
 import { recurringApi } from '@/api/recurring'
+import { notificationApi } from '@/api/notification'
 
 describe('resetUserStores', () => {
   beforeEach(() => {
@@ -154,5 +162,22 @@ describe('resetUserStores', () => {
 
     expect(wallet.wallet).toBeNull()
     expect(wallet.pendingWithdrawal).toBeNull()
+  })
+
+  it('로그아웃 전에 시작한 알림 개수 조회는 새 세션 배지를 채우지 않는다', async () => {
+    let resolveCount
+    notificationApi.getUnreadCount.mockReturnValue(
+      new Promise((resolve) => {
+        resolveCount = resolve
+      }),
+    )
+    const notifications = useNotificationStore()
+    const pending = notifications.fetchUnreadCount()
+
+    resetUserStores()
+    resolveCount({ data: { result: { unreadCount: 42 } } })
+    await pending
+
+    expect(notifications.unreadCount).toBe(0)
   })
 })

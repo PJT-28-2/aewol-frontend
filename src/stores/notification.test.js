@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { notificationApi } from '@/api/notification'
+import { bumpSessionEpoch } from '@/utils/sessionEpoch'
 import { useNotificationStore } from './notification'
 
 vi.mock('@/api/notification', () => ({
@@ -101,5 +102,21 @@ describe('useNotificationStore', () => {
     await store.fetchUnreadCount()
 
     expect(store.unreadCount).toBe(7)
+  })
+
+  it('세션이 바뀐 뒤에 도착한 읽지 않은 개수는 반영하지 않는다', async () => {
+    let resolveCount
+    notificationApi.getUnreadCount.mockReturnValue(
+      new Promise((resolve) => {
+        resolveCount = resolve
+      }),
+    )
+    const store = useNotificationStore()
+    const pending = store.fetchUnreadCount()
+    bumpSessionEpoch()
+    resolveCount({ data: { result: { unreadCount: 99 } } })
+    await pending
+
+    expect(store.unreadCount).toBe(0)
   })
 })
