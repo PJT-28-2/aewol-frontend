@@ -20,6 +20,10 @@ import CategoryDonutChart from '@/components/home/CategoryDonutChart.vue'
 import { CATEGORY_CHART_PALETTE } from '@/utils/categoryChartPalette'
 import dogHero from '@/assets/images/pet-dog-default-home-v3.webp'
 import catHero from '@/assets/images/pet-cat-default-home-v3.webp'
+import dogHeroBackground from '@/assets/images/pet-dog-home-background-v1.webp'
+import catHeroBackground from '@/assets/images/pet-cat-home-background-v1.webp'
+import dogNameTag from '@/assets/images/pet-dog-name-tag-v1.webp'
+import catNameTag from '@/assets/images/pet-cat-name-tag-v1.webp'
 
 const memberStore = useMemberStore()
 const petStore = usePetStore()
@@ -44,6 +48,12 @@ const memberName = computed(() => memberStore.profile?.name || '회원')
 // 실패한 반려동물은 종별 기본 마스코트로 대체한다.
 const defaultHero = computed(() => (primaryPet.value?.species === 'CAT' ? catHero : dogHero))
 const heroImage = computed(() => primaryPet.value?.characterImg || defaultHero.value)
+const heroBackground = computed(() => (
+  primaryPet.value?.species === 'CAT' ? catHeroBackground : dogHeroBackground
+))
+const nameTagImage = computed(() => (
+  primaryPet.value?.species === 'CAT' ? catNameTag : dogNameTag
+))
 const formattedBalance = computed(() =>
   Number(dashboardStore.summary?.walletBalance ?? 0).toLocaleString('ko-KR'),
 )
@@ -86,6 +96,13 @@ const INSIGHT_ICONS = {
   DONATION: IconSavings,
 }
 
+const INSIGHT_ICON_TONES = {
+  SUPPORT: 'bg-(--color-icon-yellow-soft) text-(color:--color-icon-yellow)',
+  SPENDING: 'bg-(--color-icon-blue-soft) text-(color:--color-icon-blue)',
+  CARE: 'bg-(--color-icon-pink-soft) text-(color:--color-icon-pink)',
+  DONATION: 'bg-(--color-icon-purple-soft) text-(color:--color-icon-purple)',
+}
+
 function insightIcon(type) {
   const icon = INSIGHT_ICONS[type]
   if (!icon && import.meta.env.DEV) {
@@ -93,6 +110,11 @@ function insightIcon(type) {
     console.warn(`[home] 아이콘이 정의되지 않은 인사이트 카드 종류: ${type}`)
   }
   return icon ?? IconPaw
+}
+
+function insightIconTone(type) {
+  return INSIGHT_ICON_TONES[type]
+    ?? 'bg-(--color-icon-gray-soft) text-(color:--color-icon-gray)'
 }
 
 // 다시 시도 버튼 등으로 fetchHome이 겹쳐 호출되면 늦게 보낸 요청이 먼저 끝날 수 있다.
@@ -224,29 +246,58 @@ onMounted(() => {
 
       <section
         v-else
-        class="relative mt-(--space-4) flex h-[286px] items-end justify-center overflow-hidden rounded-[30px] bg-(--color-leaf-soft)"
+        class="relative mt-(--space-4) flex h-[324px] items-end justify-center overflow-hidden rounded-t-[30px]"
+        :class="primaryPet?.species === 'CAT' ? 'bg-[#f2eae3]' : 'bg-[#f4f8d2]'"
         :aria-label="`${petName} 대표 이미지`"
       >
-        <div class="absolute top-(--space-4) left-(--space-4)">
-          <p class="text-(length:--font-xs) font-semibold text-(color:--color-leaf-dark)">
-            MY PET
-          </p>
-          <p class="mt-[2px] text-(length:--font-xl) font-bold text-(color:--color-navy)">
+        <img
+          :src="heroBackground"
+          alt=""
+          class="absolute inset-x-0 top-0 h-[calc(100%-40px)] w-full object-fill"
+          aria-hidden="true"
+        >
+        <div
+          class="absolute top-0 left-(--space-4) z-3 h-[76px]"
+          :class="primaryPet?.species === 'CAT' ? 'w-[120px]' : 'w-[128px]'"
+        >
+          <img
+            :src="nameTagImage"
+            alt=""
+            class="h-full w-full object-contain object-top drop-shadow-[0_3px_5px_rgba(34,38,42,0.12)]"
+            aria-hidden="true"
+          >
+          <span
+            class="absolute -translate-y-1/2 truncate text-center font-semibold tracking-[-0.005em] [text-shadow:0_0_0.4px_currentColor]"
+            :class="[
+              primaryPet?.species === 'CAT'
+                ? (petName.length > 5 ? 'text-[11px]' : 'text-[14px]')
+                : (petName.length > 5 ? 'text-[12px]' : 'text-[16px]'),
+              primaryPet?.species === 'CAT'
+                ? '-translate-x-[10px] text-[#3f596b]'
+                : 'text-[#405d2d]',
+            ]"
+            :style="{
+              top: primaryPet?.species === 'CAT' ? '34px' : '41px',
+              left: primaryPet?.species === 'CAT' ? '0' : '18px',
+              right: primaryPet?.species === 'CAT' ? '0' : '18px',
+              fontFamily: `'Apple SD Gothic Neo', 'Apple SD 산돌고딕 Neo', ui-rounded, 'SF Pro Rounded', var(--font-logo)`,
+            }"
+            :aria-label="`${petName} 네임택`"
+          >
             {{ petName }}
-          </p>
+          </span>
         </div>
-        <div class="absolute bottom-[15px] h-[62px] w-[258px] rounded-[50%] bg-[color-mix(in_srgb,var(--color-leaf)_66%,var(--color-white))]" />
         <img
           :src="heroImage"
           :alt="`${petName} 캐릭터`"
-          class="relative z-1 h-[274px] w-full object-contain object-bottom"
+          class="relative z-2 mb-[40px] h-[274px] w-full object-contain object-bottom"
         >
       </section>
 
       <!-- 히어로가 있을 땐 카드가 살짝 겹치게(-mt) 올라오지만, 빈 상태 안내일 땐 겹치지 않고 간격을 둔다. -->
       <section
         class="relative z-2 rounded-[28px] bg-(--color-white) p-(--space-6) shadow-(--shadow-card)"
-        :class="primaryPet ? '-mt-(--space-1)' : 'mt-(--space-5)'"
+        :class="primaryPet ? '-mt-[30px]' : 'mt-(--space-5)'"
       >
         <div class="flex items-start justify-between gap-(--space-4)">
           <div>
@@ -433,9 +484,14 @@ onMounted(() => {
 
               <div
                 v-else
-                class="flex items-start gap-(--space-3)"
+                class="flex items-center gap-(--space-3)"
+                data-testid="insight-headline-row"
               >
-                <span class="mt-[2px] flex size-[26px] shrink-0 items-center justify-center rounded-(--radius-md) bg-(--color-leaf) text-(color:--color-navy)">
+                <span
+                  class="flex size-[26px] shrink-0 items-center justify-center rounded-(--radius-md)"
+                  :class="insightIconTone(card.type)"
+                  data-testid="insight-icon-tile"
+                >
                   <component
                     :is="insightIcon(card.type)"
                     size="15"

@@ -1,5 +1,8 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
+import BottomSheet from '@/components/common/BottomSheet.vue';
+import IconCheck from '@/components/common/icons/IconCheck.vue';
+import IconChevronDown from '@/components/common/icons/IconChevronDown.vue';
 
 const props = defineProps({
   modelValue: {
@@ -22,6 +25,8 @@ const currentDay = today.getDate();
 const selectedYear = ref('');
 const selectedMonth = ref('');
 const selectedDay = ref('');
+
+const openSheet = ref(null);
 
 const years = computed(() =>
   Array.from(
@@ -101,43 +106,46 @@ function clampSelection() {
   }
 }
 
-function emitSelection(clearIncomplete = false) {
+function emitSelection() {
   const isComplete = selectedYear.value && selectedMonth.value && selectedDay.value;
-  if (!isComplete && !clearIncomplete) return;
+  if (!isComplete) return;
 
-  const nextValue = isComplete
-    ? `${selectedYear.value}.${pad(selectedMonth.value)}.${pad(selectedDay.value)}`
-    : '';
+  const nextValue = `${selectedYear.value}.${pad(selectedMonth.value)}.${pad(selectedDay.value)}`;
   if (nextValue !== props.modelValue) emit('update:modelValue', nextValue);
 }
 
-function handleYearChange(event) {
-  selectedYear.value = event.target.value;
-  if (!selectedYear.value) {
-    selectedMonth.value = '';
-    selectedDay.value = '';
-    emitSelection(true);
-    return;
-  }
+function selectYear(year) {
+  selectedYear.value = String(year);
   clampSelection();
   emitSelection();
+  openSheet.value = null;
 }
 
-function handleMonthChange(event) {
-  selectedMonth.value = event.target.value;
-  if (!selectedMonth.value) {
-    selectedDay.value = '';
-    emitSelection(true);
-    return;
-  }
+function selectMonth(month) {
+  selectedMonth.value = String(month);
   clampSelection();
   emitSelection();
+  openSheet.value = null;
 }
 
-function handleDayChange(event) {
-  selectedDay.value = event.target.value;
-  emitSelection(!selectedDay.value);
+function selectDay(day) {
+  selectedDay.value = String(day);
+  emitSelection();
+  openSheet.value = null;
 }
+
+const yearSheetOpen = computed({
+  get: () => openSheet.value === 'year',
+  set: (isOpen) => { openSheet.value = isOpen ? 'year' : null; },
+});
+const monthSheetOpen = computed({
+  get: () => openSheet.value === 'month',
+  set: (isOpen) => { openSheet.value = isOpen ? 'month' : null; },
+});
+const daySheetOpen = computed({
+  get: () => openSheet.value === 'day',
+  set: (isOpen) => { openSheet.value = isOpen ? 'day' : null; },
+});
 </script>
 
 <template>
@@ -146,59 +154,141 @@ function handleDayChange(event) {
       생년월일
     </legend>
     <div class="grid grid-cols-3 gap-(--space-2)">
-      <label class="min-w-0">
-        <span class="sr-only">출생 연도</span>
-        <select
-          :value="selectedYear"
-          class="h-[48px] w-full rounded-(--radius-xl) border border-(--color-card-border) bg-(--color-app-bg) px-(--space-3) text-(length:--font-sm) text-(color:--color-navy) outline-none focus-visible:border-(--color-leaf-dark) focus-visible:ring-2 focus-visible:ring-(--color-leaf-soft)"
-          @change="handleYearChange"
-        >
-          <option value="">년</option>
-          <option
-            v-for="year in years"
-            :key="year"
-            :value="year"
-          >
-            {{ year }}년
-          </option>
-        </select>
-      </label>
+      <button
+        type="button"
+        data-testid="birth-year-trigger"
+        class="flex h-[48px] min-w-0 items-center justify-between rounded-(--radius-xl) border border-(--color-card-border) bg-(--color-app-bg) px-(--space-3) text-(length:--font-sm) outline-none focus-visible:border-(--color-leaf-dark) focus-visible:ring-2 focus-visible:ring-(--color-leaf-soft)"
+        :class="selectedYear ? 'text-(color:--color-navy)' : 'text-(color:--color-slate-muted)'"
+        @click="yearSheetOpen = true"
+      >
+        <span class="truncate">{{ selectedYear ? `${selectedYear}년` : '년' }}</span>
+        <IconChevronDown
+          size="14"
+          color="var(--color-slate-muted)"
+          class="shrink-0"
+        />
+      </button>
 
-      <label class="min-w-0">
-        <span class="sr-only">출생 월</span>
-        <select
-          :value="selectedMonth"
-          class="h-[48px] w-full rounded-(--radius-xl) border border-(--color-card-border) bg-(--color-app-bg) px-(--space-3) text-(length:--font-sm) text-(color:--color-navy) outline-none focus-visible:border-(--color-leaf-dark) focus-visible:ring-2 focus-visible:ring-(--color-leaf-soft)"
-          @change="handleMonthChange"
-        >
-          <option value="">월</option>
-          <option
-            v-for="month in months"
-            :key="month"
-            :value="month"
-          >
-            {{ month }}월
-          </option>
-        </select>
-      </label>
+      <button
+        type="button"
+        data-testid="birth-month-trigger"
+        class="flex h-[48px] min-w-0 items-center justify-between rounded-(--radius-xl) border border-(--color-card-border) bg-(--color-app-bg) px-(--space-3) text-(length:--font-sm) outline-none focus-visible:border-(--color-leaf-dark) focus-visible:ring-2 focus-visible:ring-(--color-leaf-soft)"
+        :class="selectedMonth ? 'text-(color:--color-navy)' : 'text-(color:--color-slate-muted)'"
+        @click="monthSheetOpen = true"
+      >
+        <span class="truncate">{{ selectedMonth ? `${selectedMonth}월` : '월' }}</span>
+        <IconChevronDown
+          size="14"
+          color="var(--color-slate-muted)"
+          class="shrink-0"
+        />
+      </button>
 
-      <label class="min-w-0">
-        <span class="sr-only">출생 일</span>
-        <select
-          :value="selectedDay"
-          class="h-[48px] w-full rounded-(--radius-xl) border border-(--color-card-border) bg-(--color-app-bg) px-(--space-3) text-(length:--font-sm) text-(color:--color-navy) outline-none focus-visible:border-(--color-leaf-dark) focus-visible:ring-2 focus-visible:ring-(--color-leaf-soft)"
-          @change="handleDayChange"
-        >
-          <option value="">일</option>
-          <option
-            v-for="day in days"
-            :key="day"
-            :value="day"
-          >
-            {{ day }}일
-          </option>
-        </select>
-      </label>
+      <button
+        type="button"
+        data-testid="birth-day-trigger"
+        :disabled="!days.length"
+        class="flex h-[48px] min-w-0 items-center justify-between rounded-(--radius-xl) border border-(--color-card-border) bg-(--color-app-bg) px-(--space-3) text-(length:--font-sm) outline-none focus-visible:border-(--color-leaf-dark) focus-visible:ring-2 focus-visible:ring-(--color-leaf-soft) disabled:opacity-50"
+        :class="selectedDay ? 'text-(color:--color-navy)' : 'text-(color:--color-slate-muted)'"
+        @click="daySheetOpen = true"
+      >
+        <span class="truncate">{{ selectedDay ? `${selectedDay}일` : '일' }}</span>
+        <IconChevronDown
+          size="14"
+          color="var(--color-slate-muted)"
+          class="shrink-0"
+        />
+      </button>
     </div>
+
+    <BottomSheet
+      v-model="yearSheetOpen"
+      title="출생 연도 선택"
+    >
+      <ul data-testid="birth-year-options">
+        <li
+          v-for="year in years"
+          :key="year"
+        >
+          <button
+            type="button"
+            class="flex w-full items-center justify-between py-(--space-3) text-(length:--font-base)"
+            :class="
+              String(year) === selectedYear
+                ? 'text-(color:--color-gold) font-bold'
+                : 'text-(color:--color-slate-dark)'
+            "
+            @click="selectYear(year)"
+          >
+            <span>{{ year }}년</span>
+            <IconCheck
+              v-if="String(year) === selectedYear"
+              size="18"
+              color="var(--color-gold)"
+            />
+          </button>
+        </li>
+      </ul>
+    </BottomSheet>
+
+    <BottomSheet
+      v-model="monthSheetOpen"
+      title="출생 월 선택"
+    >
+      <ul data-testid="birth-month-options">
+        <li
+          v-for="month in months"
+          :key="month"
+        >
+          <button
+            type="button"
+            class="flex w-full items-center justify-between py-(--space-3) text-(length:--font-base)"
+            :class="
+              String(month) === selectedMonth
+                ? 'text-(color:--color-gold) font-bold'
+                : 'text-(color:--color-slate-dark)'
+            "
+            @click="selectMonth(month)"
+          >
+            <span>{{ month }}월</span>
+            <IconCheck
+              v-if="String(month) === selectedMonth"
+              size="18"
+              color="var(--color-gold)"
+            />
+          </button>
+        </li>
+      </ul>
+    </BottomSheet>
+
+    <BottomSheet
+      v-model="daySheetOpen"
+      title="출생 일 선택"
+    >
+      <ul data-testid="birth-day-options">
+        <li
+          v-for="day in days"
+          :key="day"
+        >
+          <button
+            type="button"
+            class="flex w-full items-center justify-between py-(--space-3) text-(length:--font-base)"
+            :class="
+              String(day) === selectedDay
+                ? 'text-(color:--color-gold) font-bold'
+                : 'text-(color:--color-slate-dark)'
+            "
+            @click="selectDay(day)"
+          >
+            <span>{{ day }}일</span>
+            <IconCheck
+              v-if="String(day) === selectedDay"
+              size="18"
+              color="var(--color-gold)"
+            />
+          </button>
+        </li>
+      </ul>
+    </BottomSheet>
   </fieldset>
 </template>

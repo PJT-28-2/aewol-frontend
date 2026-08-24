@@ -55,7 +55,7 @@ function handleBackspace() {
         <button
           v-if="key === '__shuffle__'"
           type="button"
-          class="mx-auto flex size-14 items-center justify-center rounded-full text-(length:--font-xs) font-semibold text-(color:--color-leaf-dark) transition-transform active:scale-95"
+          class="mx-auto flex size-14 touch-manipulation select-none items-center justify-center rounded-full text-(length:--font-xs) font-semibold text-(color:--color-leaf-dark) transition-transform active:scale-95"
           aria-label="숫자판 재배열"
           @click="shuffle"
         >
@@ -64,7 +64,7 @@ function handleBackspace() {
         <button
           v-else
           type="button"
-          class="mx-auto flex size-14 items-center justify-center text-(length:--font-xl) font-bold text-(color:--color-navy) transition-transform active:scale-95"
+          class="mx-auto flex size-14 touch-manipulation select-none items-center justify-center text-(length:--font-xl) font-bold text-(color:--color-navy) transition-transform active:scale-95"
           :aria-label="key === '⌫' ? '지우기' : key"
           @click="key === '⌫' ? handleBackspace() : handleKeyPress(key)"
         >

@@ -90,25 +90,59 @@ describe('TransactionHistoryView 진입 조건별 거래 조회 type', () => {
   // 지출리포트(DashboardView)에서 카테고리 카드를 눌러 들어오면 category 쿼리가 붙는다.
   // REFUND는 category가 항상 'ETC'로 떨어지므로, 이 진입에서 type=ALL로 조회하면
   // '기타' 카테고리 상세에 환불 내역이 지출과 섞여 보이는 문제가 있었다(#376)
-  it('category 쿼리로 진입하면 type=PAYMENT로 조회해 REFUND가 섞이지 않는다', async () => {
+  it('category 쿼리로 진입하면 호환 가능한 WITHDRAW로 조회한다', async () => {
     mocks.routeQuery = { category: 'ETC' }
 
     await mountView()
 
     expect(mocks.getTransactions).toHaveBeenCalledWith(
-      expect.objectContaining({ type: 'PAYMENT' }),
+      expect.objectContaining({ type: 'WITHDRAW' }),
     )
+  })
+
+  it('category 진입에서 WITHDRAW 응답 중 실제 PAYMENT 거래만 보여준다', async () => {
+    mocks.routeQuery = { category: 'MEDICAL' }
+    mocks.getTransactions.mockResolvedValue({
+      data: {
+        result: {
+          transactions: [
+            {
+              transactionId: 'payment-1',
+              txnType: 'PAYMENT',
+              amount: 30000,
+              category: 'HOSPITAL',
+              merchantName: '행복동물병원',
+              transactionDate: '2026-08-24T12:00:00',
+            },
+            {
+              transactionId: 'withdraw-1',
+              txnType: 'WITHDRAW',
+              amount: 30000,
+              category: 'HOSPITAL',
+              merchantName: '내 계좌 출금',
+              transactionDate: '2026-08-24T11:00:00',
+            },
+          ],
+          nextCursor: null,
+        },
+      },
+    })
+
+    await mountView()
+    await vi.waitFor(() => expect(host.textContent).toContain('행복동물병원'))
+
+    expect(host.textContent).not.toContain('내 계좌 출금')
   })
 
   // 지출리포트 "반려동물별" 탭에서 반려동물 카드를 눌러 petId 쿼리로 들어온 경우도
   // category와 동일하게 REFUND 없이 지출만 보여야 한다
-  it('petId 쿼리로 진입하면 type=PAYMENT로 조회한다', async () => {
+  it('petId 쿼리로 진입하면 호환 가능한 WITHDRAW로 조회한다', async () => {
     mocks.routeQuery = { petId: '5' }
 
     await mountView({ pets: [{ id: '5', petId: '5', name: '초코', species: 'DOG' }] })
 
     expect(mocks.getTransactions).toHaveBeenCalledWith(
-      expect.objectContaining({ type: 'PAYMENT' }),
+      expect.objectContaining({ type: 'WITHDRAW' }),
     )
   })
 
@@ -122,13 +156,13 @@ describe('TransactionHistoryView 진입 조건별 거래 조회 type', () => {
   })
 
   // category 쿼리로 들어온 상태에서 사용자가 "유형" 시트에서 '출금'을 직접 고르면,
-  // PAYMENT로 덮어쓰지 않고 사용자가 고른 값을 그대로 백엔드에 보내야 한다
+  // 대시보드 진입용 기본 조회 방식으로 덮어쓰지 않고 사용자가 고른 값을 그대로 보내야 한다
   it('category 쿼리로 진입해도 유형을 직접 고르면 그 값을 그대로 요청한다', async () => {
     mocks.routeQuery = { category: 'ETC' }
 
     await mountView()
     expect(mocks.getTransactions).toHaveBeenCalledWith(
-      expect.objectContaining({ type: 'PAYMENT' }),
+      expect.objectContaining({ type: 'WITHDRAW' }),
     )
 
     const typeButton = await waitForText(host, 'button', '유형')
@@ -167,13 +201,13 @@ describe('TransactionHistoryView 진입 조건별 거래 조회 type', () => {
     await waitForFetchCall(0)
 
     expect(mocks.getTransactions).toHaveBeenCalledWith(
-      expect.objectContaining({ type: 'PAYMENT' }),
+      expect.objectContaining({ type: 'WITHDRAW' }),
     )
   })
 
   // fetchPets 실패를 .catch(() => {})로 삼키지 않으면 예외가 onMounted를 타고 전파돼
   // fetchTransactions()가 아예 호출되지 않는다 — 반려동물 목록 조회가 실패해도 거래내역
-  // 조회는 계속 진행돼야 한다(petId를 못 구했으니 type은 PAYMENT로 좁혀지지 않고 ALL로 나간다)
+  // 조회는 계속 진행돼야 한다(petId를 못 구했으니 type은 WITHDRAW로 좁혀지지 않고 ALL로 나간다)
   it('반려동물 목록 조회가 실패해도 거래내역 조회는 계속 진행된다', async () => {
     mocks.routeQuery = { petId: '5' }
     mocks.getPets.mockRejectedValue(new Error('network error'))
@@ -199,7 +233,7 @@ describe('TransactionHistoryView 진입 조건별 거래 조회 type', () => {
 
     // pets가 아직 안 끝났어도 거래내역 조회는 이미 나갔어야 한다(대기 없음)
     expect(mocks.getTransactions).toHaveBeenCalledWith(
-      expect.objectContaining({ type: 'PAYMENT' }),
+      expect.objectContaining({ type: 'WITHDRAW' }),
     )
     // 그렇다고 pets 로드 자체를 안 하는 건 아니다
     expect(mocks.getPets).toHaveBeenCalled()

@@ -1,5 +1,6 @@
 <script setup>
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import IconGroupPurchase from '@/components/common/icons/IconGroupPurchase.vue'
 
 const props = defineProps({
   products: {
@@ -13,7 +14,12 @@ const SWIPE_THRESHOLD = 40
 
 const activeIndex = ref(0)
 const isPaused = ref(false)
+const brokenImageUrls = ref(new Set())
 let timer = null
+
+function markImageBroken(url) {
+  brokenImageUrls.value = new Set(brokenImageUrls.value).add(url)
+}
 
 function goTo(index) {
   activeIndex.value = index
@@ -75,30 +81,51 @@ function handleTouchEnd(event) {
         v-for="product in products"
         :key="product.id"
         :to="`/group-purchase/${product.id}`"
-        class="block w-full shrink-0 rounded-[18px] border border-(--color-card-border) bg-(--color-white) p-(--space-4) text-inherit no-underline"
+        class="flex w-full shrink-0 items-center gap-(--space-3) rounded-[18px] border border-(--color-card-border) bg-(--color-white) p-(--space-3) text-inherit no-underline"
       >
-        <p class="truncate text-(length:--font-sm) font-bold text-(color:--color-navy)">
-          {{ product.productName }}
-        </p>
-        <p class="mt-[2px] text-(length:--font-xs) text-(color:--color-slate-muted)">
-          {{ product.currentQuantity }}/{{ product.targetQuantity }}개 참여 · {{ product.dDay }}
-        </p>
+        <div
+          class="flex size-(--size-thumb-md) shrink-0 items-center justify-center overflow-hidden rounded-(--radius-lg) bg-(--color-surface)"
+          data-testid="recommended-product-thumbnail"
+        >
+          <img
+            v-if="product.image && !brokenImageUrls.has(product.image)"
+            :src="product.image"
+            alt=""
+            loading="lazy"
+            class="size-full object-cover"
+            @error="markImageBroken(product.image)"
+          >
+          <IconGroupPurchase
+            v-else
+            :size="28"
+            color="var(--color-slate-light)"
+          />
+        </div>
 
-        <div class="mt-(--space-3) flex items-end justify-between gap-(--space-2)">
-          <div class="flex items-baseline gap-(--space-2)">
-            <span class="text-(length:--font-lg) font-bold text-(color:--color-navy)">
-              {{ product.groupPrice?.toLocaleString('ko-KR') }}원
-            </span>
-            <span class="text-(length:--font-xs) text-(color:--color-slate-muted) line-through">
-              {{ product.unitPrice?.toLocaleString('ko-KR') }}원
+        <div class="min-w-0 flex-1">
+          <p class="truncate text-(length:--font-sm) font-bold text-(color:--color-navy)">
+            {{ product.productName }}
+          </p>
+          <p class="mt-[2px] text-(length:--font-xs) text-(color:--color-slate-muted)">
+            {{ product.currentQuantity }}/{{ product.targetQuantity }}개 참여 · {{ product.dDay }}
+          </p>
+
+          <div class="mt-(--space-3) flex items-end justify-between gap-(--space-2)">
+            <div class="flex min-w-0 items-baseline gap-(--space-2)">
+              <span class="shrink-0 text-(length:--font-lg) font-bold text-(color:--color-navy)">
+                {{ product.groupPrice?.toLocaleString('ko-KR') }}원
+              </span>
+              <span class="truncate text-(length:--font-xs) text-(color:--color-slate-muted) line-through">
+                {{ product.unitPrice?.toLocaleString('ko-KR') }}원
+              </span>
+            </div>
+            <span
+              v-if="product.badgeText"
+              class="shrink-0 rounded-full bg-(--color-warning-soft) px-(--space-2) py-[3px] text-(length:--font-xs) font-bold text-(color:--color-warning-strong)"
+            >
+              {{ product.badgeText }}
             </span>
           </div>
-          <span
-            v-if="product.badgeText"
-            class="shrink-0 rounded-full bg-(--color-warning-soft) px-(--space-2) py-[3px] text-(length:--font-xs) font-bold text-(color:--color-warning-strong)"
-          >
-            {{ product.badgeText }}
-          </span>
         </div>
       </router-link>
     </div>

@@ -4,12 +4,14 @@ import { createPinia, setActivePinia } from 'pinia'
 const mocks = vi.hoisted(() => ({
   addPreference: vi.fn(),
   removePreference: vi.fn(),
+  saveSettings: vi.fn(),
 }))
 
 vi.mock('@/api/donation', () => ({
   donationApi: {
     addPreference: mocks.addPreference,
     removePreference: mocks.removePreference,
+    saveSettings: mocks.saveSettings,
   },
 }))
 
@@ -68,5 +70,62 @@ describe('donation store 선호 기부처', () => {
     expect(store.campaigns.every(({ preferred }) => !preferred)).toBe(true)
     expect(store.operationError).toBe('기부처 저장 실패')
     expect(store.preferenceUpdatingIds).toEqual([])
+  })
+})
+
+describe('donation store 저금통 설정', () => {
+  it('임시 설정은 저장 요청이 성공한 뒤에만 스토어에 반영한다', async () => {
+    const store = useDonationStore()
+    store.campaigns = campaigns()
+    store.piggyBankEnabled = true
+    store.savingUnit = 1000
+    store.autoDonate = false
+    mocks.saveSettings.mockResolvedValue({
+      data: {
+        result: { piggyBankEnabled: false, savingUnit: 10, autoDonate: true },
+      },
+    })
+
+    const result = await store.saveSettings({
+      piggyBankEnabled: false,
+      savingUnit: 10,
+      autoDonate: true,
+      campaignId: 'campaign-2',
+    })
+
+    expect(result).toBe(true)
+    expect(mocks.saveSettings).toHaveBeenCalledWith({
+      piggyBankEnabled: false,
+      savingUnit: 10,
+      autoDonate: true,
+      campaignId: 'campaign-2',
+    })
+    expect(store.piggyBankEnabled).toBe(false)
+    expect(store.savingUnit).toBe(10)
+    expect(store.autoDonate).toBe(true)
+    expect(store.selectedCampaignId).toBe('campaign-2')
+  })
+
+  it('저장 요청이 실패하면 기존 설정을 유지한다', async () => {
+    const store = useDonationStore()
+    store.piggyBankEnabled = true
+    store.savingUnit = 1000
+    store.autoDonate = false
+    mocks.saveSettings.mockRejectedValue({
+      response: { data: { message: '설정 저장 실패' } },
+    })
+
+    const result = await store.saveSettings({
+      piggyBankEnabled: false,
+      savingUnit: 10,
+      autoDonate: true,
+      campaignId: 'campaign-2',
+    })
+
+    expect(result).toBe(false)
+    expect(store.piggyBankEnabled).toBe(true)
+    expect(store.savingUnit).toBe(1000)
+    expect(store.autoDonate).toBe(false)
+    expect(store.operationError).toBe('설정 저장 실패')
   })
 })
