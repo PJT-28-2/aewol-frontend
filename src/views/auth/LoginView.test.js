@@ -138,3 +138,31 @@ describe('LoginView Kakao OAuth 진입', () => {
     expect(host.textContent).not.toContain('이메일 또는 비밀번호를 확인해 주세요.')
   })
 })
+
+describe('LoginView theme-color', () => {
+  let meta
+
+  beforeEach(() => {
+    meta = document.createElement('meta')
+    meta.setAttribute('name', 'theme-color')
+    meta.setAttribute('content', '#15191b')
+    document.head.appendChild(meta)
+    host = document.createElement('div')
+    document.body.appendChild(host)
+    app = createApp(LoginView)
+    app.component('RouterLink', {
+      template: '<a><slot /></a>',
+    })
+    app.mount(host)
+  })
+
+  afterEach(() => {
+    app.unmount()
+    host.remove()
+    meta.remove()
+  })
+
+  it('다크모드에서도 브라우저 상단색을 밝은 색으로 덮지 않는다', () => {
+    expect(meta.getAttribute('content')).toBe('#15191b')
+  })
+})

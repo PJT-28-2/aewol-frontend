@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { usePetStore } from '@/stores/pet'
@@ -61,10 +61,6 @@ const getLoginErrorMessage = (error) => {
 
   return error.response.data?.message ?? '이메일 또는 비밀번호를 확인해 주세요.'
 }
-
-onMounted(() => {
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '#f5f7f2')
-})
 
 /**
  * 이메일과 비밀번호로 로그인을 요청한다.
