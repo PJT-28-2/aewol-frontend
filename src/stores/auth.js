@@ -84,6 +84,11 @@ export const useAuthStore = defineStore('auth', {
       // 바로 일어나지 않는 화면에서 이전 계정의 PIN 설정 흔적이 남지 않도록
       // 여기서도 한번 더 초기화해준다(2026-08-13, defense-in-depth).
       useAccountStore().setHasSimplePassword(false)
+      // 간편 비밀번호 재설정 진행 상태(resetting.currentPassword/pendingPassword)도 같이
+      // 지운다 — 안 지우면 재설정 1단계(현재 PIN 확인)만 통과한 채로 로그아웃했을 때,
+      // 같은 브라우저에서 다른 계정으로 로그인해도 이 값이 남아있어서 라우트 가드가
+      // 이전 계정 상태로 본인확인 단계를 건너뛰게 만든다(#425).
+      useAccountStore().resetSimplePasswordResetState()
     },
 
     async login(email, password) {
