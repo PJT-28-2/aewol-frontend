@@ -23,6 +23,14 @@ export const memberApi = {
     return api.post('/users/me/password/verify', { currentPassword })
   },
 
+  sendPhoneVerificationCode(phone) {
+    return api.post('/users/me/phone/send-code', { phone })
+  },
+
+  verifyPhoneCode(phone, verificationCode) {
+    return api.post('/users/me/phone/verify-code', { phone, verificationCode })
+  },
+
   changePassword(currentPassword, newPassword) {
     return api.patch('/users/me/password', { currentPassword, newPassword })
   },

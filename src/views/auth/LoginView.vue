@@ -48,6 +48,13 @@ const getLoginErrorMessage = (error) => {
     return '이메일 또는 비밀번호를 확인해 주세요.'
   }
 
+  if (status === 429) {
+    const serverMessage = error.response.data?.message
+    return typeof serverMessage === 'string' && serverMessage.trim()
+      ? serverMessage
+      : '로그인 시도가 너무 많습니다. 잠시 후 다시 시도해 주세요.'
+  }
+
   if (status === 503) {
     const serverMessage = error.response.data?.message
     return typeof serverMessage === 'string' && serverMessage.trim()

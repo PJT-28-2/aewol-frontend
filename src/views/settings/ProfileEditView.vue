@@ -26,6 +26,14 @@ const form = reactive({
 const isCurrentPasswordVerified = ref(false)
 const isAddressSearchOpen = ref(false)
 const isPhoneInputOverflow = ref(false)
+const originalPhoneDigits = ref('')
+const verificationCode = ref('')
+const isCodeSent = ref(false)
+const isPhoneVerified = ref(false)
+const isSendingCode = ref(false)
+const isVerifyingCode = ref(false)
+const phoneMessage = ref({ type: 'error', text: '' })
+const codeMessage = ref('')
 const passwordError = ref('')
 const isVerifyingPassword = ref(false)
 const isSaving = ref(false)
@@ -40,6 +48,14 @@ const phoneDigits = computed(() => form.phone.replace(/\D/g, ''))
 const isPhoneValid = computed(
   () => !isPhoneInputOverflow.value && /^010\d{8}$/.test(phoneDigits.value),
 )
+const isPhoneChanged = computed(
+  () => phoneDigits.value !== originalPhoneDigits.value,
+)
+const canSaveProfile = computed(() => {
+  if (!isPhoneValid.value) return false
+  if (isPhoneChanged.value && !isPhoneVerified.value) return false
+  return true
+})
 
 const handlePhoneInput = (event) => {
   const rawPhoneDigits = event.target.value.replace(/\D/g, '')
@@ -47,6 +63,87 @@ const handlePhoneInput = (event) => {
   form.phone = formatPhoneNumber(event.target.value)
   event.target.value = form.phone
   saveError.value = ''
+  verificationCode.value = ''
+  isCodeSent.value = false
+  isPhoneVerified.value = false
+  phoneMessage.value = { type: 'error', text: '' }
+  codeMessage.value = ''
+}
+
+const getSmsErrorMessage = (error, action) => {
+  const status = error.response?.status
+  const serverMessage = error.response?.data?.message
+  if (typeof serverMessage === 'string' && serverMessage.trim()) {
+    return serverMessage
+  }
+  if (status === 429) {
+    return '인증번호 요청 횟수를 초과했습니다. 잠시 후 다시 시도해주세요.'
+  }
+  return action === 'send'
+    ? '인증번호 전송에 실패했습니다.'
+    : '인증번호 확인에 실패했습니다.'
+}
+
+const handleRequestPhoneCode = async () => {
+  if (!isPhoneValid.value || isSendingCode.value || isPhoneVerified.value) return
+  const requestedPhone = phoneDigits.value
+  phoneMessage.value = { type: 'error', text: '' }
+  codeMessage.value = ''
+  isSendingCode.value = true
+  try {
+    const { data } = await memberStore.sendPhoneVerificationCode(requestedPhone)
+    if (phoneDigits.value !== requestedPhone) return
+    const expiresInSeconds = data?.result?.expiresInSeconds
+    if (
+      typeof expiresInSeconds !== 'number' ||
+      !Number.isFinite(expiresInSeconds) ||
+      expiresInSeconds <= 0
+    ) {
+      phoneMessage.value = {
+        type: 'error',
+        text: '인증번호 전송 결과를 확인할 수 없습니다.',
+      }
+      return
+    }
+    verificationCode.value = ''
+    isCodeSent.value = true
+    isPhoneVerified.value = false
+    phoneMessage.value = {
+      type: 'success',
+      text: '인증번호를 전송했습니다.',
+    }
+  } catch (error) {
+    if (phoneDigits.value !== requestedPhone) return
+    phoneMessage.value = {
+      type: 'error',
+      text: getSmsErrorMessage(error, 'send'),
+    }
+  } finally {
+    isSendingCode.value = false
+  }
+}
+
+const handleVerifyPhoneCode = async () => {
+  if (!isCodeSent.value || isVerifyingCode.value || isPhoneVerified.value) return
+  if (!/^\d{6}$/.test(verificationCode.value)) {
+    codeMessage.value = '인증번호 6자리를 입력해주세요.'
+    return
+  }
+  const requestedPhone = phoneDigits.value
+  codeMessage.value = ''
+  isVerifyingCode.value = true
+  try {
+    await memberStore.verifyPhoneCode(requestedPhone, verificationCode.value)
+    if (phoneDigits.value !== requestedPhone) return
+    isPhoneVerified.value = true
+    codeMessage.value = '전화번호 인증이 완료되었습니다.'
+  } catch (error) {
+    if (phoneDigits.value !== requestedPhone) return
+    isPhoneVerified.value = false
+    codeMessage.value = getSmsErrorMessage(error, 'verify')
+  } finally {
+    isVerifyingCode.value = false
+  }
 }
 
 const handleCurrentPasswordInput = () => {
@@ -90,6 +187,10 @@ const handleProfileSave = async () => {
     saveError.value = '010으로 시작하는 11자리 휴대폰 번호를 입력해 주세요.'
     return
   }
+  if (isPhoneChanged.value && !isPhoneVerified.value) {
+    saveError.value = '변경한 전화번호 인증을 완료해 주세요.'
+    return
+  }
   if (!form.zipCode.trim() || !form.address.trim()) {
     saveError.value = '전화번호와 주소를 확인해주세요.'
     return
@@ -103,6 +204,11 @@ const handleProfileSave = async () => {
       address: form.address.trim(),
       addressDetail: form.addressDetail.trim(),
     })
+    originalPhoneDigits.value = phoneDigits.value
+    isCodeSent.value = false
+    isPhoneVerified.value = false
+    verificationCode.value = ''
+    phoneMessage.value = { type: 'error', text: '' }
     isSaveSuccessVisible.value = true
     saveSuccessTimer = window.setTimeout(() => {
       isSaveSuccessVisible.value = false
@@ -153,6 +259,7 @@ onMounted(async () => {
   const profile = memberStore.profile ?? await memberStore.fetchProfile()
   form.name = profile.name ?? ''
   form.phone = formatPhoneNumber(profile.phone ?? '')
+  originalPhoneDigits.value = (profile.phone ?? '').replace(/\D/g, '')
   form.profileImg = profile.profileImg ?? null
   form.zipCode = profile.zipCode ?? ''
   form.address = profile.address ?? ''
@@ -201,16 +308,27 @@ onBeforeUnmount(() => window.clearTimeout(saveSuccessTimer))
       >
         전화번호
       </label>
-      <input
-        id="profile-phone"
-        :value="form.phone"
-        class="h-(--control-height-md) rounded-(--radius-lg) border border-(--color-border) bg-(--color-white) px-[13px] text-[13px] text-(color:--color-navy) outline-none focus:border-(--color-leaf)"
-        type="tel"
-        autocomplete="tel"
-        inputmode="tel"
-        required
-        @input="handlePhoneInput"
-      >
+      <div class="flex gap-(--space-2)">
+        <input
+          id="profile-phone"
+          :value="form.phone"
+          class="h-(--control-height-md) min-w-0 flex-1 rounded-(--radius-lg) border border-(--color-border) bg-(--color-white) px-[13px] text-[13px] text-(color:--color-navy) outline-none focus:border-(--color-leaf)"
+          type="tel"
+          autocomplete="tel"
+          inputmode="tel"
+          required
+          @input="handlePhoneInput"
+        >
+        <button
+          v-if="isPhoneChanged"
+          class="h-(--control-height-md) w-20 shrink-0 rounded-(--radius-lg) bg-(--color-leaf) text-[12.5px] font-(--font-bold) text-(color:--color-navy) disabled:cursor-not-allowed disabled:opacity-50"
+          type="button"
+          :disabled="!isPhoneValid || isSendingCode || isVerifyingCode || isPhoneVerified"
+          @click="handleRequestPhoneCode"
+        >
+          {{ isCodeSent ? '다시 받기' : '인증번호 받기' }}
+        </button>
+      </div>
       <p
         v-if="form.phone && !isPhoneValid"
         class="mt-1 text-[11px] text-(color:--color-danger-strong)"
@@ -218,6 +336,52 @@ onBeforeUnmount(() => window.clearTimeout(saveSuccessTimer))
       >
         010으로 시작하는 11자리 휴대폰 번호를 입력해 주세요.
       </p>
+      <p
+        v-else-if="phoneMessage.text"
+        class="mt-1 text-[11px]"
+        :class="phoneMessage.type === 'success' ? 'text-(color:--color-olive)' : 'text-(color:--color-danger-strong)'"
+        :role="phoneMessage.type === 'success' ? 'status' : 'alert'"
+      >
+        {{ phoneMessage.text }}
+      </p>
+
+      <template v-if="isPhoneChanged && isCodeSent">
+        <label
+          class="mt-[11px] mb-1 text-[12.5px] font-(--font-bold) text-(color:--color-slate-dark)"
+          for="profile-phone-code"
+        >
+          인증번호
+        </label>
+        <div class="flex gap-(--space-2)">
+          <input
+            id="profile-phone-code"
+            v-model="verificationCode"
+            class="h-(--control-height-md) min-w-0 flex-1 rounded-(--radius-lg) border border-(--color-border) bg-(--color-white) px-[13px] text-[13px] text-(color:--color-navy) outline-none focus:border-(--color-leaf) disabled:cursor-not-allowed disabled:opacity-50"
+            type="text"
+            inputmode="numeric"
+            maxlength="6"
+            placeholder="6자리 숫자 입력"
+            :disabled="isPhoneVerified"
+            @input="verificationCode = verificationCode.replace(/\D/g, '').slice(0, 6)"
+          >
+          <button
+            class="h-(--control-height-md) w-20 shrink-0 rounded-(--radius-lg) bg-(--color-leaf) text-[12.5px] font-(--font-bold) text-(color:--color-navy) disabled:cursor-not-allowed disabled:opacity-50"
+            type="button"
+            :disabled="isPhoneVerified || isVerifyingCode || verificationCode.length !== 6"
+            @click="handleVerifyPhoneCode"
+          >
+            {{ isPhoneVerified ? '인증 완료' : '확인' }}
+          </button>
+        </div>
+        <p
+          v-if="codeMessage"
+          class="mt-1 text-[11px]"
+          :class="isPhoneVerified ? 'text-(color:--color-olive)' : 'text-(color:--color-danger-strong)'"
+          :role="isPhoneVerified ? 'status' : 'alert'"
+        >
+          {{ codeMessage }}
+        </p>
+      </template>
 
       <label
         class="mt-[11px] mb-1 text-[12.5px] font-(--font-bold) text-(color:--color-slate-dark)"
@@ -292,7 +456,7 @@ onBeforeUnmount(() => window.clearTimeout(saveSuccessTimer))
         size="lg"
         block
         :loading="isSaving"
-        :disabled="isSaving || !isPhoneValid"
+        :disabled="isSaving || !canSaveProfile"
       >
         저장하기
       </AppButton>
