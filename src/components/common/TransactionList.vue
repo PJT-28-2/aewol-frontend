@@ -39,11 +39,11 @@ function formatAmount(amount) {
       </p>
       <router-link
         :to="{ path: `/wallet/history/${tx.id}`, query: detailQuery }"
-        class="flex items-center justify-between py-(--space-3) no-underline"
+        class="flex items-center gap-(--space-3) py-(--space-3) no-underline"
       >
-        <div>
+        <div class="min-w-0 flex-1">
           <p
-            class="text-(length:--font-base) font-medium text-(color:--color-navy)"
+            class="line-clamp-2 break-words text-(length:--font-base) font-medium text-(color:--color-navy)"
           >
             {{ tx.title }}
           </p>
@@ -59,7 +59,8 @@ function formatAmount(amount) {
           </p>
         </div>
         <p
-          class="text-(length:--font-base) font-semibold"
+          class="shrink-0 whitespace-nowrap text-right text-(length:--font-base) font-semibold tabular-nums"
+          data-testid="transaction-amount"
           :class="
             tx.amount > 0
               ? 'text-(color:--color-leaf)'

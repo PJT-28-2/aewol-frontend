@@ -433,9 +433,10 @@ onMounted(() => {
 
               <div
                 v-else
-                class="flex items-start gap-(--space-3)"
+                class="flex items-center gap-(--space-3)"
+                data-testid="insight-headline-row"
               >
-                <span class="mt-[2px] flex size-[26px] shrink-0 items-center justify-center rounded-(--radius-md) bg-(--color-leaf) text-(color:--color-navy)">
+                <span class="flex size-[26px] shrink-0 items-center justify-center rounded-(--radius-md) bg-(--color-leaf) text-(color:--color-navy)">
                   <component
                     :is="insightIcon(card.type)"
                     size="15"

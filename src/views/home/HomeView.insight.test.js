@@ -138,6 +138,17 @@ describe('HomeView AI 인사이트 카드', () => {
     expect(section().textContent).not.toContain('예상')
   })
 
+  it('지원 카드 아이콘과 제목을 세로 가운데에 맞춘다', async () => {
+    mocks.getHomeInsights.mockResolvedValue({
+      data: { result: [card({ type: 'SUPPORT', headline: '황칠복이 받을 수 있는 지원 1건' })] },
+    })
+    await mountView()
+
+    const headlineRow = host.querySelector('[data-testid="insight-headline-row"]')
+    expect(headlineRow?.classList.contains('items-center')).toBe(true)
+    expect(headlineRow?.textContent).toContain('황칠복이 받을 수 있는 지원 1건')
+  })
+
   // fallback은 서버가 데이터로 조립한 문구다. AI가 썼다고 표시하면 사실과 다르다.
   it('모든 카드가 fallback이면 AI 배지를 달지 않는다', async () => {
     mocks.getHomeInsights.mockResolvedValue({

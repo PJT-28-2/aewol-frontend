@@ -11,6 +11,11 @@ import IconStats from '@/components/common/icons/IconStats.vue';
 import { CATEGORY_LABELS } from '@/constants/transactionCategory';
 import { useDashboardStore } from '@/stores/dashboard';
 import { usePetStore } from '@/stores/pet';
+import {
+  mergeDashboardCategories,
+  sortByPercentageDescending,
+  withWholePercentages,
+} from '@/utils/dashboardCategories';
 
 const router = useRouter();
 const route = useRoute();
@@ -21,25 +26,17 @@ const pets = computed(() => petStore.pets);
 
 const CATEGORY_COLOR_TOKENS = {
   MEDICAL: '--color-chart-leaf',
-  FOOD: '--color-chart-sage',
-  GROOMING: '--color-chart-amber',
-  SUPPLIES: '--color-chart-teal',
-  ETC: '--color-chart-lilac',
-};
-
-const UI_CATEGORY_BY_API = {
-  HOSPITAL: 'MEDICAL',
-  FOOD: 'FOOD',
-  GROOMING: 'GROOMING',
-  TOY: 'SUPPLIES',
-  ETC: 'ETC',
+  FOOD: '--color-icon-green',
+  GROOMING: '--color-icon-yellow',
+  SUPPLIES: '--color-icon-blue',
+  ETC: '--color-icon-purple',
 };
 
 const today = new Date();
 const currentYearMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
 const categories = computed(() =>
-  (dashboardStore.category?.items ?? []).map((entry) => {
-    const key = UI_CATEGORY_BY_API[entry.category] ?? entry.category ?? 'ETC';
+  mergeDashboardCategories(dashboardStore.category?.items).map((entry) => {
+    const key = entry.key;
     return {
       key,
       label: CATEGORY_LABELS[key] ?? '기타',
@@ -102,31 +99,17 @@ const isPetTabActive = computed(
 );
 
 function withPercentages(list) {
-  const total = list.reduce((sum, item) => sum + item.amount, 0);
-  const items = list.map((item) => ({
-    ...item,
-    percentage: total
-      ? Math.round((item.amount / total) * 100)
-      : 0,
-  }));
-
-  if (total && items.length > 1) {
-    const othersTotal = items
-      .slice(0, -1)
-      .reduce((sum, item) => sum + item.percentage, 0);
-    items[items.length - 1].percentage = 100 - othersTotal;
-  }
-
-  return items;
+  return withWholePercentages(list);
 }
 
 // 선명하고 다양한 팔레트
 const petColors = [
   '--color-chart-leaf',
-  '--color-chart-sage',
-  '--color-chart-teal',
-  '--color-chart-amber',
-  '--color-chart-lilac',
+  '--color-icon-green',
+  '--color-icon-blue',
+  '--color-icon-yellow',
+  '--color-icon-purple',
+  '--color-icon-pink',
 ];
 
 const categoryItems = computed(() =>
@@ -164,7 +147,9 @@ const petItems = computed(() => {
 });
 
 const activeItems = computed(() =>
-  isPetTabActive.value ? petItems.value : categoryItems.value,
+  sortByPercentageDescending(
+    isPetTabActive.value ? petItems.value : categoryItems.value,
+  ),
 );
 
 const totalExpense = computed(() =>
