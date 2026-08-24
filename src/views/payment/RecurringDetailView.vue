@@ -85,11 +85,6 @@ function goToEdit() {
         >
           정기결제 상세
         </h1>
-        <p
-          class="text-(length:--font-md) text-(color:--color-slate-muted) mt-(--space-1)"
-        >
-          등록한 정기결제 정보를 확인하고 관리해요
-        </p>
       </header>
 
       <div class="mb-(--space-5) flex items-center gap-(--space-3)">

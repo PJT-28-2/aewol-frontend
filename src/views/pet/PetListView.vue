@@ -42,10 +42,10 @@ const isRepresentativePet = computed(() =>
 )
 
 const lifeMenus = [
-  { label: '함께 돌보기', description: '가족과 돌봄 기록 공유', to: '/share', icon: IconFamilyCare, tone: 'green' },
-  { label: '증명서', description: '등록증과 의료 문서', to: '/certificates', icon: IconDocument, tone: 'pink' },
-  { label: '응급 SOS', description: '가까운 24시 병원', to: '/emergency', icon: IconEmergencyCross, tone: 'blue' },
-  { label: '보험', description: '비교와 간편 청구', to: '/insurance', icon: IconPetInsurance, tone: 'purple' },
+  { label: '함께 돌보기', to: '/share', icon: IconFamilyCare, tone: 'green' },
+  { label: '증명서', to: '/certificates', icon: IconDocument, tone: 'pink' },
+  { label: '응급 SOS', to: '/emergency', icon: IconEmergencyCross, tone: 'blue' },
+  { label: '보험', to: '/insurance', icon: IconPetInsurance, tone: 'purple' },
 ]
 
 function dismissRegistrationNotice() {
@@ -198,10 +198,7 @@ onMounted(async () => {
       </article>
 
       <section class="mt-(--space-6)">
-        <h2 class="text-(length:--font-base) font-bold text-(color:--color-navy)">
-          반려생활 메뉴
-        </h2>
-        <div class="mt-(--space-3) grid grid-cols-2 gap-(--space-3)">
+        <div class="grid grid-cols-2 gap-(--space-3)">
           <router-link
             v-for="menu in lifeMenus"
             :key="menu.label"
@@ -212,39 +209,22 @@ onMounted(async () => {
               :icon="menu.icon"
               :tone="menu.tone"
             />
-            <div class="mt-(--space-3) pl-(--space-1)">
-              <strong class="block text-(length:--font-sm) text-(color:--color-navy)">{{ menu.label }}</strong>
-              <span class="mt-[3px] block text-(length:--font-xs) leading-[1.45] text-(color:--color-slate-muted)">{{ menu.description }}</span>
-            </div>
+            <strong class="mt-(--space-3) block pl-(--space-1) text-(length:--font-sm) text-(color:--color-navy)">{{ menu.label }}</strong>
           </router-link>
         </div>
       </section>
 
-      <section class="mt-(--space-6)">
-        <div class="flex items-center justify-between">
-          <h2 class="text-(length:--font-base) font-bold text-(color:--color-navy)">
-            오늘도 육아일기 한 장
-          </h2><span class="rounded-full bg-(--color-leaf-soft) px-(--space-3) py-(--space-2) text-(length:--font-xs) font-bold text-(color:--color-leaf-dark)">하루 1장</span>
-        </div>
-        <!--
-          petId를 실어 보내지 않으면 ShareDiaryView가 route.query.petId 대신 pets[0]으로
-          떨어져, 여러 마리인 경우 지금 고른 반려동물이 아닌 첫 번째 일기가 열린다.
-        -->
-        <router-link
-          :to="{ path: '/share/diary', query: { petId: primaryPet.id } }"
-          class="mt-(--space-3) flex items-center gap-(--space-4) rounded-[22px] bg-(--color-white) p-(--space-4) text-inherit no-underline"
-        >
-          <FeatureIconTile
-            :icon="IconImage"
-            tone="pink"
-          />
-          <div>
-            <strong class="text-(length:--font-sm) text-(color:--color-navy)">가족과 함께 쌓은 기록을 만나보세요</strong><p class="mt-(--space-1) text-(length:--font-xs) text-(color:--color-slate-muted)">
-              오늘 하루도 여기에서 남길 수 있어요.
-            </p>
-          </div>
-        </router-link>
-      </section>
+      <!-- petId가 없으면 ShareDiaryView가 pets[0]으로 떨어져 고른 반려동물과 어긋난다. -->
+      <router-link
+        :to="{ path: '/share/diary', query: { petId: primaryPet.id } }"
+        class="mt-(--space-3) flex items-center gap-(--space-4) rounded-[22px] bg-(--color-white) p-(--space-4) text-inherit no-underline"
+      >
+        <FeatureIconTile
+          :icon="IconImage"
+          tone="pink"
+        />
+        <strong class="text-(length:--font-sm) text-(color:--color-navy)">육아일기</strong>
+      </router-link>
 
       <router-link
         to="/pets/register"

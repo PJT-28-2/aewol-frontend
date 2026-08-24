@@ -54,13 +54,8 @@ function goToDetail(id) {
       <h1
         class="text-(length:--font-2xl) font-bold text-(color:--color-navy)"
       >
-        정기 결제 관리
+        정기 결제
       </h1>
-      <p
-        class="text-(length:--font-md) text-(color:--color-slate-muted) mt-(--space-1)"
-      >
-        구독형 결제를 등록하고 확인해요
-      </p>
     </header>
 
     <section class="mb-(--space-6)">

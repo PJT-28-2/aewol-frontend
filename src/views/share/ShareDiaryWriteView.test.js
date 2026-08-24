@@ -86,10 +86,6 @@ describe('ShareDiaryWriteView 일기 형식 화면', () => {
     expect(host.querySelector('h1').textContent.trim()).toBe(expected)
   })
 
-  it('반려동물 이름을 머리글에 함께 보여준다', () => {
-    expect(host.textContent).toContain('보리와 보낸 하루')
-  })
-
   // 날짜는 대부분 오늘이라 입력칸을 앞세우지 않는다. 상태만 알려주고 필요할 때 연다.
   it('오늘이면 날짜 칸 대신 오늘 표시를 보여준다', async () => {
     const dateInput = host.querySelector('input[type="date"]')
@@ -164,9 +160,8 @@ describe('ShareDiaryWriteView 수정 모드', () => {
     expect(host.querySelector('input[type="date"]').value).toBe('2026-08-10')
   })
 
-  it('작성이 아니라 수정임을 버튼과 머리글에 드러낸다', () => {
+  it('작성이 아니라 수정임을 버튼에 드러낸다', () => {
     expect(host.textContent).toContain('일기 수정하기')
-    expect(host.textContent).toContain('남긴 일기를 고쳐요')
   })
 
   // 이 값이 빠지면 서버가 충돌을 판정할 수 없어 낙관락이 무력해진다.

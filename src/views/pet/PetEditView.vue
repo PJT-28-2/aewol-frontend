@@ -335,9 +335,6 @@ function handleDocumentDelete() {
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">
         반려동물 프로필 수정
       </h1>
-      <p class="mt-(--space-1) text-(length:--font-md) text-(color:--color-slate-muted)">
-        등록된 반려동물 정보를 관리해요
-      </p>
     </header>
     <div
       v-if="notFound"

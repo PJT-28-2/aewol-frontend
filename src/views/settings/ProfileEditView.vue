@@ -279,9 +279,6 @@ onBeforeUnmount(() => window.clearTimeout(saveSuccessTimer))
       >
         프로필 수정
       </h1>
-      <p class="mt-[5px] text-(length:--font-md) leading-[1.3] text-(color:--color-slate-muted)">
-        계정 정보를 변경해요
-      </p>
     </header>
 
     <form

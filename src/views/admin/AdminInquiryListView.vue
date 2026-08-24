@@ -64,9 +64,6 @@ onMounted(() => loadInquiries())
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">
         고객문의 관리
       </h1>
-      <p class="mt-(--space-1) text-(length:--font-sm) text-(color:--color-slate-dark)">
-        접수된 1:1 문의를 확인하고 답변해요.
-      </p>
     </header>
 
     <div

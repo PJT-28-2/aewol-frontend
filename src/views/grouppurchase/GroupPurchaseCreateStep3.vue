@@ -150,9 +150,6 @@ async function handleSubmit() {
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-1)">
         최종 확인
       </h1>
-      <p class="text-(length:--font-md) text-(color:--color-slate-muted)">
-        공동구매 정보를 확인해주세요
-      </p>
     </header>
 
     <!-- 상품 이미지 미리보기 -->

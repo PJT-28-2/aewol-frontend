@@ -106,9 +106,6 @@ async function handleCharge() {
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">
         충전하기
       </h1>
-      <p class="mt-(--space-1) text-(length:--font-md) text-(color:--color-slate-muted)">
-        계좌이체로 애월지갑을 충전해요
-      </p>
     </header>
 
     <section class="mb-(--space-5)">

@@ -438,11 +438,6 @@ onBeforeUnmount(() => {
         추가 정보 입력
       </h1>
       <p
-        class="mt-(--space-1) text-(length:--font-md) leading-(--line-height-tight) text-(color:--color-slate-muted)"
-      >
-        애월 이용에 필요한 정보를 입력해주세요
-      </p>
-      <p
         class="mt-(--space-4) flex items-center gap-(--space-2) text-(length:--font-sm) font-(--font-semibold) text-(color:--color-olive-dark)"
       >
         <span

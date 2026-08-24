@@ -177,11 +177,6 @@ watch(
         <h1 class="m-0 text-[length:var(--font-2xl)] font-bold leading-[1.3]">
           {{ supportProgramsStore.petName || '반려동물' }} 맞춤 지원사업
         </h1>
-        <p
-          class="mb-0 mt-[var(--space-1)] text-[length:var(--font-md)] text-(--color-slate-muted)"
-        >
-          {{ supportProgramsStore.petName || '반려동물' }}의 조건에 맞는 지원사업을 모아봤어요
-        </p>
       </header>
 
       <ul class="m-0 mt-[var(--space-5)] list-none space-y-[var(--space-3)] p-0">

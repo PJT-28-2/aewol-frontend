@@ -116,9 +116,6 @@ onMounted(fetchNotificationSettings)
       >
         알림 설정
       </h1>
-      <p class="mt-[4px] text-(length:--font-md) leading-[1.4] text-(color:--color-slate-muted)">
-        필요한 알림만 받아보세요
-      </p>
     </header>
 
     <section

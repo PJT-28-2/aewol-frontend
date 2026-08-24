@@ -109,9 +109,6 @@ onMounted(initializeDiary)
         <h1 class="m-0 text-(length:--font-2xl) font-bold leading-[1.3] text-(--color-navy)">
           육아일기
         </h1>
-        <p class="mb-0 mt-[var(--space-1)] text-(length:--font-md) text-(--color-slate-muted)">
-          가족과 함께 오늘 하루를 남겨요
-        </p>
       </div>
 
       <!-- 인스타그램 탐색과 같은 돋보기다. 아이콘만 두므로 aria-label로 이름을 남긴다. -->

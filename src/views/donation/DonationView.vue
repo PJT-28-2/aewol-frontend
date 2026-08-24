@@ -287,9 +287,6 @@ onMounted(loadDonationData)
         <strong class="block text-[length:var(--font-2xl)]">
           ₩{{ balance.toLocaleString() }}
         </strong>
-        <small
-          class="block text-[length:var(--font-sm)] text-(--color-slate-dark)"
-        >잔돈을 모아 좋은 곳에 전해보세요</small>
       </section>
 
       <h2
@@ -586,13 +583,10 @@ onMounted(loadDonationData)
     <!-- RF-SI-05 · 기부처둘러보기 -->
     <template v-else-if="screen === 'explore'">
       <h1
-        class="mb-[var(--space-2)] text-[length:var(--font-2xl)] font-bold text-(--color-navy)"
+        class="mb-[var(--space-5)] text-[length:var(--font-2xl)] font-bold text-(--color-navy)"
       >
         기부처 둘러보기
       </h1>
-      <p class="m-0 text-[length:var(--font-md)] text-(--color-slate-muted)">
-        우리 아이들을 위한 캠페인을 만나보세요
-      </p>
 
       <div class="my-[var(--space-5)]">
         <AppInput
@@ -695,13 +689,10 @@ onMounted(loadDonationData)
     <!-- RF-SI-06 · 저금통설정 -->
     <template v-else-if="screen === 'settings'">
       <h1
-        class="mb-[var(--space-2)] text-[length:var(--font-2xl)] font-bold text-(--color-navy)"
+        class="mb-[var(--space-5)] text-[length:var(--font-2xl)] font-bold text-(--color-navy)"
       >
         저금통 설정
       </h1>
-      <p class="m-0 text-[length:var(--font-md)] text-(--color-slate-muted)">
-        짜투리 저금 방식을 설정해요
-      </p>
 
       <section
         class="mt-[var(--space-5)] flex items-center gap-[var(--space-4)] rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-[var(--space-5)] shadow-(--shadow-card)"
