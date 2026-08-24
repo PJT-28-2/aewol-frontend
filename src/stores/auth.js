@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { authApi } from '@/api/auth'
 import { useMemberStore } from '@/stores/member'
 import { useAccountStore } from '@/stores/account'
+import { usePaymentStore } from '@/stores/payment'
 import router from '@/router'
 import { decodeJwtPayload } from '@/utils/jwt'
 import { isValidToken } from '@/utils/token'
@@ -115,6 +116,9 @@ export const useAuthStore = defineStore('auth', {
       // 바로 일어나지 않는 화면에서 이전 계정의 PIN 설정 흔적이 남지 않도록
       // 여기서도 한번 더 초기화해준다(2026-08-13, defense-in-depth).
       useAccountStore().setHasSimplePassword(false)
+      // sessionStorage만 지우면 이미 만들어진 payment store의 멱등키가 메모리에
+      // 남아, 새로고침 없이 다른 계정으로 같은 내용을 등록할 때 이전 키가 재사용된다.
+      usePaymentStore().clearCreateKey()
     },
 
     async login(email, password) {
