@@ -118,111 +118,122 @@ const handleKakaoLogin = () => {
 
 <template>
   <main
-    class="flex min-h-svh w-full flex-col justify-center bg-(--color-app-bg) px-(--space-5) pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)]"
+    class="flex min-h-svh w-full flex-col bg-(--color-app-bg) px-(--space-5) pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)]"
   >
-    <h1
-      id="login-title"
-      class="sr-only"
-    >
-      애월 로그인
-    </h1>
-
-    <div class="flex flex-col items-center gap-(--space-2)">
-      <AewolLogo size="34" />
-      <p
-        class="text-center text-(length:--auth-font-sm) leading-[1.3] text-(color:--color-slate-dark)"
-      >
-        반려동물을 위한, 전자 지갑
-      </p>
-    </div>
-
-    <section
-      class="relative mt-(--space-9)"
-      aria-label="로그인"
-    >
-      <p
-        v-if="passwordChangeNotice"
-        class="mb-3 text-center text-(length:--font-sm) text-(color:--color-olive)"
-        role="status"
-      >
-        {{ passwordChangeNotice }}
-      </p>
-
-      <form
-        class="flex flex-col"
-        @submit.prevent="handleEmailLogin"
-      >
-        <label
-          class="mb-1 text-[12.5px] leading-[1.3] font-(--font-bold) text-(color:--color-slate-dark)"
-          for="email"
+    <a
+      href="#login-form"
+      class="skip-to-content"
+    >로그인 폼으로 건너뛰기</a>
+    <div class="mx-auto flex w-full max-w-(--layout-max-width) flex-1 flex-col justify-center py-(--space-10)">
+      <header>
+        <AewolLogo size="34" />
+        <p class="mt-(--space-2) text-(length:--auth-font-sm) leading-snug text-(color:--color-slate-dark)">
+          반려동물을 위한 전자 지갑
+        </p>
+        <h1
+          id="login-title"
+          class="mt-(--space-6) text-(length:--font-2xl) font-bold tracking-[-0.03em] text-(color:--color-navy)"
         >
-          이메일
-        </label>
-        <input
-          id="email"
-          v-model="email"
-          class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-white) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-leaf)"
-          type="email"
-          autocomplete="email"
-          placeholder="example@aewol.com"
-          required
+          로그인
+        </h1>
+      </header>
+
+      <section
+        class="relative mt-(--space-6)"
+        aria-labelledby="login-title"
+      >
+        <p
+          v-if="passwordChangeNotice"
+          class="mb-(--space-3) text-left text-(length:--font-sm) text-(color:--color-olive)"
+          role="status"
         >
-        <label
-          class="mt-(--space-3) mb-1 text-[12.5px] leading-[1.3] font-(--font-bold) text-(color:--color-slate-dark)"
-          for="password"
+          {{ passwordChangeNotice }}
+        </p>
+
+        <form
+          id="login-form"
+          class="flex flex-col"
+          @submit.prevent="handleEmailLogin"
         >
-          비밀번호
-        </label>
-        <PasswordInput
-          id="password"
-          v-model="password"
-          input-class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-white) px-[13px] text-[13px] text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-leaf)"
-          autocomplete="current-password"
-          placeholder="8자 이상 입력해주세요"
-          minlength="8"
-          required
-        />
+          <label
+            class="mb-1 text-(length:--font-sm) font-semibold text-(color:--color-slate-dark)"
+            for="email"
+          >
+            이메일
+          </label>
+          <input
+            id="email"
+            v-model="email"
+            class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-white) px-(--space-3) text-(length:--font-md) text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-leaf) focus-visible:shadow-(--shadow-focus)"
+            type="email"
+            autocomplete="email"
+            placeholder="example@aewol.com"
+            required
+          >
+          <label
+            class="mt-(--space-3) mb-1 text-(length:--font-sm) font-semibold text-(color:--color-slate-dark)"
+            for="password"
+          >
+            비밀번호
+          </label>
+          <PasswordInput
+            id="password"
+            v-model="password"
+            input-class="h-(--control-height-md) w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-white) px-(--space-3) text-(length:--font-md) text-(color:--color-navy) outline-none placeholder:text-(color:--color-slate-muted) focus:border-(--color-leaf) focus-visible:shadow-(--shadow-focus)"
+            autocomplete="current-password"
+            placeholder="8자 이상 입력해주세요"
+            minlength="8"
+            required
+          />
+          <button
+            class="mt-(--space-6) flex h-(--control-height-lg) w-full items-center justify-center rounded-(--radius-xl) bg-(--color-leaf) text-(length:--font-md) font-bold text-(color:--color-navy) transition-[opacity,transform] duration-200 ease-out hover:opacity-90 active:scale-[0.98] motion-reduce:transition-none motion-reduce:active:scale-100 focus-visible:outline-none focus-visible:shadow-(--shadow-focus) disabled:cursor-wait disabled:opacity-65 disabled:active:scale-100"
+            type="submit"
+            :disabled="isLoading"
+          >
+            {{ isLoading ? '로그인 중...' : '로그인' }}
+          </button>
+        </form>
+
         <button
-          class="mt-6 flex h-[52px] w-full items-center justify-center rounded-(--radius-xl) bg-(--color-leaf) text-[14.5px] leading-[1.3] font-(--font-bold) text-(color:--color-navy) disabled:cursor-wait disabled:opacity-65"
-          type="submit"
-          :disabled="isLoading"
+          class="mt-(--space-3) flex h-(--control-height-lg) w-full items-center justify-center rounded-(--radius-xl) bg-(--color-kakao) text-(length:--font-md) font-bold text-(color:--color-kakao-label) transition-[opacity,transform] duration-200 ease-out hover:opacity-90 active:scale-[0.98] motion-reduce:transition-none motion-reduce:active:scale-100 focus-visible:outline-none focus-visible:shadow-(--shadow-focus)"
+          type="button"
+          @click="handleKakaoLogin"
         >
-          {{ isLoading ? '로그인 중...' : '로그인' }}
+          카카오로 시작하기
         </button>
-      </form>
 
-      <button
-        class="mt-(--space-3) flex h-[52px] w-full items-center justify-center rounded-(--radius-xl) bg-(--color-kakao) text-[14.5px] leading-[1.3] font-(--font-bold) text-(color:--color-kakao-label)"
-        type="button"
-        @click="handleKakaoLogin"
-      >
-        카카오로 3초만에 시작하기
-      </button>
+        <nav
+          class="mt-(--space-5) flex flex-wrap gap-x-(--space-4) gap-y-(--space-2) text-(length:--font-sm) font-semibold text-(color:--color-slate-dark)"
+          aria-label="회원 메뉴"
+        >
+          <router-link
+            class="underline-offset-2 hover:underline focus-visible:outline-none focus-visible:shadow-(--shadow-focus)"
+            to="/signup"
+          >
+            회원가입
+          </router-link>
+          <router-link
+            class="underline-offset-2 hover:underline focus-visible:outline-none focus-visible:shadow-(--shadow-focus)"
+            to="/id/find"
+          >
+            계정 찾기
+          </router-link>
+          <router-link
+            class="underline-offset-2 hover:underline focus-visible:outline-none focus-visible:shadow-(--shadow-focus)"
+            to="/password/reset"
+          >
+            비밀번호 찾기
+          </router-link>
+        </nav>
 
-      <nav
-        class="mt-(--space-4) flex justify-center gap-[7px] text-[12.5px] leading-[1.3] font-(--font-bold) text-(color:--color-slate-dark)"
-        aria-label="회원 메뉴"
-      >
-        <router-link to="/signup">
-          회원가입
-        </router-link>
-        <span aria-hidden="true">|</span>
-        <router-link to="/id/find">
-          계정 찾기
-        </router-link>
-        <span aria-hidden="true">|</span>
-        <router-link to="/password/reset">
-          비밀번호 찾기
-        </router-link>
-      </nav>
-
-      <p
-        v-if="errorMessage"
-        class="mt-3 text-center text-(length:--font-sm) text-(color:--color-danger-strong)"
-        role="alert"
-      >
-        {{ errorMessage }}
-      </p>
-    </section>
+        <p
+          v-if="errorMessage"
+          class="mt-(--space-3) text-left text-(length:--font-sm) text-(color:--color-danger-strong)"
+          role="alert"
+        >
+          {{ errorMessage }}
+        </p>
+      </section>
+    </div>
   </main>
 </template>

@@ -11,6 +11,10 @@ const route = useRoute()
     class="flex min-h-svh flex-col"
     :class="route.path.startsWith('/payment/qr') ? 'bg-(--color-brand-dark)' : 'bg-(--color-app-bg)'"
   >
+    <a
+      href="#app-main"
+      class="skip-to-content"
+    >본문으로 건너뛰기</a>
     <PageHeader
       v-if="!route.meta.hideHeader"
       :title="route.meta.title || ''"
@@ -18,6 +22,7 @@ const route = useRoute()
     />
 
     <main
+      id="app-main"
       class="flex-1 overflow-x-clip [&>*]:min-h-[calc(100svh-var(--page-top-offset)-var(--page-bottom-offset))]"
       :class="[
         route.meta.hideBottomNav ? 'pb-0' : 'pb-[calc(var(--bottom-nav-height)+var(--space-6)+env(safe-area-inset-bottom,0px))]',

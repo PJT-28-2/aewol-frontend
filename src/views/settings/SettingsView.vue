@@ -177,7 +177,7 @@ const confirmLogout = async () => {
     <header class="mb-(--space-5) flex h-[42px] items-center">
       <h1
         id="mypage-title"
-        class="text-(length:--font-2xl) font-bold text-(color:--color-navy)"
+        class="text-(length:--font-2xl) font-bold tracking-[-0.03em] text-(color:--color-navy)"
       >
         마이페이지
       </h1>
@@ -236,23 +236,24 @@ const confirmLogout = async () => {
         </h2>
       </div>
       <nav
-        class="grid grid-cols-3 gap-(--space-2)"
+        class="overflow-hidden rounded-[22px] bg-(--color-white)"
         aria-label="혜택과 생활"
       >
         <button
           v-for="item in benefitItems"
           :key="item.title"
           type="button"
-          class="min-w-0 rounded-[20px] bg-(--color-white) px-(--space-2) py-(--space-4) text-center shadow-(--shadow-sm) active:bg-(--color-leaf-soft)"
+          class="flex min-h-20 w-full items-center gap-(--space-3) border-b border-(--color-card-border) px-(--space-4) text-left transition-colors duration-200 last:border-b-0 hover:bg-(--color-leaf-soft) focus-visible:outline-none focus-visible:shadow-(--shadow-focus) active:bg-(--color-leaf-soft)"
           @click="handleMenuClick(item)"
         >
           <FeatureIconTile
-            class="mx-auto"
             :icon="item.icon"
             :tone="item.tone"
           />
-          <strong class="mt-(--space-3) block truncate text-[13px] font-bold text-(color:--color-navy)">{{ item.title }}</strong>
-          <span class="mt-[3px] block truncate text-[10px] text-(color:--color-slate-muted)">{{ item.description }}</span>
+          <span class="min-w-0 flex-1">
+            <strong class="block text-(length:--font-md) font-bold text-(color:--color-navy)">{{ item.title }}</strong>
+            <span class="mt-[3px] block text-(length:--font-xs) text-(color:--color-slate-muted)">{{ item.description }}</span>
+          </span>
         </button>
       </nav>
     </section>

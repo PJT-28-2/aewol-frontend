@@ -212,7 +212,7 @@ onMounted(() => {
           <AewolLogo size="18" />
           <router-link
             to="/notifications"
-            class="relative flex size-[42px] items-center justify-center text-(color:--color-navy)"
+            class="relative flex size-[42px] items-center justify-center rounded-(--radius-lg) text-(color:--color-navy) transition-colors duration-200 hover:bg-(--color-white) focus-visible:outline-none focus-visible:shadow-(--shadow-focus)"
             aria-label="알림함"
           >
             <IconNotificationBell size="22" />
@@ -223,7 +223,7 @@ onMounted(() => {
             >{{ notificationStore.unreadCount > 99 ? '99+' : notificationStore.unreadCount }}</span>
           </router-link>
         </div>
-        <h1 class="mt-(--space-3) text-(length:--font-lg) font-bold text-(color:--color-navy)">
+        <h1 class="mt-(--space-3) text-(length:--font-2xl) font-bold tracking-[-0.03em] text-(color:--color-navy)">
           안녕하세요, {{ memberName }}님
         </h1>
       </header>
@@ -306,29 +306,29 @@ onMounted(() => {
             </p>
             <router-link
               to="/wallet"
-              class="mt-(--space-2) block text-[30px] font-bold tracking-[-0.03em] text-(color:--color-navy) no-underline"
+              class="mt-(--space-2) block text-[30px] font-bold tracking-[-0.03em] text-(color:--color-navy) no-underline tabular-nums focus-visible:outline-none focus-visible:shadow-(--shadow-focus)"
             >
               {{ formattedBalance }}원
             </router-link>
           </div>
         </div>
 
-        <div class="mt-(--space-5) grid grid-cols-3 divide-x divide-(--color-card-border)">
+        <div class="mt-(--space-5) grid grid-cols-3 gap-(--space-1)">
           <router-link
             to="/wallet/charge"
-            class="py-(--space-2) text-center text-(length:--font-sm) font-medium text-(color:--color-slate-dark) no-underline"
+            class="rounded-(--radius-lg) py-(--space-2) text-center text-(length:--font-sm) font-medium text-(color:--color-slate-dark) no-underline transition-colors duration-200 hover:bg-(--color-app-bg) focus-visible:outline-none focus-visible:shadow-(--shadow-focus)"
           >
             충전
           </router-link>
           <router-link
             to="/payment/qr"
-            class="py-(--space-2) text-center text-(length:--font-sm) font-bold text-(color:--color-navy) no-underline"
+            class="rounded-(--radius-lg) py-(--space-2) text-center text-(length:--font-sm) font-bold text-(color:--color-navy) no-underline transition-colors duration-200 hover:bg-(--color-app-bg) focus-visible:outline-none focus-visible:shadow-(--shadow-focus)"
           >
             QR 결제
           </router-link>
           <router-link
             to="/wallet/history"
-            class="py-(--space-2) text-center text-(length:--font-sm) font-medium text-(color:--color-slate-dark) no-underline"
+            class="rounded-(--radius-lg) py-(--space-2) text-center text-(length:--font-sm) font-medium text-(color:--color-slate-dark) no-underline transition-colors duration-200 hover:bg-(--color-app-bg) focus-visible:outline-none focus-visible:shadow-(--shadow-focus)"
           >
             조회
           </router-link>
@@ -342,7 +342,7 @@ onMounted(() => {
       <router-link
         v-if="!hasSpendingInsightCard"
         to="/dashboard"
-        class="mt-(--space-5) flex items-center justify-between rounded-[22px] bg-(--color-white) p-(--space-5) text-inherit no-underline"
+        class="mt-(--space-5) flex items-center justify-between rounded-[22px] bg-(--color-white) p-(--space-5) text-inherit no-underline shadow-(--shadow-card) transition-transform duration-200 hover:-translate-y-px focus-visible:outline-none focus-visible:shadow-(--shadow-focus) motion-reduce:transition-none motion-reduce:hover:translate-y-0"
       >
         <div class="min-w-0 flex-1">
           <div class="flex items-center justify-between gap-(--space-2)">
@@ -422,7 +422,7 @@ onMounted(() => {
             <component
               :is="card.ctaPath ? 'router-link' : 'div'"
               v-bind="card.ctaPath ? { to: card.ctaPath } : {}"
-              class="block rounded-[22px] bg-(--color-white) p-(--space-4) text-inherit no-underline shadow-(--shadow-card)"
+              class="block rounded-[22px] bg-(--color-white) p-(--space-4) text-inherit no-underline shadow-(--shadow-card) transition-transform duration-200 hover:-translate-y-px focus-visible:outline-none focus-visible:shadow-(--shadow-focus) motion-reduce:transition-none motion-reduce:hover:translate-y-0"
             >
               <!--
                 SPENDING 카드는 위 '이번 달 총지출' 타일이 하던 역할(금액 표시)을 이제

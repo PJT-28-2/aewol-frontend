@@ -116,7 +116,7 @@ const spinnerColor = ['secondary', 'neutral', 'ghost', 'primary', 'white'].inclu
 
 <template>
   <button
-    class="inline-flex items-center justify-center gap-(--space-2) font-semibold cursor-pointer transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+    class="inline-flex items-center justify-center gap-(--space-2) font-semibold cursor-pointer transition-[opacity,transform,background-color] duration-200 ease-out active:scale-[0.98] motion-reduce:transition-none motion-reduce:active:scale-100 focus-visible:outline-none focus-visible:shadow-(--shadow-focus) disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100"
     :class="[
       variantClasses[variant],
       sizeClasses[size],
