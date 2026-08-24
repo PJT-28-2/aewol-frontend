@@ -143,7 +143,7 @@ function handleNext() {
     </div>
 
     <template v-else>
-      <section class="mb-(--space-6) rounded-(--radius-xl) bg-(--color-navy) p-(--space-5) text-(color:--color-white)">
+      <section class="mb-(--space-6) rounded-(--radius-xl) bg-(--color-brand-dark) p-(--space-5) text-(color:--color-contrast)">
         <p class="text-(length:--font-sm) text-(color:--color-slate-light)">
           출금 가능한 애월지갑 잔액
         </p>

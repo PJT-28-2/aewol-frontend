@@ -19,7 +19,7 @@ defineProps({
       class="w-3.5 h-3.5 rounded-full"
       :class="
         index <= modelValue.length
-          ? 'bg-(--color-navy)'
+          ? 'bg-(--color-brand-dark)'
           : 'border border-(--color-border)'
       "
     />

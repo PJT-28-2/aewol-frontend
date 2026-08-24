@@ -48,6 +48,10 @@ const formattedBalance = computed(() =>
   Number(dashboardStore.summary?.walletBalance ?? 0).toLocaleString('ko-KR'),
 )
 const monthlyExpense = computed(() => Number(dashboardStore.summary?.monthlySpend?.totalAmount ?? 0))
+const formattedMonthlyExpense = computed(() => monthlyExpense.value.toLocaleString('ko-KR'))
+const monthlySpendingAriaLabel = computed(
+  () => `${formattedMonthlyExpense.value}원을 사용했어요`,
+)
 const changeRate = computed(() => Number(dashboardStore.summary?.monthlySpend?.changeRate ?? 0))
 const changeLabel = computed(() => {
   if (changeRate.value === 0) return '전월과 동일'
@@ -192,7 +196,7 @@ onMounted(() => {
             <IconNotificationBell size="22" />
             <span
               v-if="notificationStore.unreadCount"
-              class="absolute top-0 right-0 flex min-w-[18px] h-[18px] items-center justify-center rounded-full bg-(--color-danger-strong) px-[4px] text-[10px] font-bold leading-none text-(color:--color-white)"
+              class="absolute top-0 right-0 flex min-w-[18px] h-[18px] items-center justify-center rounded-full bg-(--color-danger-strong) px-[4px] text-[10px] font-bold leading-none text-(color:--color-contrast)"
               aria-label="읽지 않은 알림 수"
             >{{ notificationStore.unreadCount > 99 ? '99+' : notificationStore.unreadCount }}</span>
           </router-link>
@@ -296,8 +300,19 @@ onMounted(() => {
             </p>
             <span class="shrink-0 rounded-full bg-(--color-leaf-soft) px-(--space-3) py-(--space-2) text-(length:--font-xs) font-bold text-(color:--color-leaf-dark)">{{ changeLabel }}</span>
           </div>
-          <p class="mt-(--space-2) text-(length:--font-xl) font-bold text-(color:--color-navy)">
-            {{ monthlyExpense.toLocaleString('ko-KR') }}원을 사용했어요
+          <p
+            class="mt-(--space-3) flex flex-wrap items-baseline gap-x-(--space-2) gap-y-(--space-1)"
+            :aria-label="monthlySpendingAriaLabel"
+            data-testid="monthly-spending-amount-summary"
+          >
+            <span
+              aria-hidden="true"
+              class="text-[28px] font-extrabold leading-none tracking-[-0.035em] text-(color:--color-navy)"
+            >{{ formattedMonthlyExpense }}원</span>
+            <span
+              aria-hidden="true"
+              class="text-(length:--font-sm) font-semibold leading-snug text-(color:--color-slate-dark)"
+            >사용했어요</span>
           </p>
         </div>
       </router-link>
@@ -373,9 +388,18 @@ onMounted(() => {
               </p>
               <p
                 v-if="card.type === 'SPENDING'"
-                class="mt-(--space-1) text-(length:--font-xl) font-bold text-(color:--color-navy)"
+                class="mt-(--space-2) flex flex-wrap items-baseline gap-x-(--space-2) gap-y-(--space-1)"
+                :aria-label="monthlySpendingAriaLabel"
+                data-testid="monthly-spending-amount-card"
               >
-                {{ monthlyExpense.toLocaleString('ko-KR') }}원을 사용했어요
+                <span
+                  aria-hidden="true"
+                  class="text-[28px] font-extrabold leading-none tracking-[-0.035em] text-(color:--color-navy)"
+                >{{ formattedMonthlyExpense }}원</span>
+                <span
+                  aria-hidden="true"
+                  class="text-(length:--font-sm) font-semibold leading-snug text-(color:--color-slate-dark)"
+                >사용했어요</span>
               </p>
 
               <!--

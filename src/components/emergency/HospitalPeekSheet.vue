@@ -56,7 +56,7 @@ function selectFromList(hospital) {
 
 <template>
   <section
-    class="absolute inset-x-0 bottom-0 z-20 flex flex-col overflow-hidden rounded-t-(--radius-sheet) border-t border-(--color-card-border) bg-(--color-app-bg) shadow-[0_-12px_40px_color-mix(in_srgb,var(--color-navy)_14%,transparent)] transition-[height] duration-300 ease-out"
+    class="absolute inset-x-0 bottom-0 z-20 flex flex-col overflow-hidden rounded-t-(--radius-sheet) border-t border-(--color-card-border) bg-(--color-app-bg) shadow-[0_-12px_40px_color-mix(in_srgb,var(--color-brand-dark)_14%,transparent)] transition-[height] duration-300 ease-out"
     :class="heightClass"
     aria-label="주변 응급병원"
   >

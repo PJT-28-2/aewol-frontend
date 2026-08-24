@@ -252,7 +252,7 @@ onMounted(initializeDiary)
               <div class="p-[var(--space-4)]">
                 <div class="flex items-center gap-[var(--space-2)]">
                   <span
-                    class="grid size-[var(--diary-avatar-size)] shrink-0 place-items-center rounded-full text-(length:--font-sm) font-bold text-(--color-white)"
+                    class="grid size-[var(--diary-avatar-size)] shrink-0 place-items-center rounded-full text-(length:--font-sm) font-bold text-(--color-contrast)"
                     :class="diary.avatarClass"
                   >
                     {{ diary.authorName?.slice(0, 1) }}

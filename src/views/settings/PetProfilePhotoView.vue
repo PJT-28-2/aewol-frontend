@@ -464,7 +464,7 @@ onBeforeUnmount(() => {
           <button
             type="button"
             class="rounded-full px-(--space-4) py-(--space-2) text-(length:--font-xs) font-semibold"
-            :class="fitMode === 'contain' ? 'bg-(--color-navy) text-(color:--color-white)' : 'bg-(--color-white) text-(color:--color-navy)'"
+            :class="fitMode === 'contain' ? 'bg-(--color-brand-dark) text-(color:--color-contrast)' : 'bg-(--color-white) text-(color:--color-navy)'"
             @click="fitMode = fitMode === 'contain' ? 'cover' : 'contain'"
           >
             전체 몸

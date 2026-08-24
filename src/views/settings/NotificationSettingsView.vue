@@ -153,7 +153,7 @@ onMounted(fetchNotificationSettings)
             @change="handleAllChange"
           >
           <span
-            class="block relative h-[24px] w-[44px] shrink-0 rounded-full bg-(--color-border) transition-colors after:absolute after:top-[2px] after:left-[2px] after:size-5 after:rounded-full after:bg-(--color-white) after:shadow-(--shadow-sm) after:transition-transform peer-checked:bg-(--color-leaf) peer-checked:after:translate-x-5 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-(--color-leaf-dark)"
+            class="block relative h-[24px] w-[44px] shrink-0 rounded-full bg-(--color-border) transition-colors after:absolute after:top-[2px] after:left-[2px] after:size-5 after:rounded-full after:bg-(--color-contrast) after:shadow-(--shadow-sm) after:transition-transform peer-checked:bg-(--color-leaf) peer-checked:after:translate-x-5 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-(--color-leaf-dark)"
             aria-hidden="true"
           />
         </label>
@@ -206,7 +206,7 @@ onMounted(fetchNotificationSettings)
               @change="handleSettingChange(setting, $event)"
             >
             <span
-              class="block relative h-[24px] w-[44px] shrink-0 rounded-full bg-(--color-border) transition-colors after:absolute after:top-[2px] after:left-[2px] after:size-5 after:rounded-full after:bg-(--color-white) after:shadow-(--shadow-sm) after:transition-transform peer-checked:bg-(--color-leaf) peer-checked:after:translate-x-5 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-(--color-leaf-dark)"
+              class="block relative h-[24px] w-[44px] shrink-0 rounded-full bg-(--color-border) transition-colors after:absolute after:top-[2px] after:left-[2px] after:size-5 after:rounded-full after:bg-(--color-contrast) after:shadow-(--shadow-sm) after:transition-transform peer-checked:bg-(--color-leaf) peer-checked:after:translate-x-5 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-(--color-leaf-dark)"
               aria-hidden="true"
             />
           </label>

@@ -27,7 +27,7 @@ defineProps({
       :fill="color"
     />
     <path
-      fill="var(--color-white)"
+      fill="var(--color-contrast)"
       d="M8.2 13.5a4.6 4.6 0 0 1 7.6-1.7l1.1-1.1v3.8h-3.8l1.2-1.2a2.6 2.6 0 0 0-4.1.9l-2-.7Zm7.6 3a4.6 4.6 0 0 1-7.6 1.7l-1.1 1.1v-3.8h3.8l-1.2 1.2a2.6 2.6 0 0 0 4.1-.9l2 .7Z"
     />
     <rect
