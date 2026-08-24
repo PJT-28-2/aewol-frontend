@@ -21,6 +21,14 @@ export const donationApi = {
     return api.put('/donation/settings', data)
   },
 
+  addPreference(organizationId) {
+    return api.put(`/donation/preferences/${organizationId}`)
+  },
+
+  removePreference(organizationId) {
+    return api.delete(`/donation/preferences/${organizationId}`)
+  },
+
   getHistory(params) {
     return api.get('/donation/history', { params })
   },
