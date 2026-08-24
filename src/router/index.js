@@ -549,6 +549,18 @@ const authRoutes = [
     meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
+    path: '/admin/diary-reports',
+    name: 'AdminDiaryReports',
+    component: () => import('@/views/admin/AdminDiaryReportListView.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true, adminFallback: '/settings', layout: 'DefaultLayout', showBack: true },
+  },
+  {
+    path: '/admin/diary-reports/:reportId',
+    name: 'AdminDiaryReportDetail',
+    component: () => import('@/views/admin/AdminDiaryReportDetailView.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true, adminFallback: '/settings', layout: 'DefaultLayout', showBack: true },
+  },
+  {
     path: '/settings',
     name: 'Settings',
     component: () => import('@/views/settings/SettingsView.vue'),
@@ -669,7 +681,7 @@ router.beforeEach(async (to) => {
   // 공동구매 글쓰기 등 관리자 전용 화면을 URL 직접 입력으로 우회하는 것을 막음.
   // 버튼은 숨겨져 있어도 라우트 자체는 막혀있지 않으면 그대로 진입할 수 있기 때문
   if (to.meta.requiresAdmin && !authStore.isAdmin) {
-    return { path: '/group-purchase' };
+    return { path: to.meta.adminFallback ?? '/group-purchase' };
   }
 
   // 나의 공동구매(GET /api/group-purchase/my)는 role=USER 전용이라 관리자가 URL로 직접

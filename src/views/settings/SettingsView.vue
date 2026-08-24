@@ -17,6 +17,7 @@ import IconNotificationBell from '@/components/common/icons/IconNotificationBell
 import IconRecurring from '@/components/common/icons/IconRecurring.vue'
 import IconSavings from '@/components/common/icons/IconSavings.vue'
 import IconWallet from '@/components/common/icons/IconWallet.vue'
+import IconWarning from '@/components/common/icons/IconWarning.vue'
 import dogProfileMascot from '@/assets/images/pet-dog-default-profile-v3.webp'
 import catProfileMascot from '@/assets/images/pet-cat-default-profile-v3.webp'
 
@@ -100,6 +101,16 @@ const settingItems = [
     path: '/support',
     icon: IconChatBubble,
     tone: 'gray',
+  },
+]
+
+const adminItems = [
+  {
+    title: '멍스타그램 신고 관리',
+    description: '신고 게시물 확인 및 처리',
+    path: '/admin/diary-reports',
+    icon: IconWarning,
+    tone: 'pink',
   },
 ]
 
@@ -232,6 +243,36 @@ const confirmLogout = async () => {
           />
           <strong class="mt-(--space-3) block truncate text-[13px] font-bold text-(color:--color-navy)">{{ item.title }}</strong>
           <span class="mt-[3px] block truncate text-[10px] text-(color:--color-slate-muted)">{{ item.description }}</span>
+        </button>
+      </nav>
+    </section>
+
+    <section
+      v-if="authStore.isAdmin"
+      class="mt-(--space-7)"
+    >
+      <h2 class="mb-(--space-3) px-(--space-1) text-(length:--font-lg) font-bold text-(color:--color-navy)">
+        관리자
+      </h2>
+      <nav
+        class="overflow-hidden rounded-[22px] bg-(--color-white)"
+        aria-label="관리자 메뉴"
+      >
+        <button
+          v-for="item in adminItems"
+          :key="item.title"
+          type="button"
+          class="flex w-full items-center gap-(--space-3) p-(--space-4) text-left active:bg-(--color-gray-100)"
+          @click="handleMenuClick(item)"
+        >
+          <FeatureIconTile
+            :icon="item.icon"
+            :tone="item.tone"
+          />
+          <span class="min-w-0">
+            <strong class="block text-[13px] font-semibold text-(color:--color-navy)">{{ item.title }}</strong>
+            <small class="mt-1 block text-(length:--font-xs) text-(color:--color-slate-muted)">{{ item.description }}</small>
+          </span>
         </button>
       </nav>
     </section>
