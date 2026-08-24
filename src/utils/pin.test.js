@@ -28,4 +28,10 @@ describe('getPinWeaknessReason', () => {
     // sequential 검사가 weak 검사보다 먼저 실행되는지 확인하기 위한 케이스.
     expect(getPinWeaknessReason('123456')).toBe('sequential');
   });
+
+  it('세 자리 반복(THREE_DIGIT_REPEAT)이면서 그 세 자리가 연속 숫자이기도 하면 sequential을 우선한다', () => {
+    // 123123은 '(\d{3})\1'(세 자리 반복) weak 규칙에도 걸리고 '123'이 연속 숫자이기도 한
+    // 케이스라, 위 123456 테스트보다 더 직접적으로 우선순위를 검증한다.
+    expect(getPinWeaknessReason('123123')).toBe('sequential');
+  });
 });
