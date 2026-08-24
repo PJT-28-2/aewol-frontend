@@ -54,6 +54,10 @@ export const useDonationStore = defineStore('donation', {
     preferredCampaigns: (state) =>
       state.campaigns.filter((campaign) => campaign.preferred),
 
+    isCurrentCampaignDonatable() {
+      return this.currentCampaign?.donatable !== false
+    },
+
     filteredCampaigns: (state) => {
       const keyword = state.searchKeyword.trim().toLowerCase()
 
@@ -70,8 +74,12 @@ export const useDonationStore = defineStore('donation', {
       })
     },
 
-    canDonate: (state) =>
-      Boolean(state.selectedCampaignId) && state.amount > 0 && state.amount <= state.balance,
+    canDonate() {
+      return Boolean(this.selectedCampaignId)
+        && this.amount > 0
+        && this.amount <= this.balance
+        && this.isCurrentCampaignDonatable
+    },
 
     balanceAfterDonation: (state) => Math.max(state.balance - state.amount, 0),
 
