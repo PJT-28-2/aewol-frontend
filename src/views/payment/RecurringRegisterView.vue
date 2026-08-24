@@ -326,7 +326,11 @@ async function handleSubmit() {
         class="mt-[1px] shrink-0 text-(--color-gold-dark)"
       />
       <p class="text-(length:--font-sm) text-(color:--color-slate-dark)">
-        매월 결제일 3일 전에 미리 알려드려요
+        {{
+          isEditMode
+            ? '매월 결제일 3일 전에 미리 알려드려요'
+            : '등록하면 오늘 바로 결제되고, 다음부터 매월 선택한 날에 자동으로 빠져나가요'
+        }}
       </p>
     </div>
 
