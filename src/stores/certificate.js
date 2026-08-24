@@ -170,12 +170,14 @@ export const useCertificateStore = defineStore('certificate', {
     async uploadVaccination(petId, file, issuedDate) {
       return this._withRequestState(async () => {
         const { data } = await certificatesApi.uploadVaccination(petId, file, issuedDate)
-        // data.result는 POST 응답 그대로라 docName 등이 비어있을 수 있어 폴백을 먼저 깔고 덮어쓴다
+        // data.result는 POST 응답 그대로라 docName 등이 비어있을 수 있어 폴백을 먼저 깔고 덮어쓴다.
+        // 폴백 이름은 백엔드 규칙(문서유형_발급일)과 동일하게 맞춘다 — 원본 파일명은 숫자 나열인 경우가 많다.
+        const fallbackDate = issuedDate || new Date().toISOString().slice(0, 10)
         const newDoc = {
           petId,
           docType: 'VACCINATION',
-          docName: file.name,
-          issuedDate: issuedDate || new Date().toISOString().slice(0, 10),
+          docName: `접종증명서_${fallbackDate}`,
+          issuedDate: fallbackDate,
           createdAt: new Date().toISOString(),
           ...data.result,
         }
@@ -194,11 +196,12 @@ export const useCertificateStore = defineStore('certificate', {
         formData.append('file', file)
         formData.append('docType', 'MEDICAL_CONFIRMATION')
         const { data } = await certificatesApi.uploadDocument(petId, formData)
+        const uploadDate = new Date().toISOString().slice(0, 10)
         const newDoc = {
           petId,
           docType: 'MEDICAL_CONFIRMATION',
-          docName: file.name,
-          issuedDate: new Date().toISOString().slice(0, 10),
+          docName: `진료확인서_${uploadDate}`,
+          issuedDate: uploadDate,
           createdAt: new Date().toISOString(),
           ...data.result,
         }
