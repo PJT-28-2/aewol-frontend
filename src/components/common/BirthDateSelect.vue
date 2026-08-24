@@ -149,8 +149,8 @@ const daySheetOpen = computed({
 </script>
 
 <template>
-  <fieldset>
-    <legend class="mb-(--space-2) text-(length:--font-sm) font-medium text-(color:--color-slate-dark)">
+  <fieldset class="m-0 min-w-0 border-0 p-0">
+    <legend class="mb-(--space-2) p-0 text-(length:--font-sm) font-medium text-(color:--color-slate-dark)">
       생년월일
     </legend>
     <div class="grid grid-cols-3 gap-(--space-2)">
