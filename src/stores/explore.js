@@ -28,6 +28,7 @@ export const useExploreStore = defineStore('explore', {
     profilePosts: [],
     profileNextCursor: null,
     isProfileLoading: false,
+    isProfileLoadingMore: false,
     profileError: '',
   }),
 
@@ -102,7 +103,7 @@ export const useExploreStore = defineStore('explore', {
       const requestId = this.profileRequestId + 1
       this.profileRequestId = requestId
       this.isProfileLoading = true
-      this.isLoadingMore = false
+      this.isProfileLoadingMore = false
       this.profileError = ''
       try {
         const [profile, posts] = await Promise.all([
@@ -126,9 +127,9 @@ export const useExploreStore = defineStore('explore', {
     },
 
     async fetchMorePetPosts(petId) {
-      if (this.isLoadingMore || this.profileNextCursor == null) return
+      if (this.isProfileLoadingMore || this.profileNextCursor == null) return
       const requestId = this.profileRequestId
-      this.isLoadingMore = true
+      this.isProfileLoadingMore = true
       try {
         const result = unwrap(await exploreApi.getPetPosts(petId, { cursor: this.profileNextCursor }))
         if (requestId !== this.profileRequestId) return
@@ -138,7 +139,7 @@ export const useExploreStore = defineStore('explore', {
         if (requestId !== this.profileRequestId) return
         this.profileError = errorMessage(error, '다음 게시물을 불러오지 못했어요.')
       } finally {
-        if (requestId === this.profileRequestId) this.isLoadingMore = false
+        if (requestId === this.profileRequestId) this.isProfileLoadingMore = false
       }
     },
   },
