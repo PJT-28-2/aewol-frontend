@@ -33,6 +33,7 @@ const createdResult = {
 
 describe('usePaymentStore', () => {
   beforeEach(() => {
+    sessionStorage.clear()
     setActivePinia(createPinia())
     vi.clearAllMocks()
   })
@@ -52,6 +53,7 @@ describe('usePaymentStore', () => {
     )
     expect(retriedRequest.idempotencyKey).toBe(firstRequest.idempotencyKey)
     expect(store.pendingCreateKey).toBeNull()
+    expect(sessionStorage.getItem('pendingRecurringCreate')).toBeNull()
   })
 
   it('등록 내용이 바뀌면 새 멱등키를 사용한다', async () => {
@@ -74,5 +76,19 @@ describe('usePaymentStore', () => {
     await store.updateRecurringPayment('11', payload)
 
     expect(recurringApi.updateRecurring.mock.calls[0][1].idempotencyKey).toBeUndefined()
+  })
+
+  it('새로고침 뒤에도 같은 등록 내용이면 멱등키를 재사용한다', async () => {
+    recurringApi.createRecurring.mockRejectedValue(new Error('network error'))
+    const store = usePaymentStore()
+    await expect(store.createRecurringPayment(payload)).rejects.toThrow()
+    const firstKey = store.pendingCreateKey
+
+    setActivePinia(createPinia())
+    const restored = usePaymentStore()
+    await expect(restored.createRecurringPayment(payload)).rejects.toThrow()
+
+    expect(restored.pendingCreateKey).toBe(firstKey)
+    expect(recurringApi.createRecurring.mock.calls[1][0].idempotencyKey).toBe(firstKey)
   })
 })
