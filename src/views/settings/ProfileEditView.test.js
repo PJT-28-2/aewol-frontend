@@ -213,4 +213,48 @@ describe('ProfileEditView 전화번호 변경 SMS', () => {
       expect.objectContaining({ phone: '01099998888' }),
     )
   })
+
+  it('전송 중 번호를 바꾸면 이전 응답으로 전송 완료를 표시하지 않는다', async () => {
+    let resolveSend
+    mocks.memberStore.sendPhoneVerificationCode.mockReturnValue(
+      new Promise((resolve) => {
+        resolveSend = resolve
+      }),
+    )
+    await inputValue(getPhoneInput(), '01099998888')
+    getSendCodeButton().click()
+    await flushView()
+    await inputValue(getPhoneInput(), '01011112222')
+    resolveSend({ data: { result: { expiresInSeconds: 300 } } })
+    await flushView()
+
+    expect(host.textContent).not.toContain('인증번호를 전송했습니다.')
+    expect(host.querySelector('#profile-phone-code')).toBeNull()
+  })
+
+  it('확인 중 번호를 바꾸면 이전 인증 완료를 현재 번호에 적용하지 않는다', async () => {
+    let resolveVerify
+    mocks.memberStore.verifyPhoneCode.mockReturnValue(
+      new Promise((resolve) => {
+        resolveVerify = resolve
+      }),
+    )
+    await inputValue(getPhoneInput(), '01099998888')
+    getSendCodeButton().click()
+    await flushView()
+
+    const codeInput = host.querySelector('#profile-phone-code')
+    await inputValue(codeInput, '123456')
+    const confirmButton = [...host.querySelectorAll('button')].find(
+      (button) => button.textContent.trim() === '확인',
+    )
+    confirmButton.click()
+    await flushView()
+    await inputValue(getPhoneInput(), '01011112222')
+    resolveVerify({})
+    await flushView()
+
+    expect(host.textContent).not.toContain('전화번호 인증이 완료되었습니다.')
+    expect(getSaveButton().disabled).toBe(true)
+  })
 })
