@@ -32,13 +32,19 @@ const category = ref('');
 const selectedPetId = ref(null);
 const isLoading = ref(false);
 const errorMessage = ref('');
+// 멍냥마켓처럼 외부에서 merchant/amount 쿼리로 열리면 일회 결제 확인과 같이 상품·금액을 고정한다.
+const openedFromShop = ref(false);
+const categoryKeys = new Set(RECURRING_CATEGORIES.map((item) => item.key));
 
 onMounted(async () => {
   isLoading.value = true;
   try {
     // 반려동물 선택은 필수이므로 등록/변경 모두 반려동물 목록이 필요하다.
     await Promise.all([petStore.fetchPets(), walletStore.fetchWallet()]);
-    if (!isEditMode.value) return;
+    if (!isEditMode.value) {
+      applyShopQuery();
+      return;
+    }
     // 변경 모드: 기존 정기결제 값을 폼에 채워둔다.
     await paymentStore.fetchRecurringPayments();
     const payment = paymentStore.findRecurringPayment(editId.value);
@@ -60,6 +66,25 @@ onMounted(async () => {
   }
 });
 
+function applyShopQuery() {
+  const merchant = String(route.query.merchant ?? '').trim();
+  const amountValue = Array.isArray(route.query.amount) ? route.query.amount[0] : route.query.amount;
+  const amountText = String(amountValue ?? '').trim();
+  if (!merchant || merchant.length > 100 || !/^\d+$/.test(amountText)) return;
+  const parsedAmount = Number(amountText);
+  if (parsedAmount <= 0 || parsedAmount > 10_000_000) return;
+
+  openedFromShop.value = true;
+  merchantName.value = merchant;
+  amount.value = String(parsedAmount);
+  const categoryKey = String(route.query.category ?? '').toUpperCase();
+  category.value = categoryKeys.has(categoryKey) ? categoryKey : 'SUPPLIES';
+  const dayValue = Array.isArray(route.query.day) ? route.query.day[0] : route.query.day;
+  const day = Number(dayValue);
+  if (Number.isInteger(day) && day >= 1 && day <= 31) dayOfMonth.value = day;
+  if (petStore.pets.length === 1) selectedPetId.value = petStore.pets[0].id;
+}
+
 function selectCategory(key) {
   category.value = key;
 }
@@ -80,18 +105,25 @@ function selectDay(day) {
 // 사용자가 placeholder처럼 콤마를 넣어 입력해도(예: "32,000") 정상 인식되도록
 // 숫자가 아닌 문자는 모두 제거하고 파싱한다.
 const numericAmount = computed(() => Number(String(amount.value).replace(/[^0-9]/g, '')) || 0);
+const isAmountOverBalance = computed(
+  () => !isEditMode.value && numericAmount.value > walletBalance.value,
+);
 
 const canSubmit = computed(
   () =>
     !!merchantName.value.trim() &&
     numericAmount.value > 0 &&
     !!category.value &&
-    !!selectedPetId.value,
+    !!selectedPetId.value &&
+    !isAmountOverBalance.value,
 );
 
 const isSubmitting = ref(false);
 
-const pageTitle = computed(() => (isEditMode.value ? '정기결제 변경' : '정기결제 등록'));
+const pageTitle = computed(() => {
+  if (openedFromShop.value) return '정기결제';
+  return isEditMode.value ? '정기결제 변경' : '정기결제 등록';
+});
 const submitLabel = computed(() => (isEditMode.value ? '변경 완료' : '정기결제 등록하기'));
 
 // mockData.js의 기존 항목과 같은 "다음 M/D" 형식으로 다음 결제일을 계산한다.
@@ -168,7 +200,8 @@ async function handleSubmit() {
         v-model="merchantName"
         type="text"
         placeholder="예: 강아지 사료 정기배송"
-        class="w-full p-4 rounded-(--radius-xl) bg-(--color-surface) border border-(--color-border) text-(length:--font-md) text-(color:--color-navy) outline-none placeholder:text-(--color-slate-muted)"
+        :readonly="openedFromShop"
+        class="w-full p-4 rounded-(--radius-xl) bg-(--color-surface) border border-(--color-border) text-(length:--font-md) text-(color:--color-navy) outline-none placeholder:text-(--color-slate-muted) read-only:bg-(--color-app-bg)"
       >
     </section>
 
@@ -183,7 +216,8 @@ async function handleSubmit() {
         type="text"
         inputmode="numeric"
         placeholder="32,000 원"
-        class="w-full p-4 rounded-(--radius-xl) bg-(--color-surface) border border-(--color-border) text-(length:--font-md) text-(color:--color-navy) outline-none placeholder:text-(--color-slate-muted)"
+        :readonly="openedFromShop"
+        class="w-full p-4 rounded-(--radius-xl) bg-(--color-surface) border border-(--color-border) text-(length:--font-md) text-(color:--color-navy) outline-none placeholder:text-(--color-slate-muted) read-only:bg-(--color-app-bg)"
       >
     </section>
 
@@ -275,6 +309,12 @@ async function handleSubmit() {
         >
           잔액 {{ walletBalance.toLocaleString() }}원
         </p>
+        <p
+          v-if="isAmountOverBalance"
+          class="text-(length:--font-sm) text-(color:--color-danger-strong) mt-(--space-1)"
+        >
+          잔액이 부족합니다.
+        </p>
       </div>
     </section>
 
@@ -286,7 +326,11 @@ async function handleSubmit() {
         class="mt-[1px] shrink-0 text-(--color-gold-dark)"
       />
       <p class="text-(length:--font-sm) text-(color:--color-slate-dark)">
-        매월 결제일 3일 전에 미리 알려드려요
+        {{
+          isEditMode
+            ? '매월 결제일 3일 전에 미리 알려드려요'
+            : '등록하면 오늘 바로 결제되고, 다음부터 매월 선택한 날에 자동으로 빠져나가요'
+        }}
       </p>
     </div>
 
