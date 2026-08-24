@@ -88,14 +88,12 @@ async function saveSettings() {
 }
 
 /**
- * 결제액을 저금 단위로 올렸을 때 생기는 차액.
- *
- * 서버(DonationServiceImpl.roundUpAmount)와 같은 계산이다. 딱 떨어지면 올릴 것이
- * 없으므로 0이고, 그 결제는 적립을 건너뛴다.
+ * 지갑 잔액을 저금 단위로 깎고 남는 나머지.
+ * 31,275원을 1,000원 단위로 깎으면 275원이 저금통으로 간다.
  */
-function roundUpGap(amount) {
-  const remainder = amount % draftSavingUnit.value
-  return remainder === 0 ? 0 : draftSavingUnit.value - remainder
+function spareRemainder(amount) {
+  if (!draftSavingUnit.value) return 0
+  return amount % draftSavingUnit.value
 }
 
 watch(
@@ -164,7 +162,7 @@ onMounted(loadDonationData)
           class="mt-[var(--space-1)] block text-[length:var(--font-sm)] text-(--color-slate-muted)"
         >{{
           piggyBankEnabled
-            ? '결제할 때마다 잔돈이 자동으로 모여요'
+            ? '매일 밤 지갑 잔돈을 저금통으로 옮겨요'
             : '짜투리저금통 사용이 중지되어 있어요'
         }}</span>
       </header>
@@ -190,6 +188,17 @@ onMounted(loadDonationData)
             @click="go('/donation/give')"
           >
             기부하기
+          </AppButton>
+        </div>
+        <div class="mt-[var(--space-3)] flex gap-[var(--space-3)]">
+          <AppButton
+            block
+            pill
+            size="md"
+            variant="secondary"
+            @click="go('/donation/deposit')"
+          >
+            넣기
           </AppButton>
           <AppButton
             block
@@ -696,7 +705,7 @@ onMounted(loadDonationData)
           <b class="block">짜투리 저금통 사용</b>
           <span
             class="mt-[var(--space-1)] block text-[length:var(--font-xs)] text-(--color-slate-muted)"
-          >결제할 때마다 잔돈을 자동으로 모아요</span>
+          >매일 밤, 애월지갑 잔액의 나머지를 저금통으로 옮겨요</span>
         </div>
         <ToggleSwitch
           :model-value="draftPiggyBankEnabled"
@@ -714,7 +723,7 @@ onMounted(loadDonationData)
             저금 단위
           </h3>
           <p class="mb-[var(--space-4)] mt-[var(--space-1)] text-[length:var(--font-xs)] text-(--color-slate-muted)">
-            결제 금액을 올림할 단위를 선택해 주세요
+            매일 깎을 자릿수를 선택해 주세요
           </p>
           <div class="flex gap-[var(--space-2)]">
             <SelectableChip
@@ -737,13 +746,13 @@ onMounted(loadDonationData)
             <strong
               class="mt-[var(--space-2)] block text-[length:var(--font-sm)] leading-snug text-(--color-navy)"
             >
-              31,275원 결제 시, {{ formatWon(draftSavingUnit) }} 단위로 올린
-              {{ formatWon(31275 + roundUpGap(31275)) }}과의 차액
-              {{ formatWon(roundUpGap(31275)) }}이 자동으로 저금통에 쌓여요
+              지갑에 31,275원이 있으면, {{ formatWon(draftSavingUnit) }} 단위로 깎아
+              {{ formatWon(spareRemainder(31275)) }}이 저금통으로 옮겨지고
+              지갑에는 {{ formatWon(31275 - spareRemainder(31275)) }}이 남아요
             </strong>
             <span
               class="mt-[var(--space-1)] block text-[length:var(--font-xs)] text-(--color-slate-dark)"
-            >결제 금액은 그대로 나가고, 잔돈만 별도로 모여요</span>
+            >매일 밤 한 번, 직접 넣을 수도 있어요</span>
           </div>
         </section>
 

@@ -5,6 +5,9 @@ const mocks = vi.hoisted(() => ({
   addPreference: vi.fn(),
   removePreference: vi.fn(),
   saveSettings: vi.fn(),
+  getOverview: vi.fn(),
+  depositPot: vi.fn(),
+  withdrawPot: vi.fn(),
 }))
 
 vi.mock('@/api/donation', () => ({
@@ -12,6 +15,9 @@ vi.mock('@/api/donation', () => ({
     addPreference: mocks.addPreference,
     removePreference: mocks.removePreference,
     saveSettings: mocks.saveSettings,
+    getOverview: mocks.getOverview,
+    depositPot: mocks.depositPot,
+    withdrawPot: mocks.withdrawPot,
   },
 }))
 
@@ -127,6 +133,83 @@ describe('donation store 저금통 설정', () => {
     expect(store.savingUnit).toBe(1000)
     expect(store.autoDonate).toBe(false)
     expect(store.operationError).toBe('설정 저장 실패')
+  })
+})
+
+describe('donation store 저금통 넣기·출금', () => {
+  it('개요에서 애월지갑 잔액을 읽어 넣기 한도로 쓴다', async () => {
+    const store = useDonationStore()
+    mocks.getOverview.mockResolvedValue({
+      data: {
+        result: {
+          balance: 1200,
+          walletBalance: 31275,
+          monthlySaved: 400,
+          impactMessage: '',
+          campaigns: [],
+          settings: { piggyBankEnabled: true, savingUnit: 1000, autoDonate: false },
+        },
+      },
+    })
+
+    await store.fetchDonationData()
+
+    expect(store.balance).toBe(1200)
+    expect(store.walletBalance).toBe(31275)
+    expect(store.canDeposit).toBe(false)
+  })
+
+  it('넣기가 성공하면 저금통과 지갑 잔액을 함께 갱신하고 멱등키를 보낸다', async () => {
+    const store = useDonationStore()
+    store.balance = 1200
+    store.walletBalance = 31275
+    store.monthlySaved = 400
+    store.setDepositAmount(2000)
+    mocks.depositPot.mockResolvedValue({
+      data: { result: { balance: 3200 } },
+    })
+
+    expect(await store.deposit()).toBe(true)
+
+    expect(mocks.depositPot).toHaveBeenCalledWith(2000, expect.any(String))
+    expect(store.balance).toBe(3200)
+    expect(store.walletBalance).toBe(29275)
+    expect(store.monthlySaved).toBe(2400)
+    expect(store.pendingDepositKey).toBeNull()
+  })
+
+  it('같은 금액으로 넣기를 다시 시도하면 이전 멱등키를 그대로 쓴다', async () => {
+    const store = useDonationStore()
+    store.walletBalance = 10000
+    store.setDepositAmount(3000)
+    mocks.depositPot.mockRejectedValueOnce({
+      response: { data: { message: '잠시 후 다시 시도해 주세요.' } },
+    })
+
+    expect(await store.deposit()).toBe(false)
+    const firstKey = mocks.depositPot.mock.calls[0][1]
+
+    mocks.depositPot.mockResolvedValue({
+      data: { result: { balance: 4200 } },
+    })
+    expect(await store.deposit()).toBe(true)
+    expect(mocks.depositPot.mock.calls[1][1]).toBe(firstKey)
+  })
+
+  it('출금 요청에 멱등키를 실어 보낸다', async () => {
+    const store = useDonationStore()
+    store.balance = 5000
+    store.walletBalance = 1000
+    store.setWithdrawAmount(2000)
+    mocks.withdrawPot.mockResolvedValue({
+      data: { result: { balance: 3000 } },
+    })
+
+    expect(await store.withdraw()).toBe(true)
+
+    expect(mocks.withdrawPot).toHaveBeenCalledWith(2000, expect.any(String))
+    expect(store.balance).toBe(3000)
+    expect(store.walletBalance).toBe(3000)
   })
 })
 

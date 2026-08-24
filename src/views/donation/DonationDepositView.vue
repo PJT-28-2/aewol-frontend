@@ -16,52 +16,47 @@ import { formatWon } from '@/utils/bankMeta'
 
 const router = useRouter()
 const donationStore = useDonationStore()
-const { balance, isLoading, withdrawAmount, withdrawError } =
+const { walletBalance, isLoading, depositAmount, depositError } =
   storeToRefs(donationStore)
 
 const isConfirmOpen = ref(false)
 
-const hasBalance = computed(() => balance.value > 0)
+const hasWalletBalance = computed(() => walletBalance.value > 0)
 
 /** 입력 중 천 단위 콤마를 유지하기 위해 표시용 문자열을 따로 만든다. */
-const withdrawAmountInput = computed(() =>
-  withdrawAmount.value > 0 ? withdrawAmount.value.toLocaleString('ko-KR') : '',
+const depositAmountInput = computed(() =>
+  depositAmount.value > 0 ? depositAmount.value.toLocaleString('ko-KR') : '',
 )
 
 const confirmTitle = computed(
-  () => `${formatWon(withdrawAmount.value)}을 지갑으로 옮길까요?`,
+  () => `${formatWon(depositAmount.value)}을 저금통에 넣을까요?`,
 )
 
 function onAmountInput(value) {
   const digitsOnly = String(value).replace(/[^\d]/g, '')
 
-  donationStore.setWithdrawAmount(digitsOnly ? Number(digitsOnly) : 0)
+  donationStore.setDepositAmount(digitsOnly ? Number(digitsOnly) : 0)
 }
 
 function selectPreset(preset) {
-  donationStore.setWithdrawAmount(preset)
+  donationStore.setDepositAmount(preset)
 }
 
 function openConfirm() {
-  if (!donationStore.validateWithdrawAmount()) return
+  if (!donationStore.validateDepositAmount()) return
 
   isConfirmOpen.value = true
 }
 
-/**
- * 시트를 닫는 leave 트랜지션 도중 라우트가 바뀌면 Teleport 노드가 body에 남아
- * 화면 전체를 덮는 오버레이가 클릭을 가로챈다. 이동 시에는 닫기 토글 없이
- * 언마운트가 시트를 정리하도록 둔다.
- */
-async function confirmWithdraw() {
-  if (!(await donationStore.withdraw())) return
+async function confirmDeposit() {
+  if (!(await donationStore.deposit())) return
 
-  donationStore.resetWithdraw()
-  router.push('/wallet')
+  donationStore.resetDeposit()
+  router.push('/donation')
 }
 
 onMounted(() => {
-  donationStore.resetWithdraw()
+  donationStore.resetDeposit()
 
   if (!donationStore.isInitialized) donationStore.fetchDonationData()
 })
@@ -101,7 +96,7 @@ onMounted(() => {
       <h1
         class="mb-[var(--space-7)] text-[length:var(--font-2xl)] font-bold text-(--color-navy)"
       >
-        출금하기
+        넣기
       </h1>
 
       <section
@@ -109,25 +104,25 @@ onMounted(() => {
       >
         <span
           class="block text-[length:var(--font-sm)] text-(--color-slate-light)"
-        >내 저금통 잔액</span>
+        >내 애월지갑 잔액</span>
         <strong class="block text-[length:var(--font-2xl)]">
-          ₩{{ balance.toLocaleString('ko-KR') }}
+          ₩{{ walletBalance.toLocaleString('ko-KR') }}
         </strong>
         <small
           class="block text-[length:var(--font-sm)] text-(--color-slate-light)"
-        >지갑으로 옮길 금액을 입력해주세요</small>
+        >저금통에 넣을 금액을 입력해주세요</small>
       </section>
 
-      <template v-if="hasBalance">
+      <template v-if="hasWalletBalance">
         <div class="mt-[var(--space-6)]">
           <AppInput
-            :model-value="withdrawAmountInput"
-            label="출금 금액 (원)"
-            placeholder="출금할 금액을 입력해주세요"
+            :model-value="depositAmountInput"
+            label="넣을 금액 (원)"
+            placeholder="저금통에 넣을 금액을 입력해주세요"
             inputmode="numeric"
-            :error="withdrawError"
+            :error="depositError"
             @update:model-value="onAmountInput"
-            @focusout="donationStore.validateWithdrawAmount()"
+            @focusout="donationStore.validateDepositAmount()"
           />
         </div>
 
@@ -137,8 +132,8 @@ onMounted(() => {
             :key="preset"
             block
             shape="rounded"
-            :selected="withdrawAmount === preset"
-            :disabled="preset > balance"
+            :selected="depositAmount === preset"
+            :disabled="preset > walletBalance"
             @click="selectPreset(preset)"
           >
             {{ formatWon(preset) }}
@@ -146,8 +141,8 @@ onMounted(() => {
           <SelectableChip
             block
             shape="rounded"
-            :selected="withdrawAmount === balance"
-            @click="selectPreset(balance)"
+            :selected="depositAmount === walletBalance"
+            @click="selectPreset(walletBalance)"
           >
             전액
           </SelectableChip>
@@ -157,13 +152,13 @@ onMounted(() => {
           class="mt-[var(--space-4)] flex items-center justify-between rounded-(--radius-xl) border border-(--color-card-border) bg-(--color-white) p-[var(--space-4)]"
         >
           <span class="text-[length:var(--font-sm)] text-(--color-slate-dark)">
-            {{ withdrawError ? '출금 가능 금액' : '출금 후 저금통 잔액' }}
+            {{ depositError ? '넣을 수 있는 금액' : '넣고 난 뒤 애월지갑 잔액' }}
           </span>
           <strong class="text-[length:var(--font-md)] font-bold">
             {{
-              withdrawError
-                ? formatWon(balance)
-                : formatWon(donationStore.balanceAfterWithdraw)
+              depositError
+                ? formatWon(walletBalance)
+                : formatWon(donationStore.balanceAfterDeposit)
             }}
           </strong>
         </section>
@@ -178,10 +173,10 @@ onMounted(() => {
           <div>
             <strong
               class="block text-[length:var(--font-sm)] text-(--color-slate-dark)"
-            >출금한 잔돈은 지갑 잔액에 바로 반영돼요</strong>
+            >넣은 금액은 바로 저금통 잔액에 반영돼요</strong>
             <span
               class="mt-[var(--space-1)] block text-[length:var(--font-sm)] text-(--color-slate-muted)"
-            >저금통에 남은 금액은 계속 모을 수 있어요</span>
+            >매일 밤 자동으로 깎이는 잔돈과 따로, 원할 때 더 넣을 수 있어요</span>
           </div>
         </section>
 
@@ -190,13 +185,13 @@ onMounted(() => {
           block
           size="lg"
           variant="primary"
-          :disabled="!donationStore.canWithdraw"
+          :disabled="!donationStore.canDeposit"
           @click="openConfirm"
         >
           {{
-            donationStore.canWithdraw
-              ? `지갑으로 ${formatWon(withdrawAmount)} 출금하기`
-              : '지갑으로 출금하기'
+            donationStore.canDeposit
+              ? `저금통에 ${formatWon(depositAmount)} 넣기`
+              : '저금통에 넣기'
           }}
         </AppButton>
         <p
@@ -211,7 +206,7 @@ onMounted(() => {
       <EmptyState
         v-else
         :icon="IconSavings"
-        message="저금통에 모인 잔돈이 아직 없어요. 매일 밤 지갑 잔돈이 모여요."
+        message="애월지갑에 넣을 돈이 아직 없어요."
         action-text="저금통으로 돌아가기"
         action-route="/donation"
       />
@@ -223,7 +218,7 @@ onMounted(() => {
     :title="confirmTitle"
   >
     <p class="m-0 text-[length:var(--font-sm)] text-(--color-slate-muted)">
-      출금한 금액은 바로 지갑에서 사용할 수 있어요
+      넣은 금액은 바로 저금통에서 기부하거나 모을 수 있어요
     </p>
 
     <dl
@@ -231,19 +226,19 @@ onMounted(() => {
     >
       <div class="flex justify-between">
         <dt class="text-[length:var(--font-sm)] text-(--color-slate-dark)">
-          출금 금액
+          넣을 금액
         </dt>
         <dd class="m-0 text-[length:var(--font-md)] font-bold">
-          {{ formatWon(withdrawAmount) }}
+          {{ formatWon(depositAmount) }}
         </dd>
       </div>
       <hr class="my-[var(--space-3)] border-0 border-t border-(--color-border)">
       <div class="flex justify-between">
         <dt class="text-[length:var(--font-sm)] text-(--color-slate-dark)">
-          출금 후 저금통 잔액
+          넣고 난 뒤 애월지갑 잔액
         </dt>
         <dd class="m-0 text-[length:var(--font-md)] font-bold">
-          {{ formatWon(donationStore.balanceAfterWithdraw) }}
+          {{ formatWon(donationStore.balanceAfterDeposit) }}
         </dd>
       </div>
     </dl>
@@ -264,9 +259,9 @@ onMounted(() => {
         variant="primary"
         :disabled="donationStore.isSubmitting"
         :loading="donationStore.isSubmitting"
-        @click="confirmWithdraw"
+        @click="confirmDeposit"
       >
-        출금하기
+        넣기
       </AppButton>
     </div>
   </BottomSheet>
