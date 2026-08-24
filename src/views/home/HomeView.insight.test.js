@@ -203,6 +203,10 @@ describe('HomeView AI 인사이트 카드', () => {
     await mountView()
 
     expect(countOccurrences(host.textContent, '이번 달 총지출')).toBe(1)
+    const amount = host.querySelector('[data-testid="monthly-spending-amount"]')
+    expect(amount?.getAttribute('aria-label')).toBe('0원을 사용했어요')
+    expect([...amount.querySelectorAll('span')].map((span) => span.textContent))
+      .toEqual(['0원', '사용했어요'])
   })
 
   // SPENDING 카드가 없으면(신규 유저 등) 총지출을 보여줄 자리가 사라지면 안 된다.
@@ -213,6 +217,10 @@ describe('HomeView AI 인사이트 카드', () => {
     await mountView()
 
     expect(countOccurrences(host.textContent, '이번 달 총지출')).toBe(1)
+    const amount = host.querySelector('[data-testid="monthly-spending-amount"]')
+    expect(amount?.getAttribute('aria-label')).toBe('0원을 사용했어요')
+    expect([...amount.querySelectorAll('span')].map((span) => span.textContent))
+      .toEqual(['0원', '사용했어요'])
   })
 
   // 본문 중 'N%' 부분만 강조 색으로 감싼다. 조각내는 과정에서 공백이 끼어들거나
