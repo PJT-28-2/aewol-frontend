@@ -20,6 +20,7 @@ import IconSavings from '@/components/common/icons/IconSavings.vue'
 import IconWallet from '@/components/common/icons/IconWallet.vue'
 import IconWarning from '@/components/common/icons/IconWarning.vue'
 import IconMoon from '@/components/common/icons/IconMoon.vue'
+import IconLock from '@/components/common/icons/IconLock.vue'
 import dogProfileMascot from '@/assets/images/pet-dog-default-profile-v3.webp'
 import catProfileMascot from '@/assets/images/pet-cat-default-profile-v3.webp'
 
@@ -86,6 +87,12 @@ const settingItems = [
     path: '/account',
     icon: IconWallet,
     tone: 'blue',
+  },
+  {
+    title: '간편 비밀번호 재설정',
+    path: '/account/simple-password/reset',
+    icon: IconLock,
+    tone: 'yellow',
   },
   {
     title: '정기 결제',

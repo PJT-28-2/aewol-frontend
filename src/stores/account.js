@@ -8,6 +8,7 @@ import {
   setPrimaryAccount,
   unlinkAccount,
   setSimplePassword,
+  verifySimplePassword,
 } from '@/api/account';
 
 // 계좌 연동 진행 상태(linking)에 대한 요청 세대 토큰. Pinia reactive state에 넣지 않고
@@ -72,6 +73,14 @@ export const useAccountStore = defineStore('account', {
     // 방금 연동 완료된 계좌 ID — AccountLinkComplete.vue에서 "배열의 마지막 항목"
     // 같은 불안정한 추측 대신 이 값으로 정확히 그 계좌를 찾아요.
     lastLinkedAccountId: null,
+
+    // 간편 비밀번호 재설정 진행 상태 — 계좌 연동(linking)과는 별개 플로우라 상태를 분리해요.
+    // currentPassword는 재설정 첫 단계(현재 PIN 확인)를 통과했을 때만 채워지고,
+    // pendingPassword는 새 PIN 입력 화면에서 확인 화면으로 넘길 때까지만 잠깐 보관해요.
+    resetting: {
+      currentPassword: '',
+      pendingPassword: '',
+    },
   }),
 
   getters: {
@@ -260,6 +269,41 @@ export const useAccountStore = defineStore('account', {
       });
       this.setHasSimplePassword(true);
       this.linking.password = '';
+      return true;
+    },
+
+    // 간편 비밀번호 재설정 플로우 상태 초기화 — 재설정 첫 화면 진입 시, 그리고 완료/이탈 시 호출해요.
+    resetSimplePasswordResetState() {
+      this.resetting = { currentPassword: '', pendingPassword: '' };
+    },
+
+    // POST /api/users/simple-password/verify — 재설정 첫 단계에서 현재 PIN을 확인해요.
+    // 통과하면 currentPassword를 잠깐 보관해뒀다가 마지막 confirmSimplePasswordReset 호출 때 같이 보내요.
+    async verifyCurrentSimplePassword(password) {
+      return this._withRequestState(async () => {
+        const { data } = await verifySimplePassword(password);
+        const verified = data.result?.verified === true;
+        if (verified) this.resetting.currentPassword = password;
+        return verified;
+      });
+    },
+
+    // 새 PIN 입력 화면에서 입력한 값을 확인 화면으로 넘길 때까지 잠깐 보관
+    setResetPendingPassword(password) {
+      this.resetting.pendingPassword = password;
+    },
+
+    // POST /api/users/simple-password — 재설정 마지막 단계. 확인 화면에서 재입력한 값이
+    // 새 PIN 입력값과 일치할 때만 호출해요. currentPassword를 함께 보내야 서버가 최초 설정이
+    // 아니라 재설정으로 인식해요(MemberServiceImpl.setSimplePassword 참고).
+    async confirmSimplePasswordReset(password) {
+      if (password !== this.resetting.pendingPassword) {
+        return false;
+      }
+      await this._withRequestState(async () => {
+        await setSimplePassword(password, this.resetting.currentPassword);
+      });
+      this.resetSimplePasswordResetState();
       return true;
     },
 

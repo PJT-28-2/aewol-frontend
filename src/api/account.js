@@ -72,14 +72,30 @@ export function unlinkAccount(accountId) {
 }
 
 /**
- * 간편 비밀번호 설정 — 최초 계좌 연동 시 1회만 호출 (계정당 하나)
+ * 간편 비밀번호 설정/재설정 — 최초 계좌 연동 시 1회, 이후에는 재설정할 때 호출해요.
  * POST /api/users/simple-password
- * body: { password }
+ * body: { password, currentPassword? }
  * ⚠️ MemberController가 마이페이지 리팩토링 때 /api/members → /api/users로 이동했어요.
  * 이 파일이 예전 /members 경로로 되돌아가 있는 걸 재발견한 적 있으니, 404가 나면 가장
  * 먼저 이 경로부터 의심할 것(2026-08-11).
  * ⚠️ 아직 Notion API 명세서에 없는 엔드포인트예요. 명세 확정되면 경로/응답 다시 확인 필요.
+ * currentPassword는 이미 PIN이 설정된 회원의 재설정일 때만 필요해요(서버
+ * MemberServiceImpl.setSimplePassword가 기존 PIN 확인 없이 덮어쓰는 걸 막아요) — 최초
+ * 설정(계좌 연동 직후)에는 넘기지 않아도 돼요.
  */
-export function setSimplePassword(password) {
-  return api.post('/users/simple-password', { password });
+export function setSimplePassword(password, currentPassword) {
+  return api.post(
+    '/users/simple-password',
+    currentPassword ? { password, currentPassword } : { password },
+  );
+}
+
+/**
+ * 간편 비밀번호 확인 — 재설정 전 현재 PIN이 맞는지 확인할 때 사용해요.
+ * POST /api/users/simple-password/verify
+ * body: { password }
+ * result: { verified: boolean }
+ */
+export function verifySimplePassword(password) {
+  return api.post('/users/simple-password/verify', { password });
 }

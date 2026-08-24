@@ -127,6 +127,40 @@ const authRoutes = [
     },
   },
   {
+    path: '/account/simple-password/reset',
+    name: 'SimplePasswordResetVerify',
+    component: () => import('@/views/account/SimplePasswordResetVerifyView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true, hideBottomNav: true, title: '간편 비밀번호 재설정' },
+  },
+  {
+    path: '/account/simple-password/reset/new',
+    name: 'SimplePasswordResetNew',
+    component: () => import('@/views/account/SimplePasswordResetNewView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true, hideBottomNav: true, title: '간편 비밀번호 재설정' },
+  },
+  {
+    path: '/account/simple-password/reset/confirm',
+    name: 'SimplePasswordResetConfirm',
+    component: () => import('@/views/account/SimplePasswordResetConfirmView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true, hideBottomNav: true, title: '간편 비밀번호 재설정' },
+  },
+  {
+    path: '/account/simple-password/reset/complete',
+    name: 'SimplePasswordResetComplete',
+    component: () => import('@/views/account/SimplePasswordResetComplete.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout', hideHeader: true },
+    beforeEnter: () => {
+      // PasswordSetupComplete와 동일한 방식 — 재설정 API가 실제로 성공했을 때만 세팅되는
+      // 플래그가 없으면 완료 화면 직접 진입(URL 직접 접근, 뒤로가기 후 재접근)이므로 돌려보낸다.
+      const completionKey = 'simplePasswordResetCompleted';
+      const isCompleted = window.sessionStorage.getItem(completionKey) === 'true';
+
+      if (!isCompleted) return { name: 'Settings' };
+
+      window.sessionStorage.removeItem(completionKey);
+    },
+  },
+  {
     path: '/account/link/complete',
     name: 'AccountLinkComplete',
     component: () => import('@/views/account/AccountLinkComplete.vue'),
