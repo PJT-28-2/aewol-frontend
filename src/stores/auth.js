@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { authApi } from '@/api/auth'
 import { useMemberStore } from '@/stores/member'
 import { useAccountStore } from '@/stores/account'
+import { resetUserSessionStores } from '@/stores/sessionStoreReset'
 import router from '@/router'
 import { decodeJwtPayload } from '@/utils/jwt'
 import { isValidToken } from '@/utils/token'
@@ -114,6 +115,7 @@ export const useAuthStore = defineStore('auth', {
       // 바로 일어나지 않는 화면에서 이전 계정의 PIN 설정 흔적이 남지 않도록
       // 여기서도 한번 더 초기화해준다(2026-08-13, defense-in-depth).
       useAccountStore().setHasSimplePassword(false)
+      resetUserSessionStores()
     },
 
     async login(email, password) {
