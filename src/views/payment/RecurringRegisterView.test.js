@@ -97,6 +97,7 @@ describe('RecurringRegisterView 마켓 진입', () => {
     const merchantInput = host.querySelector('input[placeholder="예: 강아지 사료 정기배송"]')
     expect(merchantInput.value).toBe('')
     expect(merchantInput.readOnly).toBe(false)
+    expect(host.textContent).not.toContain('구독형 결제 정보를 입력해주세요')
   })
 
   it('등록 금액이 지갑 잔액보다 크면 제출하지 않는다', async () => {
