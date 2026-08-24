@@ -212,3 +212,29 @@ describe('donation store 저금통 넣기·출금', () => {
     expect(store.walletBalance).toBe(3000)
   })
 })
+
+describe('donation store 시연 캠페인', () => {
+  it('donatable이 false이면 기부할 수 없다', () => {
+    const store = useDonationStore()
+    store.balance = 10000
+    store.amount = 3000
+    store.selectedCampaignId = 'demo-1'
+    store.campaigns = [
+      { id: 'demo-1', title: '[시연] 캠페인', donatable: false },
+    ]
+
+    expect(store.isCurrentCampaignDonatable).toBe(false)
+    expect(store.canDonate).toBe(false)
+  })
+
+  it('donatable 필드가 없으면 기존처럼 기부할 수 있다', () => {
+    const store = useDonationStore()
+    store.balance = 10000
+    store.amount = 3000
+    store.selectedCampaignId = 'campaign-1'
+    store.campaigns = campaigns()
+
+    expect(store.isCurrentCampaignDonatable).toBe(true)
+    expect(store.canDonate).toBe(true)
+  })
+})

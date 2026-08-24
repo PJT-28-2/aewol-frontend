@@ -392,7 +392,14 @@ onMounted(loadDonationData)
         </SelectableChip>
       </div>
       <p
-        v-if="!donationStore.canDonate"
+        v-if="currentCampaign && !donationStore.isCurrentCampaignDonatable"
+        class="mt-[var(--space-2)] text-[length:var(--font-sm)] text-(--color-danger-strong)"
+        role="alert"
+      >
+        시연용 캠페인이라 실제 기부는 할 수 없어요.
+      </p>
+      <p
+        v-else-if="!donationStore.canDonate"
         class="mt-[var(--space-2)] text-[length:var(--font-sm)] text-(--color-danger-strong)"
         role="alert"
       >
@@ -499,7 +506,14 @@ onMounted(loadDonationData)
           <strong class="text-[length:var(--font-md)] font-bold">{{ formatWon(donationStore.balanceAfterDonation) }}</strong>
         </div>
         <p
-          v-if="!donationStore.canDonate"
+          v-if="currentCampaign && !donationStore.isCurrentCampaignDonatable"
+          class="mt-[var(--space-2)] text-[length:var(--font-sm)] text-(--color-danger-strong)"
+          role="alert"
+        >
+          시연용 캠페인이라 실제 기부는 할 수 없어요.
+        </p>
+        <p
+          v-else-if="!donationStore.canDonate"
           class="mt-[var(--space-2)] text-[length:var(--font-sm)] text-(--color-danger-strong)"
           role="alert"
         >
@@ -774,7 +788,7 @@ onMounted(loadDonationData)
               v-for="campaign in donationStore.campaigns"
               :key="campaign.id"
               :selected="draftCampaignId === campaign.id"
-              :disabled="donationStore.isSubmitting"
+              :disabled="donationStore.isSubmitting || campaign.donatable === false"
               @click="draftCampaignId = campaign.id"
             >
               {{ campaign.organization }} · {{ campaign.title }}

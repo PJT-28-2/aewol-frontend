@@ -1,5 +1,5 @@
 <script setup>
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import EmptyState from '@/components/common/EmptyState.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
@@ -19,14 +19,19 @@ function goPost(diaryId) {
   router.push({ name: 'ExplorePostDetail', params: { diaryId } })
 }
 
-onMounted(async () => {
-  await exploreStore.fetchFeed()
+onMounted(() => {
+  exploreStore.fetchFeed()
 
   if (typeof IntersectionObserver === 'undefined') return
   observer = new IntersectionObserver((entries) => {
     if (entries.some((entry) => entry.isIntersecting)) exploreStore.fetchMore()
   })
-  if (sentinel.value) observer.observe(sentinel.value)
+})
+
+// 빈 목록이어도 nextCursor가 있으면 sentinel이 나중에 생긴다. 그때 감시자를 붙인다.
+watch(sentinel, (el) => {
+  observer?.disconnect()
+  if (el) observer.observe(el)
 })
 
 onBeforeUnmount(() => observer?.disconnect())
@@ -48,7 +53,7 @@ onBeforeUnmount(() => observer?.disconnect())
     <LoadingSpinner v-if="exploreStore.isLoading" />
 
     <EmptyState
-      v-else-if="exploreStore.posts.length === 0"
+      v-else-if="exploreStore.posts.length === 0 && !exploreStore.hasMore"
       :icon="IconPaw"
       :message="exploreStore.error || '아직 공개된 일기가 없어요.\n첫 번째로 공개해 보세요.'"
     />
@@ -57,8 +62,12 @@ onBeforeUnmount(() => observer?.disconnect())
       <!--
         인스타그램 탐색처럼 정사각 3열 그리드다. 사진이 주인공이라 글은 상세에서 본다.
         서버가 사진 있는 공개 일기만 주므로 여기서 다시 거르지 않는다.
+        첫 장이 비어도 nextCursor가 있으면 sentinel을 남겨 다음 장을 이어서 부른다.
       -->
-      <ul class="m-0 grid list-none grid-cols-3 gap-[2px] p-0">
+      <ul
+        v-if="exploreStore.posts.length > 0"
+        class="m-0 grid list-none grid-cols-3 gap-[2px] p-0"
+      >
         <li
           v-for="post in exploreStore.posts"
           :key="post.diaryId"

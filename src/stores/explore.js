@@ -13,6 +13,10 @@ export const useExploreStore = defineStore('explore', {
     isLoading: false,
     isLoadingMore: false,
     error: '',
+    // 느린 이전 요청이 최신 목록을 덮지 않게 한다. fetchFeed가 올라가고 fetchMore는
+    // 그 세대가 그대로일 때만 이어 붙인다.
+    feedRequestId: 0,
+    profileRequestId: 0,
 
     // 공개 게시물 상세
     post: null,
@@ -35,18 +39,23 @@ export const useExploreStore = defineStore('explore', {
   actions: {
     /** 첫 장. 다시 부르면 목록을 갈아끼운다. */
     async fetchFeed() {
+      const requestId = this.feedRequestId + 1
+      this.feedRequestId = requestId
       this.isLoading = true
+      this.isLoadingMore = false
       this.error = ''
       try {
         const result = unwrap(await exploreApi.getFeed())
+        if (requestId !== this.feedRequestId) return
         this.posts = result?.posts ?? []
         this.nextCursor = result?.nextCursor ?? null
       } catch (error) {
+        if (requestId !== this.feedRequestId) return
         this.posts = []
         this.nextCursor = null
         this.error = errorMessage(error, '피드를 불러오지 못했어요. 다시 시도해 주세요.')
       } finally {
-        this.isLoading = false
+        if (requestId === this.feedRequestId) this.isLoading = false
       }
     },
 
@@ -58,17 +67,20 @@ export const useExploreStore = defineStore('explore', {
      */
     async fetchMore() {
       if (this.isLoadingMore || this.nextCursor == null) return
+      const requestId = this.feedRequestId
       this.isLoadingMore = true
       try {
         const result = unwrap(await exploreApi.getFeed({ cursor: this.nextCursor }))
+        if (requestId !== this.feedRequestId) return
         this.posts = [...this.posts, ...(result?.posts ?? [])]
         this.nextCursor = result?.nextCursor ?? null
       } catch (error) {
+        if (requestId !== this.feedRequestId) return
         // 이어 붙이기 실패는 이미 보고 있는 목록을 지우지 않는다. 커서를 그대로 둬서
         // 다음 스크롤에 다시 시도된다.
         this.error = errorMessage(error, '다음 게시물을 불러오지 못했어요.')
       } finally {
-        this.isLoadingMore = false
+        if (requestId === this.feedRequestId) this.isLoadingMore = false
       }
     },
 
@@ -87,38 +99,46 @@ export const useExploreStore = defineStore('explore', {
     },
 
     async fetchPetProfile(petId) {
+      const requestId = this.profileRequestId + 1
+      this.profileRequestId = requestId
       this.isProfileLoading = true
+      this.isLoadingMore = false
       this.profileError = ''
       try {
         const [profile, posts] = await Promise.all([
           exploreApi.getPetProfile(petId),
           exploreApi.getPetPosts(petId),
         ])
+        if (requestId !== this.profileRequestId) return
         this.profile = unwrap(profile) ?? null
         const result = unwrap(posts)
         this.profilePosts = result?.posts ?? []
         this.profileNextCursor = result?.nextCursor ?? null
       } catch (error) {
+        if (requestId !== this.profileRequestId) return
         this.profile = null
         this.profilePosts = []
         this.profileNextCursor = null
         this.profileError = errorMessage(error, '프로필을 불러오지 못했어요. 다시 시도해 주세요.')
       } finally {
-        this.isProfileLoading = false
+        if (requestId === this.profileRequestId) this.isProfileLoading = false
       }
     },
 
     async fetchMorePetPosts(petId) {
       if (this.isLoadingMore || this.profileNextCursor == null) return
+      const requestId = this.profileRequestId
       this.isLoadingMore = true
       try {
         const result = unwrap(await exploreApi.getPetPosts(petId, { cursor: this.profileNextCursor }))
+        if (requestId !== this.profileRequestId) return
         this.profilePosts = [...this.profilePosts, ...(result?.posts ?? [])]
         this.profileNextCursor = result?.nextCursor ?? null
       } catch (error) {
+        if (requestId !== this.profileRequestId) return
         this.profileError = errorMessage(error, '다음 게시물을 불러오지 못했어요.')
       } finally {
-        this.isLoadingMore = false
+        if (requestId === this.profileRequestId) this.isLoadingMore = false
       }
     },
   },
