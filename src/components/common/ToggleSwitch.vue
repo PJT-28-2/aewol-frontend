@@ -35,7 +35,7 @@ function toggle() {
     @click="toggle"
   >
     <span
-      class="block size-4 rounded-(--radius-full) bg-(--color-white) transition-transform"
+      class="block size-4 rounded-(--radius-full) bg-(--color-contrast) transition-transform"
       :class="{ 'translate-x-5': modelValue }"
       aria-hidden="true"
     />

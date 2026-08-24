@@ -22,22 +22,22 @@ defineProps({
       cx="8.5"
       cy="13"
       r="1.25"
-      fill="var(--color-white)"
+      fill="var(--color-contrast)"
     />
     <circle
       cx="12"
       cy="12"
       r="1.5"
-      fill="var(--color-white)"
+      fill="var(--color-contrast)"
     />
     <circle
       cx="15.5"
       cy="13"
       r="1.25"
-      fill="var(--color-white)"
+      fill="var(--color-contrast)"
     />
     <path
-      fill="var(--color-white)"
+      fill="var(--color-contrast)"
       d="M6.5 17.5c.1-2 1-3.1 2-3.1.7 0 1.3.4 1.6 1.1.4-1.4 1-2.1 1.9-2.1s1.5.7 1.9 2.1c.3-.7.9-1.1 1.6-1.1 1 0 1.9 1.1 2 3.1h-11Z"
     />
   </svg>

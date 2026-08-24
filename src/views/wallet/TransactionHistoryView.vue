@@ -329,13 +329,13 @@ onMounted(async () => {
       <button
         v-if="categoryFilter"
         type="button"
-        class="inline-flex items-center gap-(--space-1) h-(--space-7) px-(--space-3) rounded-full bg-(--color-navy) text-(color:--color-white) text-(length:--font-sm) font-semibold mb-(--space-4)"
+        class="inline-flex items-center gap-(--space-1) h-(--space-7) px-(--space-3) rounded-full bg-(--color-brand-dark) text-(color:--color-contrast) text-(length:--font-sm) font-semibold mb-(--space-4)"
         @click="clearCategoryFilter"
       >
         {{ categoryFilterLabel }} 필터 적용됨
         <IconClose
           size="14"
-          color="var(--color-white)"
+          color="var(--color-contrast)"
         />
       </button>
 

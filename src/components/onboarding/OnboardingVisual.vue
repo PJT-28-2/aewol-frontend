@@ -72,7 +72,7 @@ defineProps({
         <article class="overflow-hidden rounded-[18px] border border-(--color-card-border) bg-(--color-white) shadow-(--shadow-sm)">
           <img :src="memoryWalk" alt="공원에서 아침 산책을 즐기는 포리" class="block h-[97px] w-full object-cover object-[center_58%]" />
           <div class="flex items-center gap-(--space-2) px-(--space-3) py-(--space-2)">
-            <span class="grid size-[24px] shrink-0 place-items-center rounded-full bg-(--color-icon-blue) text-[9px] font-bold text-(--color-white)">김</span>
+            <span class="grid size-[24px] shrink-0 place-items-center rounded-full bg-(--color-icon-blue) text-[9px] font-bold text-(--color-contrast)">김</span>
             <div class="min-w-0">
               <strong class="block text-[10px] text-(--color-navy)">김지원</strong>
               <p class="mt-[2px] truncate text-[9px] text-(--color-slate-muted)">포리는 정말 낙엽을 좋아해</p>
@@ -91,7 +91,7 @@ defineProps({
       <section>
         <strong class="text-[11px] text-(--color-navy)">반려동물 선택</strong>
         <div class="mt-(--space-2) flex items-center gap-(--space-2)">
-          <span class="rounded-full bg-(--color-navy) px-(--space-4) py-[7px] text-[10px] font-semibold text-(--color-white)">포리</span>
+          <span class="rounded-full bg-(--color-brand-dark) px-(--space-4) py-[7px] text-[10px] font-semibold text-(--color-contrast)">포리</span>
           <span class="rounded-full border border-(--color-card-border) bg-(--color-white) px-(--space-4) py-[7px] text-[10px] font-semibold text-(--color-slate-dark)">나비</span>
           <span class="grid size-[29px] place-items-center rounded-full bg-(--color-white) text-(--color-navy) shadow-(--shadow-sm)"><IconPlus :size="15" /></span>
         </div>
@@ -100,8 +100,8 @@ defineProps({
       <section class="mt-(--space-3) rounded-[20px] bg-(--color-white) p-(--space-4) shadow-(--shadow-sm)">
         <strong class="text-[11px] text-(--color-navy)">참여 중인 가족</strong>
         <div class="mt-(--space-3) flex items-start justify-between px-(--space-2)">
-          <div v-for="member in [{ initial: '김', name: '김애월', tone: 'bg-(--color-navy)' }, { initial: '김', name: '김지원', tone: 'bg-(--color-icon-blue)' }, { initial: '김', name: '김서준', tone: 'bg-(--color-icon-pink)' }]" :key="member.name" class="w-[48px] text-center">
-            <span class="mx-auto grid size-[36px] place-items-center rounded-full text-[10px] font-bold text-(--color-white)" :class="member.tone">{{ member.initial }}</span>
+          <div v-for="member in [{ initial: '김', name: '김애월', tone: 'bg-(--color-brand-dark)' }, { initial: '김', name: '김지원', tone: 'bg-(--color-icon-blue)' }, { initial: '김', name: '김서준', tone: 'bg-(--color-icon-pink)' }]" :key="member.name" class="w-[48px] text-center">
+            <span class="mx-auto grid size-[36px] place-items-center rounded-full text-[10px] font-bold text-(--color-contrast)" :class="member.tone">{{ member.initial }}</span>
             <span class="mt-[5px] block truncate text-[9px] text-(--color-slate-dark)">{{ member.name }}</span>
           </div>
           <div class="w-[48px] text-center">

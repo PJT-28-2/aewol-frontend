@@ -196,7 +196,7 @@ onMounted(() => {
             <IconNotificationBell size="22" />
             <span
               v-if="notificationStore.unreadCount"
-              class="absolute top-0 right-0 flex min-w-[18px] h-[18px] items-center justify-center rounded-full bg-(--color-danger-strong) px-[4px] text-[10px] font-bold leading-none text-(color:--color-white)"
+              class="absolute top-0 right-0 flex min-w-[18px] h-[18px] items-center justify-center rounded-full bg-(--color-danger-strong) px-[4px] text-[10px] font-bold leading-none text-(color:--color-contrast)"
               aria-label="읽지 않은 알림 수"
             >{{ notificationStore.unreadCount > 99 ? '99+' : notificationStore.unreadCount }}</span>
           </router-link>

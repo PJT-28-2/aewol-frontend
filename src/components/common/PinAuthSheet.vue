@@ -83,7 +83,7 @@ function handleBackspace() {
           class="w-3 h-3 rounded-full"
           :class="
             index <= pinInput.length
-              ? 'bg-(--color-navy)'
+              ? 'bg-(--color-brand-dark)'
               : 'border border-(--color-border)'
           "
         />

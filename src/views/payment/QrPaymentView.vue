@@ -161,7 +161,7 @@ function toPaymentErrorMessage(error) {
 </script>
 
 <template>
-  <section class="min-h-svh bg-(--color-navy) px-(--space-5) pt-(--space-3) pb-(--space-8) text-(color:--color-white)">
+  <section class="min-h-svh bg-(--color-brand-dark) px-(--space-5) pt-(--space-3) pb-(--space-8) text-(color:--color-contrast)">
     <header class="mb-(--space-5) flex h-[42px] items-center justify-between">
       <h1 class="text-(length:--font-2xl) font-bold">
         QR 결제
@@ -237,7 +237,7 @@ function toPaymentErrorMessage(error) {
         >
           <IconQrCode
             size="72"
-            color="var(--color-white)"
+            color="var(--color-contrast)"
           />
           <AppButton
             class="mt-(--space-5)"
@@ -252,7 +252,7 @@ function toPaymentErrorMessage(error) {
 
       <p
         v-if="scanMessage"
-        class="mt-(--space-3) flex items-start gap-(--space-2) rounded-(--radius-xl) bg-[color-mix(in_srgb,var(--color-danger-strong)_18%,transparent)] p-(--space-3) text-(length:--font-sm) text-(color:--color-white)"
+        class="mt-(--space-3) flex items-start gap-(--space-2) rounded-(--radius-xl) bg-[color-mix(in_srgb,var(--color-danger-strong)_18%,transparent)] p-(--space-3) text-(length:--font-sm) text-(color:--color-contrast)"
         role="alert"
       >
         <IconWarning
@@ -278,7 +278,7 @@ function toPaymentErrorMessage(error) {
           {{ detectedPayment.amount.toLocaleString('ko-KR') }}원
         </p>
 
-        <dl class="mt-(--space-6) flex flex-col gap-(--space-3) border-t border-[color-mix(in_srgb,var(--color-white)_14%,transparent)] pt-(--space-5) text-(length:--font-sm)">
+        <dl class="mt-(--space-6) flex flex-col gap-(--space-3) border-t border-[color-mix(in_srgb,var(--color-contrast)_14%,transparent)] pt-(--space-5) text-(length:--font-sm)">
           <div class="flex items-center justify-between">
             <dt class="text-(color:--color-slate-light)">
               현재 잔액
@@ -303,7 +303,7 @@ function toPaymentErrorMessage(error) {
 
       <p
         v-if="isBalanceShort || paymentError"
-        class="mt-(--space-3) flex items-start gap-(--space-2) rounded-(--radius-xl) bg-[color-mix(in_srgb,var(--color-danger-strong)_18%,transparent)] p-(--space-3) text-(length:--font-sm) text-(color:--color-white)"
+        class="mt-(--space-3) flex items-start gap-(--space-2) rounded-(--radius-xl) bg-[color-mix(in_srgb,var(--color-danger-strong)_18%,transparent)] p-(--space-3) text-(length:--font-sm) text-(color:--color-contrast)"
         role="alert"
       >
         <IconWarning

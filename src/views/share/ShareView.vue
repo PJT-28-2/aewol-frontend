@@ -164,7 +164,7 @@ onMounted(initializeSharedCare)
             class="flex w-[var(--share-member-width)] shrink-0 flex-col items-center"
           >
             <span
-              class="grid size-[var(--share-avatar-size)] place-items-center rounded-full text-(length:--font-lg) font-bold text-(--color-white)"
+              class="grid size-[var(--share-avatar-size)] place-items-center rounded-full text-(length:--font-lg) font-bold text-(--color-contrast)"
               :class="member.avatarClass"
             >
               {{ member.name.slice(0, 1) }}

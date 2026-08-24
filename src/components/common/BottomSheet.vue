@@ -99,7 +99,7 @@ watch(
     >
       <div
         v-if="modelValue"
-        class="fixed inset-0 z-1000 flex items-end bg-[color-mix(in_srgb,var(--color-navy)_38%,transparent)] backdrop-blur-[2px]"
+        class="fixed inset-0 z-1000 flex items-end bg-[color-mix(in_srgb,var(--color-brand-dark)_38%,transparent)] backdrop-blur-[2px]"
         @click="onOverlayClick"
       >
         <div
@@ -108,7 +108,7 @@ watch(
           aria-modal="true"
           :aria-labelledby="title ? titleId : undefined"
           tabindex="-1"
-          class="mx-auto flex w-full max-w-(--layout-max-width) flex-col overflow-hidden rounded-t-[32px] border-x border-t border-(--color-card-border) bg-(--color-app-bg) pb-[env(safe-area-inset-bottom,0)] shadow-[0_-12px_40px_color-mix(in_srgb,var(--color-navy)_14%,transparent)] outline-none"
+          class="mx-auto flex w-full max-w-(--layout-max-width) flex-col overflow-hidden rounded-t-[32px] border-x border-t border-(--color-card-border) bg-(--color-app-bg) pb-[env(safe-area-inset-bottom,0)] shadow-[0_-12px_40px_color-mix(in_srgb,var(--color-brand-dark)_14%,transparent)] outline-none"
           :class="maxHeightClasses[size]"
           @keydown="onKeydown"
         >
