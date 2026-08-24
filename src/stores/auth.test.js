@@ -41,6 +41,7 @@ vi.mock('@/router', () => ({
 }))
 
 import { useAuthStore } from './auth'
+import { usePaymentStore } from './payment'
 
 const REGISTRATION_TOKEN_KEY = 'kakaoRegistrationToken'
 
@@ -320,6 +321,9 @@ describe('useAuthStore Kakao OAuth', () => {
   })
 
   it('clearSession이 진행 중인 정기결제 등록 멱등키도 지운다', () => {
+    const paymentStore = usePaymentStore()
+    paymentStore.pendingCreateKey = 'rec-1'
+    paymentStore.pendingCreateSignature = 'pet-1:사료:1000:15:FOOD'
     sessionStorage.setItem(
       'pendingRecurringCreate',
       JSON.stringify({ key: 'rec-1', signature: 'pet-1:사료:1000:15:FOOD' }),
@@ -329,6 +333,8 @@ describe('useAuthStore Kakao OAuth', () => {
     store.clearSession()
 
     expect(sessionStorage.getItem('pendingRecurringCreate')).toBeNull()
+    expect(paymentStore.pendingCreateKey).toBeNull()
+    expect(paymentStore.pendingCreateSignature).toBe('')
   })
 
   it('잘못된 Kakao LOGIN_COMPLETE 응답은 기존 인증과 stale 가입 세션을 제거한다', async () => {
