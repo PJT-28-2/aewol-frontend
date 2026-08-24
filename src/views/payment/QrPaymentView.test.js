@@ -36,6 +36,12 @@ vi.mock('@/stores/wallet', () => ({
   }),
 }))
 
+vi.mock('@/stores/auth', () => ({
+  useAuthStore: () => ({
+    accessToken: 'test-token',
+  }),
+}))
+
 vi.mock('@/stores/pet', () => ({
   usePetStore: () => ({
     pets: [{ id: '9001', name: '보리' }],
@@ -71,5 +77,19 @@ describe('QrPaymentView 지갑 라벨', () => {
     await nextTick()
     expect(host.textContent).toContain('보리의 애월 지갑')
     expect(host.textContent).not.toContain('포리의 애월 지갑')
+  })
+
+  it('내 바코드를 고르면 시연용 결제 코드를 보여준다', async () => {
+    await Promise.resolve()
+    await nextTick()
+    const barcodeTab = [...host.querySelectorAll('button')]
+      .find((button) => button.textContent.includes('내 바코드'))
+    barcodeTab.click()
+    await nextTick()
+
+    expect(host.textContent).toContain('매장 직원에게 이 바코드를 보여주세요')
+    expect(host.textContent).toContain('시연용이라 실제 결제는 되지 않아요')
+    expect(host.querySelector('[aria-label="결제 바코드"]')).not.toBeNull()
+    expect(host.querySelector('[aria-label="결제 QR"]')).not.toBeNull()
   })
 })
