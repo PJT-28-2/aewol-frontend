@@ -110,9 +110,6 @@ function goToLink() {
         <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">
           계좌 관리
         </h1>
-        <p class="text-(length:--font-md) text-(color:--color-slate-muted) mt-(--space-1)">
-          CODEF로 연동된 계좌를 확인해요
-        </p>
       </header>
 
       <section class="mb-(--space-6)">

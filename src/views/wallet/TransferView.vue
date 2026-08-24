@@ -110,11 +110,8 @@ function handleNext() {
   <div class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-[96px]">
     <header class="mb-(--space-5)">
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">
-        얼마를 출금할까요?
+        출금
       </h1>
-      <p class="mt-(--space-1) text-(length:--font-md) text-(color:--color-slate-muted)">
-        애월지갑에서 내 연결 계좌로 출금해요
-      </p>
     </header>
 
     <div

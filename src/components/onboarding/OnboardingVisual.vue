@@ -86,7 +86,6 @@ defineProps({
     <div v-else-if="type === 'family'" class="absolute inset-x-[32px] top-1/2 -translate-y-1/2 [@media(max-height:720px)]:scale-[0.68] [@media(max-height:640px)]:scale-[0.6]">
       <header class="mb-(--space-3)">
         <strong class="block text-[15px] text-(--color-navy)">함께 돌보기</strong>
-        <span class="mt-[3px] block text-[9px] text-(--color-slate-muted)">가족과 돌봄 기록을 나누고 함께 관리해요</span>
       </header>
       <section>
         <strong class="text-[11px] text-(--color-navy)">반려동물 선택</strong>
@@ -131,8 +130,7 @@ defineProps({
     <!-- CertificateListView의 목록과 CertificateDetailView의 펼친 문서를 함께 축약해 사용 -->
     <div v-else class="absolute inset-x-[24px] top-[24px] [@media(max-height:720px)]:top-[14px] [@media(max-height:720px)]:scale-[0.62] [@media(max-height:720px)]:origin-top [@media(max-height:640px)]:scale-[0.54]">
       <header class="mb-(--space-2)">
-        <strong class="block text-[15px] text-(--color-navy)">증명서 관리</strong>
-        <span class="mt-[2px] block text-[9px] text-(--color-slate-muted)">동물등록증 · 접종증명서를 한곳에서 확인해요</span>
+        <strong class="block text-[15px] text-(--color-navy)">증명서</strong>
       </header>
 
       <section>

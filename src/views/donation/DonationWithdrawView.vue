@@ -113,9 +113,6 @@ onMounted(() => {
         <strong class="block text-[length:var(--font-2xl)]">
           ₩{{ balance.toLocaleString('ko-KR') }}
         </strong>
-        <small
-          class="block text-[length:var(--font-sm)] text-(--color-slate-light)"
-        >지갑으로 옮길 금액을 입력해주세요</small>
       </section>
 
       <template v-if="hasBalance">

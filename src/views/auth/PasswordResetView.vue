@@ -363,9 +363,6 @@ onBeforeUnmount(clearTimers)
         <h1 class="text-(length:--font-2xl) leading-[1.3] font-(--font-bold) text-(color:--color-navy)">
           비밀번호 찾기
         </h1>
-        <p class="mt-0.5 text-(length:--font-md) leading-[1.45] text-(color:--color-slate-muted)">
-          가입하신 이메일로 본인 확인 후<br>바로 새 비밀번호를 설정해요
-        </p>
       </header>
 
       <section

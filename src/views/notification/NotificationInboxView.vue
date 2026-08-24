@@ -65,9 +65,6 @@ onMounted(fetchNotifications)
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">
         알림함
       </h1>
-      <p class="mt-(--space-1) text-(length:--font-md) text-(color:--color-slate-muted)">
-        애월의 새로운 소식을 확인해요
-      </p>
     </header>
 
     <LoadingSpinner

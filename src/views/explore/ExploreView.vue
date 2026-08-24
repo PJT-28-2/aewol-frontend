@@ -40,9 +40,6 @@ onBeforeUnmount(() => observer?.disconnect())
       <h1 class="m-0 text-(length:--font-2xl) font-bold leading-[1.3]">
         멍스타그램
       </h1>
-      <p class="mb-0 mt-(--space-1) text-(length:--font-sm) text-(--color-slate-muted)">
-        공개된 육아일기를 구경해요.
-      </p>
     </header>
 
     <LoadingSpinner v-if="exploreStore.isLoading" />

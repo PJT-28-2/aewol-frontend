@@ -271,9 +271,6 @@ onBeforeUnmount(() => window.clearInterval(timerId))
         <h1 class="text-(length:--font-2xl) leading-[1.3] font-(--font-bold) text-(color:--color-navy)">
           계정 찾기
         </h1>
-        <p class="mt-0.5 text-(length:--font-md) leading-[1.45] text-(color:--color-slate-muted)">
-          이름과 전화번호로 본인 확인 후<br>가입하신 계정을 알려드려요
-        </p>
       </header>
 
       <form
