@@ -124,10 +124,6 @@ const pageTitle = computed(() => {
   if (openedFromShop.value) return '정기결제';
   return isEditMode.value ? '정기결제 변경' : '정기결제 등록';
 });
-const pageSubtitle = computed(() => {
-  if (openedFromShop.value) return '';
-  return isEditMode.value ? '정기결제 정보를 수정해주세요' : '구독형 결제 정보를 입력해주세요';
-});
 const submitLabel = computed(() => (isEditMode.value ? '변경 완료' : '정기결제 등록하기'));
 
 // mockData.js의 기존 항목과 같은 "다음 M/D" 형식으로 다음 결제일을 계산한다.
@@ -192,12 +188,6 @@ async function handleSubmit() {
       >
         {{ pageTitle }}
       </h1>
-      <p
-        v-if="pageSubtitle"
-        class="text-(length:--font-md) text-(color:--color-slate-muted) mt-(--space-1)"
-      >
-        {{ pageSubtitle }}
-      </p>
     </header>
 
     <section class="mb-(--space-5)">
