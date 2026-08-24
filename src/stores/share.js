@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { shareApi } from '@/api/share'
+import { beginSessionTask, isCurrentSession } from '@/utils/sessionEpoch'
 
 // 가족 한 사람에게 색 하나. 아바타와 기여도 도넛이 같은 색을 써야 두 영역을
 // 눈으로 이어 볼 수 있다.
@@ -58,17 +59,21 @@ export const useShareStore = defineStore('share', {
 
   actions: {
     async fetchPets() {
+      const epoch = beginSessionTask()
       this.isLoading = true
       this.error = ''
       try {
-        this.pets = unwrap(await shareApi.getPets()) ?? []
+        const pets = unwrap(await shareApi.getPets()) ?? []
+        if (!isCurrentSession(epoch)) return this.pets
+        this.pets = pets
         return this.pets
       } catch (error) {
+        if (!isCurrentSession(epoch)) return this.pets
         this.pets = []
         this.error = errorMessage(error, '반려동물 정보를 불러오지 못했어요. 다시 시도해 주세요.')
         return []
       } finally {
-        this.isLoading = false
+        if (isCurrentSession(epoch)) this.isLoading = false
       }
     },
 

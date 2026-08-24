@@ -5,6 +5,7 @@ import {
   savingUnits,
 } from '@/constants/donation'
 import { formatWon } from '@/utils/bankMeta'
+import { beginSessionTask, isCurrentSession } from '@/utils/sessionEpoch'
 
 const DEFAULT_CATEGORY = donationCategories[0]
 const DEFAULT_SAVING_UNIT = savingUnits[savingUnits.length - 1]
@@ -88,12 +89,14 @@ export const useDonationStore = defineStore('donation', {
 
   actions: {
     async fetchDonationData() {
+      const epoch = beginSessionTask()
       this.isLoading = true
       this.error = ''
       this.operationError = ''
 
       try {
         const result = unwrap(await donationApi.getOverview())
+        if (!isCurrentSession(epoch)) return
         this.balance = Number(result?.balance ?? 0)
         this.monthlySaved = Number(result?.monthlySaved ?? 0)
         this.impactMessage = result?.impactMessage ?? ''
@@ -118,11 +121,12 @@ export const useDonationStore = defineStore('donation', {
         }
         this.isInitialized = true
       } catch (error) {
+        if (!isCurrentSession(epoch)) return
         this.campaigns = []
         this.selectedCampaignId = ''
         this.error = error.response?.data?.message || '저금통 정보를 불러오지 못했어요. 다시 시도해 주세요.'
       } finally {
-        this.isLoading = false
+        if (isCurrentSession(epoch)) this.isLoading = false
       }
     },
 

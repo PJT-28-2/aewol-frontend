@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { notificationApi } from '@/api/notification'
+import { beginSessionTask, isCurrentSession } from '@/utils/sessionEpoch'
 
 const errorMessage = (error, fallback) => error.response?.data?.message || fallback
 const unwrapResult = (response) => response?.data?.result ?? response?.data ?? response
@@ -20,6 +21,7 @@ export const useNotificationStore = defineStore('notification', {
 
   actions: {
     async fetchNotifications({ page = 0, size = 20, append = false } = {}) {
+      const epoch = beginSessionTask()
       if (append) this.isLoadingMore = true
       else this.isLoading = true
       if (append) this.actionError = ''
@@ -27,6 +29,7 @@ export const useNotificationStore = defineStore('notification', {
 
       try {
         const result = unwrapResult(await notificationApi.getNotifications({ page, size }))
+        if (!isCurrentSession(epoch)) return
         const items = Array.isArray(result?.notifications) ? result.notifications : []
         this.notifications = append ? [...this.notifications, ...items] : items
         this.unreadCount = Number(result?.unreadCount ?? 0)
@@ -34,13 +37,16 @@ export const useNotificationStore = defineStore('notification', {
         this.hasNext = Boolean(result?.hasNext)
         this.initialized = true
       } catch (error) {
+        if (!isCurrentSession(epoch)) throw error
         const message = errorMessage(error, '알림을 불러오지 못했어요. 다시 시도해 주세요.')
         if (append) this.actionError = message
         else this.error = message
         throw error
       } finally {
-        this.isLoading = false
-        this.isLoadingMore = false
+        if (isCurrentSession(epoch)) {
+          this.isLoading = false
+          this.isLoadingMore = false
+        }
       }
     },
 
