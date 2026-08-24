@@ -9,6 +9,7 @@ import IconClose from '@/components/common/icons/IconClose.vue'
 import IconInfo from '@/components/common/icons/IconInfo.vue'
 import IconPaw from '@/components/common/icons/IconPaw.vue'
 import { useSupportProgramsStore } from '@/stores/supportPrograms'
+import { isSafeGovernmentApplyUrl } from '@/utils/governmentApplyUrl'
 
 const route = useRoute()
 const router = useRouter()
@@ -52,20 +53,21 @@ async function applyForProgram() {
   if (!program?.eligible) return
 
   const { applyUrl } = program
+  const safeApplyUrl = isSafeGovernmentApplyUrl(applyUrl) ? applyUrl : null
   // window.open은 클릭 핸들러 안에서 동기적으로 불러야 팝업 차단을 통과한다.
   // await 뒤로 미루면 사용자 제스처와의 연결이 끊긴다.
-  const applyWindow = applyUrl ? window.open('about:blank', '_blank') : null
+  const applyWindow = safeApplyUrl ? window.open('about:blank', '_blank') : null
   if (applyWindow) applyWindow.opener = null
 
   // 이미 기록된 건이면 store가 요청 없이 false를 돌려준다. 그래도 신청 페이지는 연다.
   // 팝업이 막히거나 실수로 탭을 닫았을 때 다시 들어갈 길이 있어야 한다.
   await supportProgramsStore.applyForProgram(program.id)
 
-  if (!applyUrl) return
+  if (!safeApplyUrl) return
   if (applyWindow) {
-    applyWindow.location.replace(applyUrl)
+    applyWindow.location.replace(safeApplyUrl)
   } else {
-    window.location.assign(applyUrl)
+    window.location.assign(safeApplyUrl)
   }
 }
 
