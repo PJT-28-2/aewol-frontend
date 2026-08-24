@@ -113,4 +113,19 @@ describe('useShareStore - 일기 작성 권한', () => {
     expect(store.canWriteDiary('9003')).toBe(false)
     expect(store.canWriteDiary(null)).toBe(false)
   })
+
+  it('기여도 조회가 실패해도 멤버 목록과 작성 권한은 유지한다', async () => {
+    shareApi.getMembers.mockResolvedValue(wrap([
+      { id: '9001', name: '김애월', role: 'ADMIN' },
+    ]))
+    shareApi.getContributions.mockRejectedValue(new Error('contribution failed'))
+
+    const store = useShareStore()
+    await store.fetchSharedCare('p1')
+
+    expect(store.members.map((member) => member.id)).toEqual(['9001'])
+    expect(store.contributions).toEqual([])
+    expect(store.canWriteDiary('9001')).toBe(true)
+    expect(store.error).toBe('')
+  })
 })
