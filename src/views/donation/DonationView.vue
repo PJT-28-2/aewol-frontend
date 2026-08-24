@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRoute, useRouter } from 'vue-router'
 import AppButton from '@/components/common/AppButton.vue'
@@ -8,6 +8,7 @@ import EmptyState from '@/components/common/EmptyState.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import SelectableChip from '@/components/common/SelectableChip.vue'
 import ToggleSwitch from '@/components/common/ToggleSwitch.vue'
+import IconChevronRight from '@/components/common/icons/IconChevronRight.vue'
 import IconDog from '@/components/common/icons/IconDog.vue'
 import IconHeart from '@/components/common/icons/IconHeart.vue'
 import IconPlus from '@/components/common/icons/IconPlus.vue'
@@ -38,7 +39,15 @@ const {
 
 const screen = computed(() => route.meta.step)
 const isMain = computed(() => screen.value === 'main')
+const hasSavedBalance = computed(() => Number(balance.value) > 0)
 const currentCampaign = computed(() => donationStore.currentCampaign)
+const draftPiggyBankEnabled = ref(true)
+const draftSavingUnit = ref(savingUnits[savingUnits.length - 1])
+const draftAutoDonate = ref(false)
+const draftCampaignId = ref('')
+const draftCampaign = computed(() =>
+  donationStore.campaigns.find((campaign) => campaign.id === draftCampaignId.value),
+)
 const otherCampaigns = computed(() =>
   donationStore.campaigns
     .filter((campaign) => campaign.id !== currentCampaign.value?.id)
@@ -69,7 +78,13 @@ async function donate() {
 }
 
 async function saveSettings() {
-  if (await donationStore.saveSettings()) go('/donation')
+  const saved = await donationStore.saveSettings({
+    piggyBankEnabled: draftPiggyBankEnabled.value,
+    savingUnit: draftSavingUnit.value,
+    autoDonate: draftAutoDonate.value,
+    campaignId: draftAutoDonate.value ? draftCampaignId.value : null,
+  })
+  if (saved) go('/donation')
 }
 
 /**
@@ -79,9 +94,21 @@ async function saveSettings() {
  * 없으므로 0이고, 그 결제는 적립을 건너뛴다.
  */
 function roundUpGap(amount) {
-  const remainder = amount % savingUnit.value
-  return remainder === 0 ? 0 : savingUnit.value - remainder
+  const remainder = amount % draftSavingUnit.value
+  return remainder === 0 ? 0 : draftSavingUnit.value - remainder
 }
+
+watch(
+  [screen, () => donationStore.isInitialized],
+  ([activeScreen, isInitialized]) => {
+    if (activeScreen !== 'settings' || !isInitialized) return
+    draftPiggyBankEnabled.value = piggyBankEnabled.value
+    draftSavingUnit.value = savingUnit.value
+    draftAutoDonate.value = autoDonate.value
+    draftCampaignId.value = currentCampaign.value?.id ?? ''
+  },
+  { immediate: true },
+)
 
 onMounted(loadDonationData)
 </script>
@@ -130,7 +157,7 @@ onMounted(loadDonationData)
           aria-label="저금통 설정"
           @click="go('/donation/settings')"
         >
-          <IconSettings :size="20" />
+          <IconSettings :size="22" />
         </button>
         <strong class="block text-[length:var(--font-2xl)] font-bold text-(--color-navy)">짜투리 저금통</strong>
         <span
@@ -143,7 +170,7 @@ onMounted(loadDonationData)
       </header>
 
       <section
-        class="mt-[var(--space-5)] rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-leaf-soft) p-[var(--space-5)] shadow-(--shadow-card)"
+        class="mt-[var(--space-5)] rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-[var(--space-5)] shadow-(--shadow-card)"
       >
         <b
           class="block text-[length:var(--font-sm)] text-(--color-leaf-dark)"
@@ -152,13 +179,13 @@ onMounted(loadDonationData)
           class="block text-[length:var(--font-3xl)] text-(--color-navy)"
         >{{ formatWon(balance) }}</strong>
         <span
-          class="block text-[length:var(--font-sm)] text-(--color-leaf-dark)"
+          class="mt-[var(--space-1)] block text-[length:var(--font-sm)] text-(--color-slate-muted)"
         >이번 달 {{ formatWon(monthlySaved) }} 모았어요</span>
         <div class="mt-[var(--space-3)] flex gap-[var(--space-3)]">
           <AppButton
             block
             pill
-            size="sm"
+            size="md"
             variant="primary"
             @click="go('/donation/give')"
           >
@@ -167,34 +194,36 @@ onMounted(loadDonationData)
           <AppButton
             block
             pill
-            size="sm"
-            variant="neutral"
-            class="bg-(--color-white)!"
+            size="md"
+            variant="secondary"
             @click="go('/donation/withdraw')"
           >
             지갑으로 출금
           </AppButton>
         </div>
-      </section>
-
-      <section
-        class="mt-[var(--space-5)] flex flex-col gap-[var(--space-2)] rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-[var(--space-4)] shadow-(--shadow-card)"
-      >
-        <div class="flex items-center gap-[var(--space-1)]">
-          <IconHeart
-            class="shrink-0 text-(--color-olive)"
-            :size="16"
-          />
-          <b class="text-[length:var(--font-sm)] text-(--color-slate-dark)">지금까지 모은 잔돈으로</b>
+        <div class="mt-[var(--space-4)] border-t border-(--color-border) pt-[var(--space-4)]">
+          <div
+            v-if="hasSavedBalance"
+            class="flex items-center gap-[var(--space-1)]"
+          >
+            <IconHeart
+              class="shrink-0 text-(--color-leaf-dark)"
+              :size="16"
+            />
+            <b class="text-[length:var(--font-sm)] text-(--color-navy)">현재 모인 잔돈으로</b>
+          </div>
+          <span
+            class="block text-[length:var(--font-sm)] text-(--color-slate-dark)"
+            :class="hasSavedBalance ? 'mt-[var(--space-1)]' : ''"
+          >{{ impactMessage }}</span>
         </div>
-        <span
-          class="text-[length:var(--font-xs)] text-(--color-slate-muted)"
-        >{{ impactMessage }}</span>
       </section>
 
-      <section
-        class="mt-[var(--space-3)] flex items-center gap-[var(--space-3)] rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-[var(--space-4)] shadow-(--shadow-card)"
+      <button
+        type="button"
+        class="mt-[var(--space-3)] flex w-full cursor-pointer items-center gap-[var(--space-3)] rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-[var(--space-4)] text-left shadow-(--shadow-card) transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-leaf-dark)"
         aria-label="저금통 설정 상태"
+        @click="go('/donation/settings')"
       >
         <div class="min-w-0 flex-1">
           <b class="block text-[length:var(--font-sm)] text-(--color-slate-dark)">
@@ -214,13 +243,17 @@ onMounted(loadDonationData)
           class="shrink-0 rounded-(--radius-full) px-[var(--space-3)] py-[var(--space-1)] text-[length:var(--font-xs)] font-bold"
           :class="
             autoDonate
-              ? 'bg-(--color-olive-surface) text-(--color-olive)'
+              ? 'bg-(--color-olive-surface) text-(--color-leaf-dark)'
               : 'bg-(--color-surface) text-(--color-slate-dark)'
           "
         >
           자동 기부 {{ autoDonate ? 'ON' : 'OFF' }}
         </span>
-      </section>
+        <IconChevronRight
+          class="shrink-0 text-(--color-slate-muted)"
+          :size="16"
+        />
+      </button>
     </template>
 
     <!-- RF-SI-02 · 기부하기 -->
@@ -643,7 +676,7 @@ onMounted(loadDonationData)
       </p>
 
       <section
-        class="mt-[var(--space-5)] flex items-start gap-[var(--space-4)] rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-[var(--space-4)] shadow-(--shadow-card)"
+        class="mt-[var(--space-5)] flex items-center gap-[var(--space-4)] rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-[var(--space-5)] shadow-(--shadow-card)"
       >
         <div class="min-w-0 flex-1">
           <b class="block">짜투리 저금통 사용</b>
@@ -652,97 +685,101 @@ onMounted(loadDonationData)
           >결제할 때마다 잔돈을 자동으로 모아요</span>
         </div>
         <ToggleSwitch
-          :model-value="piggyBankEnabled"
+          :model-value="draftPiggyBankEnabled"
           :disabled="donationStore.isSubmitting"
           label="짜투리 저금통 사용"
-          @update:model-value="donationStore.setPiggyBankEnabled($event)"
+          @update:model-value="draftPiggyBankEnabled = $event"
         />
       </section>
 
-      <h3
-        class="mb-[var(--space-3)] mt-[var(--space-6)] text-[length:var(--font-sm)] text-(--color-slate-dark)"
-      >
-        저금 단위
-      </h3>
-      <div class="flex gap-[var(--space-2)]">
-        <SelectableChip
-          v-for="unit in savingUnits"
-          :key="unit"
-          block
-          shape="rounded"
-          :selected="savingUnit === unit"
-          :disabled="donationStore.isSubmitting"
-          @click="donationStore.setSavingUnit(unit)"
+      <template v-if="draftPiggyBankEnabled">
+        <section
+          class="mt-[var(--space-4)] rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-[var(--space-5)] shadow-(--shadow-card)"
         >
-          {{ formatWon(unit) }}
-        </SelectableChip>
-      </div>
+          <h3 class="m-0 text-[length:var(--font-md)] font-bold text-(--color-navy)">
+            저금 단위
+          </h3>
+          <p class="mb-[var(--space-4)] mt-[var(--space-1)] text-[length:var(--font-xs)] text-(--color-slate-muted)">
+            결제 금액을 올림할 단위를 선택해 주세요
+          </p>
+          <div class="flex gap-[var(--space-2)]">
+            <SelectableChip
+              v-for="unit in savingUnits"
+              :key="unit"
+              block
+              shape="rounded"
+              :selected="draftSavingUnit === unit"
+              :disabled="donationStore.isSubmitting"
+              @click="draftSavingUnit = unit"
+            >
+              {{ formatWon(unit) }}
+            </SelectableChip>
+          </div>
 
-      <section
-        class="mt-[var(--space-4)] rounded-[var(--radius-lg)] bg-(--color-olive-surface) p-[var(--space-4)] text-(--color-olive)"
-      >
-        <b class="block">예시</b>
-        <strong
-          class="mt-[var(--space-2)] block text-[length:var(--font-sm)] leading-snug"
-        >
-          31,275원 결제 시, {{ formatWon(savingUnit) }} 단위로 올린
-          {{ formatWon(31275 + roundUpGap(31275)) }}과의 차액
-          {{ formatWon(roundUpGap(31275)) }}이 자동으로 저금통에 쌓여요
-        </strong>
-        <span
-          class="mt-[var(--space-1)] block text-[length:var(--font-sm)] text-(--color-olive)"
-        >결제 금액 자체는 그대로 나가고, 잔돈만 별도로 모여요</span>
-      </section>
-
-      <h3
-        class="mb-[var(--space-3)] mt-[var(--space-6)] text-[length:var(--font-sm)] text-(--color-slate-dark)"
-      >
-        자동 기부
-      </h3>
-      <section
-        class="flex items-start gap-[var(--space-4)] rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-[var(--space-4)] shadow-(--shadow-card)"
-      >
-        <div class="min-w-0 flex-1">
-          <b class="block">매달 자동으로 기부하기</b>
-          <span
-            class="mt-[var(--space-1)] block text-[length:var(--font-xs)] text-(--color-slate-muted)"
-          >매월 말일, 모인 잔돈을 선택한 기부처로 자동 전달해요</span>
-        </div>
-        <ToggleSwitch
-          :model-value="autoDonate"
-          :disabled="donationStore.isSubmitting"
-          label="매달 자동으로 기부하기"
-          @update:model-value="donationStore.setAutoDonate($event)"
-        />
-      </section>
-
-      <template v-if="autoDonate">
-        <h3
-          class="mb-[var(--space-3)] mt-[var(--space-5)] text-[length:var(--font-sm)] text-(--color-slate-dark)"
-        >
-          자동 기부 캠페인
-        </h3>
-        <div
-          v-if="donationStore.hasCampaigns"
-          class="flex flex-wrap gap-[var(--space-2)]"
-        >
-          <SelectableChip
-            v-for="campaign in donationStore.campaigns"
-            :key="campaign.id"
-            :selected="currentCampaign?.id === campaign.id"
-            :disabled="donationStore.isSubmitting"
-            @click="donationStore.selectCampaign(campaign.id)"
+          <div
+            class="mt-[var(--space-4)] rounded-[var(--radius-lg)] bg-(--color-olive-surface) p-[var(--space-4)]"
           >
-            {{ campaign.organization }} · {{ campaign.title }}
-          </SelectableChip>
-        </div>
-        <p
-          v-else
-          class="m-0 text-[length:var(--font-sm)] text-(--color-danger-strong)"
-          role="alert"
+            <b class="block text-[length:var(--font-sm)] text-(--color-leaf-dark)">이렇게 모여요</b>
+            <strong
+              class="mt-[var(--space-2)] block text-[length:var(--font-sm)] leading-snug text-(--color-navy)"
+            >
+              31,275원 결제 시, {{ formatWon(draftSavingUnit) }} 단위로 올린
+              {{ formatWon(31275 + roundUpGap(31275)) }}과의 차액
+              {{ formatWon(roundUpGap(31275)) }}이 자동으로 저금통에 쌓여요
+            </strong>
+            <span
+              class="mt-[var(--space-1)] block text-[length:var(--font-xs)] text-(--color-slate-dark)"
+            >결제 금액은 그대로 나가고, 잔돈만 별도로 모여요</span>
+          </div>
+        </section>
+
+        <section
+          class="mt-[var(--space-4)] rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-white) p-[var(--space-5)] shadow-(--shadow-card)"
         >
-          자동 기부로 선택할 수 있는 진행 중 캠페인이 없어요.
-        </p>
+          <div class="flex items-center gap-[var(--space-4)]">
+            <div class="min-w-0 flex-1">
+              <b class="block text-[length:var(--font-md)] text-(--color-navy)">매달 자동으로 기부하기</b>
+              <span
+                class="mt-[var(--space-1)] block text-[length:var(--font-xs)] text-(--color-slate-muted)"
+              >매월 말일, 모인 잔돈을 선택한 기부처로 전달해요</span>
+            </div>
+            <ToggleSwitch
+              :model-value="draftAutoDonate"
+              :disabled="donationStore.isSubmitting"
+              label="매달 자동으로 기부하기"
+              @update:model-value="draftAutoDonate = $event"
+            />
+          </div>
+
+        <template v-if="draftAutoDonate">
+          <h3
+            class="mb-[var(--space-3)] mt-[var(--space-5)] border-t border-(--color-border) pt-[var(--space-4)] text-[length:var(--font-sm)] text-(--color-slate-dark)"
+          >
+            자동 기부 캠페인
+          </h3>
+          <div
+            v-if="donationStore.hasCampaigns"
+            class="flex flex-wrap gap-[var(--space-2)]"
+          >
+            <SelectableChip
+              v-for="campaign in donationStore.campaigns"
+              :key="campaign.id"
+              :selected="draftCampaignId === campaign.id"
+              :disabled="donationStore.isSubmitting"
+              @click="draftCampaignId = campaign.id"
+            >
+              {{ campaign.organization }} · {{ campaign.title }}
+            </SelectableChip>
+          </div>
+          <p
+            v-else
+            class="m-0 text-[length:var(--font-sm)] text-(--color-danger-strong)"
+            role="alert"
+          >
+            자동 기부로 선택할 수 있는 진행 중 캠페인이 없어요.
+          </p>
+        </template>
+        </section>
       </template>
 
       <AppButton
@@ -750,7 +787,7 @@ onMounted(loadDonationData)
         block
         size="lg"
         variant="primary"
-        :disabled="donationStore.isSubmitting || (autoDonate && !currentCampaign)"
+        :disabled="donationStore.isSubmitting || (draftPiggyBankEnabled && draftAutoDonate && !draftCampaign)"
         :loading="donationStore.isSubmitting"
         @click="saveSettings"
       >

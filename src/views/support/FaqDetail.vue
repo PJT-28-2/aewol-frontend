@@ -15,14 +15,33 @@ const relatedFaqs = ref([]);
 const isLoading = ref(true);
 const loadError = ref('');
 
-// 도움됨/아쉬워요 피드백 — 백엔드 API 명세에 없어서 지금은 화면에서만 토글돼요.
-// TODO: 피드백 저장이 필요하면 백엔드에 엔드포인트 추가 요청 필요
+// 도움됨/아쉬워요 피드백 — 백엔드 API 명세에 없어서 지금은 로컬(localStorage)에만 저장돼요.
+// TODO: 서버 집계가 필요하면 백엔드에 엔드포인트 추가 요청 필요
+// FAQ별로 한 번 남긴 의견은 화면을 나갔다 들어와도(재마운트) 유지되어야 해서, faqId별로
+// localStorage에 저장해두고 로드 시 복원해요. 복원된 경우 이미 의견을 남긴 것으로 보고
+// 버튼을 다시 누를 수 없게 막아요(2026-08-24) — 그렇지 않으면 재방문할 때마다 입력이
+// 초기화된 것처럼 보여서 매번 다시 누를 수 있었어요.
+const FAQ_FEEDBACK_STORAGE_PREFIX = 'faqFeedback:';
 const feedback = ref(null); // 'HELPFUL' | 'NOT_HELPFUL' | null
 const feedbackToastVisible = ref(false);
 let feedbackToastTimer = null;
 
+function readStoredFeedback(faqId) {
+  try {
+    return window.localStorage.getItem(`${FAQ_FEEDBACK_STORAGE_PREFIX}${faqId}`);
+  } catch {
+    return null; // 프라이빗 브라우징 등으로 localStorage를 못 쓰면 매번 새로 입력하게 둬요.
+  }
+}
+
 function submitFeedback(value) {
+  if (feedback.value) return; // 이미 의견을 남겼으면 다시 누를 수 없어요.
   feedback.value = value;
+  try {
+    window.localStorage.setItem(`${FAQ_FEEDBACK_STORAGE_PREFIX}${route.params.faqId}`, value);
+  } catch {
+    // 저장 실패해도 이번 세션 화면 표시에는 지장 없으니 조용히 무시해요.
+  }
   feedbackToastVisible.value = true;
   window.clearTimeout(feedbackToastTimer);
   feedbackToastTimer = window.setTimeout(() => {
@@ -42,7 +61,7 @@ async function loadFaq(faqId) {
 
   isLoading.value = true;
   loadError.value = '';
-  feedback.value = null;
+  feedback.value = readStoredFeedback(faqId);
   window.clearTimeout(feedbackToastTimer);
   feedbackToastVisible.value = false;
   faq.value = null;
@@ -141,12 +160,16 @@ function goToRelated(relatedFaqId) {
         </p>
         <div class="flex gap-2">
           <button
-            class="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-(--radius-xl) text-(length:--font-sm) font-medium"
-            :class="
+            type="button"
+            class="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-(--radius-xl) text-(length:--font-sm) font-medium disabled:cursor-not-allowed"
+            :class="[
               feedback === 'HELPFUL'
                 ? 'bg-(--color-leaf-soft) text-(color:--color-navy)'
-                : 'bg-(--color-app-bg) text-(color:--color-gray-600)'
-            "
+                : 'bg-(--color-app-bg) text-(color:--color-gray-600)',
+              feedback && feedback !== 'HELPFUL' ? 'opacity-50' : '',
+            ]"
+            :disabled="!!feedback"
+            :aria-pressed="feedback === 'HELPFUL'"
             @click="submitFeedback('HELPFUL')"
           >
             <IconThumbsUp
@@ -156,12 +179,16 @@ function goToRelated(relatedFaqId) {
             도움됨
           </button>
           <button
-            class="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-(--radius-xl) text-(length:--font-sm) font-medium"
-            :class="
+            type="button"
+            class="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-(--radius-xl) text-(length:--font-sm) font-medium disabled:cursor-not-allowed"
+            :class="[
               feedback === 'NOT_HELPFUL'
                 ? 'bg-(--color-leaf-soft) text-(color:--color-navy)'
-                : 'bg-(--color-app-bg) text-(color:--color-gray-600)'
-            "
+                : 'bg-(--color-app-bg) text-(color:--color-gray-600)',
+              feedback && feedback !== 'NOT_HELPFUL' ? 'opacity-50' : '',
+            ]"
+            :disabled="!!feedback"
+            :aria-pressed="feedback === 'NOT_HELPFUL'"
             @click="submitFeedback('NOT_HELPFUL')"
           >
             <IconThumbsDown

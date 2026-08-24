@@ -92,13 +92,14 @@ const loadMoreError = ref(false);
 // 나오면 안 된다. 반면 지갑 메인 > 전체 거래내역처럼 필터 없이 들어온 일반 조회는 REFUND도
 // 함께 보여주는 게 기존 의도된 동작이라 그대로 둔다. activeFilter를 직접 '충전'/'출금'으로
 // 바꾼 경우는 사용자가 명시적으로 고른 값이라 이 분기로 덮어쓰지 않는다.
-// 백엔드가 type=PAYMENT를 지원하며, PAYMENT/WITHDRAW 필터 양쪽 다 환불(REFUND)된 원 결제를
-// NOT EXISTS로 이미 제외해준다(TransactionMapper.xml) — 클라이언트에서 따로 걸러낼 필요 없음.
+// 실행 중인 백엔드가 PAYMENT 필터 추가 전 버전이어도 대시보드 진입이 깨지지 않도록,
+// 오래전부터 지원하는 WITHDRAW로 조회한 뒤 아래 filteredTransactions에서 PAYMENT만 남긴다.
+// WITHDRAW 필터도 환불된 원 결제는 NOT EXISTS로 제외한다(TransactionMapper.xml).
 function transactionRequestParams(cursor = null) {
   const isCategoryOrPetEntry = Boolean(categoryFilter.value || petFilter.value);
   const type =
     activeFilter.value === 'all' && isCategoryOrPetEntry
-      ? 'PAYMENT'
+      ? 'WITHDRAW'
       : activeFilter.value.toUpperCase();
   return {
     type,
@@ -215,12 +216,16 @@ const filteredTransactions = computed(() => {
       const matchesType =
         activeFilter.value === 'all' ||
         tx.type === activeFilter.value;
+      const matchesDashboardEntry =
+        !(categoryFilter.value || petFilter.value) ||
+        activeFilter.value !== 'all' ||
+        tx.txnType === 'PAYMENT';
       const matchesCategory =
         !categoryFilter.value || tx.category === categoryFilter.value;
       const matchesPet =
         petFilter.value === null ||
         (tx.petId !== null && String(tx.petId) === String(petFilter.value));
-      return matchesMonth && matchesType && matchesCategory && matchesPet;
+      return matchesMonth && matchesType && matchesDashboardEntry && matchesCategory && matchesPet;
     })
     .sort((a, b) => `${b.date}${b.time}`.localeCompare(`${a.date}${a.time}`));
 });

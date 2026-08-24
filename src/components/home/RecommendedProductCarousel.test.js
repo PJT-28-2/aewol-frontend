@@ -10,6 +10,7 @@ const product = (id) => ({
   dDay: 'D-3',
   groupPrice: 1000,
   unitPrice: 1200,
+  image: `https://cdn.example.com/products/${id}.webp`,
 })
 
 describe('RecommendedProductCarousel', () => {
@@ -36,6 +37,26 @@ describe('RecommendedProductCarousel', () => {
     })
     app.mount(host)
   }
+
+  it('추천 상품의 썸네일을 표시한다', () => {
+    mountCarousel([product(1)])
+
+    const thumbnail = host.querySelector('[data-testid="recommended-product-thumbnail"] img')
+    expect(thumbnail?.getAttribute('src')).toBe('https://cdn.example.com/products/1.webp')
+    expect(thumbnail?.getAttribute('alt')).toBe('')
+  })
+
+  it('썸네일을 불러오지 못하면 공동구매 아이콘을 표시한다', async () => {
+    mountCarousel([product(1)])
+
+    host.querySelector('[data-testid="recommended-product-thumbnail"] img')
+      .dispatchEvent(new Event('error'))
+    await nextTick()
+
+    const thumbnail = host.querySelector('[data-testid="recommended-product-thumbnail"]')
+    expect(thumbnail.querySelector('img')).toBeNull()
+    expect(thumbnail.querySelector('svg')).toBeTruthy()
+  })
 
   it('상품 목록이 바뀌면 첫 상품으로 돌아가고 자동 전환을 다시 설정한다', async () => {
     vi.useFakeTimers()

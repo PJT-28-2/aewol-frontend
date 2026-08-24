@@ -18,15 +18,11 @@ defineProps({
     v-bind="$attrs"
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 24 24"
-    fill="none"
+    :fill="color"
     :width="size"
     :height="size"
-    :stroke="color"
-    stroke-width="1.8"
-    stroke-linecap="round"
-    stroke-linejoin="round"
     aria-hidden="true"
   >
-    <path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5 8.5 8.5 0 1 0 20.5 14.2Z" />
+    <path d="M21.75 15.05A9.75 9.75 0 0 1 8.95 2.25a.75.75 0 0 0-.86-.95A10.5 10.5 0 1 0 22.7 15.91a.75.75 0 0 0-.95-.86Z" />
   </svg>
 </template>
