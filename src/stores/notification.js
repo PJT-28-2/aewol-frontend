@@ -51,10 +51,13 @@ export const useNotificationStore = defineStore('notification', {
     },
 
     async fetchUnreadCount() {
+      const epoch = beginSessionTask()
       try {
         const result = unwrapResult(await notificationApi.getUnreadCount())
+        if (!isCurrentSession(epoch)) return
         this.unreadCount = Number(result?.unreadCount ?? 0)
       } catch (error) {
+        if (!isCurrentSession(epoch)) return
         // 배지는 홈의 부가 정보라 홈 화면 전체를 실패시키지 않는다.
         console.error('[notification] 읽지 않은 알림 수를 불러오지 못했습니다.', error)
       }

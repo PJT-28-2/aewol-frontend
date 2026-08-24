@@ -79,6 +79,7 @@ export const useShareStore = defineStore('share', {
 
     async fetchSharedCare(petId) {
       if (!petId) return
+      const epoch = beginSessionTask()
       const requestId = ++this.sharedCareRequestId
       this.isLoading = true
       this.error = ''
@@ -88,7 +89,8 @@ export const useShareStore = defineStore('share', {
           shareApi.getContributions(petId),
           shareApi.getLogs(petId),
         ])
-        if (requestId !== this.sharedCareRequestId) return
+        // $reset() 뒤 새 세션의 첫 요청도 1부터라, 순번만 보면 이전 계정 응답을 받는다.
+        if (!isCurrentSession(epoch) || requestId !== this.sharedCareRequestId) return
         // 멤버 목록을 먼저 훑어 색을 정한다. 기여도는 그 색을 id로 찾아 쓰기만 한다.
         const toneOf = createToneLookup()
         this.members = (unwrap(membersResponse) ?? []).map((member) => {
@@ -101,13 +103,15 @@ export const useShareStore = defineStore('share', {
         })
         this.activities = unwrap(logsResponse) ?? []
       } catch (error) {
-        if (requestId !== this.sharedCareRequestId) return
+        if (!isCurrentSession(epoch) || requestId !== this.sharedCareRequestId) return
         this.members = []
         this.contributions = []
         this.activities = []
         this.error = errorMessage(error, '공동육아 정보를 불러오지 못했어요. 다시 시도해 주세요.')
       } finally {
-        if (requestId === this.sharedCareRequestId) this.isLoading = false
+        if (isCurrentSession(epoch) && requestId === this.sharedCareRequestId) {
+          this.isLoading = false
+        }
       }
     },
 
