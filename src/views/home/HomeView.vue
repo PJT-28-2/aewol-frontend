@@ -296,8 +296,19 @@ onMounted(() => {
             </p>
             <span class="shrink-0 rounded-full bg-(--color-leaf-soft) px-(--space-3) py-(--space-2) text-(length:--font-xs) font-bold text-(color:--color-leaf-dark)">{{ changeLabel }}</span>
           </div>
-          <p class="mt-(--space-2) text-(length:--font-xl) font-bold text-(color:--color-navy)">
-            {{ monthlyExpense.toLocaleString('ko-KR') }}원을 사용했어요
+          <p
+            class="mt-(--space-3) flex flex-wrap items-baseline gap-x-(--space-2) gap-y-(--space-1)"
+            :aria-label="`${monthlyExpense.toLocaleString('ko-KR')}원을 사용했어요`"
+            data-testid="monthly-spending-amount"
+          >
+            <span
+              aria-hidden="true"
+              class="text-[28px] font-extrabold leading-none tracking-[-0.035em] text-(color:--color-navy)"
+            >{{ monthlyExpense.toLocaleString('ko-KR') }}원</span>
+            <span
+              aria-hidden="true"
+              class="text-(length:--font-sm) font-semibold leading-snug text-(color:--color-slate-dark)"
+            >사용했어요</span>
           </p>
         </div>
       </router-link>
@@ -373,9 +384,18 @@ onMounted(() => {
               </p>
               <p
                 v-if="card.type === 'SPENDING'"
-                class="mt-(--space-1) text-(length:--font-xl) font-bold text-(color:--color-navy)"
+                class="mt-(--space-2) flex flex-wrap items-baseline gap-x-(--space-2) gap-y-(--space-1)"
+                :aria-label="`${monthlyExpense.toLocaleString('ko-KR')}원을 사용했어요`"
+                data-testid="monthly-spending-amount"
               >
-                {{ monthlyExpense.toLocaleString('ko-KR') }}원을 사용했어요
+                <span
+                  aria-hidden="true"
+                  class="text-[28px] font-extrabold leading-none tracking-[-0.035em] text-(color:--color-navy)"
+                >{{ monthlyExpense.toLocaleString('ko-KR') }}원</span>
+                <span
+                  aria-hidden="true"
+                  class="text-(length:--font-sm) font-semibold leading-snug text-(color:--color-slate-dark)"
+                >사용했어요</span>
               </p>
 
               <!--
