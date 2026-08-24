@@ -56,6 +56,16 @@ export const useShareStore = defineStore('share', {
     error: '',
   }),
 
+  getters: {
+    /** 대표 보호자(목록에서 ADMIN)와 MANAGER만 일기를 쓸 수 있다. VIEWER는 조회만. */
+    canWriteDiary: (state) => (memberId) => {
+      if (!memberId) return false
+      const me = state.members.find((member) => String(member.id) === String(memberId))
+      const role = String(me?.role ?? '').toUpperCase()
+      return role === 'ADMIN' || role === 'MANAGER'
+    },
+  },
+
   actions: {
     async fetchPets() {
       this.isLoading = true
