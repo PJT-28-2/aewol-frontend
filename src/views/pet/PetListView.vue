@@ -71,10 +71,21 @@ function setRepresentativePet() {
   if (primaryPet.value) petStore.setRepresentativePet(primaryPet.value.id)
 }
 
+function selectPet(petId) {
+  activePetId.value = petId
+  if (petId) sessionStorage.setItem('lastViewedPetId', petId)
+  else sessionStorage.removeItem('lastViewedPetId')
+}
+
 onMounted(async () => {
   try {
     await petStore.fetchPets()
-    activePetId.value = petStore.representativePetId ?? pets.value[0]?.id ?? null
+    const lastViewedId = sessionStorage.getItem('lastViewedPetId')
+    const lastViewedExists = pets.value.some((pet) => pet.id === lastViewedId)
+    activePetId.value = (lastViewedExists ? lastViewedId : null)
+      ?? petStore.representativePetId
+      ?? pets.value[0]?.id
+      ?? null
   } finally {
     isLoading.value = false
   }
@@ -141,7 +152,7 @@ onMounted(async () => {
           :species="pet.species"
           :selected="pet.id === primaryPet.id"
           :aria-current="pet.id === primaryPet.id ? 'true' : undefined"
-          @click="activePetId = pet.id"
+          @click="selectPet(pet.id)"
         />
       </nav>
 
