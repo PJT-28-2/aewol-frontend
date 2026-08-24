@@ -180,4 +180,15 @@ describe('resetUserStores', () => {
 
     expect(notifications.unreadCount).toBe(0)
   })
+
+  it('로그아웃 때 정기결제 등록 멱등키 sessionStorage를 지운다', () => {
+    sessionStorage.setItem(
+      'pendingRecurringCreate',
+      JSON.stringify({ key: 'rec-1', signature: 'pet-1:사료:1000:15:FOOD' }),
+    )
+
+    resetUserStores()
+
+    expect(sessionStorage.getItem('pendingRecurringCreate')).toBeNull()
+  })
 })
