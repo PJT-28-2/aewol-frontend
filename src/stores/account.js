@@ -300,6 +300,10 @@ export const useAccountStore = defineStore('account', {
       if (password !== this.resetting.pendingPassword) {
         return false;
       }
+      // ⚠️ setSimplePassword가 실패(네트워크 오류 등)하면 예외가 그대로 위로 전파되고,
+      // 여기서 catch하지 않기 때문에 resetSimplePasswordResetState()가 호출되지 않아요.
+      // 의도적인 동작이에요 — currentPassword/pendingPassword를 유지해서, 실패한 사용자가
+      // 현재 PIN 확인 단계로 돌아가지 않고 바로 재시도할 수 있게 해요.
       await this._withRequestState(async () => {
         await setSimplePassword(password, this.resetting.currentPassword);
       });

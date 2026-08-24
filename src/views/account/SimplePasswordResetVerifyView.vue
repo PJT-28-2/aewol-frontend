@@ -30,8 +30,9 @@ async function handleComplete(value) {
       return;
     }
     router.push({ name: 'SimplePasswordResetNew' });
-  } catch {
-    errorMessage.value = '확인에 실패했어요. 다시 시도해주세요';
+  } catch (error) {
+    // Confirm 화면과 동일하게 서버 메시지를 우선 보여줘요 (예: 잠금 등 사유 안내).
+    errorMessage.value = error.response?.data?.message ?? '확인에 실패했어요. 다시 시도해주세요';
     pin.value = '';
   } finally {
     isSubmitting.value = false;

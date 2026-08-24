@@ -10,10 +10,8 @@ import IconLock from '@/components/common/icons/IconLock.vue';
 const router = useRouter();
 const store = useAccountStore();
 
-// 현재 PIN 확인을 건너뛰고 URL로 바로 들어오는 걸 막아요.
-if (!store.resetting.currentPassword) {
-  router.replace({ name: 'SimplePasswordResetVerify' });
-}
+// 현재 PIN 확인을 건너뛰고 URL로 바로 들어오는 걸 막는 가드는 router의 beforeEnter로 옮겼어요
+// (컴포넌트 렌더링이 시작되기 전에 막아야 원래 화면이 잠깐이라도 보이지 않아요).
 
 const pin = ref('');
 const pinError = ref('');

@@ -9,10 +9,7 @@ import IconLock from '@/components/common/icons/IconLock.vue';
 const router = useRouter();
 const store = useAccountStore();
 
-// 새 PIN 입력을 건너뛰고 URL로 바로 들어오는 걸 막아요.
-if (!store.resetting.pendingPassword) {
-  router.replace({ name: 'SimplePasswordResetNew' });
-}
+// 새 PIN 입력을 건너뛰고 URL로 바로 들어오는 걸 막는 가드는 router의 beforeEnter로 옮겼어요.
 
 // PasswordSetupComplete.vue 라우터 가드가 확인하는 플래그와 같은 방식(sessionStorage) —
 // 재설정 API가 실제로 성공했을 때만 세팅해서, 완료 화면에 URL로 바로 들어오는 걸 막아요.

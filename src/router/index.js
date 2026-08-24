@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { useMemberStore } from '@/stores/member';
 import { useGroupPurchaseCreateStore } from '@/stores/groupPurchase';
+import { useAccountStore } from '@/stores/account';
 import { usePetStore } from '@/stores/pet';
 
 /* ------------------------------------------------------------------ */
@@ -137,12 +138,25 @@ const authRoutes = [
     name: 'SimplePasswordResetNew',
     component: () => import('@/views/account/SimplePasswordResetNewView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true, hideBottomNav: true, title: '간편 비밀번호 재설정' },
+    beforeEnter: () => {
+      // 현재 PIN 확인을 건너뛰고 URL로 바로 들어오는 걸 막는다 — 컴포넌트가 그려지기 전에
+      // 라우트 단계에서 막아야 원래 화면이 잠깐이라도 보이지 않는다.
+      if (!useAccountStore().resetting.currentPassword) {
+        return { name: 'SimplePasswordResetVerify' };
+      }
+    },
   },
   {
     path: '/account/simple-password/reset/confirm',
     name: 'SimplePasswordResetConfirm',
     component: () => import('@/views/account/SimplePasswordResetConfirmView.vue'),
     meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true, hideBottomNav: true, title: '간편 비밀번호 재설정' },
+    beforeEnter: () => {
+      // 새 PIN 입력을 건너뛰고 URL로 바로 들어오는 걸 막는다.
+      if (!useAccountStore().resetting.pendingPassword) {
+        return { name: 'SimplePasswordResetNew' };
+      }
+    },
   },
   {
     path: '/account/simple-password/reset/complete',
