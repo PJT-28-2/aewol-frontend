@@ -11,6 +11,7 @@ import GroupPurchaseProgressBar from '@/components/grouppurchase/GroupPurchasePr
 import { groupPurchaseApi } from '@/api/groupPurchase';
 import { formatArrivalDateLabel, formatDDayLabel, getDeadlineTimestamp } from '@/utils/date';
 import { goBackOr } from '@/utils/navigation';
+import { decodeJwtPayload } from '@/utils/jwt';
 import { useDeadlineTimer } from '@/composables/useDeadlineTimer';
 import { useMidnightTick } from '@/composables/useMidnightTick';
 import { useAuthStore } from '@/stores/auth';
@@ -22,11 +23,31 @@ const authStore = useAuthStore();
 const status = ref(null);
 const isLoading = ref(true);
 const isError = ref(false);
-// 관리자면 참여 취소 대신 공동구매 취소 버튼을 보여준다. 관리자는 작성자 여부와 무관하게
-// 모든 게시글에 관리 권한을 가지므로(2026-08-10 정책 확정), memberId 비교가 아니라 로그인
-// 유저의 role(JWT 클레임, authStore.isAdmin)만으로 판정한다. 실제 권한은 서버가 403으로
-// 최종 판단하므로, 이건 어디까지나 UX용 방어일 뿐이다
+// 목록/마이페이지 돌아가기 목적지에만 쓴다. /group-purchase/my는 requiresNonAdmin이라
+// 관리자는 from=my가 붙어 있어도 리스트로 보낸다. 취소 버튼 노출은 isAuthor가 담당한다.
 const isAdmin = ref(false);
+
+const currentMemberId = computed(() => {
+  const fromUser = authStore.user?.memberId;
+  if (fromUser != null && String(fromUser) !== '') {
+    return String(fromUser);
+  }
+  const sub = decodeJwtPayload(authStore.accessToken)?.sub;
+  return sub == null || String(sub) === '' ? null : String(sub);
+});
+
+// 작성자만 공동구매 자체를 취소할 수 있다. 다른 ADMIN은 버튼을 숨기고, 참여 이력이 있으면
+// 참여 취소만 보여 준다. 실제 권한은 서버가 403으로 최종 판단한다.
+const isAuthor = computed(() =>
+  status.value?.memberId != null
+  && currentMemberId.value != null
+  && String(status.value.memberId) === String(currentMemberId.value),
+);
+const canCancelListing = computed(() => isAuthor.value);
+const canLeaveParticipation = computed(() =>
+  !isAuthor.value && !!status.value?.participantInfo,
+);
+const showCancelButton = computed(() => canCancelListing.value || canLeaveParticipation.value);
 
 async function loadStatus() {
   isLoading.value = true;
@@ -140,13 +161,13 @@ const cancelError = ref('');
 const hasLeft = ref(false);
 
 const pinSheetDescription = computed(() =>
-  isAdmin.value
+  canCancelListing.value
     ? '공동구매를 취소하고 참여자 전원에게 환불하기 위해 확인해요'
     : '참여를 취소하고 환불받기 위해 확인해요',
 );
 
 const cancelSuccessMessage = computed(() =>
-  isAdmin.value
+  canCancelListing.value
     ? '참여자 전원에게 결제 금액이 환불 처리돼요'
     : '결제 금액은 환불 처리돼요',
 );
@@ -154,13 +175,13 @@ const cancelSuccessMessage = computed(() =>
 // PinAuthSheet의 @complete에서 입력된 6자리 PIN을 그대로 인자로 받아 password로 함께
 // 보낸다(백엔드가 cancel/leave 요청에도 password를 필수로 요구함, join과 동일한 이유로
 // 2026-08-18 확인) — 검증 자체는 백엔드가 처리하고 프론트는 전달만 한다.
-// 관리자는 groupPurchaseApi.cancel(공동구매 취소), 참여자는 groupPurchaseApi.leave(참여 취소)를 호출
+// 작성자는 groupPurchaseApi.cancel(공동구매 취소), 참여자는 groupPurchaseApi.leave(참여 취소)를 호출
 async function handleCancelConfirm(password) {
 
   cancelError.value = '';
   isCancelling.value = true;
   try {
-    if (isAdmin.value) {
+    if (canCancelListing.value) {
       await groupPurchaseApi.cancel(route.params.gpId, password);
       // 공동구매 자체가 취소된 경우에만 CANCELLED로 갱신 — 참여자 개별 취소(leave)는
       // 공동구매 자체를 취소하는 게 아니라서 이 값을 건드리면 "관리자가 취소한 공동구매"로
@@ -172,7 +193,7 @@ async function handleCancelConfirm(password) {
     }
     isCancelSuccessSheetOpen.value = true;
   } catch {
-    cancelError.value = isAdmin.value
+    cancelError.value = canCancelListing.value
       ? '공동구매 취소에 실패했어요. 다시 시도해주세요.'
       : '참여 취소에 실패했어요. 다시 시도해주세요.';
   } finally {
@@ -347,9 +368,10 @@ function confirmCancelSuccess() {
         {{ backLabel }}
       </AppButton>
 
-      <!-- 취소: 버튼은 항상 노출하고, 보류 중이 아니거나(이미 마감) 마감 기한이 지났으면 비활성화만 처리.
-           관리자는 공동구매 취소, 참여자는 참여 취소 -->
+      <!-- 취소: 작성자는 공동구매 취소, 참여자는 참여 취소. 둘 다 아니면 버튼을 숨긴다.
+           보류 중이 아니거나(이미 마감) 마감 기한이 지났으면 비활성화만 처리. -->
       <AppButton
+        v-if="showCancelButton"
         variant="danger"
         size="lg"
         block
@@ -357,7 +379,7 @@ function confirmCancelSuccess() {
         :loading="isCancelling"
         @click="isPinSheetOpen = true"
       >
-        {{ isAdmin ? '공동구매 취소' : '참여 취소하기' }}
+        {{ canCancelListing ? '공동구매 취소' : '참여 취소하기' }}
       </AppButton>
       <p
         v-if="cancelError"
