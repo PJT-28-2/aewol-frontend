@@ -124,6 +124,24 @@ describe('useTransactionStore', () => {
     expect(store.recentTransactions[0].subtitle).toBe('병원비')
   })
 
+  it('기존 공동구매 결제는 긴 상품명 대신 공동구매 결제로 표시한다', async () => {
+    transactionApi.getRecentTransactions.mockResolvedValue({
+      data: {
+        result: [{
+          ...backendTransaction,
+          merchantName: '아이펫유 제니쥬 밸런스케어 강아지 유산균 영양제 장건강 구강 피부 건강 60정',
+          memo: '공동구매 참여: 아이펫유 제니쥬 밸런스케어 강아지 유산균 영양제 장건강 구강 피부 건강 60정',
+        }],
+      },
+    })
+
+    const store = useTransactionStore()
+    await store.fetchRecentTransactions()
+
+    expect(store.recentTransactions[0].title).toBe('공동구매 결제')
+    expect(store.recentTransactions[0].memo).toContain('아이펫유 제니쥬')
+  })
+
   it('환불(REFUND) 거래는 양수 금액으로 변환하고, "충전"/"출금" 어느 필터 타입에도 속하지 않는 별도 type을 갖는다', async () => {
     transactionApi.getRecentTransactions.mockResolvedValue({
       data: {
@@ -151,7 +169,7 @@ describe('useTransactionStore', () => {
       id: '21',
       amount: 28000,
       type: 'refund',
-      title: '공동구매 참여취소 환불',
+      title: '공동구매 환불',
       subtitle: '',
     })
   })
