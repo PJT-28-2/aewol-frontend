@@ -38,6 +38,30 @@ const passwordChangeNotice = computed(() =>
 )
 let loginAttemptId = 0
 
+const getLoginErrorMessage = (error) => {
+  if (!error.response) {
+    return '네트워크 연결을 확인해 주세요.'
+  }
+
+  const status = error.response.status
+  if (status === 401) {
+    return '이메일 또는 비밀번호를 확인해 주세요.'
+  }
+
+  if (status === 503) {
+    const serverMessage = error.response.data?.message
+    return typeof serverMessage === 'string' && serverMessage.trim()
+      ? serverMessage
+      : '현재 서비스를 일시적으로 이용할 수 없습니다. 잠시 후 다시 시도해 주세요.'
+  }
+
+  if (status >= 500) {
+    return '서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.'
+  }
+
+  return error.response.data?.message ?? '이메일 또는 비밀번호를 확인해 주세요.'
+}
+
 onMounted(() => {
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '#f5f7f2')
 })
@@ -71,8 +95,7 @@ const handleEmailLogin = async () => {
   } catch (error) {
     // 뒤로간 뒤 도착한 오류가 로그인 선택 화면에 노출되는 것을 방지한다.
     if (currentAttemptId !== loginAttemptId) return
-    errorMessage.value =
-      error.response?.data?.message ?? '이메일 또는 비밀번호를 확인해 주세요.'
+    errorMessage.value = getLoginErrorMessage(error)
   } finally {
     if (currentAttemptId === loginAttemptId) {
       isLoading.value = false

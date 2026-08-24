@@ -35,6 +35,12 @@ const getKakaoButton = () =>
     button.textContent.includes('카카오로'),
   )
 
+const submitLogin = async () => {
+  host.querySelector('form').dispatchEvent(new Event('submit'))
+  await Promise.resolve()
+  await nextTick()
+}
+
 describe('LoginView Kakao OAuth 진입', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -68,5 +74,67 @@ describe('LoginView Kakao OAuth 진입', () => {
     await nextTick()
 
     expect(host.textContent).toContain('카카오 로그인 설정을 확인해 주세요.')
+  })
+
+  it('401이면 이메일 또는 비밀번호 오류를 표시한다', async () => {
+    mocks.authStore.login.mockRejectedValue({
+      response: { status: 401, data: {} },
+    })
+
+    await submitLogin()
+
+    expect(host.textContent).toContain('이메일 또는 비밀번호를 확인해 주세요.')
+  })
+
+  it('503이면 사용자용 서버 메시지를 표시한다', async () => {
+    mocks.authStore.login.mockRejectedValue({
+      response: {
+        status: 503,
+        data: { message: '현재 인증 서비스를 이용할 수 없습니다.' },
+      },
+    })
+
+    await submitLogin()
+
+    expect(host.textContent).toContain('현재 인증 서비스를 이용할 수 없습니다.')
+    expect(host.textContent).not.toContain('이메일 또는 비밀번호를 확인해 주세요.')
+  })
+
+  it('503에 사용자용 서버 메시지가 없으면 서비스 장애 안내를 표시한다', async () => {
+    mocks.authStore.login.mockRejectedValue({
+      response: { status: 503, data: {} },
+    })
+
+    await submitLogin()
+
+    expect(host.textContent).toContain(
+      '현재 서비스를 일시적으로 이용할 수 없습니다. 잠시 후 다시 시도해 주세요.',
+    )
+  })
+
+  it('응답이 없는 네트워크 오류이면 네트워크 안내를 표시한다', async () => {
+    mocks.authStore.login.mockRejectedValue(new Error('Network Error'))
+
+    await submitLogin()
+
+    expect(host.textContent).toContain('네트워크 연결을 확인해 주세요.')
+    expect(host.textContent).not.toContain('이메일 또는 비밀번호를 확인해 주세요.')
+  })
+
+  it('기타 5xx이면 일반 서버 오류 안내를 표시한다', async () => {
+    mocks.authStore.login.mockRejectedValue({
+      response: {
+        status: 500,
+        data: { message: 'Internal NullPointerException at AuthService' },
+      },
+    })
+
+    await submitLogin()
+
+    expect(host.textContent).toContain(
+      '서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.',
+    )
+    expect(host.textContent).not.toContain('Internal NullPointerException')
+    expect(host.textContent).not.toContain('이메일 또는 비밀번호를 확인해 주세요.')
   })
 })
