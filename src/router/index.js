@@ -575,6 +575,18 @@ const authRoutes = [
     meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
+    path: '/admin/diary-reports',
+    name: 'AdminDiaryReports',
+    component: () => import('@/views/admin/AdminDiaryReportListView.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true, adminFallback: '/settings', layout: 'DefaultLayout', showBack: true },
+  },
+  {
+    path: '/admin/diary-reports/:reportId',
+    name: 'AdminDiaryReportDetail',
+    component: () => import('@/views/admin/AdminDiaryReportDetailView.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true, adminFallback: '/settings', layout: 'DefaultLayout', showBack: true },
+  },
+  {
     path: '/settings',
     name: 'Settings',
     component: () => import('@/views/settings/SettingsView.vue'),

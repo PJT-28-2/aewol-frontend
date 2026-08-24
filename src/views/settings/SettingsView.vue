@@ -18,6 +18,7 @@ import IconNotificationBell from '@/components/common/icons/IconNotificationBell
 import IconRecurring from '@/components/common/icons/IconRecurring.vue'
 import IconSavings from '@/components/common/icons/IconSavings.vue'
 import IconWallet from '@/components/common/icons/IconWallet.vue'
+import IconWarning from '@/components/common/icons/IconWarning.vue'
 import IconMoon from '@/components/common/icons/IconMoon.vue'
 import dogProfileMascot from '@/assets/images/pet-dog-default-profile-v3.webp'
 import catProfileMascot from '@/assets/images/pet-cat-default-profile-v3.webp'
@@ -107,6 +108,13 @@ const settingItems = [
 ]
 
 const adminItems = [
+  {
+    title: '멍스타그램 신고 관리',
+    description: '신고 게시물 확인 및 처리',
+    path: '/admin/diary-reports',
+    icon: IconWarning,
+    tone: 'pink',
+  },
   {
     title: '고객문의 관리',
     description: '1:1 문의 답변',
