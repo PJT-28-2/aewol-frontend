@@ -89,3 +89,28 @@ describe('useShareStore - 가족 색상 배정', () => {
     expect(store.contributions[0].colorToken).toMatch(/^--color-chart-/)
   })
 })
+
+describe('useShareStore - 일기 작성 권한', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+    shareApi.getLogs.mockResolvedValue(wrap([]))
+    shareApi.getContributions.mockResolvedValue(wrap([]))
+  })
+
+  it('대표 보호자(ADMIN)와 MANAGER만 일기를 쓸 수 있다', async () => {
+    shareApi.getMembers.mockResolvedValue(wrap([
+      { id: '9001', name: '김애월', role: 'ADMIN' },
+      { id: '9002', name: '이지원', role: 'MANAGER' },
+      { id: '9003', name: '박보기', role: 'VIEWER' },
+    ]))
+
+    const store = useShareStore()
+    await store.fetchSharedCare('p1')
+
+    expect(store.canWriteDiary('9001')).toBe(true)
+    expect(store.canWriteDiary('9002')).toBe(true)
+    expect(store.canWriteDiary('9003')).toBe(false)
+    expect(store.canWriteDiary(null)).toBe(false)
+  })
+})
