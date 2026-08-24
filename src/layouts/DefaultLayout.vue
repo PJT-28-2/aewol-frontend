@@ -9,7 +9,7 @@ const route = useRoute()
 <template>
   <div
     class="flex min-h-svh flex-col"
-    :class="route.path.startsWith('/payment/qr') ? 'bg-(--color-navy)' : 'bg-(--color-app-bg)'"
+    :class="route.path.startsWith('/payment/qr') ? 'bg-(--color-brand-dark)' : 'bg-(--color-app-bg)'"
   >
     <PageHeader
       v-if="!route.meta.hideHeader"
@@ -22,7 +22,7 @@ const route = useRoute()
       :class="[
         route.meta.hideBottomNav ? 'pb-0' : 'pb-[calc(var(--bottom-nav-height)+var(--space-6)+env(safe-area-inset-bottom,0px))]',
         route.meta.hideHeader ? '' : 'pt-[calc(var(--header-height)+env(safe-area-inset-top,0px))]',
-        route.path.startsWith('/payment/qr') ? 'bg-(--color-navy)' : 'bg-(--color-app-bg)',
+        route.path.startsWith('/payment/qr') ? 'bg-(--color-brand-dark)' : 'bg-(--color-app-bg)',
       ]"
       :style="{
         '--page-top-offset': route.meta.hideHeader

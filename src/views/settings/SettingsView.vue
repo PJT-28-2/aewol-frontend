@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useMemberStore } from '@/stores/member'
 import { usePetStore } from '@/stores/pet'
+import { useThemeStore } from '@/stores/theme'
 import { withWaGwa } from '@/utils/korean'
 import AppButton from '@/components/common/AppButton.vue'
 import AppModal from '@/components/common/AppModal.vue'
@@ -18,6 +19,7 @@ import IconRecurring from '@/components/common/icons/IconRecurring.vue'
 import IconSavings from '@/components/common/icons/IconSavings.vue'
 import IconWallet from '@/components/common/icons/IconWallet.vue'
 import IconWarning from '@/components/common/icons/IconWarning.vue'
+import IconMoon from '@/components/common/icons/IconMoon.vue'
 import dogProfileMascot from '@/assets/images/pet-dog-default-profile-v3.webp'
 import catProfileMascot from '@/assets/images/pet-cat-default-profile-v3.webp'
 
@@ -25,6 +27,7 @@ const router = useRouter()
 const authStore = useAuthStore()
 const memberStore = useMemberStore()
 const petStore = usePetStore()
+const themeStore = useThemeStore()
 const showPasswordModal = ref(false)
 const showLogoutModal = ref(false)
 const profilePassword = ref('')
@@ -275,6 +278,42 @@ const confirmLogout = async () => {
           </span>
         </button>
       </nav>
+    </section>
+
+    <section
+      class="mt-(--space-7)"
+      aria-labelledby="display-settings-title"
+    >
+      <h2
+        id="display-settings-title"
+        class="mb-(--space-3) px-(--space-1) text-(length:--font-lg) font-bold text-(color:--color-navy)"
+      >
+        화면 설정
+      </h2>
+      <div class="flex min-h-20 items-center gap-(--space-3) rounded-[22px] bg-(--color-white) px-(--space-4)">
+        <FeatureIconTile
+          :icon="IconMoon"
+          tone="purple"
+        />
+        <span class="min-w-0 flex-1">
+          <strong class="block text-[13px] font-semibold text-(color:--color-navy)">다크 모드</strong>
+          <span class="mt-[3px] block text-[10px] text-(color:--color-slate-muted)">어두운 화면으로 눈의 피로를 줄여요</span>
+        </span>
+        <label class="cursor-pointer">
+          <input
+            class="peer sr-only"
+            type="checkbox"
+            role="switch"
+            aria-label="다크 모드"
+            :checked="themeStore.isDark"
+            @change="themeStore.setTheme($event.target.checked ? 'dark' : 'light')"
+          >
+          <span
+            class="relative block h-6 w-11 shrink-0 rounded-full bg-(--color-border) transition-colors after:absolute after:top-0.5 after:left-0.5 after:size-5 after:rounded-full after:bg-(--color-contrast) after:shadow-(--shadow-sm) after:transition-transform peer-checked:bg-(--color-leaf) peer-checked:after:translate-x-5 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-(--color-leaf-dark)"
+            aria-hidden="true"
+          />
+        </label>
+      </div>
     </section>
 
     <section class="mt-(--space-7)">

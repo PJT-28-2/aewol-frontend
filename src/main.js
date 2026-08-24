@@ -4,6 +4,9 @@ import App from './App.vue'
 import router from './router'
 import 'pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css'
 import './assets/styles/global.css'
+import { initializeTheme } from '@/stores/theme'
+
+initializeTheme()
 
 const app = createApp(App)
 

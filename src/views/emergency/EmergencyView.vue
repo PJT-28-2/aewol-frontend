@@ -94,8 +94,8 @@ const markerViews = computed(() =>
 );
 
 const markerPillClasses = {
-  selected: 'bg-(--color-navy) text-(color:--color-white)',
-  nearest: 'bg-(--color-danger-strong) text-(color:--color-white)',
+  selected: 'bg-(--color-brand-dark) text-(color:--color-contrast)',
+  nearest: 'bg-(--color-danger-strong) text-(color:--color-contrast)',
   default: 'bg-(--color-white) text-(color:--color-navy)',
 };
 
@@ -107,8 +107,8 @@ const markerTailClasses = {
 };
 
 const markerIconColors = {
-  selected: 'var(--color-white)',
-  nearest: 'var(--color-white)',
+  selected: 'var(--color-contrast)',
+  nearest: 'var(--color-contrast)',
   default: 'var(--color-danger-strong)',
 };
 
@@ -411,7 +411,7 @@ onBeforeUnmount(() => {
           class="pointer-events-auto cursor-pointer rounded-(--radius-full) px-(--space-4) py-(--space-2) text-(length:--font-sm) font-semibold shadow-(--shadow-md) transition-colors"
           :class="
             is24hOnly
-              ? 'bg-(--color-navy) text-(color:--color-white)'
+              ? 'bg-(--color-brand-dark) text-(color:--color-contrast)'
               : 'bg-(--color-white) text-(color:--color-slate-dark)'
           "
           :aria-pressed="is24hOnly"

@@ -27,7 +27,7 @@ defineProps({
       shape === 'pill' ? 'rounded-(--radius-full)' : 'rounded-(--radius-lg)',
       block ? 'flex-1' : '',
       selected
-        ? 'border-(--color-navy) bg-(--color-navy) text-(color:--color-white)'
+        ? 'border-(--color-navy) bg-(--color-brand-dark) text-(color:--color-contrast)'
         : 'border-(--color-border) bg-(--color-surface) text-(color:--color-slate-dark)',
     ]"
     type="button"
