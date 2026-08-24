@@ -65,4 +65,40 @@ describe('useExploreStore 요청 세대', () => {
     expect(store.posts.some((post) => post.diaryId === 'stale-more')).toBe(false)
     expect(store.isLoadingMore).toBe(false)
   })
+
+  it('피드와 프로필 더보기 로딩 잠금은 서로 풀지 않는다', async () => {
+    let resolveFeedMore
+    let resolveProfileMore
+    mocks.getFeed
+      .mockResolvedValueOnce(feed([{ diaryId: 'a' }], 'cursor-1'))
+      .mockReturnValueOnce(new Promise((resolve) => {
+        resolveFeedMore = resolve
+      }))
+    mocks.getPetProfile.mockResolvedValue({ data: { result: { petId: 'p1' } } })
+    mocks.getPetPosts
+      .mockResolvedValueOnce(feed([], 'profile-cursor'))
+      .mockReturnValueOnce(new Promise((resolve) => {
+        resolveProfileMore = resolve
+      }))
+
+    const store = useExploreStore()
+    await store.fetchFeed()
+    const feedMore = store.fetchMore()
+    await store.fetchPetProfile('p1')
+    const profileMore = store.fetchMorePetPosts('p1')
+
+    expect(store.isLoadingMore).toBe(true)
+    expect(store.isProfileLoadingMore).toBe(true)
+
+    resolveFeedMore(feed([{ diaryId: 'b' }]))
+    await feedMore
+
+    expect(store.isLoadingMore).toBe(false)
+    expect(store.isProfileLoadingMore).toBe(true)
+
+    resolveProfileMore(feed([{ diaryId: 'p' }]))
+    await profileMore
+
+    expect(store.isProfileLoadingMore).toBe(false)
+  })
 })
