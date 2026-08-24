@@ -49,7 +49,7 @@ export function getBankMeta(bankCode, fallbackName = '') {
     label: displayName.slice(0, 2),
     name: displayName,
     bg: 'bg-(--color-gray-400)',
-    text: 'text-(color:--color-white)',
+    text: 'text-(color:--color-contrast)',
   };
 }
 

@@ -171,7 +171,7 @@ onMounted(async () => {
           <button
             v-if="!isRepresentativePet"
             type="button"
-            class="inline-flex rounded-full bg-(--color-navy) px-(--space-3) py-(--space-2) text-(length:--font-xs) font-semibold text-(color:--color-white)"
+            class="inline-flex rounded-full bg-(--color-brand-dark) px-(--space-3) py-(--space-2) text-(length:--font-xs) font-semibold text-(color:--color-contrast)"
             @click="setRepresentativePet"
           >
             대표로 설정

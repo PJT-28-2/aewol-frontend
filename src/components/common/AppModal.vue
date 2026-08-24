@@ -50,10 +50,10 @@ function onOverlayClick(event) {
     >
       <div
         v-if="modelValue"
-        class="fixed inset-0 z-1000 flex items-center justify-center bg-[color-mix(in_srgb,var(--color-navy)_38%,transparent)] p-(--space-4) backdrop-blur-[2px]"
+        class="fixed inset-0 z-1000 flex items-center justify-center bg-[color-mix(in_srgb,var(--color-brand-dark)_38%,transparent)] p-(--space-4) backdrop-blur-[2px]"
         @click="onOverlayClick"
       >
-        <div class="flex max-h-[90vh] w-full max-w-[400px] flex-col overflow-hidden rounded-[28px] border border-(--color-card-border) bg-(--color-app-bg) shadow-[0_20px_60px_color-mix(in_srgb,var(--color-navy)_20%,transparent)]">
+        <div class="flex max-h-[90vh] w-full max-w-[400px] flex-col overflow-hidden rounded-[28px] border border-(--color-card-border) bg-(--color-app-bg) shadow-[0_20px_60px_color-mix(in_srgb,var(--color-brand-dark)_20%,transparent)]">
           <div
             v-if="showHeader"
             class="flex shrink-0 items-center gap-(--space-3) px-(--space-5) pt-(--space-5) pb-(--space-4)"

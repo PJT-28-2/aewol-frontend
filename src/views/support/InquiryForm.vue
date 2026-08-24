@@ -225,12 +225,12 @@ async function submit() {
             <span class="text-(length:--font-xs) text-(color:--color-gray-600) truncate w-full text-center">{{ item.file.name }}</span>
           </div>
           <button
-            class="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-(--color-navy) flex items-center justify-center"
+            class="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-(--color-brand-dark) flex items-center justify-center"
             @click="removeAttachment(index)"
           >
             <IconClose
               :size="10"
-              color="var(--color-white)"
+              color="var(--color-contrast)"
             />
           </button>
         </div>
