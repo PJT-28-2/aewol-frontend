@@ -86,11 +86,13 @@ const getSmsErrorMessage = (error, action) => {
 
 const handleRequestPhoneCode = async () => {
   if (!isPhoneValid.value || isSendingCode.value || isPhoneVerified.value) return
+  const requestedPhone = phoneDigits.value
   phoneMessage.value = { type: 'error', text: '' }
   codeMessage.value = ''
   isSendingCode.value = true
   try {
-    const { data } = await memberStore.sendPhoneVerificationCode(phoneDigits.value)
+    const { data } = await memberStore.sendPhoneVerificationCode(requestedPhone)
+    if (phoneDigits.value !== requestedPhone) return
     const expiresInSeconds = data?.result?.expiresInSeconds
     if (
       typeof expiresInSeconds !== 'number' ||
@@ -111,6 +113,7 @@ const handleRequestPhoneCode = async () => {
       text: '인증번호를 전송했습니다.',
     }
   } catch (error) {
+    if (phoneDigits.value !== requestedPhone) return
     phoneMessage.value = {
       type: 'error',
       text: getSmsErrorMessage(error, 'send'),
@@ -126,13 +129,16 @@ const handleVerifyPhoneCode = async () => {
     codeMessage.value = '인증번호 6자리를 입력해주세요.'
     return
   }
+  const requestedPhone = phoneDigits.value
   codeMessage.value = ''
   isVerifyingCode.value = true
   try {
-    await memberStore.verifyPhoneCode(phoneDigits.value, verificationCode.value)
+    await memberStore.verifyPhoneCode(requestedPhone, verificationCode.value)
+    if (phoneDigits.value !== requestedPhone) return
     isPhoneVerified.value = true
     codeMessage.value = '전화번호 인증이 완료되었습니다.'
   } catch (error) {
+    if (phoneDigits.value !== requestedPhone) return
     isPhoneVerified.value = false
     codeMessage.value = getSmsErrorMessage(error, 'verify')
   } finally {
