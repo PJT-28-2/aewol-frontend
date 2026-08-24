@@ -383,16 +383,25 @@ export const useDonationStore = defineStore('donation', {
 
     async saveSettings(draft = {}) {
       if (this.isSubmitting) return false
+      const autoDonate = draft.autoDonate ?? this.autoDonate
+      const campaignId = draft.campaignId !== undefined
+        ? draft.campaignId
+        : (autoDonate ? this.currentCampaign?.id : null)
+      if (autoDonate) {
+        const campaign = this.campaigns.find((item) => item.id === campaignId)
+        if (campaign?.donatable === false) {
+          this.operationError = '시연용 캠페인은 자동 기부로 저장할 수 없어요.'
+          return false
+        }
+      }
       this.isSubmitting = true
       this.operationError = ''
       try {
         const payload = {
           piggyBankEnabled: draft.piggyBankEnabled ?? this.piggyBankEnabled,
           savingUnit: draft.savingUnit ?? this.savingUnit,
-          autoDonate: draft.autoDonate ?? this.autoDonate,
-          campaignId: draft.campaignId !== undefined
-            ? draft.campaignId
-            : (this.autoDonate ? this.currentCampaign?.id : null),
+          autoDonate,
+          campaignId: autoDonate ? campaignId : null,
         }
         const settings = unwrap(await donationApi.saveSettings(payload))
         this.savingUnit = Number(settings.savingUnit)
