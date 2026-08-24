@@ -60,7 +60,9 @@ async function submit() {
         보장할 수 없다. 지킬 수 없는 약속을 하느니 지금 일어난 일만 정확히 적는다.
       -->
       <p class="mb-0 mt-(--space-2) text-(length:--font-sm) leading-[1.6] text-(--color-slate-dark)">
-        이 게시물은 바로 보이지 않게 처리했어요. 고객센터에서 확인할게요.
+        {{ receipt.hidden
+          ? '이 게시물은 바로 보이지 않게 처리했어요. 고객센터에서 확인할게요.'
+          : '고객센터에서 확인할게요. 지금은 게시물을 바로 내리지 않아요.' }}
       </p>
       <p
         v-if="receipt.inquiryNumber"
@@ -87,7 +89,7 @@ async function submit() {
         이 게시물을 신고할까요?
       </h2>
       <p class="mb-0 mt-(--space-2) text-(length:--font-xs) leading-[1.5] text-(--color-slate-muted)">
-        신고하면 확인이 끝날 때까지 이 게시물이 보이지 않아요.
+        여러 건의 신고가 모이면 확인이 끝날 때까지 게시물이 보이지 않아요.
       </p>
 
       <fieldset class="mt-(--space-4) border-0 p-0">

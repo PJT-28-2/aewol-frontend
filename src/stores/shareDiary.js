@@ -157,12 +157,14 @@ export const useShareDiaryStore = defineStore('shareDiary', {
       }
     },
 
-    /** 접수 즉시 노출이 멈춘다. 목록에서도 바로 빼서 다시 신고하지 않게 한다. */
+    /** 임계치에 닿아 숨겨진 글만 목록에서 뺀다. 접수만 된 글은 그대로 둔다. */
     async reportDiary(diaryId, reason) {
       this.isSubmitting = true
       try {
         const result = unwrap(await shareApi.reportDiary(diaryId, reason))
-        this.diaries = this.diaries.filter((diary) => diary.id !== diaryId)
+        if (result?.hidden) {
+          this.diaries = this.diaries.filter((diary) => diary.id !== diaryId)
+        }
         return result
       } finally {
         this.isSubmitting = false

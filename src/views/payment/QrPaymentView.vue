@@ -1,5 +1,5 @@
 <script setup>
-import { computed, nextTick, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import IconCheck from '@/components/common/icons/IconCheck.vue'
 import IconImage from '@/components/common/icons/IconImage.vue'
@@ -10,17 +10,29 @@ import AppButton from '@/components/common/AppButton.vue'
 import FeatureIconTile from '@/components/common/FeatureIconTile.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { transactionApi } from '@/api/transaction'
+import { useAuthStore } from '@/stores/auth'
 import { useWalletStore } from '@/stores/wallet'
 import { usePetStore } from '@/stores/pet'
 import { FILE_DECODE_ERROR_MESSAGE, useQrScanner } from '@/composables/useQrScanner'
+import {
+  barcodeStripes,
+  buildPaymentToken,
+  formatPaymentToken,
+  qrModules,
+  remainingRefreshSeconds,
+} from '@/utils/paymentBarcode'
 import { parseQrPayment } from '@/utils/qr'
 
 const router = useRouter()
+const authStore = useAuthStore()
 const walletStore = useWalletStore()
 const petStore = usePetStore()
 
 // scan(스캔 대기) → confirm(인식 결과 확인) → done(결제 완료)
 const step = ref('scan')
+const paySurface = ref('scan')
+const nowMs = ref(Date.now())
+let refreshTimer = null
 const fileInput = ref(null)
 const isDecodingFile = ref(false)
 // QR을 읽었지만 결제 정보로 쓸 수 없을 때의 안내(다른 앱 QR, 손상된 페이로드 등)
@@ -52,9 +64,33 @@ const isBalanceShort = computed(
 const { videoRef, isCameraOn, isCameraStarting, cameraError, startCamera, stopCamera, decodeImageFile } =
   useQrScanner({ onDetect: handleDetected })
 
+const paymentToken = computed(() => buildPaymentToken(authStore.accessToken || 'guest', nowMs.value))
+const formattedPaymentToken = computed(() => formatPaymentToken(paymentToken.value))
+const barcodeBits = computed(() => barcodeStripes(paymentToken.value))
+const qrBits = computed(() => qrModules(paymentToken.value))
+const qrCells = computed(() => qrBits.value.flatMap((row, y) =>
+  row.map((filled, x) => ({ key: `${x}-${y}`, x, y, filled }))))
+const refreshSeconds = computed(() => remainingRefreshSeconds(nowMs.value))
+
 onMounted(() => {
   loadBalance()
   petStore.pets.length ? Promise.resolve() : petStore.fetchPets().catch(() => {})
+  startCamera()
+  refreshTimer = window.setInterval(() => {
+    nowMs.value = Date.now()
+  }, 1000)
+})
+
+onUnmounted(() => {
+  if (refreshTimer !== null) window.clearInterval(refreshTimer)
+})
+
+watch(paySurface, async (surface) => {
+  if (surface === 'barcode') {
+    stopCamera()
+    return
+  }
+  await nextTick()
   startCamera()
 })
 
@@ -164,7 +200,7 @@ function toPaymentErrorMessage(error) {
   <section class="min-h-svh bg-(--color-brand-dark) px-(--space-5) pt-(--space-3) pb-(--space-8) text-(color:--color-contrast)">
     <header class="mb-(--space-5) flex h-[42px] items-center justify-between">
       <h1 class="text-(length:--font-2xl) font-bold">
-        QR 결제
+        {{ paySurface === 'barcode' && step === 'scan' ? '바코드 결제' : 'QR 결제' }}
       </h1>
       <button
         type="button"
@@ -175,9 +211,33 @@ function toPaymentErrorMessage(error) {
       </button>
     </header>
 
-    <!-- 1단계: 스캔 -->
+    <!-- 1단계: 스캔 또는 내 바코드 -->
     <template v-if="step === 'scan'">
-      <p class="text-(length:--font-sm) text-(color:--color-slate-light)">
+      <div class="grid grid-cols-2 rounded-(--radius-full) bg-(--color-navy-light) p-[4px]">
+        <button
+          type="button"
+          class="h-[38px] rounded-(--radius-full) text-(length:--font-sm) font-semibold"
+          :class="paySurface === 'scan'
+            ? 'bg-(--color-leaf) text-(color:--color-navy)'
+            : 'text-(color:--color-slate-light)'"
+          @click="paySurface = 'scan'"
+        >
+          QR 스캔
+        </button>
+        <button
+          type="button"
+          class="h-[38px] rounded-(--radius-full) text-(length:--font-sm) font-semibold"
+          :class="paySurface === 'barcode'
+            ? 'bg-(--color-leaf) text-(color:--color-navy)'
+            : 'text-(color:--color-slate-light)'"
+          @click="paySurface = 'barcode'"
+        >
+          내 바코드
+        </button>
+      </div>
+
+      <template v-if="paySurface === 'scan'">
+      <p class="mt-(--space-4) text-(length:--font-sm) text-(color:--color-slate-light)">
         매장의 QR을 화면 안에 맞춰주세요.
       </p>
 
@@ -262,6 +322,57 @@ function toPaymentErrorMessage(error) {
         />
         {{ scanMessage }}
       </p>
+      </template>
+
+      <template v-else>
+        <p class="mt-(--space-4) text-(length:--font-sm) text-(color:--color-slate-light)">
+          매장 직원에게 이 바코드를 보여주세요.
+        </p>
+        <article class="mt-(--space-4) rounded-[30px] bg-(--color-white) px-(--space-5) py-(--space-6) text-(color:--color-navy)">
+          <svg
+            class="h-[72px] w-full"
+            :viewBox="`0 0 ${barcodeBits.length} 40`"
+            preserveAspectRatio="none"
+            role="img"
+            aria-label="결제 바코드"
+          >
+            <rect
+              v-for="(filled, index) in barcodeBits"
+              :key="index"
+              :x="index"
+              y="0"
+              width="1"
+              height="40"
+              :fill="filled ? '#14213D' : '#ffffff'"
+            />
+          </svg>
+          <p class="mt-(--space-3) text-center font-mono text-(length:--font-lg) font-bold tracking-[0.18em]">
+            {{ formattedPaymentToken }}
+          </p>
+          <div class="mt-(--space-5) flex justify-center">
+            <svg
+              class="size-[148px] rounded-(--radius-md) bg-(--color-white)"
+              viewBox="0 0 21 21"
+              shape-rendering="crispEdges"
+              role="img"
+              aria-label="결제 QR"
+            >
+              <rect
+                v-for="cell in qrCells"
+                :key="cell.key"
+                :x="cell.x"
+                :y="cell.y"
+                width="1"
+                height="1"
+                :fill="cell.filled ? '#14213D' : '#ffffff'"
+              />
+            </svg>
+          </div>
+          <p class="mt-(--space-4) text-center text-(length:--font-xs) text-(color:--color-slate-muted)">
+            {{ refreshSeconds }}초 후 코드가 바뀌어요 · 시연용이라 실제 결제는 되지 않아요
+          </p>
+        </article>
+      </template>
     </template>
 
     <!-- 2단계: 인식 결과 확인 -->
@@ -423,6 +534,7 @@ function toPaymentErrorMessage(error) {
         </p>
       </div>
       <button
+        v-if="paySurface === 'scan'"
         type="button"
         class="mt-(--space-5) flex h-(--control-height-lg) w-full items-center justify-center gap-(--space-2) rounded-[18px] bg-(--color-leaf-soft) text-(length:--font-sm) font-bold disabled:opacity-50"
         :disabled="isDecodingFile"
