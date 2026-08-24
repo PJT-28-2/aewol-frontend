@@ -543,6 +543,32 @@ const authRoutes = [
     meta: { requiresAuth: true, layout: 'DefaultLayout', hideHeader: true },
   },
   {
+    path: '/admin/inquiries',
+    name: 'AdminInquiries',
+    component: () => import('@/views/admin/AdminInquiryListView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      adminFallback: '/settings',
+      layout: 'DefaultLayout',
+      showBack: true,
+      title: '문의 관리',
+    },
+  },
+  {
+    path: '/admin/inquiries/:inquiryId',
+    name: 'AdminInquiryDetail',
+    component: () => import('@/views/admin/AdminInquiryDetailView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      adminFallback: '/settings',
+      layout: 'DefaultLayout',
+      showBack: true,
+      title: '문의 상세',
+    },
+  },
+  {
     path: '/emergency',
     name: 'Emergency',
     component: () => import('@/views/emergency/EmergencyView.vue'),

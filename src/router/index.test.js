@@ -177,6 +177,17 @@ describe('Global 인증 Router Guard', () => {
     expect(router.currentRoute.value.path).toBe('/settings')
   })
 
+  it('일반 사용자가 관리자 문의 화면에 접근하면 설정 화면으로 이동한다', async () => {
+    localStorage.setItem('accessToken', createAccessToken('USER'))
+    localStorage.setItem('refreshToken', 'persisted-refresh-token')
+    const memberStore = useMemberStore()
+    memberStore.profile = { id: 1, provider: 'LOCAL' }
+
+    await navigateTo('/admin/inquiries')
+
+    expect(router.currentRoute.value.path).toBe('/settings')
+  })
+
   it('관리자는 관리자 신고 화면에 접근할 수 있다', async () => {
     localStorage.setItem('accessToken', createAccessToken('ADMIN'))
     localStorage.setItem('refreshToken', 'persisted-refresh-token')
@@ -185,5 +196,16 @@ describe('Global 인증 Router Guard', () => {
     await navigateTo('/admin/diary-reports')
 
     expect(router.currentRoute.value.path).toBe('/admin/diary-reports')
+  })
+
+  it('관리자는 관리자 문의 화면에 접근할 수 있다', async () => {
+    localStorage.setItem('accessToken', createAccessToken('ADMIN'))
+    localStorage.setItem('refreshToken', 'persisted-refresh-token')
+    const memberStore = useMemberStore()
+    memberStore.profile = { id: 1, provider: 'LOCAL' }
+
+    await navigateTo('/admin/inquiries')
+
+    expect(router.currentRoute.value.path).toBe('/admin/inquiries')
   })
 })

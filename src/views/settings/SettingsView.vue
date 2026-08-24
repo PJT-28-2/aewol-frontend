@@ -115,6 +115,13 @@ const adminItems = [
     icon: IconWarning,
     tone: 'pink',
   },
+  {
+    title: '고객문의 관리',
+    description: '1:1 문의 답변',
+    path: '/admin/inquiries',
+    icon: IconChatBubble,
+    tone: 'gray',
+  },
 ]
 
 const handleMenuClick = (item) => {
@@ -263,18 +270,18 @@ const confirmLogout = async () => {
       >
         <button
           v-for="item in adminItems"
-          :key="item.title"
+          :key="item.path"
           type="button"
-          class="flex w-full items-center gap-(--space-3) p-(--space-4) text-left active:bg-(--color-gray-100)"
+          class="flex min-h-20 w-full items-center gap-(--space-3) px-(--space-4) text-left transition-colors active:bg-(--color-info-surface)"
           @click="handleMenuClick(item)"
         >
           <FeatureIconTile
             :icon="item.icon"
             :tone="item.tone"
           />
-          <span class="min-w-0">
-            <strong class="block text-[13px] font-semibold text-(color:--color-navy)">{{ item.title }}</strong>
-            <small class="mt-1 block text-(length:--font-xs) text-(color:--color-slate-muted)">{{ item.description }}</small>
+          <span class="min-w-0 flex-1">
+            <strong class="block text-[13px] font-bold text-(color:--color-navy)">{{ item.title }}</strong>
+            <span class="mt-[3px] block text-[10px] text-(color:--color-slate-muted)">{{ item.description }}</span>
           </span>
         </button>
       </nav>
