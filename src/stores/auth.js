@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { authApi } from '@/api/auth'
 import { useMemberStore } from '@/stores/member'
 import { useAccountStore } from '@/stores/account'
+import { usePaymentStore } from '@/stores/payment'
 import router from '@/router'
 import { decodeJwtPayload } from '@/utils/jwt'
 import { isValidToken } from '@/utils/token'
@@ -108,12 +109,16 @@ export const useAuthStore = defineStore('auth', {
       window.sessionStorage.removeItem('pendingTossCharge')
       window.sessionStorage.removeItem('completedTossCharge')
       window.sessionStorage.removeItem('pendingWalletWithdrawal')
+      window.sessionStorage.removeItem('pendingRecurringCreate')
       useMemberStore().clearProfile()
       // 로그아웃/세션 종료 시 간편비밀번호 로컬 상태도 같이 지운다. fetchProfile이
       // 다시 호출될 때 서버 값으로 동기화되긴 하지만, 로그아웃 직후처럼 그 호출이
       // 바로 일어나지 않는 화면에서 이전 계정의 PIN 설정 흔적이 남지 않도록
       // 여기서도 한번 더 초기화해준다(2026-08-13, defense-in-depth).
       useAccountStore().setHasSimplePassword(false)
+      // sessionStorage만 지우면 이미 만들어진 payment store의 멱등키가 메모리에
+      // 남아, 새로고침 없이 다른 계정으로 같은 내용을 등록할 때 이전 키가 재사용된다.
+      usePaymentStore().clearCreateKey()
     },
 
     async login(email, password) {
