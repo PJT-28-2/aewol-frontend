@@ -4,13 +4,14 @@ import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router';
 import { withEulReul } from '@/utils/korean';
 import AppButton from '@/components/common/AppButton.vue';
 import AppInput from '@/components/common/AppInput.vue';
+import BirthDateSelect from '@/components/common/BirthDateSelect.vue';
 import FeatureIconTile from '@/components/common/FeatureIconTile.vue';
 import ConfirmDeleteModal from '@/components/common/ConfirmDeleteModal.vue';
 import IconClose from '@/components/common/icons/IconClose.vue';
 import { petApi } from '@/api/pet';
 import { usePetStore } from '@/stores/pet';
 import { useMemberStore } from '@/stores/member';
-import { formatBirthDateInput, isValidCalendarDate } from '@/utils/date';
+import { isValidCalendarDate } from '@/utils/date';
 import IconDog from '@/components/common/icons/IconDog.vue';
 import IconCat from '@/components/common/icons/IconCat.vue';
 
@@ -57,13 +58,6 @@ const isDisconnectingRegistration = ref(false);
 const BIRTH_DATE_PATTERN = /^\d{4}\.\d{2}\.\d{2}$/;
 const REG_NUMBER_PATTERN = /^(\d{12}|\d{15})$/;
 const REGISTRATION_ERROR_PATTERN = /등록번호|등록정보|소유자|승인/;
-const birthDateInput = computed({
-  get: () => form.value.birthDate,
-  set: (value) => {
-    form.value.birthDate = formatBirthDateInput(value);
-  },
-});
-
 function getDocumentFileName(document) {
   if (!document) return '';
 
@@ -120,7 +114,7 @@ function validateForm() {
   if (!form.value.name.trim()) return '이름을 입력해주세요.';
   if (!form.value.breed.trim()) return '견종을 입력해주세요.';
   if (!BIRTH_DATE_PATTERN.test(form.value.birthDate)) {
-    return '생년월일을 2023.05.12 형식으로 입력해주세요.';
+    return '생년월일을 선택해주세요.';
   }
   if (!isValidCalendarDate(form.value.birthDate)) {
     return '올바른 생년월일을 입력해주세요.';
@@ -509,13 +503,7 @@ function handleDocumentDelete() {
           :placeholder="breedPlaceholder"
         />
 
-        <AppInput
-          v-model="birthDateInput"
-          variant="soft"
-          type="text"
-          label="생년월일"
-          placeholder="2023.05.12"
-        />
+        <BirthDateSelect v-model="form.birthDate" />
 
         <div>
           <p
