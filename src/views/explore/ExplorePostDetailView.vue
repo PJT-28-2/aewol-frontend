@@ -25,11 +25,12 @@ const dateLabel = computed(() => {
     .format(parsed)
 })
 
-function handleReported() {
-  isReporting.value = false
-  // 신고하면 서버가 즉시 노출을 멈춘다. 화면에 글을 그대로 두면 처리되지 않은 것처럼
-  // 보이므로 자리 자체를 바꿔 결과를 분명히 한다.
-  isReported.value = true
+function handleReported(receipt) {
+  // 임계치 미만이면 글은 그대로 둔다. 다이얼로그가 접수 결과를 보여 준다.
+  if (receipt?.hidden) {
+    isReporting.value = false
+    isReported.value = true
+  }
 }
 
 /*

@@ -86,6 +86,18 @@ describe('DiaryReportDialog', () => {
     expect(host.textContent).toContain('AEW-20260821-0055')
   })
 
+  it('아직 숨기지 않은 접수는 글을 바로 내리지 않았다고 알려준다', async () => {
+    mocks.reportDiary.mockResolvedValue({ reportId: '1', inquiryNumber: 'AEW-20260821-0055', hidden: false })
+    await mount()
+    await pickReason('SPAM')
+
+    submitButton().click()
+    await flush()
+
+    expect(host.textContent).toContain('지금은 게시물을 바로 내리지 않아요')
+    expect(host.textContent).not.toContain('바로 보이지 않게 처리했어요')
+  })
+
   // 문의 생성이 실패해도 신고 자체는 접수된다. 접수번호만 없다.
   it('접수번호가 없어도 접수 사실은 알려준다', async () => {
     mocks.reportDiary.mockResolvedValue({ reportId: '1', inquiryNumber: null, hidden: true })
