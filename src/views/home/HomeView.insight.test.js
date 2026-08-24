@@ -203,7 +203,8 @@ describe('HomeView AI 인사이트 카드', () => {
     await mountView()
 
     expect(countOccurrences(host.textContent, '이번 달 총지출')).toBe(1)
-    const amount = host.querySelector('[data-testid="monthly-spending-amount"]')
+    const amount = host.querySelector('[data-testid="monthly-spending-amount-card"]')
+    expect(host.querySelector('[data-testid="monthly-spending-amount-summary"]')).toBeNull()
     expect(amount?.getAttribute('aria-label')).toBe('0원을 사용했어요')
     expect([...amount.querySelectorAll('span')].map((span) => span.textContent))
       .toEqual(['0원', '사용했어요'])
@@ -217,7 +218,8 @@ describe('HomeView AI 인사이트 카드', () => {
     await mountView()
 
     expect(countOccurrences(host.textContent, '이번 달 총지출')).toBe(1)
-    const amount = host.querySelector('[data-testid="monthly-spending-amount"]')
+    const amount = host.querySelector('[data-testid="monthly-spending-amount-summary"]')
+    expect(host.querySelector('[data-testid="monthly-spending-amount-card"]')).toBeNull()
     expect(amount?.getAttribute('aria-label')).toBe('0원을 사용했어요')
     expect([...amount.querySelectorAll('span')].map((span) => span.textContent))
       .toEqual(['0원', '사용했어요'])
