@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAdminDiaryReportStore } from '@/stores/adminDiaryReport'
 import AppButton from '@/components/common/AppButton.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
+import { diaryReportResolutionLabel } from './diaryReportResolution'
 
 const route = useRoute()
 const router = useRouter()
@@ -137,7 +138,7 @@ onMounted(() => store.fetchReport(String(route.params.reportId)))
         class="mt-(--space-4) rounded-(--radius-xl) bg-(--color-leaf-soft) p-(--space-4)"
       >
         <p class="font-bold text-(color:--color-navy)">
-          {{ store.selectedReport.resolution === 'RESTORE' ? '게시물 복원 완료' : '게시물 숨김 유지 완료' }}
+          {{ diaryReportResolutionLabel(store.selectedReport.resolution) }}
         </p>
         <p
           v-if="store.selectedReport.adminNote"
