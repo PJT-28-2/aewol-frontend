@@ -34,6 +34,14 @@ export const useMemberStore = defineStore('member', {
       await memberApi.verifyPassword(currentPassword)
     },
 
+    async sendPhoneVerificationCode(phone) {
+      return memberApi.sendPhoneVerificationCode(phone)
+    },
+
+    async verifyPhoneCode(phone, verificationCode) {
+      await memberApi.verifyPhoneCode(phone, verificationCode)
+    },
+
     async changePassword(currentPassword, newPassword) {
       await memberApi.changePassword(currentPassword, newPassword)
     },
