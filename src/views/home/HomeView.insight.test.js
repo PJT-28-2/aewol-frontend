@@ -149,6 +149,24 @@ describe('HomeView AI 인사이트 카드', () => {
     expect(headlineRow?.textContent).toContain('황칠복이 받을 수 있는 지원 1건')
   })
 
+  it('분석 종류별 아이콘에 서로 다른 파스텔 톤을 적용한다', async () => {
+    mocks.getHomeInsights.mockResolvedValue({
+      data: {
+        result: [
+          card({ type: 'SUPPORT' }),
+          card({ type: 'CARE' }),
+          card({ type: 'DONATION' }),
+        ],
+      },
+    })
+    await mountView()
+
+    const tiles = [...host.querySelectorAll('[data-testid="insight-icon-tile"]')]
+    expect(tiles[0]?.classList.contains('bg-(--color-icon-yellow-soft)')).toBe(true)
+    expect(tiles[1]?.classList.contains('bg-(--color-icon-pink-soft)')).toBe(true)
+    expect(tiles[2]?.classList.contains('bg-(--color-icon-purple-soft)')).toBe(true)
+  })
+
   // fallback은 서버가 데이터로 조립한 문구다. AI가 썼다고 표시하면 사실과 다르다.
   it('모든 카드가 fallback이면 AI 배지를 달지 않는다', async () => {
     mocks.getHomeInsights.mockResolvedValue({
@@ -280,6 +298,13 @@ describe('HomeView AI 인사이트 카드', () => {
     const legendLabels = [...host.querySelectorAll('[aria-labelledby="home-insight-title"] li')].map((el) => el.textContent)
     expect(legendLabels.some((text) => text.includes('사료') && text.includes('80%'))).toBe(true)
     expect(legendLabels.some((text) => text.includes('간식') && text.includes('17%'))).toBe(true)
+
+    const segmentColors = [...host.querySelectorAll('[aria-labelledby="home-insight-title"] svg circle')]
+      .slice(1)
+      .map((circle) => circle.getAttribute('stroke'))
+    const legendColors = [...host.querySelectorAll('[aria-labelledby="home-insight-title"] li > span > span:first-child')]
+      .map((dot) => dot.style.background)
+    expect(legendColors).toEqual(segmentColors)
   })
 
   // categoryBreakdown이 없으면(집계 실패 등) 빈 도넛을 억지로 그리지 않는다.
