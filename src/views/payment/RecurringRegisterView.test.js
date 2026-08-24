@@ -98,4 +98,16 @@ describe('RecurringRegisterView 마켓 진입', () => {
     expect(merchantInput.value).toBe('')
     expect(merchantInput.readOnly).toBe(false)
   })
+
+  it('등록 금액이 지갑 잔액보다 크면 제출하지 않는다', async () => {
+    mocks.query = { merchant: '멍냥마켓', amount: '100001', category: 'FOOD' }
+
+    await mountView()
+
+    expect(host.textContent).toContain('잔액이 부족합니다.')
+    const submit = [...host.querySelectorAll('button')].find(
+      (button) => button.textContent.trim() === '정기결제 등록하기',
+    )
+    expect(submit.disabled).toBe(true)
+  })
 })
