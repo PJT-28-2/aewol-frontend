@@ -86,6 +86,22 @@ describe('LoginView Kakao OAuth 진입', () => {
     expect(host.textContent).toContain('이메일 또는 비밀번호를 확인해 주세요.')
   })
 
+  it('429이면 서버 메시지를 표시한다', async () => {
+    mocks.authStore.login.mockRejectedValue({
+      response: {
+        status: 429,
+        data: { message: '로그인 시도가 너무 많습니다. 15분 후 다시 시도해주세요.' },
+      },
+    })
+
+    await submitLogin()
+
+    expect(host.textContent).toContain(
+      '로그인 시도가 너무 많습니다. 15분 후 다시 시도해주세요.',
+    )
+    expect(host.textContent).not.toContain('이메일 또는 비밀번호를 확인해 주세요.')
+  })
+
   it('503이면 사용자용 서버 메시지를 표시한다', async () => {
     mocks.authStore.login.mockRejectedValue({
       response: {
