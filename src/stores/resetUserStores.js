@@ -25,6 +25,8 @@ import { useWalletStore } from '@/stores/wallet'
  */
 export function resetUserStores() {
   bumpSessionEpoch()
+  // 정기결제 등록 멱등키는 Pinia 밖 sessionStorage에 있어 $reset만으로는 안 지워진다.
+  sessionStorage.removeItem('pendingRecurringCreate')
   if (!getActivePinia()) return
 
   useMemberStore().clearProfile()
