@@ -78,6 +78,7 @@ async function donate() {
 }
 
 async function saveSettings() {
+  if (draftAutoDonate.value && draftCampaign.value?.donatable === false) return
   const saved = await donationStore.saveSettings({
     piggyBankEnabled: draftPiggyBankEnabled.value,
     savingUnit: draftSavingUnit.value,
@@ -103,7 +104,11 @@ watch(
     draftPiggyBankEnabled.value = piggyBankEnabled.value
     draftSavingUnit.value = savingUnit.value
     draftAutoDonate.value = autoDonate.value
-    draftCampaignId.value = currentCampaign.value?.id ?? ''
+    const currentId = currentCampaign.value?.id ?? ''
+    const currentIsDonatable = currentCampaign.value?.donatable !== false
+    draftCampaignId.value = currentIsDonatable
+      ? currentId
+      : (donationStore.campaigns.find((campaign) => campaign.donatable !== false)?.id ?? '')
   },
   { immediate: true },
 )
@@ -810,7 +815,7 @@ onMounted(loadDonationData)
         block
         size="lg"
         variant="primary"
-        :disabled="donationStore.isSubmitting || (draftPiggyBankEnabled && draftAutoDonate && !draftCampaign)"
+        :disabled="donationStore.isSubmitting || (draftAutoDonate && draftCampaign?.donatable === false) || (draftPiggyBankEnabled && draftAutoDonate && !draftCampaign)"
         :loading="donationStore.isSubmitting"
         @click="saveSettings"
       >
