@@ -87,6 +87,7 @@ describe('RecurringRegisterView 마켓 진입', () => {
     expect(amountInput.value).toBe('12900')
     expect(amountInput.readOnly).toBe(true)
     expect(host.textContent).toContain('매월 15일')
+    expect(host.textContent).toContain('등록하면 오늘 바로 결제되고')
   })
 
   it('쿼리가 없으면 빈 등록 폼을 보여준다', async () => {
