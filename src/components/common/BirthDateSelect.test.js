@@ -128,4 +128,13 @@ describe('BirthDateSelect 레거시 값 보호', () => {
     expect([...host.querySelectorAll('select')].map((select) => select.value))
       .toEqual(['', '', '']);
   });
+
+  it('실제로 존재하지 않는 날짜도 빈 문자열로 emit하지 않는다', async () => {
+    mountPicker('2023.02.30');
+    await nextTick();
+
+    expect(model.value).toBe('2023.02.30');
+    expect([...host.querySelectorAll('select')].map((select) => select.value))
+      .toEqual(['', '', '']);
+  });
 });
