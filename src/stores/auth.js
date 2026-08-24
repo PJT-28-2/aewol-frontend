@@ -3,6 +3,7 @@ import { authApi } from '@/api/auth'
 import { useMemberStore } from '@/stores/member'
 import { useAccountStore } from '@/stores/account'
 import { usePaymentStore } from '@/stores/payment'
+import { resetUserStores } from '@/stores/resetUserStores'
 import router from '@/router'
 import { decodeJwtPayload } from '@/utils/jwt'
 import { isValidToken } from '@/utils/token'
@@ -119,6 +120,10 @@ export const useAuthStore = defineStore('auth', {
       // sessionStorage만 지우면 이미 만들어진 payment store의 멱등키가 메모리에
       // 남아, 새로고침 없이 다른 계정으로 같은 내용을 등록할 때 이전 키가 재사용된다.
       usePaymentStore().clearCreateKey()
+      // 토큰만 지우고 기부·정기결제·반려동물 등을 남기면, 같은 브라우저에서 다음
+      // 계정이 이전 조회 결과와 캐시 플래그를 그대로 쓴다. 세션 epoch를 올려
+      // 로그아웃 전에 떠난 요청이 새 세션을 다시 채우지 못하게 한다.
+      resetUserStores()
     },
 
     async login(email, password) {

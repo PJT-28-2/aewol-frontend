@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { walletApi } from '@/api/wallet'
+import { beginSessionTask, isCurrentSession } from '@/utils/sessionEpoch'
 
 const PENDING_WITHDRAWAL_KEY = 'pendingWalletWithdrawal'
 const PENDING_TOSS_CHARGE_KEY = 'pendingTossCharge'
@@ -53,12 +54,15 @@ export const useWalletStore = defineStore('wallet', {
 
   actions: {
     async fetchWallet() {
+      const epoch = beginSessionTask()
       try {
         // 백엔드 응답은 { status, message, result: WalletResponse } 래퍼라 data.result가 실제 지갑 정보
         const { data } = await walletApi.getWallet()
+        if (!isCurrentSession(epoch)) return this.wallet
         this.wallet = normalizeWallet(data.result)
         return this.wallet
       } catch (error) {
+        if (!isCurrentSession(epoch)) throw error
         // 이전 화면에서 조회한 잔액을 최신 값처럼 노출하지 않는다.
         this.wallet = null
         throw error
@@ -164,6 +168,13 @@ export const useWalletStore = defineStore('wallet', {
       this.pendingWithdrawal = null
       sessionStorage.removeItem(PENDING_WITHDRAWAL_KEY)
       return result
+    },
+
+    resetForLogout() {
+      this.wallet = null
+      this.pendingWithdrawal = null
+      this.pendingTossCharge = null
+      this.completedTossCharge = null
     },
   },
 })

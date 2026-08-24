@@ -20,6 +20,10 @@ vi.mock('@/stores/account', () => ({
   }),
 }))
 
+vi.mock('@/stores/resetUserStores', () => ({
+  resetUserStores: vi.fn(),
+}))
+
 vi.mock('@/api/auth', () => ({
   authApi: {
     login: vi.fn(),

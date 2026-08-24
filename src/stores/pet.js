@@ -1,5 +1,6 @@
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { petApi } from '@/api/pet'
+import { beginSessionTask, isCurrentSession } from '@/utils/sessionEpoch'
 
 const normalizePet = (pet) => ({
   ...pet,
@@ -25,7 +26,9 @@ export const usePetStore = defineStore('pet', {
 
   actions: {
     async fetchPets() {
+      const epoch = beginSessionTask()
       const { data } = await petApi.getPets()
+      if (!isCurrentSession(epoch)) return this.pets
       this.pets = (data.result ?? []).map(normalizePet)
       if (!this.pets.some((pet) => pet.id === this.representativePetId)) {
         this.representativePetId = this.pets[0]?.id ?? null
@@ -71,6 +74,13 @@ export const usePetStore = defineStore('pet', {
         this.representativePetId = String(id)
         persistRepresentativePet(this.representativePetId)
       }
+    },
+
+    resetForLogout() {
+      this.pets = []
+      this.currentPet = null
+      this.representativePetId = null
+      persistRepresentativePet(null)
     },
   },
 })

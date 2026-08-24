@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { recurringApi } from '@/api/recurring'
+import { beginSessionTask, isCurrentSession } from '@/utils/sessionEpoch'
 
 const PENDING_CREATE_KEY = 'pendingRecurringCreate'
 
@@ -89,9 +90,11 @@ export const usePaymentStore = defineStore('payment', {
   actions: {
     async fetchRecurringPayments() {
       if (this.hasFetchedRecurringPayments) return
+      const epoch = beginSessionTask()
       // 실패 시 flag를 세우지 않아 다음 진입에서 재시도한다.
       // 조회에 실패하면 목록은 비운 채로 두어 EmptyState가 노출되게 한다(가짜 데이터 금지).
       const { data } = await recurringApi.getRecurrings()
+      if (!isCurrentSession(epoch)) return
       this.recurringPayments = (data.result ?? []).map(fromApiShape)
       this.hasFetchedRecurringPayments = true
     },

@@ -11,6 +11,7 @@ vi.mock('@/api/share', () => ({
 }))
 
 import { shareApi } from '@/api/share'
+import { bumpSessionEpoch } from '@/utils/sessionEpoch'
 import { useShareStore } from './share'
 
 const wrap = (result) => ({ data: { result } })
@@ -87,6 +88,27 @@ describe('useShareStore - 가족 색상 배정', () => {
 
     expect(store.contributions[0].colorToken).toBe(store.members[0].colorToken)
     expect(store.contributions[0].colorToken).toMatch(/^--color-chart-/)
+  })
+
+  it('로그아웃 후 같은 순번으로 도착한 이전 계정 응답은 버린다', async () => {
+    let resolvePrevious
+    shareApi.getMembers.mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolvePrevious = resolve
+      }),
+    )
+    shareApi.getContributions.mockResolvedValue(wrap([]))
+
+    const store = useShareStore()
+    const previous = store.fetchSharedCare('pet-a')
+    bumpSessionEpoch()
+    store.$reset()
+    shareApi.getMembers.mockResolvedValue(wrap([{ id: 'new', name: '새 가족' }]))
+    await store.fetchSharedCare('pet-b')
+    resolvePrevious(wrap([{ id: 'old', name: '이전 가족' }]))
+    await previous
+
+    expect(store.members.map((member) => member.id)).toEqual(['new'])
   })
 })
 
