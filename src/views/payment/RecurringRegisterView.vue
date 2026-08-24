@@ -105,13 +105,17 @@ function selectDay(day) {
 // 사용자가 placeholder처럼 콤마를 넣어 입력해도(예: "32,000") 정상 인식되도록
 // 숫자가 아닌 문자는 모두 제거하고 파싱한다.
 const numericAmount = computed(() => Number(String(amount.value).replace(/[^0-9]/g, '')) || 0);
+const isAmountOverBalance = computed(
+  () => !isEditMode.value && numericAmount.value > walletBalance.value,
+);
 
 const canSubmit = computed(
   () =>
     !!merchantName.value.trim() &&
     numericAmount.value > 0 &&
     !!category.value &&
-    !!selectedPetId.value,
+    !!selectedPetId.value &&
+    !isAmountOverBalance.value,
 );
 
 const isSubmitting = ref(false);
@@ -314,6 +318,12 @@ async function handleSubmit() {
           class="text-(length:--font-sm) text-(color:--color-slate-muted) mt-(--space-1)"
         >
           잔액 {{ walletBalance.toLocaleString() }}원
+        </p>
+        <p
+          v-if="isAmountOverBalance"
+          class="text-(length:--font-sm) text-(color:--color-danger-strong) mt-(--space-1)"
+        >
+          잔액이 부족합니다.
         </p>
       </div>
     </section>
