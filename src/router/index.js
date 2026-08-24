@@ -471,6 +471,12 @@ const authRoutes = [
     meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
   },
   {
+    path: '/donation/deposit',
+    name: 'DonationDeposit',
+    component: () => import('@/views/donation/DonationDepositView.vue'),
+    meta: { requiresAuth: true, layout: 'DefaultLayout', showBack: true },
+  },
+  {
     path: '/donation/confirm',
     name: 'DonationConfirm',
     component: () => import('@/views/donation/DonationView.vue'),
