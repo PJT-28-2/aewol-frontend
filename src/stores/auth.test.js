@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   fetchProfile: vi.fn(),
   clearProfile: vi.fn(),
   setHasSimplePassword: vi.fn(),
+  resetUserStores: vi.fn(),
   routerPush: vi.fn(),
 }))
 
@@ -32,6 +33,10 @@ vi.mock('@/stores/account', () => ({
   useAccountStore: () => ({
     setHasSimplePassword: mocks.setHasSimplePassword,
   }),
+}))
+
+vi.mock('@/stores/resetUserStores', () => ({
+  resetUserStores: mocks.resetUserStores,
 }))
 
 vi.mock('@/router', () => ({
@@ -315,8 +320,7 @@ describe('useAuthStore Kakao OAuth', () => {
     expect(localStorage.getItem('refreshToken')).toBeNull()
     expect(store.registrationToken).toBeNull()
     expect(sessionStorage.getItem(REGISTRATION_TOKEN_KEY)).toBeNull()
-    expect(mocks.clearProfile).toHaveBeenCalledOnce()
-    expect(mocks.setHasSimplePassword).toHaveBeenCalledWith(false)
+    expect(mocks.resetUserStores).toHaveBeenCalledOnce()
   })
 
   it('잘못된 Kakao LOGIN_COMPLETE 응답은 기존 인증과 stale 가입 세션을 제거한다', async () => {
