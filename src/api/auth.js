@@ -20,10 +20,6 @@ export const authApi = {
     return api.post('/auth/signup/verify-code', { email, verificationCode })
   },
 
-  verifyEmail(email, code) {
-    return api.post('/auth/verify-email', { email, code })
-  },
-
   kakaoLogin(code) {
     return api.post('/auth/oauth/kakao', null, {
       params: { code },

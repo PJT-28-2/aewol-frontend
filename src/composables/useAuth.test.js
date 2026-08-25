@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   fetchProfile: vi.fn(),
   clearProfile: vi.fn(),
   setHasSimplePassword: vi.fn(),
+  resetUserSessionStores: vi.fn(),
 }))
 
 vi.mock('@/stores/member', () => ({
