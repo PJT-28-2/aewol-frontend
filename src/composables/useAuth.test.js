@@ -21,8 +21,8 @@ vi.mock('@/stores/account', () => ({
   }),
 }))
 
-vi.mock('@/stores/sessionStoreReset', () => ({
-  resetUserSessionStores: mocks.resetUserSessionStores,
+vi.mock('@/stores/resetUserStores', () => ({
+  resetUserStores: vi.fn(),
 }))
 
 vi.mock('@/api/auth', () => ({

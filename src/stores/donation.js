@@ -5,6 +5,7 @@ import {
   savingUnits,
 } from '@/constants/donation'
 import { formatWon } from '@/utils/bankMeta'
+import { beginSessionTask, isCurrentSession } from '@/utils/sessionEpoch'
 
 const DEFAULT_CATEGORY = donationCategories[0]
 const DEFAULT_SAVING_UNIT = savingUnits[savingUnits.length - 1]
@@ -14,6 +15,7 @@ const unwrap = (response) => response.data?.result
 export const useDonationStore = defineStore('donation', {
   state: () => ({
     balance: 0,
+    walletBalance: 0,
     monthlySaved: 0,
     impactMessage: '',
     amount: 3000,
@@ -33,8 +35,14 @@ export const useDonationStore = defineStore('donation', {
     // (campaignId, amount) 조합에 묶인 멱등키를 성공 전까지 보관한다.
     pendingDonationKey: null,
     pendingDonationSignature: '',
+    pendingWithdrawKey: null,
+    pendingWithdrawSignature: '',
+    pendingDepositKey: null,
+    pendingDepositSignature: '',
     withdrawAmount: 0,
     withdrawError: '',
+    depositAmount: 0,
+    depositError: '',
     isLoading: true,
     isSubmitting: false,
     isInitialized: false,
@@ -54,6 +62,10 @@ export const useDonationStore = defineStore('donation', {
     preferredCampaigns: (state) =>
       state.campaigns.filter((campaign) => campaign.preferred),
 
+    isCurrentCampaignDonatable() {
+      return this.currentCampaign?.donatable !== false
+    },
+
     filteredCampaigns: (state) => {
       const keyword = state.searchKeyword.trim().toLowerCase()
 
@@ -70,8 +82,12 @@ export const useDonationStore = defineStore('donation', {
       })
     },
 
-    canDonate: (state) =>
-      Boolean(state.selectedCampaignId) && state.amount > 0 && state.amount <= state.balance,
+    canDonate() {
+      return Boolean(this.selectedCampaignId)
+        && this.amount > 0
+        && this.amount <= this.balance
+        && this.isCurrentCampaignDonatable
+    },
 
     balanceAfterDonation: (state) => Math.max(state.balance - state.amount, 0),
 
@@ -81,6 +97,12 @@ export const useDonationStore = defineStore('donation', {
     balanceAfterWithdraw: (state) =>
       Math.max(state.balance - state.withdrawAmount, 0),
 
+    canDeposit: (state) =>
+      state.depositAmount > 0 && state.depositAmount <= state.walletBalance,
+
+    balanceAfterDeposit: (state) =>
+      Math.max(state.walletBalance - state.depositAmount, 0),
+
     isFiltering: (state) =>
       Boolean(state.searchKeyword.trim()) ||
       state.activeCategory !== DEFAULT_CATEGORY,
@@ -88,13 +110,16 @@ export const useDonationStore = defineStore('donation', {
 
   actions: {
     async fetchDonationData() {
+      const epoch = beginSessionTask()
       this.isLoading = true
       this.error = ''
       this.operationError = ''
 
       try {
         const result = unwrap(await donationApi.getOverview())
+        if (!isCurrentSession(epoch)) return
         this.balance = Number(result?.balance ?? 0)
+        this.walletBalance = Number(result?.walletBalance ?? 0)
         this.monthlySaved = Number(result?.monthlySaved ?? 0)
         this.impactMessage = result?.impactMessage ?? ''
         this.campaigns = result?.campaigns ?? []
@@ -118,11 +143,12 @@ export const useDonationStore = defineStore('donation', {
         }
         this.isInitialized = true
       } catch (error) {
+        if (!isCurrentSession(epoch)) return
         this.campaigns = []
         this.selectedCampaignId = ''
         this.error = error.response?.data?.message || '저금통 정보를 불러오지 못했어요. 다시 시도해 주세요.'
       } finally {
-        this.isLoading = false
+        if (isCurrentSession(epoch)) this.isLoading = false
       }
     },
 
@@ -228,9 +254,13 @@ export const useDonationStore = defineStore('donation', {
         return this.pendingDonationKey
       }
       this.pendingDonationSignature = signature
-      this.pendingDonationKey = globalThis.crypto?.randomUUID?.()
-        ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`
+      this.pendingDonationKey = this.newIdempotencyKey()
       return this.pendingDonationKey
+    },
+
+    newIdempotencyKey() {
+      return globalThis.crypto?.randomUUID?.()
+        ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`
     },
 
     clearDonationKey() {
@@ -264,12 +294,28 @@ export const useDonationStore = defineStore('donation', {
       this.operationError = ''
     },
 
+    resolveWithdrawKey() {
+      const signature = `withdraw:${this.withdrawAmount}`
+      if (this.pendingWithdrawKey && this.pendingWithdrawSignature === signature) {
+        return this.pendingWithdrawKey
+      }
+      this.pendingWithdrawSignature = signature
+      this.pendingWithdrawKey = this.newIdempotencyKey()
+      return this.pendingWithdrawKey
+    },
+
     async withdraw() {
       if (!this.validateWithdrawAmount() || this.isSubmitting) return false
       this.isSubmitting = true
       this.operationError = ''
       try {
-        const result = unwrap(await donationApi.withdrawPot(this.withdrawAmount))
+        const result = unwrap(await donationApi.withdrawPot(
+          this.withdrawAmount,
+          this.resolveWithdrawKey(),
+        ))
+        this.pendingWithdrawKey = null
+        this.pendingWithdrawSignature = ''
+        this.walletBalance += this.withdrawAmount
         this.balance = Number(result.balance)
         return true
       } catch (error) {
@@ -280,18 +326,86 @@ export const useDonationStore = defineStore('donation', {
       }
     },
 
+    setDepositAmount(amount) {
+      const nextAmount = Number.isFinite(amount) ? Math.floor(amount) : 0
+      this.depositAmount = Math.max(nextAmount, 0)
+      this.depositError = ''
+      this.operationError = ''
+    },
+
+    validateDepositAmount() {
+      if (this.depositAmount <= 0) {
+        this.depositError = '넣을 금액을 입력해주세요.'
+        return false
+      }
+      if (this.depositAmount > this.walletBalance) {
+        this.depositError = `애월지갑 잔액 ${formatWon(this.walletBalance)}을 초과했어요.`
+        return false
+      }
+      this.depositError = ''
+      return true
+    },
+
+    resetDeposit() {
+      this.depositAmount = 0
+      this.depositError = ''
+      this.operationError = ''
+    },
+
+    resolveDepositKey() {
+      const signature = `deposit:${this.depositAmount}`
+      if (this.pendingDepositKey && this.pendingDepositSignature === signature) {
+        return this.pendingDepositKey
+      }
+      this.pendingDepositSignature = signature
+      this.pendingDepositKey = this.newIdempotencyKey()
+      return this.pendingDepositKey
+    },
+
+    async deposit() {
+      if (!this.validateDepositAmount() || this.isSubmitting) return false
+      this.isSubmitting = true
+      this.operationError = ''
+      try {
+        const result = unwrap(await donationApi.depositPot(
+          this.depositAmount,
+          this.resolveDepositKey(),
+        ))
+        this.pendingDepositKey = null
+        this.pendingDepositSignature = ''
+        this.walletBalance = Math.max(this.walletBalance - this.depositAmount, 0)
+        this.monthlySaved += this.depositAmount
+        this.balance = Number(result.balance)
+        return true
+      } catch (error) {
+        this.operationError = error.response?.data?.message || '저금통에 넣지 못했어요. 다시 시도해 주세요.'
+        return false
+      } finally {
+        this.isSubmitting = false
+      }
+    },
+
     async saveSettings(draft = {}) {
       if (this.isSubmitting) return false
+      const autoDonate = draft.autoDonate ?? this.autoDonate
+      const campaignId = draft.campaignId !== undefined
+        ? draft.campaignId
+        : (autoDonate ? this.currentCampaign?.id : null)
+      if (autoDonate) {
+        const campaign = this.campaigns.find((item) => item.id === campaignId)
+        if (campaign?.donatable === false) {
+          this.operationError = '시연용 캠페인은 자동 기부로 저장할 수 없어요.'
+          return false
+        }
+      }
       this.isSubmitting = true
       this.operationError = ''
       try {
         const payload = {
           piggyBankEnabled: draft.piggyBankEnabled ?? this.piggyBankEnabled,
           savingUnit: draft.savingUnit ?? this.savingUnit,
-          autoDonate: draft.autoDonate ?? this.autoDonate,
-          campaignId: draft.campaignId !== undefined
-            ? draft.campaignId
-            : (this.autoDonate ? this.currentCampaign?.id : null),
+          autoDonate,
+          campaignId: autoDonate ? campaignId : null,
         }
         const settings = unwrap(await donationApi.saveSettings(payload))
         this.savingUnit = Number(settings.savingUnit)

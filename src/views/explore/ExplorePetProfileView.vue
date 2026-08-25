@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import EmptyState from '@/components/common/EmptyState.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
@@ -29,16 +29,22 @@ const instagramUrl = computed(() =>
 const sentinel = ref(null)
 let observer
 
-onMounted(async () => {
-  await exploreStore.fetchPetProfile(petId.value)
-
+onMounted(() => {
   if (typeof IntersectionObserver === 'undefined') return
   observer = new IntersectionObserver((entries) => {
     if (entries.some((entry) => entry.isIntersecting)) {
       exploreStore.fetchMorePetPosts(petId.value)
     }
   })
-  if (sentinel.value) observer.observe(sentinel.value)
+})
+
+watch(petId, (id) => {
+  if (id) exploreStore.fetchPetProfile(id)
+}, { immediate: true })
+
+watch(sentinel, (el) => {
+  observer?.disconnect()
+  if (el) observer.observe(el)
 })
 
 onBeforeUnmount(() => observer?.disconnect())
@@ -105,14 +111,14 @@ onBeforeUnmount(() => observer?.disconnect())
       </a>
 
       <EmptyState
-        v-if="exploreStore.profilePosts.length === 0"
+        v-if="exploreStore.profilePosts.length === 0 && !exploreStore.profileHasMore"
         class="mt-(--space-6)"
         :icon="IconPaw"
         message="아직 공개한 일기가 없어요."
       />
 
       <ul
-        v-else
+        v-else-if="exploreStore.profilePosts.length > 0"
         class="m-0 mt-(--space-5) grid list-none grid-cols-3 gap-[2px] p-0"
       >
         <li

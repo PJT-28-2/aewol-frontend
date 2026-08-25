@@ -186,13 +186,9 @@ const docGuideItems = [
     class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-(--space-6)"
   >
     <header class="mb-(--space-6)">
-      <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-1)">
+      <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">
         보험금 청구 서류 작성
       </h1>
-      <p class="text-(length:--font-md) text-(color:--color-slate-muted) leading-relaxed">
-        진료 영수증을 업로드하면 AI가 항목을 자동으로 인식해<br>
-        서류 초안을 만들어드려요
-      </p>
     </header>
 
     <p
@@ -273,12 +269,9 @@ const docGuideItems = [
     class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-(--space-6)"
   >
     <header class="mb-(--space-6)">
-      <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-1)">
+      <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">
         보험금 청구 서류 확인
       </h1>
-      <p class="text-(length:--font-md) text-(color:--color-slate-muted)">
-        AI가 인식한 항목을 확인해주세요
-      </p>
     </header>
 
     <OcrResultCard
@@ -300,12 +293,9 @@ const docGuideItems = [
     class="min-h-screen bg-(--color-app-bg) p-(--space-4) pb-(--space-6)"
   >
     <header class="mb-(--space-5)">
-      <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy) mb-(--space-1)">
+      <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">
         보험금 청구 서류 초안
       </h1>
-      <p class="text-(length:--font-md) text-(color:--color-slate-muted) leading-relaxed">
-        영수증 정보로 자동 작성했어요 · 부족한 항목만 채워주세요
-      </p>
     </header>
 
     <!-- 요약 통계 -->

@@ -9,7 +9,7 @@ const mocks = vi.hoisted(() => ({
   fetchProfile: vi.fn(),
   clearProfile: vi.fn(),
   setHasSimplePassword: vi.fn(),
-  resetUserSessionStores: vi.fn(),
+  resetUserStores: vi.fn(),
   routerPush: vi.fn(),
 }))
 
@@ -35,8 +35,8 @@ vi.mock('@/stores/account', () => ({
   }),
 }))
 
-vi.mock('@/stores/sessionStoreReset', () => ({
-  resetUserSessionStores: mocks.resetUserSessionStores,
+vi.mock('@/stores/resetUserStores', () => ({
+  resetUserStores: mocks.resetUserStores,
 }))
 
 vi.mock('@/router', () => ({
@@ -46,6 +46,7 @@ vi.mock('@/router', () => ({
 }))
 
 import { useAuthStore } from './auth'
+import { usePaymentStore } from './payment'
 
 const REGISTRATION_TOKEN_KEY = 'kakaoRegistrationToken'
 
@@ -320,9 +321,24 @@ describe('useAuthStore Kakao OAuth', () => {
     expect(localStorage.getItem('refreshToken')).toBeNull()
     expect(store.registrationToken).toBeNull()
     expect(sessionStorage.getItem(REGISTRATION_TOKEN_KEY)).toBeNull()
-    expect(mocks.clearProfile).toHaveBeenCalledOnce()
-    expect(mocks.resetUserSessionStores).toHaveBeenCalledOnce()
-    expect(mocks.setHasSimplePassword).toHaveBeenCalledWith(false)
+    expect(mocks.resetUserStores).toHaveBeenCalledOnce()
+  })
+
+  it('clearSession이 진행 중인 정기결제 등록 멱등키도 지운다', () => {
+    const paymentStore = usePaymentStore()
+    paymentStore.pendingCreateKey = 'rec-1'
+    paymentStore.pendingCreateSignature = 'pet-1:사료:1000:15:FOOD'
+    sessionStorage.setItem(
+      'pendingRecurringCreate',
+      JSON.stringify({ key: 'rec-1', signature: 'pet-1:사료:1000:15:FOOD' }),
+    )
+    const store = useAuthStore()
+
+    store.clearSession()
+
+    expect(sessionStorage.getItem('pendingRecurringCreate')).toBeNull()
+    expect(paymentStore.pendingCreateKey).toBeNull()
+    expect(paymentStore.pendingCreateSignature).toBe('')
   })
 
   it('잘못된 Kakao LOGIN_COMPLETE 응답은 기존 인증과 stale 가입 세션을 제거한다', async () => {

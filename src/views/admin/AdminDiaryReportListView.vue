@@ -45,9 +45,6 @@ onMounted(() => store.fetchReports({ page: 0 }))
       <h1 class="mt-(--space-1) text-(length:--font-2xl) font-extrabold text-(color:--color-navy)">
         멍스타그램 신고 관리
       </h1>
-      <p class="mt-(--space-2) text-(length:--font-sm) text-(color:--color-slate-muted)">
-        신고된 게시물을 확인하고 노출 여부를 결정합니다.
-      </p>
     </header>
 
     <div

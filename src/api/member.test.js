@@ -42,3 +42,30 @@ describe('memberApi notification settings', () => {
     expect(response.data.result).toEqual(settings)
   })
 })
+
+describe('memberApi phone verification', () => {
+  afterEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('전화번호 변경 인증번호를 발송한다', async () => {
+    api.post.mockResolvedValue({ data: { result: { expiresInSeconds: 300 } } })
+
+    await memberApi.sendPhoneVerificationCode('01099998888')
+
+    expect(api.post).toHaveBeenCalledWith('/users/me/phone/send-code', {
+      phone: '01099998888',
+    })
+  })
+
+  it('전화번호 변경 인증번호를 검증한다', async () => {
+    api.post.mockResolvedValue({ data: { result: null } })
+
+    await memberApi.verifyPhoneCode('01099998888', '123456')
+
+    expect(api.post).toHaveBeenCalledWith('/users/me/phone/verify-code', {
+      phone: '01099998888',
+      verificationCode: '123456',
+    })
+  })
+})

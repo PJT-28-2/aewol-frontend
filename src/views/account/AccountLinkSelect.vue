@@ -53,9 +53,6 @@ function selectBank(bankCode) {
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">
         계좌 연동하기
       </h1>
-      <p class="text-(length:--font-md) text-(color:--color-slate-muted) mt-(--space-1)">
-        연동할 은행을 선택해주세요
-      </p>
     </header>
 
     <div
