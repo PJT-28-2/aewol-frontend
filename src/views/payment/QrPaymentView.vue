@@ -1,6 +1,6 @@
 <script setup>
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import IconCheck from '@/components/common/icons/IconCheck.vue'
 import IconImage from '@/components/common/icons/IconImage.vue'
 import IconQrCode from '@/components/common/icons/IconQrCode.vue'
@@ -21,12 +21,15 @@ import {
   qrModules,
   remainingRefreshSeconds,
 } from '@/utils/paymentBarcode'
-import { parseQrPayment } from '@/utils/qr'
+import { parsePaymentQuery, parseQrPayment } from '@/utils/qr'
 
+const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 const walletStore = useWalletStore()
 const petStore = usePetStore()
+// 멍냥마켓처럼 외부에서 /payment/qr?merchant=&amount= 로 열리면 스캔을 건너뛴다.
+const openedFromAppLink = ref(false)
 
 // scan(스캔 대기) → confirm(인식 결과 확인) → done(결제 완료)
 const step = ref('scan')
@@ -75,7 +78,7 @@ const refreshSeconds = computed(() => remainingRefreshSeconds(nowMs.value))
 onMounted(() => {
   loadBalance()
   petStore.pets.length ? Promise.resolve() : petStore.fetchPets().catch(() => {})
-  startCamera()
+  if (!applyPaymentQuery()) startCamera()
   refreshTimer = window.setInterval(() => {
     nowMs.value = Date.now()
   }, 1000)
@@ -93,6 +96,18 @@ watch(paySurface, async (surface) => {
   await nextTick()
   startCamera()
 })
+
+function applyPaymentQuery() {
+  const parsed = parsePaymentQuery(route.query)
+  if (!parsed.ok) return false
+
+  openedFromAppLink.value = true
+  scanMessage.value = ''
+  paymentError.value = ''
+  detectedPayment.value = { merchantName: parsed.merchantName, amount: parsed.amount }
+  step.value = 'confirm'
+  return true
+}
 
 async function loadBalance() {
   isBalanceLoading.value = true
@@ -119,13 +134,21 @@ function handleDetected(text) {
 }
 
 async function restartScan() {
+  openedFromAppLink.value = false
   scanMessage.value = ''
   paymentError.value = ''
   detectedPayment.value = null
   step.value = 'scan'
+  if (route.query.merchant || route.query.amount) {
+    router.replace({ path: '/payment/qr' })
+  }
   // v-if로 감춰둔 스캔 영역이 다시 그려져야 video 엘리먼트에 스트림을 붙일 수 있다.
   await nextTick()
   startCamera()
+}
+
+function cancelAppLink() {
+  router.push('/home')
 }
 
 function openGallery() {
@@ -200,7 +223,13 @@ function toPaymentErrorMessage(error) {
   <section class="min-h-svh bg-(--color-brand-dark) px-(--space-5) pt-(--space-3) pb-(--space-8) text-(color:--color-contrast)">
     <header class="mb-(--space-5) flex h-[42px] items-center justify-between">
       <h1 class="text-(length:--font-2xl) font-bold">
-        {{ paySurface === 'barcode' && step === 'scan' ? '바코드 결제' : 'QR 결제' }}
+        {{
+          openedFromAppLink
+            ? '결제'
+            : paySurface === 'barcode' && step === 'scan'
+              ? '바코드 결제'
+              : 'QR 결제'
+        }}
       </h1>
       <button
         type="button"
@@ -451,9 +480,9 @@ function toPaymentErrorMessage(error) {
           block
           class="text-(color:--color-slate-light)"
           :disabled="isPaying"
-          @click="restartScan"
+          @click="openedFromAppLink ? cancelAppLink() : restartScan()"
         >
-          다시 스캔하기
+          {{ openedFromAppLink ? '취소' : '다시 스캔하기' }}
         </AppButton>
       </div>
     </template>

@@ -108,14 +108,11 @@ onMounted(() => {
         class="rounded-(--radius-2xl) border border-(--color-card-border) bg-(--color-leaf-soft) px-[var(--space-5)] py-[var(--space-4)] text-(--color-navy) shadow-(--shadow-card)"
       >
         <span
-          class="block text-[length:var(--font-sm)] text-(--color-slate-light)"
+          class="block text-[length:var(--font-sm)] text-(--color-slate-dark)"
         >내 저금통 잔액</span>
         <strong class="block text-[length:var(--font-2xl)]">
           ₩{{ balance.toLocaleString('ko-KR') }}
         </strong>
-        <small
-          class="block text-[length:var(--font-sm)] text-(--color-slate-light)"
-        >지갑으로 옮길 금액을 입력해주세요</small>
       </section>
 
       <template v-if="hasBalance">

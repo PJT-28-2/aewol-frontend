@@ -170,9 +170,6 @@ async function handleSubmit() {
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">
         반려동물 프로필 등록
       </h1>
-      <p class="mt-(--space-1) text-(length:--font-md) text-(color:--color-slate-muted)">
-        함께할 반려동물 정보를 입력해주세요
-      </p>
     </header>
     <form
       class="flex flex-col gap-(--space-4)"

@@ -37,14 +37,9 @@ const showBackButton = computed(() => route.query.from === 'share')
       </button>
     </div>
 
-    <h1 class="m-0 mt-[var(--space-4)] text-(length:--font-2xl) font-bold text-(--color-navy)">
+    <h1 class="m-0 mt-[var(--space-4)] mb-[var(--space-8)] text-(length:--font-2xl) font-bold text-(--color-navy)">
       애월 시작하기
     </h1>
-    <p
-      class="mb-[var(--space-8)] mt-[var(--space-1)] text-(length:--font-md) text-(--color-slate-muted)"
-    >
-      새 반려동물을 등록하거나 초대링크로 참여해보세요
-    </p>
 
     <AppButton
       class="mb-[var(--space-6)] !h-[calc(var(--space-10)*3)] !rounded-[var(--radius-xl)] !border !border-(--color-border) !px-[var(--space-4)] !py-[var(--space-7)]"
@@ -59,11 +54,6 @@ const showBackButton = computed(() => route.query.from === 'share')
           tone="green"
         />
         <strong class="text-(length:--font-base) font-semibold text-(--color-navy)">새로운 반려동물 등록</strong>
-        <small
-          class="mt-[var(--space-1)] text-(length:--font-sm) font-normal text-(--color-slate-muted)"
-        >
-          첫 반려동물을 등록하고 애월을 시작해보세요
-        </small>
       </span>
     </AppButton>
 
@@ -80,11 +70,6 @@ const showBackButton = computed(() => route.query.from === 'share')
           tone="blue"
         />
         <strong class="text-(length:--font-base) font-semibold text-(--color-navy)">초대 링크로 참여</strong>
-        <small
-          class="mt-[var(--space-1)] text-(length:--font-sm) font-normal text-(--color-slate-muted)"
-        >
-          가족이나 친구로부터 받은 초대 링크를 입력해보세요
-        </small>
       </span>
     </AppButton>
   </main>

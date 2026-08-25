@@ -22,9 +22,7 @@ watchEffect(() => {
   const styles = getComputedStyle(document.documentElement);
   const themeColor = route.path.startsWith('/payment/qr')
     ? styles.getPropertyValue('--color-brand-dark').trim()
-    : route.path === '/login'
-      ? styles.getPropertyValue('--color-leaf-soft').trim()
-      : styles.getPropertyValue('--color-app-bg').trim();
+    : styles.getPropertyValue('--color-app-bg').trim();
 
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', themeColor);
 });

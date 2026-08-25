@@ -16,12 +16,14 @@ import IconPaw from '@/components/common/icons/IconPaw.vue'
 import IconPlus from '@/components/common/icons/IconPlus.vue'
 import { useShareStore } from '@/stores/share'
 import { useShareDiaryStore } from '@/stores/shareDiary'
+import { useMemberStore } from '@/stores/member'
 import { formatDateDot, formatYearMonth } from '@/utils/date'
 
 const route = useRoute()
 const router = useRouter()
 const shareStore = useShareStore()
 const diaryStore = useShareDiaryStore()
+const memberStore = useMemberStore()
 
 const selectedPetId = ref('')
 const deleteTargetId = ref('')
@@ -32,6 +34,7 @@ const brokenImageIds = ref(new Set())
 
 const hasPets = computed(() => shareStore.pets.length > 0)
 const hasDiaries = computed(() => diaryStore.diaries.length > 0)
+const canWriteDiary = computed(() => shareStore.canWriteDiary(memberStore.profile?.memberId))
 const monthLabel = computed(() => formatYearMonth(diaryStore.year, diaryStore.month))
 const isDeleteOpen = computed({
   get: () => Boolean(deleteTargetId.value),
@@ -44,10 +47,19 @@ const isDeleteOpen = computed({
 })
 
 watch(selectedPetId, (petId) => {
-  if (petId) diaryStore.fetchDiaries(petId)
+  if (!petId) return
+  diaryStore.fetchDiaries(petId)
+  shareStore.fetchSharedCare(petId)
 })
 
 async function initializeDiary() {
+  if (!memberStore.profile) {
+    try {
+      await memberStore.fetchProfile()
+    } catch {
+      // 프로필을 못 불러도 목록은 보여 준다. 작성 버튼만 숨긴다.
+    }
+  }
   const pets = shareStore.pets.length > 0 ? shareStore.pets : await shareStore.fetchPets()
   selectedPetId.value = route.query.petId ?? pets[0]?.id ?? ''
 }
@@ -97,9 +109,6 @@ onMounted(initializeDiary)
         <h1 class="m-0 text-(length:--font-2xl) font-bold leading-[1.3] text-(--color-navy)">
           육아일기
         </h1>
-        <p class="mb-0 mt-[var(--space-1)] text-(length:--font-md) text-(--color-slate-muted)">
-          가족과 함께 오늘 하루를 남겨요
-        </p>
       </div>
 
       <!-- 인스타그램 탐색과 같은 돋보기다. 아이콘만 두므로 aria-label로 이름을 남긴다. -->
@@ -214,8 +223,8 @@ onMounted(initializeDiary)
         v-else-if="!hasDiaries"
         :icon="IconDocument"
         message="이 달에는 아직 기록이 없어요."
-        action-text="첫 일기 쓰기"
-        :action-route="`/share/diary/write?petId=${selectedPetId}`"
+        :action-text="canWriteDiary ? '첫 일기 쓰기' : ''"
+        :action-route="canWriteDiary ? `/share/diary/write?petId=${selectedPetId}` : ''"
       />
 
       <section
@@ -325,6 +334,7 @@ onMounted(initializeDiary)
       </section>
 
       <AppButton
+        v-if="canWriteDiary"
         class="mt-[var(--space-4)]"
         variant="primary"
         block

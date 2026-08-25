@@ -63,9 +63,6 @@ function goToInquiryDetail(inquiryId) {
       <h1 class="text-(length:--font-2xl) font-bold text-(color:--color-navy)">
         내 문의 내역
       </h1>
-      <p class="text-(length:--font-md) text-(color:--color-gray-600) mt-1">
-        지금까지 문의한 내용을 확인해요
-      </p>
     </header>
 
     <p

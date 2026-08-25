@@ -11,6 +11,8 @@ const mocks = vi.hoisted(() => ({
     updateProfile: vi.fn(),
     verifyPassword: vi.fn(),
     changePassword: vi.fn(),
+    sendPhoneVerificationCode: vi.fn(),
+    verifyPhoneCode: vi.fn(),
   },
   routerReplace: vi.fn(),
 }))
@@ -141,5 +143,118 @@ describe('ProfileEditView 전화번호 검증', () => {
     expect(host.textContent).toContain(
       '010으로 시작하는 11자리 휴대폰 번호를 입력해 주세요.',
     )
+  })
+})
+
+describe('ProfileEditView 전화번호 변경 SMS', () => {
+  beforeEach(async () => {
+    vi.clearAllMocks()
+    mocks.memberStore.profile = { ...profile }
+    mocks.memberStore.fetchProfile.mockResolvedValue({ ...profile })
+    mocks.memberStore.updateProfile.mockResolvedValue({ ...profile })
+    mocks.memberStore.sendPhoneVerificationCode.mockResolvedValue({
+      data: { result: { expiresInSeconds: 300 } },
+    })
+    mocks.memberStore.verifyPhoneCode.mockResolvedValue({})
+    host = document.createElement('div')
+    document.body.appendChild(host)
+    app = createApp(ProfileEditView)
+    app.mount(host)
+    await flushView()
+  })
+
+  afterEach(() => {
+    app?.unmount()
+    host?.remove()
+  })
+
+  const getSendCodeButton = () =>
+    [...host.querySelectorAll('button')].find((button) =>
+      ['인증번호 받기', '다시 받기'].includes(button.textContent.trim()),
+    )
+
+  it('번호가 그대로면 SMS 없이 저장한다', async () => {
+    expect(getSendCodeButton()).toBeUndefined()
+    await submitProfileForm()
+    expect(mocks.memberStore.updateProfile).toHaveBeenCalledOnce()
+    expect(mocks.memberStore.sendPhoneVerificationCode).not.toHaveBeenCalled()
+  })
+
+  it('번호를 바꾸면 인증 전에는 저장하지 않는다', async () => {
+    await inputValue(getPhoneInput(), '01099998888')
+
+    expect(getSendCodeButton()).toBeTruthy()
+    expect(getSaveButton().disabled).toBe(true)
+    await submitProfileForm()
+
+    expect(mocks.memberStore.updateProfile).not.toHaveBeenCalled()
+    expect(host.textContent).toContain('변경한 전화번호 인증을 완료해 주세요.')
+  })
+
+  it('인증번호 확인 후 새 번호를 저장한다', async () => {
+    await inputValue(getPhoneInput(), '01099998888')
+    getSendCodeButton().click()
+    await flushView()
+
+    const codeInput = host.querySelector('#profile-phone-code')
+    await inputValue(codeInput, '123456')
+    const confirmButton = [...host.querySelectorAll('button')].find(
+      (button) => button.textContent.trim() === '확인',
+    )
+    confirmButton.click()
+    await flushView()
+
+    expect(mocks.memberStore.sendPhoneVerificationCode).toHaveBeenCalledWith('01099998888')
+    expect(mocks.memberStore.verifyPhoneCode).toHaveBeenCalledWith('01099998888', '123456')
+    expect(getSaveButton().disabled).toBe(false)
+
+    await submitProfileForm()
+    expect(mocks.memberStore.updateProfile).toHaveBeenCalledWith(
+      expect.objectContaining({ phone: '01099998888' }),
+    )
+  })
+
+  it('전송 중 번호를 바꾸면 이전 응답으로 전송 완료를 표시하지 않는다', async () => {
+    let resolveSend
+    mocks.memberStore.sendPhoneVerificationCode.mockReturnValue(
+      new Promise((resolve) => {
+        resolveSend = resolve
+      }),
+    )
+    await inputValue(getPhoneInput(), '01099998888')
+    getSendCodeButton().click()
+    await flushView()
+    await inputValue(getPhoneInput(), '01011112222')
+    resolveSend({ data: { result: { expiresInSeconds: 300 } } })
+    await flushView()
+
+    expect(host.textContent).not.toContain('인증번호를 전송했습니다.')
+    expect(host.querySelector('#profile-phone-code')).toBeNull()
+  })
+
+  it('확인 중 번호를 바꾸면 이전 인증 완료를 현재 번호에 적용하지 않는다', async () => {
+    let resolveVerify
+    mocks.memberStore.verifyPhoneCode.mockReturnValue(
+      new Promise((resolve) => {
+        resolveVerify = resolve
+      }),
+    )
+    await inputValue(getPhoneInput(), '01099998888')
+    getSendCodeButton().click()
+    await flushView()
+
+    const codeInput = host.querySelector('#profile-phone-code')
+    await inputValue(codeInput, '123456')
+    const confirmButton = [...host.querySelectorAll('button')].find(
+      (button) => button.textContent.trim() === '확인',
+    )
+    confirmButton.click()
+    await flushView()
+    await inputValue(getPhoneInput(), '01011112222')
+    resolveVerify({})
+    await flushView()
+
+    expect(host.textContent).not.toContain('전화번호 인증이 완료되었습니다.')
+    expect(getSaveButton().disabled).toBe(true)
   })
 })

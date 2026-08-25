@@ -98,11 +98,6 @@ onMounted(initializeSharedCare)
         <h1 class="m-0 text-(length:--font-2xl) font-bold text-(--color-navy) leading-[1.3]">
           함께 돌보기
         </h1>
-        <p
-          class="mb-0 mt-[var(--space-1)] text-(length:--font-md) text-(--color-slate-muted)"
-        >
-          가족과 돌봄 기록을 나누고 함께 관리해요
-        </p>
       </header>
 
       <section
@@ -201,10 +196,7 @@ onMounted(initializeSharedCare)
         </p>
       </section>
 
-      <!--
-        평범한 외곽선 버튼이라 다른 기능 카드들 사이에서 눈에 띄지 않았다. 반려생활
-        화면이 쓰는 카드 형태(FeatureIconTile + 제목·설명)로 맞춰 같은 결로 보이게 한다.
-      -->
+      <!-- 반려생활 화면과 같은 카드 형태(아이콘 + 제목)로 맞춘다. -->
       <router-link
         :to="{ path: '/share/diary', query: { petId: selectedPetId } }"
         class="mt-[var(--space-5)] flex items-center gap-[var(--space-4)] rounded-[22px] bg-(--color-white) p-[var(--space-4)] text-inherit no-underline shadow-(--shadow-sm)"
@@ -213,12 +205,7 @@ onMounted(initializeSharedCare)
           :icon="IconImage"
           tone="pink"
         />
-        <div class="min-w-0">
-          <strong class="block text-(length:--font-sm) text-(color:--color-navy)">육아일기 보기</strong>
-          <p class="mb-0 mt-[var(--space-1)] text-(length:--font-xs) leading-[1.45] text-(color:--color-slate-muted)">
-            가족이 함께 남긴 하루를 모아 봐요.
-          </p>
-        </div>
+        <strong class="min-w-0 flex-1 text-(length:--font-sm) text-(color:--color-navy)">육아일기</strong>
         <IconChevronRight
           class="ml-auto shrink-0 text-(--color-slate)"
           :size="18"

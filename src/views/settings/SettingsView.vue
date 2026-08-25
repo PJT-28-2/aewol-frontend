@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useAccountStore } from '@/stores/account'
 import { useMemberStore } from '@/stores/member'
 import { usePetStore } from '@/stores/pet'
 import { useThemeStore } from '@/stores/theme'
@@ -20,11 +21,13 @@ import IconSavings from '@/components/common/icons/IconSavings.vue'
 import IconWallet from '@/components/common/icons/IconWallet.vue'
 import IconWarning from '@/components/common/icons/IconWarning.vue'
 import IconMoon from '@/components/common/icons/IconMoon.vue'
+import IconLock from '@/components/common/icons/IconLock.vue'
 import dogProfileMascot from '@/assets/images/pet-dog-default-profile-v3.webp'
 import catProfileMascot from '@/assets/images/pet-cat-default-profile-v3.webp'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const accountStore = useAccountStore()
 const memberStore = useMemberStore()
 const petStore = usePetStore()
 const themeStore = useThemeStore()
@@ -59,34 +62,44 @@ onMounted(async () => {
 const benefitItems = [
   {
     title: '공동구매',
-    description: '인증 업체 특가',
     path: '/group-purchase',
     icon: IconGroupPurchase,
     tone: 'green',
   },
   {
     title: '짜투리 저금통',
-    description: '모아서 기부하기',
     path: '/donation',
     icon: IconSavings,
     tone: 'yellow',
   },
   {
     title: '지원사업',
-    description: '지역 혜택 찾기',
     path: '/support-programs',
     icon: IconPublicSupport,
     tone: 'blue',
   },
 ]
 
-const settingItems = [
+// 간편 비밀번호를 아직 설정하지 않은 회원은 "재설정"할 대상 자체가 없어서(계좌 미연동 등),
+// 이 메뉴를 누르면 verify 화면에서 막다른 흐름으로 끝난다. hasSimplePassword가 true일
+// 때만 노출한다(리뷰 지적, PR #420).
+const settingItems = computed(() => [
   {
     title: '계좌 관리',
     path: '/account',
     icon: IconWallet,
     tone: 'blue',
   },
+  ...(accountStore.hasSimplePassword
+    ? [
+        {
+          title: '간편 비밀번호 재설정',
+          path: '/account/simple-password/reset',
+          icon: IconLock,
+          tone: 'yellow',
+        },
+      ]
+    : []),
   {
     title: '정기 결제',
     path: '/payment/recurring',
@@ -105,19 +118,17 @@ const settingItems = [
     icon: IconChatBubble,
     tone: 'gray',
   },
-]
+])
 
 const adminItems = [
   {
     title: '멍스타그램 신고 관리',
-    description: '신고 게시물 확인 및 처리',
     path: '/admin/diary-reports',
     icon: IconWarning,
     tone: 'pink',
   },
   {
     title: '고객문의 관리',
-    description: '1:1 문의 답변',
     path: '/admin/inquiries',
     icon: IconChatBubble,
     tone: 'gray',
@@ -252,7 +263,6 @@ const confirmLogout = async () => {
             :tone="item.tone"
           />
           <strong class="mt-(--space-3) block truncate text-[13px] font-bold text-(color:--color-navy)">{{ item.title }}</strong>
-          <span class="mt-[3px] block truncate text-[10px] text-(color:--color-slate-muted)">{{ item.description }}</span>
         </button>
       </nav>
     </section>
@@ -272,17 +282,14 @@ const confirmLogout = async () => {
           v-for="item in adminItems"
           :key="item.path"
           type="button"
-          class="flex min-h-20 w-full items-center gap-(--space-3) px-(--space-4) text-left transition-colors active:bg-(--color-info-surface)"
+          class="flex min-h-[64px] w-full items-center gap-(--space-3) px-(--space-4) text-left transition-colors active:bg-(--color-info-surface)"
           @click="handleMenuClick(item)"
         >
           <FeatureIconTile
             :icon="item.icon"
             :tone="item.tone"
           />
-          <span class="min-w-0 flex-1">
-            <strong class="block text-[13px] font-bold text-(color:--color-navy)">{{ item.title }}</strong>
-            <span class="mt-[3px] block text-[10px] text-(color:--color-slate-muted)">{{ item.description }}</span>
-          </span>
+          <strong class="min-w-0 flex-1 text-[13px] font-bold text-(color:--color-navy)">{{ item.title }}</strong>
         </button>
       </nav>
     </section>
@@ -297,15 +304,12 @@ const confirmLogout = async () => {
       >
         화면 설정
       </h2>
-      <div class="flex min-h-20 items-center gap-(--space-3) rounded-[22px] bg-(--color-white) px-(--space-4)">
+      <div class="flex min-h-[64px] items-center gap-(--space-3) rounded-[22px] bg-(--color-white) px-(--space-4)">
         <FeatureIconTile
           :icon="IconMoon"
           tone="purple"
         />
-        <span class="min-w-0 flex-1">
-          <strong class="block text-[13px] font-semibold text-(color:--color-navy)">다크 모드</strong>
-          <span class="mt-[3px] block text-[10px] text-(color:--color-slate-muted)">어두운 화면으로 눈의 피로를 줄여요</span>
-        </span>
+        <strong class="min-w-0 flex-1 text-[13px] font-semibold text-(color:--color-navy)">다크 모드</strong>
         <label class="cursor-pointer">
           <input
             class="peer sr-only"
