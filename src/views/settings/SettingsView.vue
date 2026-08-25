@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useAccountStore } from '@/stores/account'
 import { useMemberStore } from '@/stores/member'
 import { usePetStore } from '@/stores/pet'
 import { useThemeStore } from '@/stores/theme'
@@ -20,11 +21,13 @@ import IconSavings from '@/components/common/icons/IconSavings.vue'
 import IconWallet from '@/components/common/icons/IconWallet.vue'
 import IconWarning from '@/components/common/icons/IconWarning.vue'
 import IconMoon from '@/components/common/icons/IconMoon.vue'
+import IconLock from '@/components/common/icons/IconLock.vue'
 import dogProfileMascot from '@/assets/images/pet-dog-default-profile-v3.webp'
 import catProfileMascot from '@/assets/images/pet-cat-default-profile-v3.webp'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const accountStore = useAccountStore()
 const memberStore = useMemberStore()
 const petStore = usePetStore()
 const themeStore = useThemeStore()
@@ -77,13 +80,26 @@ const benefitItems = [
   },
 ]
 
-const settingItems = [
+// 간편 비밀번호를 아직 설정하지 않은 회원은 "재설정"할 대상 자체가 없어서(계좌 미연동 등),
+// 이 메뉴를 누르면 verify 화면에서 막다른 흐름으로 끝난다. hasSimplePassword가 true일
+// 때만 노출한다(리뷰 지적, PR #420).
+const settingItems = computed(() => [
   {
     title: '계좌 관리',
     path: '/account',
     icon: IconWallet,
     tone: 'blue',
   },
+  ...(accountStore.hasSimplePassword
+    ? [
+        {
+          title: '간편 비밀번호 재설정',
+          path: '/account/simple-password/reset',
+          icon: IconLock,
+          tone: 'yellow',
+        },
+      ]
+    : []),
   {
     title: '정기 결제',
     path: '/payment/recurring',
@@ -102,7 +118,7 @@ const settingItems = [
     icon: IconChatBubble,
     tone: 'gray',
   },
-]
+])
 
 const adminItems = [
   {
