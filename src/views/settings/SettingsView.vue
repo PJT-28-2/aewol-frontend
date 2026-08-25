@@ -185,7 +185,9 @@ const confirmLogout = async () => {
     class="min-h-screen w-full bg-(--color-app-bg) px-(--space-5) pt-(--space-3) pb-(--space-4)"
     aria-labelledby="mypage-title"
   >
-    <header class="mb-(--space-5) flex h-[42px] items-center">
+    <header
+      class="sticky top-[env(safe-area-inset-top,0px)] z-20 -mx-(--space-5) mb-(--space-5) flex h-[42px] items-center bg-(--color-app-bg) px-(--space-5)"
+    >
       <h1
         id="mypage-title"
         class="text-(length:--font-2xl) font-bold text-(color:--color-navy)"
