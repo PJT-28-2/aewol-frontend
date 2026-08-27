@@ -1,194 +1,133 @@
-# 애월 (AeWol) — 반려동물 전자지갑 서비스 Frontend
+# 애월 (AeWol) Frontend
 
-## 프로젝트 소개
+> 반려동물 전용 전자지갑 애월의 모바일 우선 웹 클라이언트
 
-애월(AeWol) 프론트엔드는 Vue.js 3 기반 모바일 우선 SPA(Single Page Application)입니다. 반려동물 전자지갑 서비스의 모든 기능을 모바일 화면에 최적화하여 제공하며, Composition API와 `<script setup>` 문법을 사용합니다.
+[서비스 바로가기](https://www.aewol.store) · [전체 프로젝트 소개](https://github.com/PJT-28-2) · [Backend](https://github.com/PJT-28-2/aewol-backend)
 
-KB IT's Your Life 7기 팀 이파리 28-2팀 종합실무 프로젝트입니다.
+## 소개
 
----
+애월 프론트엔드는 Vue 3와 Vite로 구현한 모바일 우선 SPA입니다. 반려동물 등록, 지갑과 QR 결제, 지출 분석, 보험, 공동 양육 및 생활 지원 기능을 하나의 사용자 경험으로 제공합니다.
 
 ## 기술 스택
 
-| 구분 | 기술 | 비고 |
-|------|------|------|
-| Framework | Vue.js 3 | Composition API, `<script setup>` |
-| State | Pinia | 도메인별 스토어 분리 |
-| Router | Vue Router 4 | 30+ 라우트, 인증 가드 |
-| HTTP | Axios | JWT 자동 갱신 인터셉터 |
-| Chart | ECharts (`vue-echarts`) | 지출 대시보드 시각화 |
-| Build | Vite 6 | 개발 서버 + 프록시 |
-| Node | >= 20 | |
+| 구분 | 기술 |
+| --- | --- |
+| Framework | Vue 3, Composition API, `<script setup>` |
+| Build | Vite 6, Node.js 20 이상 |
+| State / Router | Pinia, Vue Router 4 |
+| HTTP | Axios |
+| UI | Tailwind CSS 4, Pretendard |
+| Chart | ECharts, vue-echarts |
+| Test | Vitest, jsdom |
+| Quality | ESLint, Prettier, Husky |
 
----
+Figma의 색상·타이포그래피·간격 토큰을 `variables.css`의 CSS 변수로 옮기고 Tailwind CSS 4 유틸리티와 연결했습니다. `AppButton`, `AppModal` 등의 공통 컴포넌트가 같은 토큰을 사용하므로 한 곳의 변경을 전체 화면에 일관되게 반영할 수 있습니다.
+
+## 주요 화면
+
+- 인증 및 온보딩
+- 홈 대시보드
+- 반려동물 등록·조회·수정
+- 지갑 충전·출금, QR 결제와 거래 내역
+- 지출 대시보드와 인사이트
+- 정기결제와 QR 결제
+- 보험 시뮬레이션 및 청구
+- 공동 양육, 공동구매와 기부
+- 지원사업 및 응급 병원 검색
 
 ## 프로젝트 구조
 
-```
+```text
 src/
-├── main.js                     # 앱 진입점
-├── App.vue
-├── assets/
-│   └── styles/
-│       ├── variables.css       # Figma 기반 디자인 토큰 (CSS 변수)
-│       ├── reset.css
-│       └── global.css
-├── router/
-│   └── index.js                # Vue Router 4 — 30+ 라우트 + 인증 가드
-├── stores/                     # Pinia 상태 관리
-│   ├── auth.js                 # 인증 (토큰, 사용자 정보)
-│   ├── member.js               # 회원 프로필
-│   ├── pet.js                  # 반려동물 목록/상세
-│   ├── wallet.js               # 지갑 + 버킷
-│   ├── transaction.js          # 거래 내역
-│   ├── dashboard.js            # 지출 대시보드
-│   ├── insurance.js            # 보험 시뮬레이션/청구
-│   └── notification.js         # 알림함 (목데이터, WebSocket connect는 미연동)
-├── api/                        # Axios API 모듈 (도메인별)
-│   ├── index.js                # Axios 인스턴스 + JWT 인터셉터
-│   ├── auth.js
-│   ├── pet.js
-│   ├── wallet.js
-│   ├── transaction.js
-│   └── ...                     # 15개 모듈
-├── layouts/
-│   ├── DefaultLayout.vue       # 기본 레이아웃 (헤더 + 하단 네비)
-│   └── AuthLayout.vue          # 인증 페이지 레이아웃
-├── components/
-│   └── common/
-│       ├── AppButton.vue       # 버튼 (4가지 variant)
-│       ├── AppCard.vue         # 카드 컨테이너
-│       ├── AppInput.vue        # 입력 필드
-│       ├── AppModal.vue        # 모달 다이얼로그
-│       ├── BottomNavBar.vue    # 하단 탭 네비게이션
-│       ├── PageHeader.vue      # 상단 헤더
-│       ├── LoadingSpinner.vue
-│       └── EmptyState.vue
-├── composables/
-│   ├── useAuth.js
-│   └── useLoading.js
-└── views/                      # 페이지 컴포넌트 (30개)
-    ├── auth/                   # 로그인, 회원가입, 이메일 인증, 카카오 콜백
-    ├── home/                   # 메인 대시보드
-    ├── pet/                    # 반려동물 목록/등록/상세/수정
-    ├── wallet/                 # 지갑/버킷/거래내역
-    ├── account/                # 연동 계좌
-    ├── payment/                # 결제/정기결제
-    ├── dashboard/              # 지출 대시보드 (차트)
-    ├── insurance/              # 보험 시뮬레이터/청구
-    ├── share/                  # 공동 양육
-    ├── grouppurchase/          # 공동구매
-    ├── donation/               # 짜투리 저금통/기부
-    ├── support/                # 지자체 지원사업
-    ├── emergency/              # 응급 병원
-    └── settings/               # 설정/회원탈퇴
+├── api/          # Axios 인스턴스와 도메인별 API 모듈
+├── assets/       # 이미지와 전역 스타일·디자인 토큰
+├── components/   # 공통 및 도메인 컴포넌트
+├── composables/  # 재사용 가능한 Composition 함수
+├── layouts/      # 인증·기본 레이아웃
+├── router/       # 라우트와 인증 가드
+├── stores/       # Pinia 도메인 스토어
+├── utils/        # 공통 유틸리티
+└── views/        # 페이지 단위 컴포넌트
 ```
 
----
+## 시작하기
 
-## 디자인 시스템
-
-`src/assets/styles/variables.css`에 Figma 디자인 토큰이 CSS 변수로 정의되어 있습니다.
-
-| 카테고리 | 변수 예시 | 값 |
-|----------|----------|----|
-| 컬러 | `--color-navy` | #1b2a49 |
-| 컬러 | `--color-gold` | #d99a2b |
-| 타이포 | `--font-xs` ~ `--font-3xl` | 10px ~ 32px |
-| 폰트 | Pretendard | 웹폰트 |
-| 스페이싱 | `--space-1` ~ `--space-10` | 4px ~ 64px |
-| 라디우스 | `--radius-sm` ~ `--radius-full` | 4px ~ 999px |
-
-모든 컴포넌트는 이 CSS 변수를 사용하므로, 디자인 토큰 변경 시 전체 UI에 일괄 적용됩니다.
-
----
-
-## 로컬 개발 환경 설정
-
-### 사전 요구사항
+### 요구사항
 
 - Node.js 20 이상
 - npm
+- 로컬에서 실행 중인 AeWol Backend
 
-### 의존성 설치
+### 설치 및 실행
 
 ```bash
 npm install
-```
-
-### 개발 서버 시작
-
-```bash
 npm run dev
 ```
 
-개발 서버는 `http://localhost:5173`에서 실행됩니다.
+개발 서버는 기본적으로 `http://localhost:5173`에서 실행됩니다. 개발 환경의 `/api` 요청은 Vite 프록시를 통해 `http://localhost:8080`으로 전달됩니다.
 
-### 프로덕션 빌드
+### 환경변수
 
-```bash
-npm run build
-```
+`.env.example`을 복사해 `.env.local`을 만들고 필요한 값을 설정합니다.
 
-빌드 결과물은 `dist/` 디렉토리에 생성됩니다.
-
-### 환경변수 설정
-
-`.env.example`을 복사해 `.env.local`을 만들고 값을 채웁니다. `VITE_*` 값은 빌드 결과에 들어가므로 브라우저에서 보입니다.
-
-```
-VITE_KAKAO_REST_API_KEY=카카오_REST_API_키
+```dotenv
+VITE_KAKAO_REST_API_KEY=
 VITE_KAKAO_REDIRECT_URI=
-VITE_KAKAO_MAP_KEY=카카오_지도_JavaScript_키
-VITE_TOSS_CLIENT_KEY=TossPayments_클라이언트_키
+VITE_KAKAO_MAP_KEY=
+VITE_TOSS_CLIENT_KEY=
 VITE_DEMO_MODE=false
 ```
 
-`VITE_TOSS_CLIENT_KEY`에는 브라우저용 API 개별 연동 클라이언트 키만 설정합니다.
-TossPayments 시크릿 키는 백엔드에서만 관리하며 프론트 환경변수에 넣지 않습니다.
+`VITE_*` 변수는 빌드 결과에서 노출될 수 있습니다. TossPayments 시크릿 키처럼 서버에서만 사용해야 하는 값은 프론트엔드 환경변수에 넣지 않습니다.
 
-`VITE_DEMO_MODE=true`는 1원 인증 화면에서 시연용 입금자명 카드를 띄웁니다. CODEF 데모
-서버는 실제 이체를 하지 않아 은행 앱 알림이 오지 않기 때문입니다. 실서비스에서는 켜지
-않습니다.
+배포 환경에서 API 주소를 별도로 지정할 때만 `VITE_API_BASE_URL`을 사용합니다.
 
-`VITE_API_BASE_URL`은 배포 빌드에서만 씁니다. 로컬 개발은 `vite.config.js`의 프록시가
-`http://localhost:8080`으로 넘겨주므로 비워 둡니다.
+## 명령어
 
-### 백엔드 API 프록시
+| 명령어 | 설명 |
+| --- | --- |
+| `npm run dev` | 개발 서버 실행 |
+| `npm run build` | 프로덕션 빌드 |
+| `npm run preview` | 빌드 결과 미리보기 |
+| `npm run test:run` | 전체 테스트 1회 실행 |
+| `npm run lint` | ESLint 검사 및 자동 수정 |
 
-`vite.config.js`에 `/api` 경로에 대한 프록시가 설정되어 있어, 개발 서버에서 별도의 CORS 설정 없이 백엔드(`http://localhost:8080`)와 통신할 수 있습니다.
+## 개발 규칙
 
----
+- Vue 3 Composition API와 `<script setup>`을 사용합니다.
+- 서버 상태와 공유 상태는 도메인별 Pinia store에서 관리합니다.
+- API 호출은 `src/api`의 공통 Axios 인스턴스와 도메인 모듈을 사용합니다.
+- 공통 UI와 아이콘은 `src/components/common`의 기존 컴포넌트를 우선 재사용합니다.
+- 색상은 `variables.css`의 디자인 토큰을 사용하며 화면에 hex 값을 직접 작성하지 않습니다.
+- 모바일 화면을 우선 구현한 뒤 넓은 화면에서 레이아웃을 확인합니다.
 
-## 라우트 목록
+## 검증
 
-30개 이상의 라우트를 제공합니다. 대표 라우트는 아래와 같습니다.
+변경 사항을 올리기 전에 다음 명령을 실행합니다.
 
-| 경로 | 컴포넌트 | 설명 |
-|------|----------|------|
-| `/login` | `auth/LoginView.vue` | 로그인 |
-| `/` | `home/HomeView.vue` | 메인 대시보드 (인증 필요) |
-| `/pets` | `pet/PetListView.vue` | 반려동물 목록 (인증 필요) |
-| `/pets/:id` | `pet/PetDetailView.vue` | 반려동물 상세 (인증 필요) |
-| `/wallet` | `wallet/WalletView.vue` | 지갑 홈 (인증 필요) |
-| `/dashboard` | `dashboard/DashboardView.vue` | 지출 대시보드 (인증 필요) |
+```bash
+npm run test:run
+npm run build
+```
 
-인증이 필요한 라우트는 Vue Router의 내비게이션 가드(`beforeEach`)에서 토큰 유효성을 검사하며, 미인증 시 `/login`으로 리다이렉트합니다.
+Husky가 설정된 환경에서는 커밋 전에 Vitest가 자동으로 실행됩니다.
 
----
+프로젝트 발표 시점 기준으로 75개 테스트 파일에서 560개 프론트엔드 테스트가 통과했습니다.
 
-## 브랜치 전략
+## 브랜치와 PR
 
-| 브랜치 | 용도 |
-|--------|------|
-| `main` | 프로덕션 |
-| `develop` | 개발 통합 |
-| `feature/{기능명}` | 기능 개발 |
+```text
+main
+└── develop
+    ├── feat/#이슈번호-기능명
+    ├── fix/#이슈번호-버그명
+    └── refactor/#이슈번호-대상
+```
 
-PR은 `feature/{기능명}` → `develop` → `main` 순서로 병합합니다.
+기능 브랜치는 `develop`에서 만들고 완료 후 `develop`을 대상으로 PR을 생성합니다.
 
----
+## 관련 문서
 
-## 팀
-
-KB IT's Your Life 7기 | 팀 이파리 | PJT 28-2팀
+- [QR 결제 데모](./docs/qr-payment-demo.md)
+- [Backend 저장소](https://github.com/PJT-28-2/aewol-backend)
