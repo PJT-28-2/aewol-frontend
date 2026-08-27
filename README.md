@@ -76,7 +76,6 @@ VITE_KAKAO_REST_API_KEY=
 VITE_KAKAO_REDIRECT_URI=
 VITE_KAKAO_MAP_KEY=
 VITE_TOSS_CLIENT_KEY=
-VITE_DEMO_MODE=false
 ```
 
 `VITE_*` 변수는 빌드 결과에서 노출될 수 있습니다. TossPayments 시크릿 키처럼 서버에서만 사용해야 하는 값은 프론트엔드 환경변수에 넣지 않습니다.
